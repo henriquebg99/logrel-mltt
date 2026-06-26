@@ -2,17 +2,13 @@
 
 {-# OPTIONS --safe #-}
 
-module Definition.Untyped where
+module Definition.OUntyped where
 
 open import Tools.Nat
 open import Tools.Product
 open import Tools.List
 import Tools.PropositionalEquality as PE
 open import Definition.Sort
-import Definition.OUntyped as O
-
-OTerm = O.Term
-OKind = O.Kind
 
 infix 30 Π_^_°_▹_°_°_^_
 infixr 22 _^_°_▹▹_°_°_^_
@@ -40,11 +36,10 @@ data Kind : Set where
   Castreflkind : Kind
   Fstkind : Kind
   Sndkind : Kind
-  Equivkind : Kind -- Equivalence witness
-  Nat2kind : Kind  -- 2nd type of natural numbers
-  Zero2kind : Kind -- 2nd zero
-  Suc2kind : Kind  -- 2nd successor
-  Natrec2kind : Level → Kind -- 2nd natural number recursor
+  Nat2kind : Kind
+  Zero2kind : Kind
+  Suc2kind : Kind
+  Natrec2kind : Level → Kind
 
 data Term : Set where
   var : (x : Nat) → Term
@@ -101,6 +96,19 @@ suc t = gen Suckind (⟦ 0 , t ⟧ ∷ [])
 natrec : (l : Level) (A t u v : Term) → Term  -- Recursor (A is a binder).
 natrec l A t u v = gen (Natreckind l) (⟦ 1 , A ⟧ ∷ ⟦ 0 , t ⟧ ∷ ⟦ 0 , u ⟧ ∷ ⟦ 0 , v ⟧ ∷ [])
 
+-- 2nd type of natural numbers
+ℕ2      : Term
+ℕ2 = gen Nat2kind []
+
+zero2   : Term
+zero2 = gen Zero2kind []
+
+suc2    : (t : Term) → Term
+suc2 t = gen Suc2kind (⟦ 0 , t ⟧ ∷ [])
+
+natrec2 : (l : Level) (A t u v : Term) → Term
+natrec2 l A t u v = gen (Natrec2kind l) (⟦ 1 , A ⟧ ∷ ⟦ 0 , t ⟧ ∷ ⟦ 0 , u ⟧ ∷ ⟦ 0 , v ⟧ ∷ [])
+
 -- Empty type
 Empty : Level → Term
 Empty l = gen (Emptykind l) []
@@ -139,66 +147,6 @@ cast l A B e t = gen (Castkind l) (⟦ 0 , A ⟧ ∷ ⟦ 0 , B ⟧ ∷ ⟦ 0 , e
 -- propositional proof that casting with reflexivity is the identity
 castrefl : (A t : Term) → Term
 castrefl A t = gen Castreflkind (⟦ 0 , A ⟧ ∷ ⟦ 0 , t ⟧ ∷ [])
-
-
--- Equivalence witness
-equiv : Term
-equiv = gen Equivkind []
-
--- 2nd type of natural numbers
-ℕ2      : Term
-ℕ2 = gen Nat2kind []
-
--- Introduction and elimination of 2nd natural numbers.
-zero2   : Term                     -- 2nd natural number zero.
-zero2 = gen Zero2kind []
-
-suc2    : (t : Term)       → Term  -- 2nd successor.
-suc2 t = gen Suc2kind (⟦ 0 , t ⟧ ∷ [])
-
-natrec2 : (l : Level) (A t u v : Term) → Term  -- 2nd natural number recursor (A is a binder).
-natrec2 l A t u v = gen (Natrec2kind l) (⟦ 1 , A ⟧ ∷ ⟦ 0 , t ⟧ ∷ ⟦ 0 , u ⟧ ∷ ⟦ 0 , v ⟧ ∷ [])
-
-------------------------------------------------------------------------
--- Embedding of OTerms into Terms
-
-emb_okind_kind : OKind → Kind
-emb_okind_kind (O.Ukind r l) = Ukind r l
-emb_okind_kind (O.Pikind r lA lB lΠ rΠ) = Pikind r lA lB lΠ rΠ
-emb_okind_kind O.Natkind = Natkind
-emb_okind_kind (O.Lamkind l) = Lamkind l
-emb_okind_kind (O.Appkind l) = Appkind l
-emb_okind_kind O.Zerokind = Zerokind
-emb_okind_kind O.Suckind = Suckind
-emb_okind_kind (O.Natreckind l) = Natreckind l
-emb_okind_kind (O.Emptykind l) = Emptykind l
-emb_okind_kind (O.Emptyreckind l lEmpty) = Emptyreckind l lEmpty
-emb_okind_kind O.Idkind = Idkind
-emb_okind_kind O.Idreflkind = Idreflkind
-emb_okind_kind O.Idpikind = Idpikind
-emb_okind_kind O.Idspropkind = Idspropkind
-emb_okind_kind O.Transpkind = Transpkind
-emb_okind_kind (O.Castkind l) = Castkind l
-emb_okind_kind O.Castreflkind = Castreflkind
-emb_okind_kind O.Fstkind = Fstkind
-emb_okind_kind O.Sndkind = Sndkind
-emb_okind_kind O.Nat2kind = Nat2kind
-emb_okind_kind O.Zero2kind = Zero2kind
-emb_okind_kind O.Suc2kind = Suc2kind
-emb_okind_kind (O.Natrec2kind l) = Natrec2kind l
-
-mutual
-  emb_otermGen : List (GenT OTerm) → List (GenT Term)
-  emb_otermGen [] = []
-  emb_otermGen (⟦ l , t ⟧ ∷ gs) = ⟦ l , emb_oterm_term t ⟧ ∷ emb_otermGen gs
-
-  emb_oterm_term : OTerm → Term
-  emb_oterm_term (O.var x) = var x
-  emb_oterm_term (O.gen k gs) = gen (emb_okind_kind k) (emb_otermGen gs)
-
-emb_con : Con OTerm → Con Term
-emb_con ε = ε
-emb_con (Γ ∙ A ^ r) = emb_con Γ ∙ emb_oterm_term A ^ r
 
 -- Injectivity of term constructors w.r.t. propositional equality.
 
@@ -253,7 +201,7 @@ data Whnf : Term → Set where
   Πₙ    : ∀ {A r lA B lB l r'} → Whnf (Π A ^ r ° lA ▹ B ° lB ° l ^ r')
   Idₙ : ∀ {A t u} → Whnf (Id A t u)
   ℕₙ    : Whnf ℕ
-  ℕ2ₙ    : Whnf ℕ2
+  ℕ2ₙ   : Whnf ℕ2
   Emptyₙ : ∀ {l} → Whnf (Empty l)
 
   -- Introductions are whnfs.
@@ -385,10 +333,9 @@ data Natural : Term → Set where
   ne    : ∀ {n} → Neutral n → Natural n
 
 data Natural2 : Term → Set where
-  zero2ₙ :                     Natural2 zero2 
+  zero2ₙ :                     Natural2 zero2
   suc2ₙ  : ∀ {t}             → Natural2 (suc2 t)
   ne2    : ∀ {n} → Neutral n → Natural2 n
-
 
 -- A type in whnf is either Π A B, ℕ, or neutral.
 -- Large types could also be U.
@@ -424,8 +371,8 @@ natural2Whnf (ne2 x) = ne x
 typeWhnf : ∀ {A} → Type A → Whnf A
 typeWhnf Πₙ = Πₙ
 typeWhnf ℕₙ = ℕₙ
-typeWhnf Uₙ  = Uₙ
 typeWhnf ℕ2ₙ = ℕ2ₙ
+typeWhnf Uₙ  = Uₙ
 typeWhnf Idₙ = Idₙ
 typeWhnf Emptyₙ = Emptyₙ
 typeWhnf (ne x) = ne x

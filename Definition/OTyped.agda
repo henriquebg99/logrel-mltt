@@ -1,10 +1,8 @@
 {-# OPTIONS --safe #-}
 
-open import Definition.Equiv
+module Definition.OTyped where
 
-module Definition.Typed (equiv : Equiv) where
-
-open import Definition.Untyped hiding (equiv)
+open import Definition.OUntyped
 
 open import Tools.Nat using (Nat)
 open import Tools.Product
@@ -288,18 +286,7 @@ mutual
                → Γ ⊢ cast ⁰ ℕ ℕ e (suc n)
                    ≡ suc (cast ⁰ ℕ ℕ e n)
                    ∷ ℕ ^ [ ! , ι ⁰ ]
-    cast-equiv-fwd : ∀ {e n}
-                     → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ2 ^ [ % , ι ⁰ ]
-                     → Γ ⊢ n ∷ ℕ ^ [ ! , ι ⁰ ]
-                     → Γ ⊢ cast ⁰ ℕ ℕ2 e n
-                     ≡ (Equiv.fwd equiv) ∘ n ^ ⁰
-                     ∷ ℕ2 ^ [ ! , ι ⁰ ]
-    cast-equiv-bwd : ∀ {e n}
-                     → Γ ⊢ e ∷ Id (U ⁰) ℕ2 ℕ ^ [ % , ι ⁰ ]
-                     → Γ ⊢ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
-                     → Γ ⊢ cast ⁰ ℕ2 ℕ e n
-                     ≡ (Equiv.bwd equiv) ∘ n ^ ⁰
-                     ∷ ℕ ^ [ ! , ι ⁰ ]
+
 mutual
   data _⊢_⇒_∷_^_ (Γ : Con Term) : Term → Term → Term → TypeLevel → Set where
     conv         : ∀ {A B l t u}
