@@ -292,13 +292,13 @@ mutual
                      → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ2 ^ [ % , ι ⁰ ]
                      → Γ ⊢ n ∷ ℕ ^ [ ! , ι ⁰ ]
                      → Γ ⊢ cast ⁰ ℕ ℕ2 e n
-                     ≡ (Equiv.fwd equiv) ∘ n ^ ⁰
+                     ≡ (emb_oterm_term (Equiv.fwd equiv)) ∘ n ^ ⁰
                      ∷ ℕ2 ^ [ ! , ι ⁰ ]
     cast-equiv-bwd : ∀ {e n}
                      → Γ ⊢ e ∷ Id (U ⁰) ℕ2 ℕ ^ [ % , ι ⁰ ]
                      → Γ ⊢ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
                      → Γ ⊢ cast ⁰ ℕ2 ℕ e n
-                     ≡ (Equiv.bwd equiv) ∘ n ^ ⁰
+                     ≡ (emb_oterm_term (Equiv.bwd equiv)) ∘ n ^ ⁰
                      ∷ ℕ ^ [ ! , ι ⁰ ]
 mutual
   data _⊢_⇒_∷_^_ (Γ : Con Term) : Term → Term → Term → TypeLevel → Set where
@@ -513,3 +513,314 @@ Unitⱼ ⊢Γ = Πⱼ (λ abs → ⊥-elim (!≢% (PE.sym abs))) ▹ (λ _ → P
 Ugenⱼ : ∀ {r Γ l} → ⊢ Γ → Γ ⊢ Univ r l ^ [ ! , next l ]
 Ugenⱼ {l = ⁰} ⊢Γ = univ (univ 0<1 ⊢Γ)
 Ugenⱼ {l = ¹} ⊢Γ = Uⱼ ⊢Γ
+
+import Definition.OTyped as OT
+import Definition.OUntyped as OU
+
+emb-∈ : ∀ {x A r Γ} (h : OT._∷_^_∈_ x A r Γ) →
+  x ∷ emb_oterm_term A ^ r ∈ emb_con Γ
+emb-∈ (OT.here {Γ = Γ} {A = A} {r = r}) =
+  PE.subst (λ t → _∷_^_∈_ 0 t r (_∙_^_ (emb_con Γ) (emb_oterm_term A) r))
+    (PE.sym (emb-wk1 A)) here
+emb-∈ (OT.there {Γ = Γ} {A = A} {rA = rA} {B = B} {rB = rB} {x = x} h) =
+  PE.subst (λ t → _∷_^_∈_ (Nat.suc x) t rA (_∙_^_ (emb_con Γ) (emb_oterm_term B) rB))
+    (PE.sym (emb-wk1 A)) (there (emb-∈ h))
+  where
+  open import Definition.Sort using (_∙_^_)
+
+mutual
+  emb-⊢∷-sgType : ∀ {Γ t G r s} (⊢t : OT._⊢_∷_^_ Γ t (G OU.[ s ]) r) →
+    emb_con Γ ⊢ emb_oterm_term t ∷ emb_oterm_term G [ emb_oterm_term s ] ^ r
+  emb-⊢∷-sgType {Γ} {t} {G} {r} {s} ⊢t =
+    PE.subst (λ B → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term t) B r)
+      (emb-sgSubst G s) (emb-⊢∷ ⊢t)
+
+  emb-⊢∷-natrec-s : ∀ {Γ G rG lG s} (⊢s : OT._⊢_∷_^_ Γ s (OU.natrecStepType G rG lG) ([ rG , ι lG ])) →
+    emb_con Γ ⊢ emb_oterm_term s ∷
+      Π ℕ ^ ! ° ⁰ ▹ (emb_oterm_term G ^ rG ° lG ▹▹ emb_oterm_term G [ suc (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ ([ rG , ι lG ])
+  emb-⊢∷-natrec-s {Γ} {G} {rG} {lG} {s} ⊢s =
+    PE.subst (λ A → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term s) A ([ rG , ι lG ]))
+      (emb-natrec-s-type G rG lG) (emb-⊢∷ ⊢s)
+
+  emb-⊢∷-natrec2-s : ∀ {Γ G rG lG s} (⊢s : OT._⊢_∷_^_ Γ s (OU.natrec2StepType G rG lG) ([ rG , ι lG ])) →
+    emb_con Γ ⊢ emb_oterm_term s ∷
+      Π ℕ2 ^ ! ° ⁰ ▹ (emb_oterm_term G ^ rG ° lG ▹▹ emb_oterm_term G [ suc2 (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ ([ rG , ι lG ])
+  emb-⊢∷-natrec2-s {Γ} {G} {rG} {lG} {s} ⊢s =
+    PE.subst (λ A → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term s) A ([ rG , ι lG ]))
+      (emb-natrec2-s-type G rG lG) (emb-⊢∷ ⊢s)
+
+  emb-⊢ : ∀ {Γ} → OT.⊢ Γ → ⊢ emb_con Γ
+  emb-⊢ OT.ε = ε
+  emb-⊢ (OT._∙_ ⊢Γ ⊢A) = emb-⊢ ⊢Γ ∙ emb-⊢ty ⊢A
+
+  emb-⊢ty : ∀ {Γ A r} → OT._⊢_^_ Γ A r → emb_con Γ ⊢ (emb_oterm_term A) ^ r
+  emb-⊢ty (OT.Uⱼ ⊢Γ) = Uⱼ (emb-⊢ ⊢Γ)
+  emb-⊢ty (OT.univ A) = univ (emb-⊢∷ A)
+
+  emb-⊢∷ : ∀ {Γ t A r} → OT._⊢_∷_^_ Γ t A r
+         → emb_con Γ ⊢ emb_oterm_term t ∷ (emb_oterm_term A) ^ r
+  emb-⊢∷ (OT.univ <l ⊢Γ) = univ <l (emb-⊢ ⊢Γ)
+  emb-⊢∷ (OT.ℕⱼ ⊢Γ) = ℕⱼ (emb-⊢ ⊢Γ)
+  emb-⊢∷ (OT.ℕ2ⱼ ⊢Γ) = ℕ2ⱼ (emb-⊢ ⊢Γ)
+  emb-⊢∷ (OT.Emptyⱼ ⊢Γ) = Emptyⱼ (emb-⊢ ⊢Γ)
+  emb-⊢∷ (OT.Πⱼ abs₁ ▹ abs₂ ▹ dom ▹ cod) =
+    Πⱼ abs₁ ▹ abs₂ ▹ (emb-⊢∷ dom) ▹ (emb-⊢∷ cod)
+  emb-⊢∷ (OT.var ⊢Γ x∈Γ) = var (emb-⊢ ⊢Γ) (emb-∈ x∈Γ)
+  emb-⊢∷ (OT.lamⱼ abs₁ abs₂ dom t) =
+    lamⱼ abs₁ abs₂ (emb-⊢ty dom) (emb-⊢∷ t)
+  emb-⊢∷ {Γ = Γ} (OT._▹_▹_▹_∘ⱼ_ {g = g} {a = a} {F = F} {G = Gₜ} {lG = lG} {r = r} {lΠ = lΠ} abs ⊢F ⊢Gderiv ⊢gderiv ⊢aderiv) =
+    PE.subst (λ (A : Term) → emb_con Γ ⊢ emb_oterm_term (g OU.∘ a ^ lΠ) ∷ A ^ [ r , ι lG ])
+         (PE.sym (emb-sgSubst Gₜ a))
+         (PE.subst (λ (t : Term) → emb_con Γ ⊢ t ∷ emb_oterm_term Gₜ [ emb_oterm_term a ] ^ [ r , ι lG ])
+           (emb-∘ g a lΠ)
+           (_▹_▹_▹_∘ⱼ_ {G = emb_oterm_term Gₜ} abs (emb-⊢∷ ⊢F) (emb-⊢∷ ⊢Gderiv) (emb-⊢∷ ⊢gderiv) (emb-⊢∷ ⊢aderiv)))
+  emb-⊢∷ (OT.fstⱼ A B A' B' e) =
+    fstⱼ (emb-⊢∷ A) (emb-⊢∷ B) (emb-⊢∷ A') (emb-⊢∷ B') (emb-⊢∷ e)
+  emb-⊢∷ {Γ = Γ} (OT.sndⱼ {A = Aₒ} {A' = A'ₒ} {rA = rA} {B = Bₒ} {B' = B'ₒ} {e = e} ⊢A ⊢B ⊢A' ⊢B' ⊢e) =
+    PE.subst (λ (A : Term) → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term (OU.snd e)) A ([ % , ι ⁰ ]))
+      (emb-snd-Π-type {Aₒ} {A'ₒ} {rA} {Bₒ} {B'ₒ} e)
+      (PE.subst (λ (t : Term) → _⊢_∷_^_ (emb_con Γ) t
+                   (Π (emb_oterm_term A'ₒ) ^ rA ° ⁰ ▹ Id (U ⁰)
+                     (emb_oterm_term Bₒ [ cast ⁰ (wk1 (emb_oterm_term A'ₒ)) (wk1 (emb_oterm_term Aₒ))
+                       (Idsym (Univ rA ⁰) (wk1 (emb_oterm_term Aₒ)) (wk1 (emb_oterm_term A'ₒ))
+                         (fst (wk1 (emb_oterm_term e)))) (var 0) ]↑)
+                     (emb_oterm_term B'ₒ) ° ⁰ ° ⁰ ^ %)
+                   ([ % , ι ⁰ ]))
+        (PE.sym (emb-snd e))
+        (sndⱼ (emb-⊢∷ ⊢A) (emb-⊢∷ ⊢B) (emb-⊢∷ ⊢A') (emb-⊢∷ ⊢B') (emb-⊢∷ ⊢e)))
+  emb-⊢∷ (OT.zeroⱼ ⊢Γ) = zeroⱼ (emb-⊢ ⊢Γ)
+  emb-⊢∷ (OT.sucⱼ n) = sucⱼ (emb-⊢∷ n)
+  emb-⊢∷ (OT.zero2ⱼ ⊢Γ) = zero2ⱼ (emb-⊢ ⊢Γ)
+  emb-⊢∷ (OT.suc2ⱼ n) = suc2ⱼ (emb-⊢∷ n)
+  emb-⊢∷ {Γ = Γ} (OT.natrecⱼ {G = G} {rG = rG} {lG = lG} {s = s} {z = z} {n = n} abs cod ⊢z ⊢s ⊢n) =
+    PE.subst (λ A → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec lG G z s n)) A ([ rG , ι lG ]))
+      (PE.sym (emb-sgSubst G n))
+      (PE.subst (λ t → _⊢_∷_^_ (emb_con Γ) t (emb_oterm_term G [ emb_oterm_term n ]) ([ rG , ι lG ]))
+        (PE.sym (emb-natrec lG G z s n))
+        (natrecⱼ abs (emb-⊢ty cod) (emb-⊢∷-sgType {G = G} {s = OU.zero} ⊢z) (emb-⊢∷-natrec-s {G = G} ⊢s) (emb-⊢∷ ⊢n)))
+  emb-⊢∷ {Γ = Γ} (OT.natrec2ⱼ {G = G} {rG = rG} {lG = lG} {s = s} {z = z} {n = n} abs cod ⊢z ⊢s ⊢n) =
+    PE.subst (λ A → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec2 lG G z s n)) A ([ rG , ι lG ]))
+      (PE.sym (emb-sgSubst G n))
+      (PE.subst (λ t → _⊢_∷_^_ (emb_con Γ) t (emb_oterm_term G [ emb_oterm_term n ]) ([ rG , ι lG ]))
+        (PE.sym (emb-natrec2 lG G z s n))
+        (natrec2ⱼ abs (emb-⊢ty cod) (emb-⊢∷-sgType {G = G} {s = OU.zero2} ⊢z) (emb-⊢∷-natrec2-s {G = G} ⊢s) (emb-⊢∷ ⊢n)))
+  emb-⊢∷ (OT.Emptyrecⱼ A e) = Emptyrecⱼ (emb-⊢ty A) (emb-⊢∷ e)
+  emb-⊢∷ (OT.Idⱼ A t u) = Idⱼ (emb-⊢∷ A) (emb-⊢∷ t) (emb-⊢∷ u)
+  emb-⊢∷ (OT.Idreflⱼ t) = Idreflⱼ (emb-⊢∷ t)
+  emb-⊢∷ {Γ = Γ} (OT.transpⱼ {A = A} {P = P} {t = t} {s = s} {u = u} {e = e} ⊢A ⊢P ⊢t ⊢s ⊢u ⊢e) =
+    PE.subst (λ Ty → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term (OU.transp A P t s u e)) Ty ([ % , ι ⁰ ]))
+      (PE.sym (emb-sgSubst P u))
+      (PE.subst (λ tm → _⊢_∷_^_ (emb_con Γ) tm (emb_oterm_term P [ emb_oterm_term u ]) ([ % , ι ⁰ ]))
+        (PE.sym (emb-transp A P t s u e))
+        (transpⱼ (emb-⊢ty ⊢A) (emb-⊢ty ⊢P) (emb-⊢∷ ⊢t) (emb-⊢∷-sgType {G = P} {s = t} ⊢s) (emb-⊢∷ ⊢u) (emb-⊢∷ ⊢e)))
+  emb-⊢∷ (OT.castⱼ A B e t) =
+    castⱼ (emb-⊢∷ A) (emb-⊢∷ B) (emb-⊢∷ e) (emb-⊢∷ t)
+  emb-⊢∷ (OT.conv t pAB) = conv (emb-⊢∷ t) (emb-⊢≡ pAB)
+
+  emb-⊢≡ : ∀ {Γ A B r} → OT._⊢_≡_^_ Γ A B r → emb_con Γ ⊢ emb_oterm_term A ≡ emb_oterm_term B ^ r
+  emb-⊢≡ (OT.refl A) = refl (emb-⊢ty A)
+  emb-⊢≡ (OT.sym pAB) = sym (emb-⊢≡ pAB)
+  emb-⊢≡ (OT.trans pAB pBC) = trans (emb-⊢≡ pAB) (emb-⊢≡ pBC)
+  emb-⊢≡ (OT.univ pAB) = univ (emb-⊢≡∷ pAB)
+
+  emb-⊢≡∷-sgType : ∀ {Γ t u G s r} (⊢tu : OT._⊢_≡_∷_^_ Γ t u (G OU.[ s ]) r) →
+    emb_con Γ ⊢ emb_oterm_term t ≡ emb_oterm_term u ∷ emb_oterm_term G [ emb_oterm_term s ] ^ r
+  emb-⊢≡∷-sgType {Γ} {t} {u} {G} {s} {r} ⊢tu =
+    PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term t) (emb_oterm_term u) B r)
+      (emb-sgSubst G s) (emb-⊢≡∷ ⊢tu)
+
+  emb-⊢≡∷-natrec-s : ∀ {Γ G rG lG s s'} (⊢tu : OT._⊢_≡_∷_^_ Γ s s' (OU.natrecStepType G rG lG) ([ rG , ι lG ])) →
+    emb_con Γ ⊢ emb_oterm_term s ≡ emb_oterm_term s' ∷
+      Π ℕ ^ ! ° ⁰ ▹ (emb_oterm_term G ^ rG ° lG ▹▹ emb_oterm_term G [ suc (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ ([ rG , ι lG ])
+  emb-⊢≡∷-natrec-s {Γ} {G} {rG} {lG} {s} {s'} ⊢tu =
+    PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term s) (emb_oterm_term s') B ([ rG , ι lG ]))
+      (emb-natrec-s-type G rG lG) (emb-⊢≡∷ ⊢tu)
+
+  emb-⊢≡∷-natrec2-s : ∀ {Γ G rG lG s s'} (⊢tu : OT._⊢_≡_∷_^_ Γ s s' (OU.natrec2StepType G rG lG) ([ rG , ι lG ])) →
+    emb_con Γ ⊢ emb_oterm_term s ≡ emb_oterm_term s' ∷
+      Π ℕ2 ^ ! ° ⁰ ▹ (emb_oterm_term G ^ rG ° lG ▹▹ emb_oterm_term G [ suc2 (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ ([ rG , ι lG ])
+  emb-⊢≡∷-natrec2-s {Γ} {G} {rG} {lG} {s} {s'} ⊢tu =
+    PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term s) (emb_oterm_term s') B ([ rG , ι lG ]))
+      (emb-natrec2-s-type G rG lG) (emb-⊢≡∷ ⊢tu)
+
+  emb-⊢≡∷-natrecEq : ∀ {Γ l F F' z z' s s' n n'}
+    (pf : emb_con Γ ⊢ natrec l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) (emb_oterm_term n)
+      ≡ natrec l (emb_oterm_term F') (emb_oterm_term z') (emb_oterm_term s') (emb_oterm_term n')
+      ∷ emb_oterm_term F [ emb_oterm_term n ] ^ [ ! , ι l ]) →
+    emb_con Γ ⊢ emb_oterm_term (OU.natrec l F z s n)
+      ≡ emb_oterm_term (OU.natrec l F' z' s' n')
+      ∷ emb_oterm_term (F OU.[ n ]) ^ [ ! , ι l ]
+  emb-⊢≡∷-natrecEq {Γ} {l} {F} {F'} {z} {z'} {s} {s'} {n} {n'} pf =
+    PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec l F z s n))
+                (emb_oterm_term (OU.natrec l F' z' s' n')) B ([ ! , ι l ]))
+      (PE.sym (emb-sgSubst F n))
+      (PE.subst (λ u → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec l F z s n)) u
+                  (emb_oterm_term F [ emb_oterm_term n ]) ([ ! , ι l ]))
+        (PE.sym (emb-natrec l F' z' s' n'))
+        (PE.subst (λ t → _⊢_≡_∷_^_ (emb_con Γ) t
+                    (natrec l (emb_oterm_term F') (emb_oterm_term z') (emb_oterm_term s') (emb_oterm_term n'))
+                    (emb_oterm_term F [ emb_oterm_term n ]) ([ ! , ι l ]))
+          (PE.sym (emb-natrec l F z s n)) pf))
+
+  emb-⊢≡∷-natrec2Eq : ∀ {Γ l F F' z z' s s' n n'}
+    (pf : emb_con Γ ⊢ natrec2 l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) (emb_oterm_term n)
+      ≡ natrec2 l (emb_oterm_term F') (emb_oterm_term z') (emb_oterm_term s') (emb_oterm_term n')
+      ∷ emb_oterm_term F [ emb_oterm_term n ] ^ [ ! , ι l ]) →
+    emb_con Γ ⊢ emb_oterm_term (OU.natrec2 l F z s n)
+      ≡ emb_oterm_term (OU.natrec2 l F' z' s' n')
+      ∷ emb_oterm_term (F OU.[ n ]) ^ [ ! , ι l ]
+  emb-⊢≡∷-natrec2Eq {Γ} {l} {F} {F'} {z} {z'} {s} {s'} {n} {n'} pf =
+    PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec2 l F z s n))
+                (emb_oterm_term (OU.natrec2 l F' z' s' n')) B ([ ! , ι l ]))
+      (PE.sym (emb-sgSubst F n))
+      (PE.subst (λ u → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec2 l F z s n)) u
+                  (emb_oterm_term F [ emb_oterm_term n ]) ([ ! , ι l ]))
+        (PE.sym (emb-natrec2 l F' z' s' n'))
+        (PE.subst (λ t → _⊢_≡_∷_^_ (emb_con Γ) t
+                    (natrec2 l (emb_oterm_term F') (emb_oterm_term z') (emb_oterm_term s') (emb_oterm_term n'))
+                    (emb_oterm_term F [ emb_oterm_term n ]) ([ ! , ι l ]))
+          (PE.sym (emb-natrec2 l F z s n)) pf))
+
+  emb-⊢≡∷-natrecZero : ∀ {Γ l F z s}
+    (pf : emb_con Γ ⊢ natrec l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) zero
+      ≡ emb_oterm_term z ∷ emb_oterm_term F [ zero ] ^ [ ! , ι l ]) →
+    emb_con Γ ⊢ emb_oterm_term (OU.natrec l F z s OU.zero)
+      ≡ emb_oterm_term z ∷ emb_oterm_term (F OU.[ OU.zero ]) ^ [ ! , ι l ]
+  emb-⊢≡∷-natrecZero {Γ} {l} {F} {z} {s} pf =
+    PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec l F z s OU.zero))
+                (emb_oterm_term z) B ([ ! , ι l ]))
+      (PE.sym (emb-sgSubst F OU.zero))
+      (PE.subst (λ t → _⊢_≡_∷_^_ (emb_con Γ) t (emb_oterm_term z)
+                  (emb_oterm_term F [ zero ]) ([ ! , ι l ]))
+        (PE.sym (emb-natrec l F z s OU.zero))
+        pf)
+
+  emb-⊢≡∷-natrecSuc : ∀ {Γ l F z s n}
+    (pf : emb_con Γ ⊢ natrec l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) (suc (emb_oterm_term n))
+      ≡ (emb_oterm_term s ∘ emb_oterm_term n ^ l) ∘ (natrec l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) (emb_oterm_term n)) ^ l
+      ∷ emb_oterm_term F [ suc (emb_oterm_term n) ] ^ [ ! , ι l ]) →
+    emb_con Γ ⊢ emb_oterm_term (OU.natrec l F z s (OU.suc n))
+      ≡ emb_oterm_term ((s OU.∘ n ^ l) OU.∘ (OU.natrec l F z s n) ^ l)
+      ∷ emb_oterm_term (F OU.[ OU.suc n ]) ^ [ ! , ι l ]
+  emb-⊢≡∷-natrecSuc {Γ} {l} {F} {z} {s} {n} pf =
+    PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec l F z s (OU.suc n)))
+                (emb_oterm_term ((s OU.∘ n ^ l) OU.∘ (OU.natrec l F z s n) ^ l)) B ([ ! , ι l ]))
+      (PE.sym (emb-sgSubst F (OU.suc n)))
+      (PE.subst (λ u → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec l F z s (OU.suc n))) u
+                  (emb_oterm_term F [ suc (emb_oterm_term n) ]) ([ ! , ι l ]))
+        (PE.sym (emb-natrec-suc-rhs l s n F z))
+        (PE.subst (λ t → _⊢_≡_∷_^_ (emb_con Γ) t
+                    ((emb_oterm_term s ∘ emb_oterm_term n ^ l) ∘ (natrec l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) (emb_oterm_term n)) ^ l)
+                    (emb_oterm_term F [ suc (emb_oterm_term n) ]) ([ ! , ι l ]))
+          (PE.sym (emb-natrec-suc l F z s n))
+          pf))
+
+  emb-⊢≡∷-natrec2Zero : ∀ {Γ l F z s}
+    (pf : emb_con Γ ⊢ natrec2 l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) zero2
+      ≡ emb_oterm_term z ∷ emb_oterm_term F [ zero2 ] ^ [ ! , ι l ]) →
+    emb_con Γ ⊢ emb_oterm_term (OU.natrec2 l F z s OU.zero2)
+      ≡ emb_oterm_term z ∷ emb_oterm_term (F OU.[ OU.zero2 ]) ^ [ ! , ι l ]
+  emb-⊢≡∷-natrec2Zero {Γ} {l} {F} {z} {s} pf =
+    PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec2 l F z s OU.zero2))
+                (emb_oterm_term z) B ([ ! , ι l ]))
+      (PE.sym (emb-sgSubst F OU.zero2))
+      (PE.subst (λ t → _⊢_≡_∷_^_ (emb_con Γ) t (emb_oterm_term z)
+                  (emb_oterm_term F [ zero2 ]) ([ ! , ι l ]))
+        (PE.sym (emb-natrec2 l F z s OU.zero2))
+        pf)
+
+  emb-⊢≡∷-natrec2Suc : ∀ {Γ l F z s n}
+    (pf : emb_con Γ ⊢ natrec2 l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) (suc2 (emb_oterm_term n))
+      ≡ (emb_oterm_term s ∘ emb_oterm_term n ^ l) ∘ (natrec2 l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) (emb_oterm_term n)) ^ l
+      ∷ emb_oterm_term F [ suc2 (emb_oterm_term n) ] ^ [ ! , ι l ]) →
+    emb_con Γ ⊢ emb_oterm_term (OU.natrec2 l F z s (OU.suc2 n))
+      ≡ emb_oterm_term ((s OU.∘ n ^ l) OU.∘ (OU.natrec2 l F z s n) ^ l)
+      ∷ emb_oterm_term (F OU.[ OU.suc2 n ]) ^ [ ! , ι l ]
+  emb-⊢≡∷-natrec2Suc {Γ} {l} {F} {z} {s} {n} pf =
+    PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec2 l F z s (OU.suc2 n)))
+                (emb_oterm_term ((s OU.∘ n ^ l) OU.∘ (OU.natrec2 l F z s n) ^ l)) B ([ ! , ι l ]))
+      (PE.sym (emb-sgSubst F (OU.suc2 n)))
+      (PE.subst (λ u → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec2 l F z s (OU.suc2 n))) u
+                  (emb_oterm_term F [ suc2 (emb_oterm_term n) ]) ([ ! , ι l ]))
+        (PE.sym (emb-natrec2-suc-rhs l s n F z))
+        (PE.subst (λ t → _⊢_≡_∷_^_ (emb_con Γ) t
+                    ((emb_oterm_term s ∘ emb_oterm_term n ^ l) ∘ (natrec2 l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) (emb_oterm_term n)) ^ l)
+                    (emb_oterm_term F [ suc2 (emb_oterm_term n) ]) ([ ! , ι l ]))
+          (PE.sym (emb-natrec2-suc l F z s n))
+          pf))
+
+  emb-⊢≡∷-ηPremise : ∀ {Γ' f g G l lG} (pf0g0 : OT._⊢_≡_∷_^_ Γ' (OU.wk1 f OU.∘ OU.var Nat.zero ^ l) (OU.wk1 g OU.∘ OU.var Nat.zero ^ l) G ([ ! , ι lG ])) →
+    emb_con Γ' ⊢ wk1 (emb_oterm_term f) ∘ var Nat.zero ^ l
+      ≡ wk1 (emb_oterm_term g) ∘ var Nat.zero ^ l ∷ emb_oterm_term G ^ [ ! , ι lG ]
+  emb-⊢≡∷-ηPremise {Γ' = Γ'} {f = f} {g = g} {G = G} {l = l} {lG = lG} pf0g0 =
+    let x' = wk1 (emb_oterm_term f) ∘ var Nat.zero ^ l
+    in PE.subst (λ u → emb_con Γ' ⊢ x' ≡ u ∷ emb_oterm_term G ^ [ ! , ι lG ])
+         (emb-wk1∘var g l)
+         (PE.subst (λ t → emb_con Γ' ⊢ t ≡ emb_oterm_term (OU.wk1 g OU.∘ OU.var Nat.zero ^ l) ∷ emb_oterm_term G ^ [ ! , ι lG ])
+           (emb-wk1∘var f l)
+           (emb-⊢≡∷ pf0g0))
+
+  emb-⊢≡∷ : ∀ {Γ t u A r} → OT._⊢_≡_∷_^_ Γ t u A r
+           → emb_con Γ ⊢ emb_oterm_term t ≡ emb_oterm_term u ∷ (emb_oterm_term A) ^ r
+  emb-⊢≡∷ (OT.refl t) = refl (emb-⊢∷ t)
+  emb-⊢≡∷ (OT.sym ptu) = sym (emb-⊢≡∷ ptu)
+  emb-⊢≡∷ (OT.trans ptu puv) = trans (emb-⊢≡∷ ptu) (emb-⊢≡∷ puv)
+  emb-⊢≡∷ (OT.conv ptu pAB) = conv (emb-⊢≡∷ ptu) (emb-⊢≡ pAB)
+  emb-⊢≡∷ (OT.Π-cong abs₁ abs₂ dom⊢ pDomH pCodE) =
+    Π-cong abs₁ abs₂ (emb-⊢ty dom⊢) (emb-⊢≡∷ pDomH) (emb-⊢≡∷ pCodE)
+  emb-⊢≡∷ {Γ = Γ} (OT.app-cong {a = a} {G = G} {lG = lG} pfg pab) =
+    let pf = app-cong (emb-⊢≡∷ pfg) (emb-⊢≡∷ pab)
+    in PE.subst (λ (B : Term) → emb_con Γ ⊢ _ ≡ _ ∷ B ^ [ ! , ι lG ])
+         (PE.sym (emb-sgSubst G a))
+         pf
+  emb-⊢≡∷ {Γ = Γ} (OT.β-red {a = a} {t = t} {G = G} {lG = lG} lF≤l lG≤l dom⊢ t₁ a₁) =
+    let pf = β-red lF≤l lG≤l (emb-⊢ty dom⊢) (emb-⊢∷ t₁) (emb-⊢∷ a₁)
+        lhs = (lam _ ▹ emb_oterm_term t ^ _) ∘ emb_oterm_term a ^ _
+    in PE.subst (λ (B : Term) → emb_con Γ ⊢ lhs ≡ emb_oterm_term (t OU.[ a ]) ∷ B ^ [ ! , ι lG ])
+         (PE.sym (emb-sgSubst G a))
+         (PE.subst (λ (u : Term) → emb_con Γ ⊢ lhs ≡ u ∷ emb_oterm_term G [ emb_oterm_term a ] ^ [ ! , ι lG ])
+           (PE.sym (emb-sgSubst t a))
+           pf)
+  emb-⊢≡∷ (OT.η-eq lF≤l lG≤l dom⊢ f g pf0g0) =
+    η-eq lF≤l lG≤l (emb-⊢ty dom⊢) (emb-⊢∷ f) (emb-⊢∷ g) (emb-⊢≡∷-ηPremise pf0g0)
+  emb-⊢≡∷ (OT.suc-cong n) = suc-cong (emb-⊢≡∷ n)
+  emb-⊢≡∷ (OT.suc2-cong n) = suc2-cong (emb-⊢≡∷ n)
+  emb-⊢≡∷ (OT.natrec-cong {F = F} pFF' pzz' pss' pnn') =
+    emb-⊢≡∷-natrecEq (natrec-cong (emb-⊢≡ pFF')
+      (emb-⊢≡∷-sgType {G = F} {s = OU.zero} pzz')
+      (emb-⊢≡∷-natrec-s pss') (emb-⊢≡∷ pnn'))
+  emb-⊢≡∷ (OT.natrec2-cong {F = F} pFF' pzz' pss' pnn') =
+    emb-⊢≡∷-natrec2Eq (natrec2-cong (emb-⊢≡ pFF')
+      (emb-⊢≡∷-sgType {G = F} {s = OU.zero2} pzz')
+      (emb-⊢≡∷-natrec2-s pss') (emb-⊢≡∷ pnn'))
+  emb-⊢≡∷ (OT.natrec-zero {F = F} dom⊢ z s) =
+    emb-⊢≡∷-natrecZero (natrec-zero (emb-⊢ty dom⊢)
+      (emb-⊢∷-sgType {G = F} {s = OU.zero} z) (emb-⊢∷-natrec-s s))
+  emb-⊢≡∷ (OT.natrec-suc {F = F} n dom⊢ z s) =
+    emb-⊢≡∷-natrecSuc (natrec-suc (emb-⊢∷ n) (emb-⊢ty dom⊢)
+      (emb-⊢∷-sgType {G = F} {s = OU.zero} z) (emb-⊢∷-natrec-s s))
+  emb-⊢≡∷ (OT.natrec2-zero {F = F} dom⊢ z s) =
+    emb-⊢≡∷-natrec2Zero (natrec2-zero (emb-⊢ty dom⊢)
+      (emb-⊢∷-sgType {G = F} {s = OU.zero2} z) (emb-⊢∷-natrec2-s s))
+  emb-⊢≡∷ (OT.natrec2-suc {F = F} n dom⊢ z s) =
+    emb-⊢≡∷-natrec2Suc (natrec2-suc (emb-⊢∷ n) (emb-⊢ty dom⊢)
+      (emb-⊢∷-sgType {G = F} {s = OU.zero2} z) (emb-⊢∷-natrec2-s s))
+  emb-⊢≡∷ (OT.Emptyrec-cong pAA' e e') =
+    Emptyrec-cong (emb-⊢≡ pAA') (emb-⊢∷ e) (emb-⊢∷ e')
+  emb-⊢≡∷ (OT.proof-irrelevance t u) =
+    proof-irrelevance (emb-⊢∷ t) (emb-⊢∷ u)
+  emb-⊢≡∷ (OT.Id-cong pAA' ptt' puu') =
+    Id-cong (emb-⊢≡∷ pAA') (emb-⊢≡∷ ptt') (emb-⊢≡∷ puu')
+  emb-⊢≡∷ (OT.cast-refl pAB e t) =
+    cast-refl (emb-⊢≡∷ pAB) (emb-⊢∷ e) (emb-⊢∷ t)
+  emb-⊢≡∷ (OT.cast-cong pAA' pBB' ptt' e e') =
+    cast-cong (emb-⊢≡∷ pAA') (emb-⊢≡∷ pBB') (emb-⊢≡∷ ptt') (emb-⊢∷ e) (emb-⊢∷ e')
+  emb-⊢≡∷ {Γ = Γ} (OT.cast-Π {A = A} {A' = A'} {rA = rA} {B = B} {B' = B'} {e = e} {f = f} ⊢A ⊢B ⊢A' ⊢B' ⊢e ⊢f) =
+    let l   = ⁰
+        LHS = emb_oterm_term (OU.cast l (OU.Π A ^ rA ° l ▹ B ° l ° l ^ !) (OU.Π A' ^ rA ° l ▹ B' ° l ° l ^ !) e f)
+        pf  = cast-Π (emb-⊢∷ ⊢A) (emb-⊢∷ ⊢B) (emb-⊢∷ ⊢A') (emb-⊢∷ ⊢B') (emb-⊢∷ ⊢e) (emb-⊢∷ ⊢f)
+    in PE.subst (λ rhs → emb_con Γ ⊢ LHS ≡ rhs ∷ (emb_oterm_term (OU.Π A' ^ rA ° l ▹ B' ° l ° l ^ !)) ^ [ ! , ι l ])
+         (PE.sym (emb-castΠ-lamBody {A} {A'} {rA} {B} {B'} {e} {f}))
+         pf
+  emb-⊢≡∷ (OT.cast-ℕ-0 e) = cast-ℕ-0 (emb-⊢∷ e)
+  emb-⊢≡∷ (OT.cast-ℕ-S e n) = cast-ℕ-S (emb-⊢∷ e) (emb-⊢∷ n)

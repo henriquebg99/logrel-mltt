@@ -650,6 +650,19 @@ t [ s ]↑ = subst (consSubst (wk1Subst idSubst) s) t
 _[_]↑↑ : (t : Term) (s : Term) → Term
 t [ s ]↑↑ = subst (consSubst (wk1Subst (wk1Subst idSubst)) s) t
 
+-- FIXME review
+natrecStepInner : Term → Relevance → Level → Term
+natrecStepInner G rG lG = G ^ rG ° lG ▹▹ (G [ suc (var Nat.zero) ]↑) ° lG ° lG ^ rG
+
+natrecStepType : Term → Relevance → Level → Term
+natrecStepType G rG lG = Π ℕ ^ ! ° ⁰ ▹ natrecStepInner G rG lG ° lG ° lG ^ rG
+
+natrec2StepInner : Term → Relevance → Level → Term
+natrec2StepInner G rG lG = G ^ rG ° lG ▹▹ (G [ suc2 (var Nat.zero) ]↑) ° lG ° lG ^ rG
+
+natrec2StepType : Term → Relevance → Level → Term
+natrec2StepType G rG lG = Π ℕ2 ^ ! ° ⁰ ▹ natrec2StepInner G rG lG ° lG ° lG ^ rG
+
 -- Definition of syntaxic sugar
 
 sUnit : Term
