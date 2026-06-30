@@ -1,23 +1,25 @@
 {-# OPTIONS --safe #-}
 
-open import Definition.Typed.EqualityRelation
 
-module Definition.LogicalRelation.Properties.Universe {{eqrel : EqRelSet}} where
+import Definition.Equiv as E
+import Definition.Typed.EqualityRelation as ER
+module Definition.LogicalRelation.Properties.Universe (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Weakening
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Weakening as Lwk
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Irrelevance as Irr
-open import Definition.Typed.Properties
-open import Definition.LogicalRelation.Properties.MaybeEmb
-open import Definition.LogicalRelation.Properties.Escape
-open import Definition.LogicalRelation.Properties.Reduction
-open import Definition.LogicalRelation.Properties.Conversion
+open import Definition.Typed equiv
+import Definition.Typed.Weakening equiv as Twk
+open import Definition.LogicalRelation equiv
+open import Definition.LogicalRelation.Weakening equiv as Lwk
+open import Definition.LogicalRelation.ShapeView equiv
+open import Definition.LogicalRelation.Irrelevance equiv as Irr
+open import Definition.Typed.Properties equiv
+open import Definition.LogicalRelation.Properties.MaybeEmb equiv
+open import Definition.LogicalRelation.Properties.Escape equiv
+open import Definition.LogicalRelation.Properties.Reduction equiv
+open import Definition.LogicalRelation.Properties.Conversion equiv
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 open import Tools.Empty using (⊥; ⊥-elim)
@@ -54,7 +56,7 @@ univEq {ι ¹} {Γ} {A} {r} {l′} (Uᵣ (Uᵣ r₁ ⁰ emb< eq [[ ⊢A , ⊢B ,
     r≡r₁ , l′≡l′₁ = univRed* D
     [t]′ : Γ ⊩⟨ ι ⁰ ⟩ A ^ [ r₁ , ι ⁰ ]
     [t]′ = PE.subst (λ X → Γ ⊩⟨ _ ⟩ X ^ [ _ , _ ])
-      (Definition.Untyped.Properties.wk-id A) ([t] Definition.Typed.Weakening.id ⊢Γ)
+      (Definition.Untyped.Properties.wk-id A) ([t] Twk.id ⊢Γ)
   in
   PE.subst₂ (λ X Y → Γ ⊩⟨ ι Y ⟩ A ^ [ X , ι Y ]) (PE.sym r≡r₁) (PE.sym l′≡l′₁) [t]′
 univEq {∞} {Γ} {A} {r} {l′} (Uᵣ (Uᵣ r₁ ¹ _ eq [[ ⊢A , ⊢B , D ]])) (Uₜ K d₁ typeK K≡K [t]) =
@@ -63,7 +65,7 @@ univEq {∞} {Γ} {A} {r} {l′} (Uᵣ (Uᵣ r₁ ¹ _ eq [[ ⊢A , ⊢B , D ]])
     r≡r₁ , l′≡l′₁ = univRed* D
     [t]′ : Γ ⊩⟨ ι ¹ ⟩ A ^ [ r₁ , ι ¹ ]
     [t]′ = PE.subst (λ X → Γ ⊩⟨ _ ⟩ X ^ [ _ , _ ])
-      (Definition.Untyped.Properties.wk-id A) ([t] Definition.Typed.Weakening.id ⊢Γ)
+      (Definition.Untyped.Properties.wk-id A) ([t] Twk.id ⊢Γ)
   in
   PE.subst₂ (λ X Y → Γ ⊩⟨ ι Y ⟩ A ^ [ X , ι Y ]) (PE.sym r≡r₁) (PE.sym l′≡l′₁) [t]′
 univEq (ℕᵣ [[ ⊢A , ⊢B , univ x ⇨ D ]]) [A] = ⊥-elim (univRedTerm x)
@@ -108,8 +110,8 @@ univEqEq′ {l} {ll} {l″} {Γ} {X} {A} {B} (noemb (Uᵣ r l′ l< eq [[ ⊢A ,
           (Uₜ₌ (Uₜ K d typeK K≡K [t]) [u] A≡B [t≡u]) =
   let ⊢Γ = wf ⊢A in
   irrelevanceEq″ (Definition.Untyped.Properties.wk-id A) (Definition.Untyped.Properties.wk-id B) PE.refl PE.refl
-    (emb l< ([t] Definition.Typed.Weakening.id ⊢Γ)) [A]
-    ([t≡u] Definition.Typed.Weakening.id ⊢Γ)
+    (emb l< ([t] Twk.id ⊢Γ)) [A]
+    ([t≡u] Twk.id ⊢Γ)
 univEqEq′ (emb emb< X) [A] [A≡B] = univEqEq′ X [A] [A≡B]
 univEqEq′ (emb ∞< X) [A] [A≡B] = univEqEq′ X [A] [A≡B]
 

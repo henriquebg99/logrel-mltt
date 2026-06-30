@@ -1,21 +1,22 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Typed.Consequences.TypeUnicity where
+import Definition.Equiv as E
+module Definition.Typed.Consequences.TypeUnicity (equiv : E.Equiv) where
 
 open import Definition.Untyped hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
 open import Definition.Untyped.Properties using (subst-Univ-either)
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.Weakening
-open import Definition.Typed.Consequences.Equality
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv
+open import Definition.Typed.Weakening equiv
+open import Definition.Typed.Consequences.Equality equiv
 -- import Definition.Typed.Consequences.Inequality as Ineq
-open import Definition.Typed.Consequences.Injectivity
-open import Definition.Typed.Consequences.NeTypeEq
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.RelevanceUnicity
-open import Definition.Typed.Consequences.Substitution
-open import Definition.Conversion.Stability
-open import Definition.Typed.Consequences.InjectivitySProp
+open import Definition.Typed.Consequences.Injectivity equiv
+open import Definition.Typed.Consequences.NeTypeEq equiv
+open import Definition.Typed.Consequences.Syntactic equiv
+open import Definition.Typed.Consequences.RelevanceUnicity equiv
+open import Definition.Typed.Consequences.Substitution equiv
+open import Definition.Conversion.Stability equiv
+open import Definition.Typed.Consequences.InjectivitySProp equiv
 
 open import Tools.Product
 open import Tools.Empty

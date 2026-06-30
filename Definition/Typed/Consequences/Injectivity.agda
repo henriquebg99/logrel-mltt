@@ -1,21 +1,22 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Typed.Consequences.Injectivity where
+import Definition.Equiv as E
+module Definition.Typed.Consequences.Injectivity (equiv : E.Equiv) where
 
 open import Definition.Untyped hiding (wk)
 import Definition.Untyped as U
 open import Definition.Untyped.Properties
 
-open import Definition.Typed
-open import Definition.Typed.Weakening
-open import Definition.Typed.Properties
-open import Definition.Typed.EqRelInstance
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Fundamental.Reducibility
-open import Definition.LogicalRelation.Fundamental
+open import Definition.Typed equiv
+open import Definition.Typed.Weakening equiv
+open import Definition.Typed.Properties equiv
+open import Definition.Typed.EqRelInstance equiv
+open import Definition.LogicalRelation equiv
+open import Definition.LogicalRelation.Irrelevance equiv
+open import Definition.LogicalRelation.ShapeView equiv
+open import Definition.LogicalRelation.Properties equiv
+open import Definition.LogicalRelation.Fundamental.Reducibility equiv
+open import Definition.LogicalRelation.Fundamental equiv
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE

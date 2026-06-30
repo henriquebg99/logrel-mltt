@@ -1,16 +1,18 @@
 {-# OPTIONS --safe #-}
 
-open import Definition.Typed.EqualityRelation
 
-module Definition.LogicalRelation.Weakening {{eqrel : EqRelSet}} where
+import Definition.Equiv as E
+import Definition.Typed.EqualityRelation as ER
+module Definition.LogicalRelation.Weakening (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
 open import Definition.Untyped as U hiding (wk)
 open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Weakening as T hiding (wk; wkEq; wkTerm; wkEqTerm)
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Irrelevance
+open import Definition.Typed equiv
+open import Definition.Typed.Weakening equiv as T hiding (wk; wkEq; wkTerm; wkEqTerm)
+open import Definition.LogicalRelation equiv
+open import Definition.LogicalRelation.Irrelevance equiv
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE

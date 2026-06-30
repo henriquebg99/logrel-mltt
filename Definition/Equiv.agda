@@ -5,6 +5,7 @@ module Definition.Equiv where
 open import Definition.OUntyped
 open import Definition.OTyped
 open import Definition.Sort
+import Tools.PropositionalEquality as PE
 
 -- An equivalence between ℕ and ℕ2.
 
@@ -28,6 +29,9 @@ record Equiv : Set where
     bwd  : Term
     retr : Term
     sect : Term
+
+    fwd-wk : ∀ ρ → wk ρ fwd PE.≡ fwd
+    bwd-wk : ∀ ρ → wk ρ bwd PE.≡ bwd
 
     ⊢fwd  : ∀ {Γ} → ⊢ Γ → Γ ⊢ fwd ∷ ℕ→ℕ2 ^ [ ! , ι ⁰ ]
     ⊢bwd  : ∀ {Γ} → ⊢ Γ → Γ ⊢ bwd ∷ ℕ2→ℕ ^ [ ! , ι ⁰ ]

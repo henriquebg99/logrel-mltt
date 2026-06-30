@@ -1,9 +1,11 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Typed.RedSteps where
+import Definition.Equiv as E
+
+module Definition.Typed.RedSteps (equiv : E.Equiv) where
 
 open import Definition.Untyped
-open import Definition.Typed
+open import Definition.Typed equiv
 open import Tools.Empty using (⊥; ⊥-elim)
 
 

@@ -395,6 +395,29 @@ wk-β-natrec ρ G rG lG =
          (trans (subst-wk G)
                 (substVar-to-subst (λ { 0 → refl ; (1+ x) → refl}) G)))))) refl refl refl) refl refl refl
 
+wk-β-natrec2 : ∀ ρ G rG lG
+  → Π ℕ2 ^ ! ° ⁰ ▹ (Π wk (lift ρ) G ^ rG ° lG ▹ wk (lift (lift ρ)) (wk1 (G [ suc2 (var 0) ]↑)) ° lG ° lG ^ rG) ° lG ° lG ^ rG
+  ≡ Π ℕ2 ^ ! ° ⁰ ▹ (wk (lift ρ) G ^ rG ° lG ▹▹ wk (lift ρ) G [ suc2 (var 0) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG
+wk-β-natrec2 ρ G rG lG =
+  cong7 Π_^_°_▹_°_°_^_ refl refl refl (cong7 Π_^_°_▹_°_°_^_ refl refl refl
+    (trans (wk-comp (lift (lift ρ)) (step id)
+                    (subst (consSubst (wk1Subst var) (suc2 (var 0))) G))
+       (trans (wk-subst G) (sym (trans (wk-subst (wk (lift ρ) G))
+         (trans (subst-wk G)
+                (substVar-to-subst (λ { 0 → refl ; (1+ x) → refl}) G)))))) refl refl refl) refl refl refl
+
+wk-cast : ∀ ρ l A B e t → wk ρ (cast l A B e t) ≡ cast l (wk ρ A) (wk ρ B) (wk ρ e) (wk ρ t)
+wk-cast ρ l A B e t = refl
+
+wk-app : ∀ ρ f a l → wk ρ (f ∘ a ^ l) ≡ wk ρ f ∘ wk ρ a ^ l
+wk-app ρ f a l = refl
+
+wk-ℕ : ∀ ρ → wk ρ ℕ ≡ ℕ
+wk-ℕ ρ = refl
+
+wk-ℕ2 : ∀ ρ → wk ρ ℕ2 ≡ ℕ2
+wk-ℕ2 ρ = refl
+
 -- Composing a singleton substitution and a lifted substitution.
 -- sg u ∘ lift σ = cons id u ∘ lift σ = cons σ u
 

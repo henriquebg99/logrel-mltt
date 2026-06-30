@@ -1,11 +1,12 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Conversion.Reduction where
+import Definition.Equiv as E
+module Definition.Conversion.Reduction (equiv : E.Equiv) where
 
 open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Conversion
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv
+open import Definition.Conversion equiv
 
 
 -- Weak head expansion of algorithmic equality of types.

@@ -1,16 +1,17 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Typed.Consequences.Syntactic where
+import Definition.Equiv as E
+module Definition.Typed.Consequences.Syntactic (equiv : E.Equiv) where
 
 open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.EqRelInstance
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Substitution
-open import Definition.LogicalRelation.Substitution.Escape
-open import Definition.LogicalRelation.Fundamental
-open import Definition.Typed.Consequences.Injectivity
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv
+open import Definition.Typed.EqRelInstance equiv
+open import Definition.LogicalRelation equiv
+open import Definition.LogicalRelation.Substitution equiv
+open import Definition.LogicalRelation.Substitution.Escape equiv
+open import Definition.LogicalRelation.Fundamental equiv
+open import Definition.Typed.Consequences.Injectivity equiv
 
 open import Tools.Product
 

@@ -1,14 +1,15 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Conversion.Universe where
+import Definition.Equiv as E
+module Definition.Conversion.Universe (equiv : E.Equiv) where
 
 open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.RedSteps
-open import Definition.Conversion
-open import Definition.Conversion.Reduction
-open import Definition.Conversion.Lift
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv
+open import Definition.Typed.RedSteps equiv
+open import Definition.Conversion equiv
+open import Definition.Conversion.Reduction equiv
+open import Definition.Conversion.Lift equiv
 
 import Tools.PropositionalEquality as PE
 

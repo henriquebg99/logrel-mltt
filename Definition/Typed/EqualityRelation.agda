@@ -1,10 +1,11 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Typed.EqualityRelation where
+import Definition.Equiv as E
+module Definition.Typed.EqualityRelation (equiv : E.Equiv) where
 
 open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Weakening using (_∷_⊆_)
+open import Definition.Typed equiv
+open import Definition.Typed.Weakening equiv using (_∷_⊆_)
 import Tools.PropositionalEquality as PE
 open import Tools.Product
 

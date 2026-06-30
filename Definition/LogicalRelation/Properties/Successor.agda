@@ -1,16 +1,18 @@
 {-# OPTIONS --safe #-}
 
-open import Definition.Typed.EqualityRelation
 
-module Definition.LogicalRelation.Properties.Successor {{eqrel : EqRelSet}} where
+import Definition.Equiv as E
+import Definition.Typed.EqualityRelation as ER
+module Definition.LogicalRelation.Properties.Successor (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
 open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.ShapeView
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv
+open import Definition.LogicalRelation equiv
+open import Definition.LogicalRelation.Irrelevance equiv
+open import Definition.LogicalRelation.ShapeView equiv
 
 open import Tools.Product
 

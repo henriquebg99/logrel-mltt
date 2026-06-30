@@ -1,12 +1,14 @@
 {-# OPTIONS --safe #-}
 
-open import Definition.Typed.EqualityRelation
 
-module Definition.LogicalRelation.Properties.Reflexivity {{eqrel : EqRelSet}} where
+import Definition.Equiv as E
+import Definition.Typed.EqualityRelation as ER
+module Definition.LogicalRelation.Properties.Reflexivity (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+open import Definition.Typed.EqualityRelation equiv
 
 open import Definition.Untyped
-open import Definition.Typed
-open import Definition.LogicalRelation
+open import Definition.Typed equiv
+open import Definition.LogicalRelation equiv
 
 open import Tools.Product
 open import Tools.Empty

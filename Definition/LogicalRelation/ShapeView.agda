@@ -1,17 +1,19 @@
 {-# OPTIONS --safe #-}
 
-open import Definition.Typed.EqualityRelation
 
-module Definition.LogicalRelation.ShapeView {{eqrel : EqRelSet}} where
+import Definition.Equiv as E
+import Definition.Typed.EqualityRelation as ER
+module Definition.LogicalRelation.ShapeView (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
 open import Definition.Untyped as U
-open import Definition.Typed
-open import Definition.Typed.Weakening
-open import Definition.Typed.Properties
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Properties.Escape
-open import Definition.LogicalRelation.Properties.Reflexivity
+open import Definition.Typed equiv
+open import Definition.Typed.Weakening equiv
+open import Definition.Typed.Properties equiv
+open import Definition.LogicalRelation equiv
+open import Definition.LogicalRelation.Properties.Escape equiv
+open import Definition.LogicalRelation.Properties.Reflexivity equiv
 
 open import Tools.Product
 open import Tools.Empty using (⊥; ⊥-elim)

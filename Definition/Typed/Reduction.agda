@@ -1,10 +1,11 @@
 {-# OPTIONS  --safe #-}
 
-module Definition.Typed.Reduction where
+import Definition.Equiv as E
+module Definition.Typed.Reduction (equiv : E.Equiv) where
 
 open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv
 
 
 -- Weak head expansion of type equality

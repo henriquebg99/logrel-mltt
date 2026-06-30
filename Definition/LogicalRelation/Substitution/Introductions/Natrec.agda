@@ -1,28 +1,30 @@
 {-# OPTIONS --safe #-}
 
-open import Definition.Typed.EqualityRelation
 
-module Definition.LogicalRelation.Substitution.Introductions.Natrec {{eqrel : EqRelSet}} where
+import Definition.Equiv as E
+import Definition.Typed.EqualityRelation as ER
+module Definition.LogicalRelation.Substitution.Introductions.Natrec (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.RedSteps
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Application
-open import Definition.LogicalRelation.Substitution
-open import Definition.LogicalRelation.Substitution.Properties
-import Definition.LogicalRelation.Substitution.Irrelevance as S
-open import Definition.LogicalRelation.Substitution.Reflexivity
-open import Definition.LogicalRelation.Substitution.Weakening
-open import Definition.LogicalRelation.Substitution.Introductions.Nat
-open import Definition.LogicalRelation.Substitution.Introductions.Pi
-open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv
+open import Definition.Typed.RedSteps equiv
+open import Definition.LogicalRelation equiv
+open import Definition.LogicalRelation.ShapeView equiv
+open import Definition.LogicalRelation.Irrelevance equiv
+open import Definition.LogicalRelation.Properties equiv
+open import Definition.LogicalRelation.Application equiv
+open import Definition.LogicalRelation.Substitution equiv
+open import Definition.LogicalRelation.Substitution.Properties equiv
+import Definition.LogicalRelation.Substitution.Irrelevance equiv as S
+open import Definition.LogicalRelation.Substitution.Reflexivity equiv
+open import Definition.LogicalRelation.Substitution.Weakening equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv
+open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv
 
 open import Tools.Product
 open import Tools.Empty

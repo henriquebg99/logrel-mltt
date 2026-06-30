@@ -1,12 +1,13 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Conversion.Weakening where
+import Definition.Equiv as E
+module Definition.Conversion.Weakening (equiv : E.Equiv) where
 
 open import Definition.Untyped as U hiding (wk)
 open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Weakening
-open import Definition.Conversion
+open import Definition.Typed equiv
+open import Definition.Typed.Weakening equiv
+open import Definition.Conversion equiv
 
 import Tools.PropositionalEquality as PE
 

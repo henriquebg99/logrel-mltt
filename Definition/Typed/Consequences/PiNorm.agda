@@ -1,22 +1,23 @@
 {-# OPTIONS --safe #-}
 
 
-module Definition.Typed.Consequences.PiNorm where
+import Definition.Equiv as E
+module Definition.Typed.Consequences.PiNorm (equiv : E.Equiv) where
 
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.Weakening
-open import Definition.Typed.EqRelInstance
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.Fundamental.Reducibility
-open import Definition.Typed.Consequences.Inversion
-open import Definition.Typed.Consequences.Injectivity
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Conversion.Stability
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv
+open import Definition.Typed.Weakening equiv
+open import Definition.Typed.EqRelInstance equiv
+open import Definition.LogicalRelation equiv
+open import Definition.LogicalRelation.Properties equiv
+open import Definition.LogicalRelation.Irrelevance equiv
+open import Definition.LogicalRelation.Fundamental.Reducibility equiv
+open import Definition.Typed.Consequences.Inversion equiv
+open import Definition.Typed.Consequences.Injectivity equiv
+open import Definition.Typed.Consequences.Syntactic equiv
+open import Definition.Conversion.Stability equiv
 
 open import Tools.Product
 open import Tools.Empty

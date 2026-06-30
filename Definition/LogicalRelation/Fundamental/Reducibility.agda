@@ -1,16 +1,18 @@
 {-# OPTIONS --safe #-}
 
-open import Definition.Typed.EqualityRelation
 
-module Definition.LogicalRelation.Fundamental.Reducibility {{eqrel : EqRelSet}} where
+import Definition.Equiv as E
+import Definition.Typed.EqualityRelation as ER
+module Definition.LogicalRelation.Fundamental.Reducibility (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
 open import Definition.Untyped
-open import Definition.Typed
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Substitution
-open import Definition.LogicalRelation.Substitution.Reducibility
-open import Definition.LogicalRelation.Fundamental
+open import Definition.Typed equiv
+open import Definition.LogicalRelation equiv
+open import Definition.LogicalRelation.Substitution equiv
+open import Definition.LogicalRelation.Substitution.Reducibility equiv
+open import Definition.LogicalRelation.Fundamental equiv
 
 open import Tools.Product
 

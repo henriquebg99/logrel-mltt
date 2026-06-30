@@ -1,19 +1,20 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Conversion.Consequences.Completeness where
+import Definition.Equiv as E
+module Definition.Conversion.Consequences.Completeness (equiv : E.Equiv) where
 
 open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Conversion
-open import Definition.Typed.Properties
+open import Definition.Typed equiv
+open import Definition.Conversion equiv
+open import Definition.Typed.Properties equiv
 
-open import Definition.Conversion.EqRelInstance
-open import Definition.Conversion.Inversion
+open import Definition.Conversion.EqRelInstance equiv
+open import Definition.Conversion.Inversion equiv
 
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Substitution
-open import Definition.LogicalRelation.Substitution.Escape
-open import Definition.LogicalRelation.Fundamental
+open import Definition.LogicalRelation equiv
+open import Definition.LogicalRelation.Substitution equiv
+open import Definition.LogicalRelation.Substitution.Escape equiv
+open import Definition.LogicalRelation.Fundamental equiv
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE

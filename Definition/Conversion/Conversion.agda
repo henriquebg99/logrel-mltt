@@ -1,17 +1,18 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Conversion.Conversion where
+import Definition.Equiv as E
+module Definition.Conversion.Conversion (equiv : E.Equiv) where
 
 open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.RedSteps
-open import Definition.Typed.Properties
-open import Definition.Conversion
-open import Definition.Conversion.Stability
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.Injectivity
-open import Definition.Typed.Consequences.Equality
-open import Definition.Typed.Consequences.Reduction
+open import Definition.Typed equiv
+open import Definition.Typed.RedSteps equiv
+open import Definition.Typed.Properties equiv
+open import Definition.Conversion equiv
+open import Definition.Conversion.Stability equiv
+open import Definition.Typed.Consequences.Syntactic equiv
+open import Definition.Typed.Consequences.Injectivity equiv
+open import Definition.Typed.Consequences.Equality equiv
+open import Definition.Typed.Consequences.Reduction equiv
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE

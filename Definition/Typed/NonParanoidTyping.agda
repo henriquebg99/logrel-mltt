@@ -1,14 +1,15 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Typed.NonParanoidTyping where
+import Definition.Equiv as E
+module Definition.Typed.NonParanoidTyping (equiv : E.Equiv) where
 
 open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties as T hiding (wf ; wfTerm)
-open import Definition.Typed.Weakening
-open import Definition.Typed.Consequences.Injectivity
-open import Definition.Typed.Consequences.Inversion
-open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv as T hiding (wf ; wfTerm)
+open import Definition.Typed.Weakening equiv
+open import Definition.Typed.Consequences.Injectivity equiv
+open import Definition.Typed.Consequences.Inversion equiv
+open import Definition.Typed.Consequences.Syntactic equiv
 
 open import Tools.Nat using (Nat)
 open import Tools.Product

@@ -4,13 +4,12 @@ open import Definition.Equiv
 
 module Definition.Typed (equiv : Equiv) where
 
-open import Definition.Untyped hiding (equiv)
+open import Definition.Untyped
 
 open import Tools.Nat using (Nat)
 open import Tools.Product
 open import Tools.Empty
 import Tools.PropositionalEquality as PE
-open import Definition.Sort
 
 infixl 30 _∙_
 infix 30 Πⱼ_▹_▹_▹_

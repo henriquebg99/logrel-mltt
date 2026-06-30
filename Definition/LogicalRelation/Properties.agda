@@ -1,17 +1,19 @@
 {-# OPTIONS --safe #-}
 
-open import Definition.Typed.EqualityRelation
 
-module Definition.LogicalRelation.Properties {{eqrel : EqRelSet}} where
+import Definition.Equiv as E
+import Definition.Typed.EqualityRelation as ER
+module Definition.LogicalRelation.Properties (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+open import Definition.Typed.EqualityRelation equiv
 
 
-open import Definition.LogicalRelation.Properties.Reflexivity public
-open import Definition.LogicalRelation.Properties.Symmetry public
-open import Definition.LogicalRelation.Properties.Transitivity public
-open import Definition.LogicalRelation.Properties.Conversion public
-open import Definition.LogicalRelation.Properties.Escape public
-open import Definition.LogicalRelation.Properties.Universe public
-open import Definition.LogicalRelation.Properties.Neutral public
-open import Definition.LogicalRelation.Properties.Reduction public
-open import Definition.LogicalRelation.Properties.Successor public
-open import Definition.LogicalRelation.Properties.MaybeEmb public
+open import Definition.LogicalRelation.Properties.Reflexivity equiv public
+open import Definition.LogicalRelation.Properties.Symmetry equiv public
+open import Definition.LogicalRelation.Properties.Transitivity equiv public
+open import Definition.LogicalRelation.Properties.Conversion equiv public
+open import Definition.LogicalRelation.Properties.Escape equiv public
+open import Definition.LogicalRelation.Properties.Universe equiv public
+open import Definition.LogicalRelation.Properties.Neutral equiv public
+open import Definition.LogicalRelation.Properties.Reduction equiv public
+open import Definition.LogicalRelation.Properties.Successor equiv public
+open import Definition.LogicalRelation.Properties.MaybeEmb equiv public

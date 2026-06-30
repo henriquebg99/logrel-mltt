@@ -1,21 +1,23 @@
 {-# OPTIONS --safe #-}
 
-open import Definition.Typed.EqualityRelation
 
-module Definition.LogicalRelation.Properties.Neutral {{eqrel : EqRelSet}} where
+import Definition.Equiv as E
+import Definition.Typed.EqualityRelation as ER
+module Definition.LogicalRelation.Properties.Neutral (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
 open import Definition.Untyped as U
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.Weakening as TW
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.Properties.Reflexivity
-open import Definition.LogicalRelation.Properties.Escape
-open import Definition.LogicalRelation.Properties.Symmetry
-import Definition.LogicalRelation.Weakening as W
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv
+open import Definition.Typed.Weakening equiv as TW
+open import Definition.LogicalRelation equiv
+open import Definition.LogicalRelation.ShapeView equiv
+open import Definition.LogicalRelation.Irrelevance equiv
+open import Definition.LogicalRelation.Properties.Reflexivity equiv
+open import Definition.LogicalRelation.Properties.Escape equiv
+open import Definition.LogicalRelation.Properties.Symmetry equiv
+import Definition.LogicalRelation.Weakening equiv as W
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE

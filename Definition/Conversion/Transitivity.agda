@@ -1,33 +1,34 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Conversion.Transitivity where
+import Definition.Equiv as E
+module Definition.Conversion.Transitivity (equiv : E.Equiv) where
 
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.RedSteps
-open import Definition.Conversion
-open import Definition.Conversion.Soundness
-open import Definition.Conversion.Stability
-open import Definition.Conversion.Conversion
-open import Definition.Conversion.ConvSize
-open import Definition.Conversion.ConversionProp
-open import Definition.Conversion.StabilityProp
-open import Definition.Conversion.Inversion
-open import Definition.Conversion.Whnf
-open import Definition.Conversion.TransitivityHelper
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.Reduction
-open import Definition.Typed.Consequences.Injectivity
-import Definition.Typed.Consequences.Inequality as WF
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.Substitution
-open import Definition.Typed.Consequences.NeTypeEq
-open import Definition.Typed.Consequences.SucCong
-open import Definition.Typed.Consequences.RelevanceUnicity
-open import Definition.Typed.Consequences.Equality
-open import Definition.Typed.Consequences.Inversion
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv
+open import Definition.Typed.RedSteps equiv
+open import Definition.Conversion equiv
+open import Definition.Conversion.Soundness equiv
+open import Definition.Conversion.Stability equiv
+open import Definition.Conversion.Conversion equiv
+open import Definition.Conversion.ConvSize equiv
+open import Definition.Conversion.ConversionProp equiv
+open import Definition.Conversion.StabilityProp equiv
+open import Definition.Conversion.Inversion equiv
+open import Definition.Conversion.Whnf equiv
+open import Definition.Conversion.TransitivityHelper equiv
+open import Definition.Typed.Consequences.Syntactic equiv
+open import Definition.Typed.Consequences.Reduction equiv
+open import Definition.Typed.Consequences.Injectivity equiv
+import Definition.Typed.Consequences.Inequality equiv as WF
+open import Definition.Typed.Consequences.Syntactic equiv
+open import Definition.Typed.Consequences.Substitution equiv
+open import Definition.Typed.Consequences.NeTypeEq equiv
+open import Definition.Typed.Consequences.SucCong equiv
+open import Definition.Typed.Consequences.RelevanceUnicity equiv
+open import Definition.Typed.Consequences.Equality equiv
+open import Definition.Typed.Consequences.Inversion equiv
 
 open import Tools.Nat as Nat
 open import Tools.Product

@@ -1,14 +1,16 @@
 {-# OPTIONS   --safe  #-}
 
-open import Definition.Typed.EqualityRelation
 
-module Definition.LogicalRelation {{eqrel : EqRelSet}} where
+import Definition.Equiv as E
+import Definition.Typed.EqualityRelation as ER
+module Definition.LogicalRelation (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
 open import Definition.Untyped as U
-open import Definition.Typed
-open import Definition.Typed.Weakening
-open import Definition.Typed.Reduction
+open import Definition.Typed equiv
+open import Definition.Typed.Weakening equiv
+open import Definition.Typed.Reduction equiv
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE

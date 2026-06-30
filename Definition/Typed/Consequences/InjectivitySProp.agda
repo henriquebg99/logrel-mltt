@@ -1,23 +1,24 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Typed.Consequences.InjectivitySProp where
+import Definition.Equiv as E
+module Definition.Typed.Consequences.InjectivitySProp (equiv : E.Equiv) where
 
 open import Definition.Untyped hiding (wk)
 import Definition.Untyped as U
 open import Definition.Untyped.Properties
 
-open import Definition.Typed
-open import Definition.Typed.Weakening
-open import Definition.Typed.Properties
-open import Definition.Typed.EqRelInstance
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Conversion
+open import Definition.Typed equiv
+open import Definition.Typed.Weakening equiv
+open import Definition.Typed.Properties equiv
+open import Definition.Typed.EqRelInstance equiv
+open import Definition.Typed.Consequences.Syntactic equiv
+open import Definition.Conversion equiv
 -- open import Definition.Conversion.Decidable
-open import Definition.Conversion.Soundness
-open import Definition.Conversion.Stability
-open import Definition.Conversion.EqRelInstance
-open import Definition.Conversion.Universe
-open import Definition.Conversion.Consequences.Completeness
+open import Definition.Conversion.Soundness equiv
+open import Definition.Conversion.Stability equiv
+open import Definition.Conversion.EqRelInstance equiv
+open import Definition.Conversion.Universe equiv
+open import Definition.Conversion.Consequences.Completeness equiv
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE

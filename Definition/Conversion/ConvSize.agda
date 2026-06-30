@@ -2,15 +2,16 @@
 
 {-# OPTIONS --safe #-}
 
-module Definition.Conversion.ConvSize where
+import Definition.Equiv as E
+module Definition.Conversion.ConvSize (equiv : E.Equiv) where
 
 open import Definition.Untyped
-open import Definition.Typed
+open import Definition.Typed equiv
 
 open import Tools.Nat
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-open import Definition.Conversion
+open import Definition.Conversion equiv
 
 
 

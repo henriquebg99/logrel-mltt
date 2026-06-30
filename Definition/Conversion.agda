@@ -2,10 +2,11 @@
 
 {-# OPTIONS --safe #-}
 
-module Definition.Conversion where
+import Definition.Equiv as E
+module Definition.Conversion (equiv : E.Equiv) where
 
 open import Definition.Untyped
-open import Definition.Typed
+open import Definition.Typed equiv
 
 open import Tools.Nat
 open import Tools.Product

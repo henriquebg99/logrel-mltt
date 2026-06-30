@@ -1,45 +1,47 @@
 {-# OPTIONS --safe #-}
 
-open import Definition.Typed.EqualityRelation
 
-module Definition.LogicalRelation.Fundamental {{eqrel : EqRelSet}} where
+import Definition.Equiv as E
+import Definition.Typed.EqualityRelation as ER
+module Definition.LogicalRelation.Fundamental (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed 
-open import Definition.Typed.Properties
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Substitution
-open import Definition.LogicalRelation.Substitution.Properties
-open import Definition.LogicalRelation.Substitution.Conversion
-open import Definition.LogicalRelation.Substitution.Reduction
-open import Definition.LogicalRelation.Substitution.Reflexivity
-open import Definition.LogicalRelation.Substitution.ProofIrrelevance
-open import Definition.LogicalRelation.Substitution.MaybeEmbed
-open import Definition.LogicalRelation.Substitution.Introductions.Nat
-open import Definition.LogicalRelation.Substitution.Introductions.Natrec
-open import Definition.LogicalRelation.Substitution.Introductions.Empty
-open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec
-open import Definition.LogicalRelation.Substitution.Introductions.Universe
-open import Definition.LogicalRelation.Substitution.Introductions.Pi
-open import Definition.LogicalRelation.Substitution.Introductions.Id
-open import Definition.LogicalRelation.Substitution.Introductions.Cast
-open import Definition.LogicalRelation.Substitution.Introductions.CastRefl
-open import Definition.LogicalRelation.Substitution.Introductions.CastPi
-open import Definition.LogicalRelation.Substitution.Introductions.Lambda
-open import Definition.LogicalRelation.Substitution.Introductions.Application
-open import Definition.LogicalRelation.Substitution.Introductions.Fst
-open import Definition.LogicalRelation.Substitution.Introductions.Snd
-open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst
-open import Definition.LogicalRelation.Substitution.Introductions.Transp
-open import Definition.LogicalRelation.Substitution.Introductions.IdRefl
-open import Definition.LogicalRelation.Fundamental.Variable
-import Definition.LogicalRelation.Substitution.ProofIrrelevance as PI
-import Definition.LogicalRelation.Substitution.Irrelevance as S
-open import Definition.LogicalRelation.Substitution.Weakening
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv
+open import Definition.LogicalRelation equiv
+open import Definition.LogicalRelation.Irrelevance equiv
+open import Definition.LogicalRelation.Properties equiv
+open import Definition.LogicalRelation.Substitution equiv
+open import Definition.LogicalRelation.Substitution.Properties equiv
+open import Definition.LogicalRelation.Substitution.Conversion equiv
+open import Definition.LogicalRelation.Substitution.Reduction equiv
+open import Definition.LogicalRelation.Substitution.Reflexivity equiv
+open import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv
+open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Natrec equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Id equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Cast equiv
+open import Definition.LogicalRelation.Substitution.Introductions.CastRefl equiv
+open import Definition.LogicalRelation.Substitution.Introductions.CastPi equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Lambda equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Application equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Fst equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Snd equiv
+open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Transp equiv
+open import Definition.LogicalRelation.Substitution.Introductions.IdRefl equiv
+open import Definition.LogicalRelation.Fundamental.Variable equiv
+import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv as PI
+import Definition.LogicalRelation.Substitution.Irrelevance equiv as S
+open import Definition.LogicalRelation.Substitution.Weakening equiv
 
 open import Tools.Product
 open import Tools.Unit

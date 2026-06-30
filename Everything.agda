@@ -2,92 +2,93 @@
 
 -- A Logical Relation for Dependent Type Theory Formalized in Agda
 
-module Everything where
+import Definition.Equiv as E
+module Everything (equiv : E.Equiv) where
 
 -- README
-import README
+open import README equiv
 
 -- Minimal library
-import Tools.Empty
-import Tools.Unit
-import Tools.Nat
-import Tools.Sum
-import Tools.Product
-import Tools.Function
-import Tools.Nullary
-import Tools.List
-import Tools.PropositionalEquality
+open import Tools.Empty
+open import Tools.Unit
+open import Tools.Nat
+open import Tools.Sum
+open import Tools.Product
+open import Tools.Function
+open import Tools.Nullary
+open import Tools.List
+open import Tools.PropositionalEquality
 
 -- Grammar of the language
-import Definition.Untyped
-import Definition.Untyped.Properties
+open import Definition.Untyped
+open import Definition.Untyped.Properties
 
 -- Typing and conversion rules of language
-import Definition.Typed
-import Definition.Typed.Properties
-import Definition.Typed.Weakening
-import Definition.Typed.Reduction
-import Definition.Typed.RedSteps
-import Definition.Typed.EqualityRelation
-import Definition.Typed.EqRelInstance
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv
+open import Definition.Typed.Weakening equiv
+open import Definition.Typed.Reduction equiv
+open import Definition.Typed.RedSteps equiv
+open import Definition.Typed.EqualityRelation equiv
+open import Definition.Typed.EqRelInstance equiv
 
 -- Logical relation
-import Definition.LogicalRelation
-import Definition.LogicalRelation.ShapeView
-import Definition.LogicalRelation.Irrelevance
-import Definition.LogicalRelation.Weakening
-import Definition.LogicalRelation.Properties
-import Definition.LogicalRelation.Application
+open import Definition.LogicalRelation equiv
+open import Definition.LogicalRelation.ShapeView equiv
+open import Definition.LogicalRelation.Irrelevance equiv
+open import Definition.LogicalRelation.Weakening equiv
+open import Definition.LogicalRelation.Properties equiv
+open import Definition.LogicalRelation.Application equiv
 
-import Definition.LogicalRelation.Substitution
-import Definition.LogicalRelation.Substitution.Properties
-import Definition.LogicalRelation.Substitution.Irrelevance
-import Definition.LogicalRelation.Substitution.Conversion
-import Definition.LogicalRelation.Substitution.Reduction
-import Definition.LogicalRelation.Substitution.Reflexivity
-import Definition.LogicalRelation.Substitution.Weakening
-import Definition.LogicalRelation.Substitution.Reducibility
-import Definition.LogicalRelation.Substitution.Escape
-import Definition.LogicalRelation.Substitution.MaybeEmbed
-import Definition.LogicalRelation.Substitution.Introductions
+open import Definition.LogicalRelation.Substitution equiv
+open import Definition.LogicalRelation.Substitution.Properties equiv
+open import Definition.LogicalRelation.Substitution.Irrelevance equiv
+open import Definition.LogicalRelation.Substitution.Conversion equiv
+open import Definition.LogicalRelation.Substitution.Reduction equiv
+open import Definition.LogicalRelation.Substitution.Reflexivity equiv
+open import Definition.LogicalRelation.Substitution.Weakening equiv
+open import Definition.LogicalRelation.Substitution.Reducibility equiv
+open import Definition.LogicalRelation.Substitution.Escape equiv
+open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
+open import Definition.LogicalRelation.Substitution.Introductions equiv
 
-import Definition.LogicalRelation.Fundamental
-import Definition.LogicalRelation.Fundamental.Reducibility
+open import Definition.LogicalRelation.Fundamental equiv
+open import Definition.LogicalRelation.Fundamental.Reducibility equiv
 
 -- Consequences of the logical relation for typing and conversion
 -- import Definition.Typed.Consequences.Canonicity
-import Definition.Typed.Consequences.Injectivity
-import Definition.Typed.Consequences.Syntactic
-import Definition.Typed.Consequences.Inversion
-import Definition.Typed.Consequences.Inequality
-import Definition.Typed.Consequences.Substitution
-import Definition.Typed.Consequences.Equality
-import Definition.Typed.Consequences.Reduction
-import Definition.Typed.Consequences.NeTypeEq
-import Definition.Typed.Consequences.RelevanceUnicity
-import Definition.Typed.Consequences.SucCong
-import Definition.Typed.Consequences.Consistency
+open import Definition.Typed.Consequences.Injectivity equiv
+open import Definition.Typed.Consequences.Syntactic equiv
+open import Definition.Typed.Consequences.Inversion equiv
+open import Definition.Typed.Consequences.Inequality equiv
+open import Definition.Typed.Consequences.Substitution equiv
+open import Definition.Typed.Consequences.Equality equiv
+open import Definition.Typed.Consequences.Reduction equiv
+open import Definition.Typed.Consequences.NeTypeEq equiv
+open import Definition.Typed.Consequences.RelevanceUnicity equiv
+open import Definition.Typed.Consequences.SucCong equiv
+open import Definition.Typed.Consequences.Consistency equiv
 
 -- Algorithmic equality with lemmas that depend on typing consequences
-import Definition.Conversion
-import Definition.Conversion.Conversion
-import Definition.Conversion.Lift
-import Definition.Conversion.Reduction
-import Definition.Conversion.Soundness
-import Definition.Conversion.Stability
-import Definition.Conversion.Symmetry
-import Definition.Conversion.Transitivity
-import Definition.Conversion.Universe
-import Definition.Conversion.Weakening
-import Definition.Conversion.Whnf
-import Definition.Conversion.EqRelInstance
-import Definition.Conversion.FullReduction
+open import Definition.Conversion equiv
+open import Definition.Conversion.Conversion equiv
+open import Definition.Conversion.Lift equiv
+open import Definition.Conversion.Reduction equiv
+open import Definition.Conversion.Soundness equiv
+open import Definition.Conversion.Stability equiv
+open import Definition.Conversion.Symmetry equiv
+open import Definition.Conversion.Transitivity equiv
+open import Definition.Conversion.Universe equiv
+open import Definition.Conversion.Weakening equiv
+open import Definition.Conversion.Whnf equiv
+open import Definition.Conversion.EqRelInstance equiv
+open import Definition.Conversion.FullReduction equiv
 
 -- Consequences of the logical relation for algorithmic equality
-import Definition.Conversion.Consequences.Completeness
+open import Definition.Conversion.Consequences.Completeness equiv
 
 -- Decidability of conversion
-import Definition.Typed.Decidable
-import Definition.Typed.NonParanoidTyping
-import Definition.Conversion.ConversionGenEquiv
-import Definition.Conversion.Decidable
+open import Definition.Typed.Decidable equiv
+open import Definition.Typed.NonParanoidTyping equiv
+open import Definition.Conversion.ConversionGenEquiv equiv
+open import Definition.Conversion.Decidable equiv

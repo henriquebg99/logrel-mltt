@@ -1,11 +1,12 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Conversion.Whnf where
+import Definition.Equiv as E
+module Definition.Conversion.Whnf (equiv : E.Equiv) where
 
 open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Conversion
-open import Definition.Typed.Consequences.Inversion
+open import Definition.Typed equiv
+open import Definition.Conversion equiv
+open import Definition.Typed.Consequences.Inversion equiv
 
 open import Tools.Product
 

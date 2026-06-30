@@ -1,6 +1,7 @@
 {-# OPTIONS --safe #-}
 
-module README where
+import Definition.Equiv as E
+module README (equiv : E.Equiv) where
 
 -- Formalization of the decidability of conversion for a fragment of CICobs
 -- Git repository: https://github.com/CoqHott/logrel-mltt/tree/impredicativity-cast-compute-refl
@@ -59,13 +60,13 @@ import Definition.Untyped.Properties
 -- Judgements: Typing rules, conversion, reduction rules
 -- and well-formed substitutions and respective equality.
 -- The conversion rule cast-refl is the main contribution of this development.
-import Definition.Typed
+open import Definition.Typed equiv
 
 -- Well-formed context extraction and reduction properties.
-import Definition.Typed.Properties
+open import Definition.Typed.Properties equiv
 
 -- Well-formed weakening and its properties.
-import Definition.Typed.Weakening
+open import Definition.Typed.Weakening equiv
 
 
 ------------------------------
@@ -73,56 +74,56 @@ import Definition.Typed.Weakening
 ------------------------------
 
 -- Generic equality relation definition.
-import Definition.Typed.EqualityRelation
+open import Definition.Typed.EqualityRelation equiv
 
 -- The judgemental instance of the generic equality.
-import Definition.Typed.EqRelInstance
+open import Definition.Typed.EqRelInstance equiv
 
 -- Logical relations definitions.
-import Definition.LogicalRelation
+open import Definition.LogicalRelation equiv
 
 -- Properties of logical relation:
 
 -- Reflexivity of the logical relation.
-import Definition.LogicalRelation.Properties.Reflexivity
+open import Definition.LogicalRelation.Properties.Reflexivity equiv
 
 -- Escape lemma for the logical relation.
-import Definition.LogicalRelation.Properties.Escape
+open import Definition.LogicalRelation.Properties.Escape equiv
 
 -- Shape view of two or more types.
-import Definition.LogicalRelation.ShapeView
+open import Definition.LogicalRelation.ShapeView equiv
 
 -- Proof irrelevance for the logical relation.
-import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.Irrelevance equiv
 
 -- Weakening of logical relation judgements.
-import Definition.LogicalRelation.Weakening
+open import Definition.LogicalRelation.Weakening equiv
 
 -- Conversion of the logical relation.
-import Definition.LogicalRelation.Properties.Conversion
+open import Definition.LogicalRelation.Properties.Conversion equiv
 
 -- Symmetry of the logical relation.
-import Definition.LogicalRelation.Properties.Symmetry
+open import Definition.LogicalRelation.Properties.Symmetry equiv
 
 -- Transitvity of the logical relation.
-import Definition.LogicalRelation.Properties.Transitivity
+open import Definition.LogicalRelation.Properties.Transitivity equiv
 
 -- Neutral introduction in the logical relation.
-import Definition.LogicalRelation.Properties.Neutral
+open import Definition.LogicalRelation.Properties.Neutral equiv
 
 -- Weak head expansion of the logical relation.
-import Definition.LogicalRelation.Properties.Reduction
+open import Definition.LogicalRelation.Properties.Reduction equiv
 
 -- Application in the logical relation.
-import Definition.LogicalRelation.Application
+open import Definition.LogicalRelation.Application equiv
 
 -- Validity judgements definitions
-import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Substitution equiv
 
 -- Properties of validity judgements:
 
 -- Proof irrelevance for the validity judgements.
-import Definition.LogicalRelation.Substitution.Irrelevance
+open import Definition.LogicalRelation.Substitution.Irrelevance equiv
 
 -- Properties about valid substitutions:
 -- * Substitution well-formedness.
@@ -130,102 +131,102 @@ import Definition.LogicalRelation.Substitution.Irrelevance
 -- * Substitution lifting.
 -- * Identity substitution.
 -- * Reflexivity, symmetry and transitivity of substitution equality.
-import Definition.LogicalRelation.Substitution.Properties
+open import Definition.LogicalRelation.Substitution.Properties equiv
 
 -- Single term substitution of validity judgements.
-import Definition.LogicalRelation.Substitution.Introductions.SingleSubst
+open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv
 
 -- The fundamental theorem.
-import Definition.LogicalRelation.Fundamental
+open import Definition.LogicalRelation.Fundamental equiv
 
 -- Certain cases of the fundamental theorem
 
 -- Validity of the universes
-import Definition.LogicalRelation.Substitution.Introductions.Universe
+open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv
 
 -- Validity of the empty type and its eliminator
-import Definition.LogicalRelation.Substitution.Introductions.Empty
-import Definition.LogicalRelation.Substitution.Introductions.Emptyrec
+open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec equiv
 
 -- Validity of natural numbers and its eliminator
-import Definition.LogicalRelation.Substitution.Introductions.Nat
-import Definition.LogicalRelation.Substitution.Introductions.Natrec
+open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Natrec equiv
 
 -- Validity of Π-types, abstractions and applications
-import Definition.LogicalRelation.Substitution.Introductions.Pi
-import Definition.LogicalRelation.Substitution.Introductions.Application
-import Definition.LogicalRelation.Substitution.Introductions.Lambda
+open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Application equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Lambda equiv
 
 -- Validity of ∃-types, pairs and projections
-import Definition.LogicalRelation.Substitution.Introductions.Fst
-import Definition.LogicalRelation.Substitution.Introductions.Snd
+open import Definition.LogicalRelation.Substitution.Introductions.Fst equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Snd equiv
 
 -- Validity of type casting and proof-irrelevant transport
-import Definition.LogicalRelation.Substitution.Introductions.Castlemmas
-import Definition.LogicalRelation.Substitution.Introductions.Cast
-import Definition.LogicalRelation.Substitution.Introductions.CastPi
-import Definition.LogicalRelation.Substitution.Introductions.Transp
+open import Definition.LogicalRelation.Substitution.Introductions.Castlemmas equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Cast equiv
+open import Definition.LogicalRelation.Substitution.Introductions.CastPi equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Transp equiv
 
 -- Validity of identity types, and reflexivity
-import Definition.LogicalRelation.Substitution.Introductions.Id
-import Definition.LogicalRelation.Substitution.Introductions.IdRefl
+open import Definition.LogicalRelation.Substitution.Introductions.Id equiv
+open import Definition.LogicalRelation.Substitution.Introductions.IdRefl equiv
 
 -- Reducibility of well-formedness.
-import Definition.LogicalRelation.Fundamental.Reducibility
+open import Definition.LogicalRelation.Fundamental.Reducibility equiv
 
 -- Consequences of the fundamental theorem:
 
 -- Consistency (no proof of False in the empty context) implies
 -- canonicity of the system.
-import Definition.Typed.Consequences.Canonicity
+open import Definition.Typed.Consequences.Canonicity equiv
 
 -- Injectivity of Π-types.
-import Definition.Typed.Consequences.Injectivity
+open import Definition.Typed.Consequences.Injectivity equiv
 
 -- Syntactic validitiy of the system.
-import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.Syntactic equiv
 
 -- All types and terms fully reduce to WHNF.
-import Definition.Typed.Consequences.Reduction
+open import Definition.Typed.Consequences.Reduction equiv
 
 -- Strong equality of types.
-import Definition.Typed.Consequences.Equality
+open import Definition.Typed.Consequences.Equality equiv
 
 -- Syntactic inequality of types.
-import Definition.Typed.Consequences.Inequality
+open import Definition.Typed.Consequences.Inequality equiv
 
 -- Substitution in judgements and substitution composition.
-import Definition.Typed.Consequences.Substitution
+open import Definition.Typed.Consequences.Substitution equiv
 
 -- Uniqueness of the types of neutral terms.
-import Definition.Typed.Consequences.NeTypeEq
+open import Definition.Typed.Consequences.NeTypeEq equiv
 
 -- Consistency (0 is not judgementally equal to 1) of the type theory.
-import Definition.Typed.Consequences.Consistency
+open import Definition.Typed.Consequences.Consistency equiv
 
 -- Types can only belong to one universe (because of annotations)
 -- also various inequalities for conversion
-import Definition.Typed.Consequences.PiNorm
-import Definition.Typed.Consequences.RelevanceUnicity
+open import Definition.Typed.Consequences.PiNorm equiv
+open import Definition.Typed.Consequences.RelevanceUnicity equiv
 
 -- Terms can only admit one type
-import Definition.Typed.Consequences.TypeUnicity
+open import Definition.Typed.Consequences.TypeUnicity equiv
 
 -- Various inversion results
-import Definition.Typed.Consequences.TypeUnicity
+open import Definition.Typed.Consequences.TypeUnicity equiv
 
 ------------------
 -- DECIDABILITY --
 ------------------
 
 -- Conversion algorithm definition.
-import Definition.Conversion
+open import Definition.Conversion equiv
 
 -- A size measure for conversion proofs
 -- Because of cast-refl, some proofs cannot be done by structural induction
 -- For these, we will show that they terminate by induction on the size of
 -- the derivation of algorithmic conversion
-import Definition.Conversion.ConvSize
+open import Definition.Conversion.ConvSize equiv
 
 -----------------------------------------
 -- Properties of conversion algorithm: --
@@ -235,53 +236,53 @@ import Definition.Conversion.ConvSize
 -- * Context conversion of typing judgements.
 -- * Context conversion of reductions and algorithmic equality.
 -- * Reflexivity and symmetry of context equality.
-import Definition.Conversion.Stability
+open import Definition.Conversion.Stability equiv
 
 -- Soundness of the conversion algorithm.
-import Definition.Conversion.Soundness
+open import Definition.Conversion.Soundness equiv
 
 -- Weakening of the conversion algorithm.
-import Definition.Conversion.Weakening
+open import Definition.Conversion.Weakening equiv
 
 -- The type of the conversion algorithm is stable under definitional equality
-import Definition.Conversion.Conversion
+open import Definition.Conversion.Conversion equiv
 
 -- Transitivity of the conversion algorithm.
-import Definition.Conversion.Transitivity
+open import Definition.Conversion.Transitivity equiv
 
 -- Symmetry of the conversion algorithm.
-import Definition.Conversion.Symmetry
+open import Definition.Conversion.Symmetry equiv
 
 -- Symmetry does not change the size of the derivation
-import Definition.Conversion.SymmetrySize
+open import Definition.Conversion.SymmetrySize equiv
 
 -- Conversion is an instance of the generic equality relation interface
-import Definition.Conversion.EqRelInstance
+open import Definition.Conversion.EqRelInstance equiv
 
 -- Completeness of conversion algorithm.
-import Definition.Conversion.Consequences.Completeness
+open import Definition.Conversion.Consequences.Completeness equiv
 
 -- Results around normalisation of reflexive terms
-import Definition.Conversion.FullReduction
+open import Definition.Conversion.FullReduction equiv
 
 -------------------------------------------
 -- Decidability of conversion algorithm: --
 -------------------------------------------
 
 -- Useful lemmas for the decidability proof
-import Definition.Conversion.HelperDecidable
-import Definition.Conversion.DecidableLemmas
-import Definition.Conversion.DecView
+open import Definition.Conversion.HelperDecidable equiv
+open import Definition.Conversion.DecidableLemmas equiv
+open import Definition.Conversion.DecView equiv
 
 -- Decidability of the conversion algorithm.
-import Definition.Conversion.Decidable
+open import Definition.Conversion.Decidable equiv
 
 -- Generic equality relation instance for the conversion algorithm.
-import Definition.Conversion.EqRelInstance
+open import Definition.Conversion.EqRelInstance equiv
 
 -- Decidability of judgemental conversion.
-import Definition.Conversion.HelperDecidable
-import Definition.Typed.Decidable
+open import Definition.Conversion.HelperDecidable equiv
+open import Definition.Typed.Decidable equiv
 
 --------------------------------
 -- BONUS: NON-PARANOID TYPING --
@@ -290,9 +291,9 @@ import Definition.Typed.Decidable
 -- The typing rules in Definition.Typed have unnecessary premises
 -- Now that we know a lot about the properties of the theory, we can give
 -- an alternative and less verbose presentation of the theory
-import Definition.Typed.NonParanoidTyping
+open import Definition.Typed.NonParanoidTyping equiv
 
 -- Likewise, we can do the same for the algorithmic equality, to simplify
 -- the conversion checking algorithm
-import Definition.ConversionGen
-import Definition.Conversion.ConversionGenEquiv
+open import Definition.ConversionGen equiv
+open import Definition.Conversion.ConversionGenEquiv equiv

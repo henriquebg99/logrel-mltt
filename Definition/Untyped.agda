@@ -8,7 +8,7 @@ open import Tools.Nat
 open import Tools.Product
 open import Tools.List
 import Tools.PropositionalEquality as PE
-open import Definition.Sort
+open import Definition.Sort public
 import Definition.OUntyped as O
 
 OTerm = O.Term
@@ -142,8 +142,8 @@ castrefl A t = gen Castreflkind (⟦ 0 , A ⟧ ∷ ⟦ 0 , t ⟧ ∷ [])
 
 
 -- Equivalence witness
-equiv : Term
-equiv = gen Equivkind []
+equiv-eq : Term
+equiv-eq = gen Equivkind []
 
 -- 2nd type of natural numbers
 ℕ2      : Term

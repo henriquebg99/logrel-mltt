@@ -1,30 +1,31 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Conversion.EqRelInstance where
+import Definition.Equiv as E
+module Definition.Conversion.EqRelInstance (equiv : E.Equiv) where
+open import Definition.Typed.EqualityRelation equiv
 
 open import Definition.Untyped
 open import Definition.Untyped.Properties using (wkSingleSubstId)
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.Weakening using (_∷_⊆_; wkEq; step; id)
-open import Definition.Conversion
-open import Definition.Conversion.Reduction
-open import Definition.Conversion.Universe
-open import Definition.Conversion.Stability
-open import Definition.Conversion.Soundness
-open import Definition.Conversion.Lift
-open import Definition.Conversion.Conversion
-open import Definition.Conversion.Transitivity
-open import Definition.Conversion.Weakening
-open import Definition.Conversion.Whnf
-open import Definition.Typed.EqualityRelation
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.Substitution
-open import Definition.Typed.Consequences.Injectivity
-open import Definition.Typed.Consequences.Equality
-open import Definition.Typed.Consequences.Reduction
-open import Definition.Typed.Consequences.NeTypeEq
-open import Definition.Conversion.Symmetry
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv
+open import Definition.Typed.Weakening equiv using (_∷_⊆_; wkEq; step; id)
+open import Definition.Conversion equiv
+open import Definition.Conversion.Reduction equiv
+open import Definition.Conversion.Universe equiv
+open import Definition.Conversion.Stability equiv
+open import Definition.Conversion.Soundness equiv
+open import Definition.Conversion.Lift equiv
+open import Definition.Conversion.Conversion equiv
+open import Definition.Conversion.Transitivity equiv
+open import Definition.Conversion.Weakening equiv
+open import Definition.Conversion.Whnf equiv
+open import Definition.Typed.Consequences.Syntactic equiv
+open import Definition.Typed.Consequences.Substitution equiv
+open import Definition.Typed.Consequences.Injectivity equiv
+open import Definition.Typed.Consequences.Equality equiv
+open import Definition.Typed.Consequences.Reduction equiv
+open import Definition.Typed.Consequences.NeTypeEq equiv
+open import Definition.Conversion.Symmetry equiv
 
 -- open import Definition.Conversion.HelperDecidable
 

@@ -1,16 +1,17 @@
 {-# OPTIONS --safe #-}
 
-module Definition.Typed.Decidable where
+import Definition.Equiv as E
+module Definition.Typed.Decidable (equiv : E.Equiv) where
 
 open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Conversion
-open import Definition.Conversion.Decidable
-open import Definition.Conversion.Soundness
-open import Definition.Conversion.Stability
-open import Definition.Conversion.Consequences.Completeness
+open import Definition.Typed equiv
+open import Definition.Typed.Properties equiv
+open import Definition.Typed.Consequences.Syntactic equiv
+open import Definition.Conversion equiv
+open import Definition.Conversion.Decidable equiv
+open import Definition.Conversion.Soundness equiv
+open import Definition.Conversion.Stability equiv
+open import Definition.Conversion.Consequences.Completeness equiv
 
 open import Tools.Nullary
 open import Tools.Product

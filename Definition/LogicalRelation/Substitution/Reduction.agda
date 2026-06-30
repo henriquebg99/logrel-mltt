@@ -1,13 +1,15 @@
 {-# OPTIONS --safe #-}
 
-open import Definition.Typed.EqualityRelation
 
-module Definition.LogicalRelation.Substitution.Reduction {{eqrel : EqRelSet}} where
+import Definition.Equiv as E
+import Definition.Typed.EqualityRelation as ER
+module Definition.LogicalRelation.Substitution.Reduction (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
 open import Definition.Untyped
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Properties equiv
+open import Definition.LogicalRelation.Substitution equiv
 
 open import Tools.Product
 

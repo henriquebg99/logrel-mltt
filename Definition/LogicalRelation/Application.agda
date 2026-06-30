@@ -1,21 +1,23 @@
 {-# OPTIONS --safe #-}
 
-open import Definition.Typed.EqualityRelation
 
-module Definition.LogicalRelation.Application {{eqrel : EqRelSet}} where
+import Definition.Equiv as E
+import Definition.Typed.EqualityRelation as ER
+module Definition.LogicalRelation.Application (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Weakening using (id)
-open import Definition.Typed.Properties
-open import Definition.Typed.RedSteps
-open import Definition.Typed.Reduction
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.Properties
+open import Definition.Typed equiv
+open import Definition.Typed.Weakening equiv using (id)
+open import Definition.Typed.Properties equiv
+open import Definition.Typed.RedSteps equiv
+open import Definition.Typed.Reduction equiv
+open import Definition.LogicalRelation equiv
+open import Definition.LogicalRelation.ShapeView equiv
+open import Definition.LogicalRelation.Irrelevance equiv
+open import Definition.LogicalRelation.Properties equiv
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE
@@ -100,8 +102,8 @@ app-congTerm′ : ∀ {F G t t′ u u′ Γ rF lF lΠ lG l l′}
           ([u′] : Γ ⊩⟨ l′ ⟩ u′ ∷ F ^ [ rF , ι lF ] / [F])
           ([u≡u′] : Γ ⊩⟨ l′ ⟩ u ≡ u′ ∷ F ^ [ rF , ι lF ] / [F])
         → Γ ⊩⟨ l′ ⟩ t ∘ u ^ lΠ ≡ t′ ∘ u′ ^ lΠ ∷ G [ u ] ^ [ ! , ι lG ] / [G[u]]
-app-congTerm′ {F′} {G′} {t = t} {t′ = t′} {Γ = Γ} {rF = rF} {lF = lF} {lΠ = lΠ} {lG = lG}
-              [F] [G[u]] (noemb (Πᵣ rF′ lF' lG' lF≤ lG≤ F G D ⊢F ⊢G A≡A [F]₁ [G] G-ext))
+app-congTerm′ {t = t} {t′ = t′} {Γ = Γ} {rF = rF} {lF = lF} {lΠ = lΠ} {lG = lG}
+              [F] [G[u]] [ΠFGΠ]@(noemb (Πᵣ rF′ lF' lG' lF≤ lG≤ F G D ⊢F ⊢G A≡A [F]₁ [G] G-ext))
               (Πₜ₌ f g [[ ⊢t , ⊢f , d ]] [[ ⊢t′ , ⊢g , d′ ]] funcF funcG t≡u
                    (Πₜ f′ [[ _ , ⊢f′ , d″ ]] funcF′ f≡f [f] [f]₁)
                    (Πₜ g′ [[ _ , ⊢g′ , d‴ ]] funcG′ g≡g [g] [g]₁) [t≡u])
@@ -111,7 +113,7 @@ app-congTerm′ {F′} {G′} {t = t} {t′ = t′} {Γ = Γ} {rF = rF} {lF = lF
       f≡f′ = whrDet*Term (d , functionWhnf funcF) (d″ , functionWhnf funcF′)
       g≡g′ = whrDet*Term (d′ , functionWhnf funcG) (d‴ , functionWhnf funcG′)
       F≡wkidF′ = PE.trans F≡F′ (PE.sym (wk-id _))
-      [ΠFG] = Πᵣ′ rF′ lF' lG' lF≤ lG≤ F G (PE.subst _ rF≡rF′ D) ⊢F ⊢G A≡A [F]₁ [G] G-ext
+      [ΠFG] = Π-intr [ΠFGΠ]
       t∘x≡wkidt∘x : {a b : Term} → wk id a ∘ b ^ _ PE.≡ a ∘ b ^ _
       t∘x≡wkidt∘x {a} {b} = PE.cong (λ x → x ∘ b ^ _ ) (wk-id a)
       t∘x≡wkidt∘x′ : {a : Term} → wk id g′ ∘ a ^ _ PE.≡ g ∘ a ^ _
@@ -129,14 +131,12 @@ app-congTerm′ {F′} {G′} {t = t} {t′ = t′} {Γ = Γ} {rF = rF} {lF = lF
       [G[u≡u′]] = irrelevanceEq″ wkidG₁[u]≡G[u] wkidG₁[u′]≡G[u′] PE.refl (PE.cong ι (PE.sym lG≡lG′))
                                   ([G] id ⊢Γ [u]′) [G[u]]
                                   (G-ext id ⊢Γ [u]′ [u′]′ [u≡u′]′)
-      [f′] : Γ ⊩⟨ _ ⟩ f′ ∷ Π F′ ^ rF′ ° lF ▹ G′ ° lG ° lΠ ^ ! ^ [ ! , ι lΠ ] / [ΠFG]
       [f′] = Πₜ f′ (idRedTerm:*: ⊢f′) funcF′ f≡f [f] [f]₁
-      [f∘u] = appTerm rF≡rF′ [F] [G[u]] [ΠFG]
+      [f∘u] = appTerm PE.refl [F] [G[u]] [ΠFG]
                       (irrelevanceTerm″ PE.refl PE.refl PE.refl (PE.sym f≡f′) [ΠFG] [ΠFG] [f′])
                       [a]
-      [g′] : Γ ⊩⟨ _ ⟩ g′ ∷ Π F′ ^ rF′ ° lF ▹ G′ ° lG ° lΠ ^ ! ^ [ ! , ι lΠ ] / [ΠFG]
       [g′] = Πₜ g′ (idRedTerm:*: ⊢g′) funcG′ g≡g [g] [g]₁
-      [g∘u′] = appTerm rF≡rF′ [F] [G[u′]] [ΠFG]
+      [g∘u′] = appTerm PE.refl [F] [G[u′]] [ΠFG]
                        (irrelevanceTerm″ PE.refl PE.refl PE.refl (PE.sym g≡g′) [ΠFG] [ΠFG] [g′])
                        [a′]
       [tu≡t′u] = irrelevanceEqTerm″ PE.refl (PE.cong ι (PE.sym lG≡lG′)) t∘x≡wkidt∘x t∘x≡wkidt∘x wkidG₁[u]≡G[u]
@@ -170,7 +170,7 @@ app-congTermirr′ : ∀ {F G t t′ u u′ Γ rF lF l l′}
           ([Gext] : Γ ⊩⟨ l′ ⟩ G [ u ] ≡ G [ u′ ] ^ [ % , ι ⁰ ] / [G[u]])
           (⊢G : Γ ∙ F ^ [ rF , ι lF ] ⊢ G ∷ SProp ^ [ ! , next ⁰ ])
         → Γ ⊩⟨ l′ ⟩ t ∘ u ^ ⁰ ≡ t′ ∘ u′ ^ ⁰ ∷ G [ u ] ^ [ % , ι ⁰ ] / [G[u]]
-app-congTermirr′ {F′} {G′} {t = t} {t′ = t′} {Γ = Γ} {rF = rF} {l = l}
+app-congTermirr′ {t = t} {t′ = t′} {Γ = Γ} {rF = rF} {l = l}
               [F] [G[u]] (noemb (Πirrᵣ rF′ lF' F G D ⊢F ⊢G A≡A))
               ([t] , [t′])
               [u] [u′] [Gext] ⊢G' =
