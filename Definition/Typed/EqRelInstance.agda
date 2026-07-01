@@ -22,18 +22,23 @@ eqRelInstance = eqRel _⊢_≡_^_ _⊢_≡_∷_^_ _⊢_≡_∷_^_
                       sym genSym genSym trans genTrans genTrans
                       conv conv wkEq wkEqTerm wkEqTerm
                       reduction reductionₜ
-                      Urefl (refl ∘ᶠ univ 0<1) (refl ∘ᶠ ℕⱼ) (refl ∘ᶠ Emptyⱼ)
-                      Π-cong (refl ∘ᶠ zeroⱼ) suc-cong
+                      Urefl (refl ∘ᶠ univ 0<1) (refl ∘ᶠ ℕⱼ) (refl ∘ᶠ ℕ2ⱼ) (refl ∘ᶠ Emptyⱼ)
+                      Π-cong (refl ∘ᶠ zeroⱼ) (refl ∘ᶠ zero2ⱼ) suc-cong suc2-cong
                       (λ lF lG x x₁ x₂ x₃ x₄ x₅ → η-eq lF lG x x₁ x₂ x₅)
-                      genVar app-cong natrec-cong Emptyrec-cong
+                      genVar app-cong natrec-cong natrec2-cong Emptyrec-cong
                       Id-cong
-                      cast-cong (λ A≡A t≡t e e' → cast-cong A≡A (refl (ℕⱼ (wfTerm e))) t≡t e e') cast-cong
+                      cast-cong (λ A≡A t≡t e e' → cast-cong A≡A (refl (ℕⱼ (wfTerm e))) t≡t e e')
+                      (λ A≡A t≡t e e' → cast-cong A≡A (refl (ℕ2ⱼ (wfTerm e))) t≡t e e') cast-cong
                       (λ A t~u ⊢t ⊢e → trans (cast-refl A ⊢e ⊢t) (conv t~u (univ A)))
                       (λ t~u ⊢t ⊢e → trans (cast-refl (refl (ℕⱼ (wfTerm ⊢t))) ⊢e ⊢t) t~u)
+                      (λ t~u ⊢t ⊢e → trans (cast-refl (refl (ℕ2ⱼ (wfTerm ⊢t))) ⊢e ⊢t) t~u)
                       (λ ⊢Γ → cast-cong (refl (ℕⱼ ⊢Γ)))
+                      (λ ⊢Γ → cast-cong (refl (ℕ2ⱼ ⊢Γ)))
                       cast-cong
                       (λ ⊢A ⊢P P → cast-cong (refl (ℕⱼ (wf (univ ⊢A)))) P)
+                      (λ ⊢A ⊢P P → cast-cong (refl (ℕ2ⱼ (wf (univ ⊢A)))) P)
                       (λ ⊢A ⊢P P → cast-cong P (refl (ℕⱼ (wf (univ ⊢A)))))
+                      (λ ⊢A ⊢P P → cast-cong P (refl (ℕ2ⱼ (wf (univ ⊢A)))))
                       (λ ⊢A ⊢P P ⊢A' ⊢P' P' → cast-cong P P')
                       (λ ⊢A ⊢P P ⊢A' ⊢P' P' → cast-cong P P')
                       proof-irrelevance

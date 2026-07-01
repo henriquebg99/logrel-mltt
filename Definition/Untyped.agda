@@ -217,6 +217,9 @@ Id-PE-injectivity PE.refl = PE.refl , PE.refl , PE.refl
 suc-PE-injectivity : ∀ {n m} → suc n PE.≡ suc m → n PE.≡ m
 suc-PE-injectivity PE.refl = PE.refl
 
+suc2-PE-injectivity : ∀ {n m} → suc2 n PE.≡ suc2 m → n PE.≡ m
+suc2-PE-injectivity PE.refl = PE.refl
+
 Univ-PE-injectivity : ∀ {r r' l l'} → Univ r l PE.≡ Univ r' l' → r PE.≡ r' × l PE.≡ l'
 Univ-PE-injectivity PE.refl = PE.refl , PE.refl
 
@@ -236,6 +239,9 @@ data Neutral : Term → Set where
   castℕₙ : ∀ {l B e t} → Neutral B → Neutral (cast l ℕ B e t)
   castΠₙ : ∀ {l A rA lA P lP r B e t} → Neutral B → Neutral (cast l (Π A ^ rA ° lA ▹ P ° lP ° l ^ r) B e t)
   castℕℕₙ : ∀ {l e t} → Neutral t → Neutral (cast l ℕ ℕ e t)
+  castnℕ2ₙ : ∀ {l B e t} → Neutral B → Neutral (cast l B ℕ2 e t)
+  castℕ2ₙ : ∀ {l B e t} → Neutral B → Neutral (cast l ℕ2 B e t)
+  castℕ2ℕ2ₙ : ∀ {l e t} → Neutral t → Neutral (cast l ℕ2 ℕ2 e t)
   castℕΠₙ : ∀ {l A rA r B e t} → Neutral (cast l ℕ (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) e t)
   castΠℕₙ : ∀ {l A rA r B e t} → Neutral (cast l (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) ℕ e t)
   castΠΠ%!ₙ : ∀ {l A B A' B' r r' e t} → Neutral (cast l (Π A ^ % ° ⁰ ▹ B ° ⁰ ° l ^ r) (Π A' ^ ! ° ⁰ ▹ B' ° ⁰ ° l ^ r') e t)
@@ -513,6 +519,9 @@ wkNeutral ρ (castnΠₙ A) = castnΠₙ (wkNeutral ρ A)
 wkNeutral ρ (castℕₙ A) = castℕₙ (wkNeutral ρ A)
 wkNeutral ρ (castΠₙ A) = castΠₙ (wkNeutral ρ A)
 wkNeutral ρ (castℕℕₙ t) = castℕℕₙ (wkNeutral ρ t)
+wkNeutral ρ (castnℕ2ₙ A) = castnℕ2ₙ (wkNeutral ρ A)
+wkNeutral ρ (castℕ2ₙ A) = castℕ2ₙ (wkNeutral ρ A)
+wkNeutral ρ (castℕ2ℕ2ₙ t) = castℕ2ℕ2ₙ (wkNeutral ρ t)
 wkNeutral ρ castℕΠₙ = castℕΠₙ
 wkNeutral ρ castΠℕₙ = castΠℕₙ
 wkNeutral ρ castΠΠ%!ₙ = castΠΠ%!ₙ

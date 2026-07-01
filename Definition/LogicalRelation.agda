@@ -143,6 +143,54 @@ split (sucᵣ x) = sucₙ , sucₙ
 split zeroᵣ = zeroₙ , zeroₙ
 split (ne (neNfₜ₌ neK neM k≡m)) = ne neK , ne neM
 
+-- Reducibility of second natural numbers:
+
+-- Second natural number type
+_⊩ℕ2_ : (Γ : Con Term) (A : Term) → Set
+Γ ⊩ℕ2 A = Γ ⊢ A :⇒*: ℕ2 ^ [ ! , ι ⁰ ]
+
+-- Second natural number type equality
+_⊩ℕ2_≡_ : (Γ : Con Term) (A B : Term) → Set
+Γ ⊩ℕ2 A ≡ B = Γ ⊢ B ⇒* ℕ2 ^ [ ! , ι ⁰ ]
+
+mutual
+  -- Second natural number term
+  data _⊩ℕ2_∷ℕ2 (Γ : Con Term) (t : Term) : Set where
+    ℕ2ₜ : (n : Term) (d : Γ ⊢ t :⇒*: n ∷ ℕ2 ^ ι ⁰) (n≡n : Γ ⊢ n ≅ n ∷ ℕ2 ^ [ ! , ι ⁰ ])
+         (prop : Natural2-prop Γ n)
+       → Γ ⊩ℕ2 t ∷ℕ2
+
+  -- WHNF property of second natural number terms
+  data Natural2-prop (Γ : Con Term) : (n : Term) → Set where
+    suc2ᵣ  : ∀ {n} → Γ ⊩ℕ2 n ∷ℕ2 → Natural2-prop Γ (suc2 n)
+    zero2ᵣ : Natural2-prop Γ zero2
+    ne    : ∀ {n} → Γ ⊩neNf n ∷ ℕ2 ^ [ ! , ι ⁰ ] → Natural2-prop Γ n
+
+mutual
+  -- Second natural number term equality
+  data _⊩ℕ2_≡_∷ℕ2 (Γ : Con Term) (t u : Term) : Set where
+    ℕ2ₜ₌ : (k k′ : Term) (d : Γ ⊢ t :⇒*: k  ∷ ℕ2 ^ ι ⁰) (d′ : Γ ⊢ u :⇒*: k′ ∷ ℕ2 ^ ι ⁰)
+          (k≡k′ : Γ ⊢ k ≅ k′ ∷ ℕ2 ^ [ ! , ι ⁰ ])
+          (prop : [Natural2]-prop Γ k k′) → Γ ⊩ℕ2 t ≡ u ∷ℕ2
+
+  -- WHNF property of Natural2 number term equality
+  data [Natural2]-prop (Γ : Con Term) : (n n′ : Term) → Set where
+    suc2ᵣ  : ∀ {n n′} → Γ ⊩ℕ2 n ≡ n′ ∷ℕ2 → [Natural2]-prop Γ (suc2 n) (suc2 n′)
+    zero2ᵣ : [Natural2]-prop Γ zero2 zero2
+    ne    : ∀ {n n′} → Γ ⊩neNf n ≡ n′ ∷ ℕ2 ^ [ ! , ι ⁰ ] → [Natural2]-prop Γ n n′
+
+-- Natural2 extraction from term WHNF property
+natural2 : ∀ {Γ n} → Natural2-prop Γ n → Natural2 n
+natural2 (suc2ᵣ x) = suc2ₙ
+natural2 zero2ᵣ = zero2ₙ
+natural2 (ne (neNfₜ neK ⊢k k≡k)) = ne2 neK
+
+-- Natural2 extraction from term equality WHNF property
+split2 : ∀ {Γ a b} → [Natural2]-prop Γ a b → Natural2 a × Natural2 b
+split2 (suc2ᵣ x) = suc2ₙ , suc2ₙ
+split2 zero2ᵣ = zero2ₙ , zero2ₙ
+split2 (ne (neNfₜ₌ neK neM k≡m)) = ne2 neK , ne2 neM
+
 -- Reducibility of Empty
 
 -- Empty type
@@ -396,6 +444,7 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     data _⊩¹_^_ (Γ : Con Term) : Term → TypeInfo → Set where
       Uᵣ  : ∀ {A ll} → (UA : Γ ⊩¹U A ^ ll) → Γ ⊩¹ A ^ [ ! , ll ]
       ℕᵣ  : ∀ {A} → Γ ⊩ℕ A → Γ ⊩¹ A ^ [ ! , ι ⁰ ]
+      ℕ2ᵣ : ∀ {A} → Γ ⊩ℕ2 A → Γ ⊩¹ A ^ [ ! , ι ⁰ ]
       Emptyᵣ : ∀ {A} → Γ ⊩Empty A → Γ ⊩¹ A ^ [ % , ι ⁰ ]
       ne  : ∀ {A r l} → Γ ⊩ne A ^[ r , l ] → Γ ⊩¹ A ^ [ r , ι l ]
       Πᵣ  : ∀ {A l} → Γ ⊩¹Π A ^[ l ] → Γ ⊩¹ A ^ [ ! , ι l ]
@@ -407,6 +456,7 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     _⊩¹_≡_^_/_ : (Γ : Con Term) (A B : Term) (r : TypeInfo) → Γ ⊩¹ A ^ r  → Set
     Γ ⊩¹ A ≡ B ^ [ .! , l ] / Uᵣ UA = Γ ⊩¹U A ≡ B ^ l / UA
     Γ ⊩¹ A ≡ B ^ [ .! , .ι ⁰ ] / ℕᵣ D = Γ ⊩ℕ A ≡ B
+    Γ ⊩¹ A ≡ B ^ [ .! , .ι ⁰ ] / ℕ2ᵣ D = Γ ⊩ℕ2 A ≡ B
     Γ ⊩¹ A ≡ B ^ [ .% , .ι ⁰ ] / Emptyᵣ D = Γ ⊩Empty A ≡ B
     Γ ⊩¹ A ≡ B ^ [ r , ι l ] / ne neA = Γ ⊩ne A ≡ B ^[ r , l ]/ neA
     Γ ⊩¹ A ≡ B ^ [ .! , ι l ] / Πᵣ ΠA =  Γ ⊩¹Π A ≡ B ^[ l ]/ ΠA
@@ -418,6 +468,7 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     _⊩¹_∷_^_/_ : (Γ : Con Term) (t A : Term) (r : TypeInfo) → Γ ⊩¹ A ^ r  → Set
     Γ ⊩¹ t ∷ A ^ [ .! , ll ] / Uᵣ UA = Γ ⊩¹U t ∷ A ^ ll / UA
     Γ ⊩¹ t ∷ A ^ .([ ! , ι ⁰ ]) / ℕᵣ x = Γ ⊩ℕ t ∷ℕ
+    Γ ⊩¹ t ∷ A ^ .([ ! , ι ⁰ ]) / ℕ2ᵣ x = Γ ⊩ℕ2 t ∷ℕ2
     Γ ⊩¹ t ∷ A ^ [ .% , ι ⁰ ] / Emptyᵣ x =  Γ ⊩Empty t ∷Empty
     Γ ⊩¹ t ∷ A ^ .([ ! , ι l ]) / ne {r = !} {l} neA = Γ ⊩ne t ∷ A ^ l / neA
     Γ ⊩¹ t ∷ A ^ .([ % , ι l ]) / ne {r = %} {l} neA = Γ ⊩neIrr t ∷ A ^ l / neA
@@ -430,6 +481,7 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     _⊩¹_≡_∷_^_/_ : (Γ : Con Term) (t u A : Term) (r : TypeInfo) → Γ ⊩¹ A ^ r → Set
     Γ ⊩¹ t ≡ u ∷ A ^ [ .! , ll ] / Uᵣ UA = Γ ⊩¹U t ≡ u ∷ A ^ ll / UA
     Γ ⊩¹ t ≡ u ∷ A ^ .([ ! , ι ⁰ ]) / ℕᵣ D = Γ ⊩ℕ t ≡ u ∷ℕ
+    Γ ⊩¹ t ≡ u ∷ A ^ .([ ! , ι ⁰ ]) / ℕ2ᵣ D = Γ ⊩ℕ2 t ≡ u ∷ℕ2
     Γ ⊩¹ t ≡ u ∷ A ^ [ .% , ι ⁰ ] / Emptyᵣ D = Γ ⊩Empty t ≡ u ∷Empty
     Γ ⊩¹ t ≡ u ∷ A ^ .([ ! , ι l ]) / ne {r = !} {l} neA = Γ ⊩ne t ≡ u ∷ A ^  l / neA
     Γ ⊩¹ t ≡ u ∷ A ^ .([ % , ι l ]) / ne {r = %} {l} neA = Γ ⊩neIrr t ≡ u ∷ A ^ l / neA
@@ -442,7 +494,7 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     kit : LogRelKit
     kit = Kit _⊩¹U_^_ _⊩¹Π_^[_] _⊩¹_^_ _⊩¹_≡_^_/_ _⊩¹_∷_^_/_ _⊩¹_≡_∷_^_/_
 
-open LogRel public using (Uᵣ; ℕᵣ; Emptyᵣ; ne; Πᵣ ; Πirrᵣ ; Idᵣ ; emb; Uₜ; Uₜ₌; Π₌)
+open LogRel public using (Uᵣ; ℕᵣ; ℕ2ᵣ; Emptyᵣ; ne; Πᵣ ; Πirrᵣ ; Idᵣ ; emb; Uₜ; Uₜ₌; Π₌)
 
 -- Patterns for the non-records of Π
 pattern Πₜ a b c d e f = a , b , c , d , e , f

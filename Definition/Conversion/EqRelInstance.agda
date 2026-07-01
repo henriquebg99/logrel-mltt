@@ -102,6 +102,23 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
       _ , ⊢n , _ = syntacticEqTerm (soundness~↓! k~l′)
   in  ↑ (refl (substType ⊢F ⊢n)) (natrec-cong′ x x₁ x₂ k~l′)
 
+~-natrec2 : ∀ {z z′ s s′ n n′ F F′ Γ lF}
+         → (Γ ∙ ℕ2 ^ [ ! , ι ⁰ ]) ⊢ F [conv↑] F′ ^ [ ! , ι lF ]  →
+      Γ ⊢ z [conv↑] z′ ∷ (F [ zero2 ]) ^ ι lF →
+      Γ ⊢ s [conv↑] s′ ∷ (Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° lF ▹▹ F [ suc2 (var 0) ]↑ ° lF ° lF ^ !) ° lF ° lF ^ !) ^ ι lF →
+      Γ ⊢ n ~ n′ ∷ ℕ2 ^ [ ! , ι ⁰ ] →
+      Γ ⊢ natrec2 lF F z s n ~ natrec2 lF F′ z′ s′ n′ ∷ (F [ n ]) ^ [ ! , ι lF ]
+~-natrec2 {n = n} {n′ = n′} x x₁ x₂ (↑ A≡B (~↑! x₄)) =
+  let _ , ⊢B = syntacticEq A≡B
+      B′ , whnfB′ , D = whNorm ⊢B
+      ℕ2≡B′ = trans A≡B (subset* (red D))
+      B≡ℕ2 = ℕ2≡A ℕ2≡B′ whnfB′
+      k~l′ = PE.subst (λ x → _ ⊢ n ~ n′ ↓! x ^ _) B≡ℕ2
+                      ([~] _ (red D) whnfB′ x₄)
+      ⊢F , _ = syntacticEq (soundnessConv↑ x)
+      _ , ⊢n , _ = syntacticEqTerm (soundness~↓! k~l′)
+  in  ↑ (refl (substType ⊢F ⊢n)) (natrec2-cong′ x x₁ x₂ k~l′)
+
 
 ~-Emptyrec : ∀ {e e' F F′ Γ l}
          → Γ ⊢ F [conv↑] F′ ^ [ ! , ι l ] →
@@ -411,12 +428,15 @@ eqRelInstance = eqRel _⊢_[conv↑]_^_ _⊢_[genconv↑]_∷_^_ _⊢_~_∷_^_
                       reductionConv↑ reductionConv↑Term
                       (liftConv ∘ᶠ (U-refl PE.refl)) ( liftConvTerm ∘ᶠ  (U-refl PE.refl))
                       (liftConvTerm ∘ᶠ ℕ-refl)
+                      (liftConvTerm ∘ᶠ ℕ2-refl)
                       (liftConvTerm ∘ᶠ Empty-refl)
                       Πₜ-cong
                       (liftConvTerm ∘ᶠ zero-refl)
+                      (liftConvTerm ∘ᶠ zero2-refl)
                       (liftConvTerm ∘ᶠ suc-cong)
+                      (liftConvTerm ∘ᶠ suc2-cong)
                       (λ l< l<' x x₁ x₂ x₃ x₄ x₅ → liftConvTerm (η-eq l< l<' x x₁ x₂ x₃ x₄ x₅))
-                      ~-var ~-app ~-natrec ~-Emptyrec
+                      ~-var ~-app ~-natrec ~-natrec2 ~-Emptyrec
                       (λ x x₁ x₂ → liftConvTerm (Id-cong x x₁ x₂))
                       ~-castcong ~-castneℕ ~-castneΠ ~-cast-refl ~-castℕ-refl
                       ~-castℕ ~-castΠ ~-castℕΠ ~-castΠℕ ~-castΠΠ%! ~-castΠΠ!%

@@ -135,6 +135,7 @@ mutual
            → Γ ⊢ t ∷ A ^ r
            → Γ ⊢ A ≡ B ^ r
            → Γ ⊢ t ∷ B ^ r
+    equiv-eqⱼ : ⊢ Γ → Γ ⊢ equiv-eq ∷ Id (U ⁰) ℕ ℕ2 ^ [ % , ι ⁰ ]
 
   -- Type equality
   data _⊢_≡_^_ (Γ : Con Term) : Term → Term → TypeInfo → Set where
@@ -287,6 +288,17 @@ mutual
                → Γ ⊢ cast ⁰ ℕ ℕ e (suc n)
                    ≡ suc (cast ⁰ ℕ ℕ e n)
                    ∷ ℕ ^ [ ! , ι ⁰ ]
+    cast-ℕ2-0 : ∀ {e}
+               → Γ ⊢ e ∷ Id (U ⁰) ℕ2 ℕ2 ^ [ % , ι ⁰ ]
+               → Γ ⊢ cast ⁰ ℕ2 ℕ2 e zero2
+                   ≡ zero2
+                   ∷ ℕ2 ^ [ ! , ι ⁰ ]
+    cast-ℕ2-S : ∀ {e n}
+               → Γ ⊢ e ∷ Id (U ⁰) ℕ2 ℕ2 ^ [ % , ι ⁰ ]
+               → Γ ⊢ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
+               → Γ ⊢ cast ⁰ ℕ2 ℕ2 e (suc2 n)
+                   ≡ suc2 (cast ⁰ ℕ2 ℕ2 e n)
+                   ∷ ℕ2 ^ [ ! , ι ⁰ ]
     cast-equiv-fwd : ∀ {e n}
                      → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ2 ^ [ % , ι ⁰ ]
                      → Γ ⊢ n ∷ ℕ ^ [ ! , ι ⁰ ]
@@ -373,6 +385,11 @@ mutual
                   → Γ ⊢ e ∷ Id (U ⁰) ℕ B ^ [ % , ι ⁰ ]
                   → Γ ⊢ t ∷ ℕ ^ [ ! , ι ⁰ ]
                   → Γ ⊢ cast ⁰ ℕ B e t ⇒ cast ⁰ ℕ B' e t ∷ B ^ ι ⁰
+    cast-ℕ2-subst : ∀ {B B' e t}
+                  → Γ ⊢ B ⇒ B' ∷ U ⁰ ^ next ⁰
+                  → Γ ⊢ e ∷ Id (U ⁰) ℕ2 B ^ [ % , ι ⁰ ]
+                  → Γ ⊢ t ∷ ℕ2 ^ [ ! , ι ⁰ ]
+                  → Γ ⊢ cast ⁰ ℕ2 B e t ⇒ cast ⁰ ℕ2 B' e t ∷ B ^ ι ⁰
     cast-Π-subst : ∀ {A rA P B B' e t} → let l = ⁰ in let lA = ⁰ in let lP = ⁰ in
                     Γ ⊢ A ∷ (Univ rA lA) ^ [ ! , next lA ]
                   → Γ ∙ A ^ [ rA , ι lA ] ⊢ P ∷ U lP ^ [ ! , next lA ]
@@ -412,6 +429,25 @@ mutual
                    ⇒ cast ⁰ ℕ ℕ e u
                    ∷ ℕ ^ ι ⁰
 
+    cast-ℕ2-0 : ∀ {e}
+               → Γ ⊢ e ∷ Id (U ⁰) ℕ2 ℕ2 ^ [ % , ι ⁰ ]
+               → Γ ⊢ cast ⁰ ℕ2 ℕ2 e zero2
+                   ⇒ zero2
+                   ∷ ℕ2 ^ ι ⁰
+    cast-ℕ2-S : ∀ {e n}
+               → Γ ⊢ e ∷ Id (U ⁰) ℕ2 ℕ2 ^ [ % , ι ⁰ ]
+               → Γ ⊢ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
+               → Γ ⊢ cast ⁰ ℕ2 ℕ2 e (suc2 n)
+                   ⇒ suc2 (cast ⁰ ℕ2 ℕ2 e n)
+                   ∷ ℕ2 ^ ι ⁰
+
+    cast-ℕ2-cong : ∀ {e t u}
+               → Γ ⊢ e ∷ Id (U ⁰) ℕ2 ℕ2 ^ [ % , ι ⁰ ]
+               → Γ ⊢ t ⇒ u ∷ ℕ2 ^ ι ⁰
+               → Γ ⊢ cast ⁰ ℕ2 ℕ2 e t
+                   ⇒ cast ⁰ ℕ2 ℕ2 e u
+                   ∷ ℕ2 ^ ι ⁰
+
     cast-ne-cong : ∀ {K L e t u} → 
                  Γ ⊢ K ∷ U ⁰ ^ [ ! , next ⁰ ]
                → Neutral K
@@ -422,6 +458,21 @@ mutual
                → Γ ⊢ cast ⁰ K L e t
                    ⇒ cast ⁰ K L e u
                    ∷ L ^ ι ⁰
+    
+    cast-equiv-fwd : ∀ {e n}
+                     → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ2 ^ [ % , ι ⁰ ]
+                     → Γ ⊢ n ∷ ℕ ^ [ ! , ι ⁰ ]
+                     → Γ ⊢ cast ⁰ ℕ ℕ2 e n
+                         ⇒ (emb_oterm_term (Equiv.fwd equiv)) ∘ n ^ ⁰
+                         ∷ ℕ2 ^ ι ⁰
+
+    cast-equiv-bwd : ∀ {e n}
+                     → Γ ⊢ e ∷ Id (U ⁰) ℕ2 ℕ ^ [ % , ι ⁰ ]
+                     → Γ ⊢ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
+                     → Γ ⊢ cast ⁰ ℕ2 ℕ e n
+                         ⇒ (emb_oterm_term (Equiv.bwd equiv)) ∘ n ^ ⁰
+                         ∷ ℕ ^ ι ⁰
+    
 
   -- Type reduction
   data _⊢_⇒_^_ (Γ : Con Term) : Term → Term → TypeInfo → Set where
@@ -823,3 +874,5 @@ mutual
          pf
   emb-⊢≡∷ (OT.cast-ℕ-0 e) = cast-ℕ-0 (emb-⊢∷ e)
   emb-⊢≡∷ (OT.cast-ℕ-S e n) = cast-ℕ-S (emb-⊢∷ e) (emb-⊢∷ n)
+  emb-⊢≡∷ (OT.cast-ℕ2-0 e) = cast-ℕ2-0 (emb-⊢∷ e)
+  emb-⊢≡∷ (OT.cast-ℕ2-S e n) = cast-ℕ2-S (emb-⊢∷ e) (emb-⊢∷ n)

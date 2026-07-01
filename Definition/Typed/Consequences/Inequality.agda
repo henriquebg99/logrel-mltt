@@ -3,7 +3,7 @@
 import Definition.Equiv as E
 module Definition.Typed.Consequences.Inequality (equiv : E.Equiv) where
 
-open import Definition.Untyped hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
+open import Definition.Untyped hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne; ℕ≢ℕ2; ℕ2≢ℕ)
 open import Definition.Typed equiv
 open import Definition.Typed.Properties equiv
 open import Definition.Typed.EqRelInstance equiv
@@ -180,6 +180,43 @@ Empty≢Π% Empty≡Π =
 ℕ≢ne! neK ℕ≡K =
   let ⊢ℕ , ⊢K = syntacticEq ℕ≡K
   in  ℕ≢ne-red (id ⊢ℕ) (id ⊢K) neK ℕ≡K
+
+ℕ≢ℕ2′ : ∀ {A B Γ l l′}
+       ([ℕ] : Γ ⊩ℕ A)
+       ([ℕ2] : Γ ⊩ℕ2 B)
+     → ShapeView Γ l l′ _ _ _ _ (ℕᵣ [ℕ]) (ℕ2ᵣ [ℕ2]) → ⊥
+ℕ≢ℕ2′ a b ()
+
+ℕ≢ℕ2-red : ∀ {A B Γ} → Γ ⊢ A ⇒* ℕ ^ [ ! , ι ⁰ ] → Γ ⊢ B ⇒* ℕ2 ^ [ ! , ι ⁰ ] → Γ ⊢ A ≡ B ^ [ ! , ι ⁰ ] → ⊥
+ℕ≢ℕ2-red D D′ = A≢B (λ Γ l A → Γ ⊩ℕ A)
+                   (λ Γ l A → Γ ⊩ℕ2 A) ℕᵣ ℕ2ᵣ
+                   (λ x → extractMaybeEmb (ℕ-elim′ D x))
+                   (λ x → extractMaybeEmb (ℕ2-elim′ D′ x))
+                   ℕ≢ℕ2′
+
+-- ℕ and ℕ2 cannot be judgmentally equal.
+ℕ≢ℕ2! : ∀ {Γ} → Γ ⊢ ℕ ≡ ℕ2 ^ [ ! , ι ⁰ ] → ⊥
+ℕ≢ℕ2! ℕ≡ℕ2 =
+  let ⊢ℕ , ⊢ℕ2 = syntacticEq ℕ≡ℕ2
+  in  ℕ≢ℕ2-red (id ⊢ℕ) (id ⊢ℕ2) ℕ≡ℕ2
+
+ℕ2≢ℕ′ : ∀ {A B Γ l l′}
+       ([ℕ2] : Γ ⊩ℕ2 A)
+       ([ℕ] : Γ ⊩ℕ B)
+     → ShapeView Γ l l′ _ _ _ _ (ℕ2ᵣ [ℕ2]) (ℕᵣ [ℕ]) → ⊥
+ℕ2≢ℕ′ a b ()
+
+ℕ2≢ℕ-red : ∀ {A B Γ} → Γ ⊢ A ⇒* ℕ2 ^ [ ! , ι ⁰ ] → Γ ⊢ B ⇒* ℕ ^ [ ! , ι ⁰ ] → Γ ⊢ A ≡ B ^ [ ! , ι ⁰ ] → ⊥
+ℕ2≢ℕ-red D D′ = A≢B (λ Γ l A → Γ ⊩ℕ2 A)
+                   (λ Γ l A → Γ ⊩ℕ A) ℕ2ᵣ ℕᵣ
+                   (λ x → extractMaybeEmb (ℕ2-elim′ D x))
+                   (λ x → extractMaybeEmb (ℕ-elim′ D′ x))
+                   ℕ2≢ℕ′
+
+ℕ2≢ℕ! : ∀ {Γ} → Γ ⊢ ℕ2 ≡ ℕ ^ [ ! , ι ⁰ ] → ⊥
+ℕ2≢ℕ! ℕ2≡ℕ =
+  let ⊢ℕ2 , ⊢ℕ = syntacticEq ℕ2≡ℕ
+  in  ℕ2≢ℕ-red (id ⊢ℕ2) (id ⊢ℕ) ℕ2≡ℕ
 
 -- Empty and neutral
 Empty≢ne′ : ∀ {A K Γ l l′}

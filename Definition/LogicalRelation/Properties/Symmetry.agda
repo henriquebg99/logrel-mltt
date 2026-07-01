@@ -29,6 +29,7 @@ mutual
          → Γ ⊩⟨ l  ⟩ A ≡ B ^ r / [A]
          → Γ ⊩⟨ l′ ⟩ B ≡ A ^ r / [B]
   symEqT (ℕᵥ D D′) A≡B = red D
+  symEqT (ℕ2ᵥ D D′) A≡B = red D
   symEqT (Emptyᵥ D D′) A≡B = red D
   symEqT (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (ne₌ M D′ neM K≡M)
          rewrite whrDet* (red D′ , ne neM) (red D₁ , ne neK₁) =
@@ -106,6 +107,14 @@ symNatural-prop (sucᵣ (ℕₜ₌ k k′ d d′ t≡u prop)) =
 symNatural-prop zeroᵣ = zeroᵣ
 symNatural-prop (ne prop) = ne (symNeutralTerm prop)
 
+symNatural2-prop : ∀ {Γ k k′}
+                → [Natural2]-prop Γ k k′
+                → [Natural2]-prop Γ k′ k
+symNatural2-prop (suc2ᵣ (ℕ2ₜ₌ k k′ d d′ t≡u prop)) =
+  suc2ᵣ (ℕ2ₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural2-prop prop))
+symNatural2-prop zero2ᵣ = zero2ᵣ
+symNatural2-prop (ne prop) = ne (symNeutralTerm prop)
+
 symEmpty-prop : ∀ {Γ k k′}
                 → [Empty]-prop Γ k k′
                 → [Empty]-prop Γ k′ k
@@ -117,6 +126,8 @@ symEqTerm⁰ : ∀ {Γ A t u r} ([A] : Γ ⊩⟨ ι ⁰ ⟩ A ^ r)
           → Γ ⊩⟨ ι ⁰ ⟩ u ≡ t ∷ A ^ r / [A]
 symEqTerm⁰ (ℕᵣ D) (ℕₜ₌ k k′ d d′ t≡u prop) =
   ℕₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural-prop prop)
+symEqTerm⁰ (ℕ2ᵣ D) (ℕ2ₜ₌ k k′ d d′ t≡u prop) =
+  ℕ2ₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural2-prop prop)
 symEqTerm⁰ (Emptyᵣ D) (Emptyₜ₌ prop) = Emptyₜ₌ (symEmpty-prop prop)
 symEqTerm⁰ {r = [ ! , ll ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ nf) =
   neₜ₌ m k d′ d (symNeutralTerm nf)
@@ -146,6 +157,8 @@ symEqTerm¹ {Γ} {A} {t} {u} (Uᵣ (Uᵣ r ⁰ l< el D)) (Uₜ₌ [A] [B] A≡B 
   Uₜ₌ [B] [A] (≅ₜ-sym A≡B) [B≡A]
 symEqTerm¹ (ℕᵣ D) (ℕₜ₌ k k′ d d′ t≡u prop) =
   ℕₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural-prop prop)
+symEqTerm¹ (ℕ2ᵣ D) (ℕ2ₜ₌ k k′ d d′ t≡u prop) =
+  ℕ2ₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural2-prop prop)
 symEqTerm¹ (Emptyᵣ D) (Emptyₜ₌ prop) = Emptyₜ₌ (symEmpty-prop prop)
 symEqTerm¹ {r = [ ! , ll ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ nf) =
   neₜ₌ m k d′ d (symNeutralTerm nf)
@@ -178,6 +191,8 @@ symEqTerm∞ {Γ} {A} {t} {u} (Uᵣ (Uᵣ r ¹ l< el D)) (Uₜ₌ [A] [B] A≡B 
   Uₜ₌ [B] [A] (≅ₜ-sym A≡B) [B≡A]
 symEqTerm∞ (ℕᵣ D) (ℕₜ₌ k k′ d d′ t≡u prop) =
   ℕₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural-prop prop)
+symEqTerm∞ (ℕ2ᵣ D) (ℕ2ₜ₌ k k′ d d′ t≡u prop) =
+  ℕ2ₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural2-prop prop)
 symEqTerm∞ (Emptyᵣ D) (Emptyₜ₌ prop) = Emptyₜ₌ (symEmpty-prop prop)
 symEqTerm∞ {r = [ ! , ll ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ nf) =
   neₜ₌ m k d′ d (symNeutralTerm nf)

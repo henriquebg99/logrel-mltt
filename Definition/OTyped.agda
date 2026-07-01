@@ -286,6 +286,17 @@ mutual
                → Γ ⊢ cast ⁰ ℕ ℕ e (suc n)
                    ≡ suc (cast ⁰ ℕ ℕ e n)
                    ∷ ℕ ^ [ ! , ι ⁰ ]
+    cast-ℕ2-0 : ∀ {e}
+               → Γ ⊢ e ∷ Id (U ⁰) ℕ2 ℕ2 ^ [ % , ι ⁰ ]
+               → Γ ⊢ cast ⁰ ℕ2 ℕ2 e zero2
+                   ≡ zero2
+                   ∷ ℕ2 ^ [ ! , ι ⁰ ]
+    cast-ℕ2-S : ∀ {e n}
+               → Γ ⊢ e ∷ Id (U ⁰) ℕ2 ℕ2 ^ [ % , ι ⁰ ]
+               → Γ ⊢ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
+               → Γ ⊢ cast ⁰ ℕ2 ℕ2 e (suc2 n)
+                   ≡ suc2 (cast ⁰ ℕ2 ℕ2 e n)
+                   ∷ ℕ2 ^ [ ! , ι ⁰ ]
 
 mutual
   data _⊢_⇒_∷_^_ (Γ : Con Term) : Term → Term → Term → TypeLevel → Set where

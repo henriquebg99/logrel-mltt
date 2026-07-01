@@ -36,6 +36,12 @@ mutual
                 → Γ ⊢ h [conv↑] g ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° lF ▹▹ F [ suc (var 0) ]↑ ° lF ° lF ^ !) ° lF ° lF ^ ! ^ ι lF
                 → Γ ⊢ k ~ l ↓! ℕ ^ ι ⁰
                 → Γ ⊢ natrec lF F a₀ h k ~ natrec lF G b₀ g l ↑! F [ k ] ^ ι lF
+    natrec2-cong : ∀ {k l h g a₀ b₀ F G lF}
+                → Γ ∙ ℕ2 ^ [ ! , ι ⁰ ] ⊢ F [conv↑] G ^ [ ! , ι lF ]
+                → Γ ⊢ a₀ [conv↑] b₀ ∷ F [ zero2 ] ^ ι lF
+                → Γ ⊢ h [conv↑] g ∷ Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° lF ▹▹ F [ suc2 (var 0) ]↑ ° lF ° lF ^ !) ° lF ° lF ^ ! ^ ι lF
+                → Γ ⊢ k ~ l ↓! ℕ2 ^ ι ⁰
+                → Γ ⊢ natrec2 lF F a₀ h k ~ natrec2 lF G b₀ g l ↑! F [ k ] ^ ι lF
     Emptyrec-cong : ∀ {k l F G ll}
                   → Γ ⊢ F [conv↑] G ^ [ ! , ι ll ]
                   → Γ ⊢ k ~ l ↑% sEmpty ^ ι ⁰
@@ -186,6 +192,7 @@ mutual
                 → Γ ⊢ K ~ L ↓! Univ r lU ^ l
                 → Γ ⊢ K [conv↓] L ∷ Univ r lU ^ l
     ℕ-refl    : ⊢ Γ → Γ ⊢ ℕ [conv↓] ℕ ∷ U ⁰ ^ next ⁰
+    ℕ2-refl   : ⊢ Γ → Γ ⊢ ℕ2 [conv↓] ℕ2 ∷ U ⁰ ^ next ⁰
     Empty-refl : ⊢ Γ → Γ ⊢ sEmpty [conv↓] sEmpty ∷ SProp ^ next ⁰
     Π-cong    : ∀ {F G H E rF rH rΠ lF lH lG lE lΠ ll}
               → ll PE.≡ next lΠ
@@ -213,9 +220,13 @@ mutual
               → Γ ⊢ k ~ l ↓! M ^ ι ll
               → Γ ⊢ k [conv↓] l ∷ N ^ ι ll
     zero-refl : ⊢ Γ → Γ ⊢ zero [conv↓] zero ∷ ℕ ^ ι ⁰
+    zero2-refl : ⊢ Γ → Γ ⊢ zero2 [conv↓] zero2 ∷ ℕ2 ^ ι ⁰
     suc-cong  : ∀ {m n}
               → Γ ⊢ m [conv↑] n ∷ ℕ ^ ι ⁰
               → Γ ⊢ suc m [conv↓] suc n ∷ ℕ ^ ι ⁰
+    suc2-cong  : ∀ {m n}
+              → Γ ⊢ m [conv↑] n ∷ ℕ2 ^ ι ⁰
+              → Γ ⊢ suc2 m [conv↓] suc2 n ∷ ℕ2 ^ ι ⁰
     η-eq      : ∀ {f g F G rF lF lG l}
               → lF ≤ l
               → lG ≤ l

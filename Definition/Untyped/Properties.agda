@@ -614,6 +614,59 @@ natrecIrrelevantSubst′ F z s n =
                (trans (substCompEq F)
                       (substVar-to-subst (natrecIrrelevantSubstLemma′ F z s n) F)))
 
+natrec2SucCaseLemma : ∀ {σ} (x : Nat)
+  → (step id •ₛ consSubst (wk1Subst idSubst) (suc2 (var 0)) ₛ•ₛ liftSubst σ) x
+  ≡ (liftSubst (liftSubst σ) ₛ• step id ₛ•ₛ consSubst (wk1Subst idSubst) (suc2 (var 0))) x
+natrec2SucCaseLemma 0 = refl
+natrec2SucCaseLemma {σ} (1+ x) =
+  trans (subst-wk (σ x))
+           (sym (trans (wk1-wk (step id) _)
+                             (wk≡subst (step (step id)) (σ x))))
+
+natrec2SucCase : ∀ σ F rF lF
+  → Π ℕ2 ^ ! ° ⁰ ▹ (Π subst (liftSubst σ) F ^ rF ° lF
+                ▹ subst (liftSubst (liftSubst σ)) (wk1 (F [ suc2 (var 0) ]↑)) ° lF ° lF ^ rF) ° lF ° lF ^ rF
+  ≡ Π ℕ2 ^ ! ° ⁰ ▹ (subst (liftSubst σ) F ^ rF ° lF ▹▹ subst (liftSubst σ) F [ suc2 (var 0) ]↑ ° lF ° lF ^ rF) ° lF ° lF ^ rF
+natrec2SucCase σ F rF lF =
+  cong7 Π_^_°_▹_°_°_^_ refl refl refl
+    (cong7 Π_^_°_▹_°_°_^_ refl refl refl
+       (trans (trans (subst-wk (F [ suc2 (var 0) ]↑))
+                           (substCompEq F))
+                 (sym (trans (wk-subst (subst (liftSubst σ) F))
+                                   (trans (substCompEq F)
+                                             (substVar-to-subst natrec2SucCaseLemma F))))) refl refl refl) refl refl refl
+
+natrec2IrrelevantSubstLemma : ∀ {l} F z s m σ (x : Nat)
+  → (sgSubst (natrec2 l (subst (liftSubst σ) F) (subst σ z) (subst σ s) m)
+     ₛ•ₛ liftSubst (sgSubst m)
+     ₛ•ₛ liftSubst (liftSubst σ)
+     ₛ•  step id
+     ₛ•ₛ consSubst (tail idSubst) (suc2 (var 0))) x
+  ≡ (consSubst σ (suc2 m)) x
+natrec2IrrelevantSubstLemma F z s m σ 0 =
+  cong suc2 (trans (subst-wk m) (subst-id m))
+natrec2IrrelevantSubstLemma F z s m σ (1+ x) =
+  trans (subst-wk (wk (step id) (σ x)))
+           (trans (subst-wk (σ x))
+                     (subst-id (σ x)))
+
+natrec2IrrelevantSubst : ∀ {l} F z s m σ
+  → subst (consSubst σ (suc2 m)) F
+  ≡ subst (liftSubst (sgSubst m))
+          (subst (liftSubst (liftSubst σ))
+                 (wk1 (F [ suc2 (var 0) ]↑)))
+                   [ natrec2 l (subst (liftSubst σ) F) (subst σ z) (subst σ s) m ]
+natrec2IrrelevantSubst F z s m σ =
+  sym (trans (substCompEq (subst (liftSubst (liftSubst σ))
+        (wk (step id)
+         (subst (consSubst (tail idSubst) (suc2 (var 0))) F))))
+         (trans (substCompEq (wk (step id)
+        (subst (consSubst (tail idSubst) (suc2 (var 0))) F)))
+        (trans
+           (subst-wk (subst (consSubst (tail idSubst) (suc2 (var 0))) F))
+           (trans (substCompEq F)
+                     (substVar-to-subst (natrec2IrrelevantSubstLemma F z s m σ) F)))))
+
 cons0wkLift1-id : ∀ σ G
     → subst (sgSubst (var 0))
             (wk (lift (step id)) (subst (liftSubst σ) G))

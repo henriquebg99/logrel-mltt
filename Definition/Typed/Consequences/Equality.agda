@@ -108,6 +108,25 @@ U≡A-whnf {A} X whnfA = whnfRed* (U≡A X) whnfA
       [ℕ≡A] = proj₂ (proj₂ X)
   in ℕ≡A′ (ℕ-elim [ℕ]) (irrelevanceEq [ℕ] (ℕ-intr (ℕ-elim [ℕ])) [ℕ≡A]) whnfA
 
+ℕ2≡A′ : ∀ {A Γ l} ([ℕ2] : Γ ⊩⟨ l ⟩ℕ2 ℕ2)
+    → Γ ⊩⟨ l ⟩ ℕ2 ≡ A ^ [ ! , ι ⁰ ] / (ℕ2-intr [ℕ2])
+    → Whnf A
+    → A PE.≡ ℕ2
+ℕ2≡A′ (noemb x) [ℕ2≡A] whnfA = whnfRed* [ℕ2≡A] whnfA
+ℕ2≡A′ (emb emb< [ℕ2]) [ℕ2≡A] whnfA = ℕ2≡A′ [ℕ2] [ℕ2≡A] whnfA
+ℕ2≡A′ (emb ∞< [ℕ2]) [ℕ2≡A] whnfA = ℕ2≡A′ [ℕ2] [ℕ2≡A] whnfA
+
+ℕ2≡A : ∀ {A Γ}
+    → Γ ⊢ ℕ2 ≡ A ^ [ ! , ι ⁰ ]
+    → Whnf A
+    → A PE.≡ ℕ2
+ℕ2≡A {A} ℕ2≡A whnfA =
+  let X = reducibleEq ℕ2≡A
+      [ℕ2] = proj₁ X
+      [A] = proj₁ (proj₂ X)
+      [ℕ2≡A] = proj₂ (proj₂ X)
+  in ℕ2≡A′ (ℕ2-elim [ℕ2]) (irrelevanceEq [ℕ2] (ℕ2-intr (ℕ2-elim [ℕ2])) [ℕ2≡A]) whnfA
+
 -- If A in WHNF is judgmentally equal to Empty, then A is propositionally equal to Empty.
 Empty≡A′ : ∀ {A Γ l} ([Empty] : Γ ⊩⟨ l ⟩Empty sEmpty)
     → Γ ⊩⟨ l ⟩ sEmpty ≡ A ^ [ % , ι ⁰ ] / (Empty-intr [Empty])

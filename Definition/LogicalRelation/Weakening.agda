@@ -48,6 +48,37 @@ mutual
   wkNatural-prop ρ ⊢Δ (ne nf) = ne (wkTermNe ρ ⊢Δ nf)
 
 mutual
+  wkTermℕ2 : ∀ {ρ Γ Δ n} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
+          → Γ ⊩ℕ2 n ∷ℕ2 → Δ ⊩ℕ2 U.wk ρ n ∷ℕ2
+  wkTermℕ2 {ρ} [ρ] ⊢Δ (ℕ2ₜ n d n≡n prop) =
+    ℕ2ₜ (U.wk ρ n) (wkRed:*:Term [ρ] ⊢Δ d)
+       (≅ₜ-wk [ρ] ⊢Δ n≡n)
+       (wkNatural2-prop [ρ] ⊢Δ prop)
+
+  wkNatural2-prop : ∀ {ρ Γ Δ n} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
+                 → Natural2-prop Γ n
+                 → Natural2-prop Δ (U.wk ρ n)
+  wkNatural2-prop ρ ⊢Δ (suc2ᵣ n) = suc2ᵣ (wkTermℕ2 ρ ⊢Δ n)
+  wkNatural2-prop ρ ⊢Δ zero2ᵣ = zero2ᵣ
+  wkNatural2-prop ρ ⊢Δ (ne nf) = ne (wkTermNe ρ ⊢Δ nf)
+
+mutual
+  wkEqTermℕ2 : ∀ {ρ Γ Δ t u} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
+            → Γ ⊩ℕ2 t ≡ u ∷ℕ2
+            → Δ ⊩ℕ2 U.wk ρ t ≡ U.wk ρ u ∷ℕ2
+  wkEqTermℕ2 {ρ} [ρ] ⊢Δ (ℕ2ₜ₌ k k′ d d′ t≡u prop) =
+    ℕ2ₜ₌ (U.wk ρ k) (U.wk ρ k′) (wkRed:*:Term [ρ] ⊢Δ d)
+        (wkRed:*:Term [ρ] ⊢Δ d′) (≅ₜ-wk [ρ] ⊢Δ t≡u)
+        (wk[Natural2]-prop [ρ] ⊢Δ prop)
+
+  wk[Natural2]-prop : ∀ {ρ Γ Δ n n′} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
+                   → [Natural2]-prop Γ n n′
+                   → [Natural2]-prop Δ (U.wk ρ n) (U.wk ρ n′)
+  wk[Natural2]-prop ρ ⊢Δ (suc2ᵣ [n≡n′]) = suc2ᵣ (wkEqTermℕ2 ρ ⊢Δ [n≡n′])
+  wk[Natural2]-prop ρ ⊢Δ zero2ᵣ = zero2ᵣ
+  wk[Natural2]-prop ρ ⊢Δ (ne x) = ne (wkEqTermNe ρ ⊢Δ x)
+
+mutual
   wkEqTermℕ : ∀ {ρ Γ Δ t u} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
             → Γ ⊩ℕ t ≡ u ∷ℕ
             → Δ ⊩ℕ U.wk ρ t ≡ U.wk ρ u ∷ℕ
@@ -84,6 +115,7 @@ wkEqTermEmpty {ρ} [ρ] ⊢Δ (Emptyₜ₌ (ne d d')) = Emptyₜ₌ (ne (T.wkTer
 wk : ∀ {ρ Γ Δ A rA l} → ρ ∷ Δ ⊆ Γ → ⊢ Δ → Γ ⊩⟨ l ⟩ A ^ rA → Δ ⊩⟨ l ⟩ U.wk ρ A ^ rA
 wk ρ ⊢Δ (Uᵣ (Uᵣ r l′ l< eq d)) = Uᵣ (Uᵣ r l′ l< eq (wkRed:*: ρ ⊢Δ d))
 wk ρ ⊢Δ (ℕᵣ D) = ℕᵣ (wkRed:*: ρ ⊢Δ D)
+wk ρ ⊢Δ (ℕ2ᵣ D) = ℕ2ᵣ (wkRed:*: ρ ⊢Δ D)
 wk ρ ⊢Δ (Emptyᵣ D) = Emptyᵣ (wkRed:*: ρ ⊢Δ D)
 wk {ρ} [ρ] ⊢Δ (ne′ K D neK K≡K) =
   ne′ (U.wk ρ K) (wkRed:*: [ρ] ⊢Δ D) (wkNeutral ρ neK) (~-wk [ρ] ⊢Δ K≡K)
@@ -149,6 +181,7 @@ wkEq : ∀ {ρ Γ Δ A B r l} → ([ρ] : ρ ∷ Δ ⊆ Γ) (⊢Δ : ⊢ Δ)
      → Δ ⊩⟨ l ⟩ U.wk ρ A ≡ U.wk ρ B ^ r / wk [ρ] ⊢Δ [A]
 wkEq ρ ⊢Δ (Uᵣ (Uᵣ r l′ l< eq d)) D = wkRed* ρ ⊢Δ D
 wkEq ρ ⊢Δ (ℕᵣ D) A≡B = wkRed* ρ ⊢Δ A≡B
+wkEq ρ ⊢Δ (ℕ2ᵣ D) A≡B = wkRed* ρ ⊢Δ A≡B
 wkEq ρ ⊢Δ (Emptyᵣ D) A≡B = wkRed* ρ ⊢Δ A≡B
 wkEq {ρ} [ρ] ⊢Δ (ne′ _ _ _ _) (ne₌ M D′ neM K≡M) =
   ne₌ (U.wk ρ M) (wkRed:*: [ρ] ⊢Δ D′)
@@ -220,6 +253,7 @@ wkTerm {ρ} {Δ = Δ} {t = t} {l = ∞} [ρ] ⊢Δ (Uᵣ (Uᵣ r ¹ l< eq d)) (U
   in
   Uₜ (U.wk ρ K) (wkRed:*:Term [ρ] ⊢Δ d₁) (wkType ρ typeK) (≅ₜ-wk [ρ] ⊢Δ K≡K) [t]′
 wkTerm ρ ⊢Δ (ℕᵣ D) [t] = wkTermℕ ρ ⊢Δ [t]
+wkTerm ρ ⊢Δ (ℕ2ᵣ D) [t] = wkTermℕ2 ρ ⊢Δ [t]
 wkTerm ρ ⊢Δ (Emptyᵣ D) [t] = wkTermEmpty ρ ⊢Δ [t]
 wkTerm {ρ} {r = [ ! , l′ ]} [ρ] ⊢Δ (ne′ K D neK K≡K) (neₜ k d nf) =
   neₜ (U.wk ρ k) (wkRed:*:Term [ρ] ⊢Δ d) (wkTermNe [ρ] ⊢Δ nf)
@@ -295,6 +329,7 @@ wkEqTerm {ρ} {Γ} {Δ} {A} {t} {u} {r} {l = ∞} [ρ] ⊢Δ (Uᵣ (Uᵣ ti ¹ l
   Uₜ₌ (wkTerm [ρ] ⊢Δ (Uᵣ (Uᵣ ti ¹ l< eq d)) [t]) (wkTerm [ρ] ⊢Δ (Uᵣ (Uᵣ ti ¹ l< eq d)) [u])
     (≅ₜ-wk [ρ] ⊢Δ A≡B) [t≡u]′
 wkEqTerm ρ ⊢Δ (ℕᵣ D) [t≡u] = wkEqTermℕ ρ ⊢Δ [t≡u]
+wkEqTerm ρ ⊢Δ (ℕ2ᵣ D) [t≡u] = wkEqTermℕ2 ρ ⊢Δ [t≡u]
 wkEqTerm ρ ⊢Δ (Emptyᵣ D) [t≡u] = wkEqTermEmpty ρ ⊢Δ [t≡u]
 wkEqTerm {ρ} {r = [ ! , l′ ]} [ρ] ⊢Δ (ne′ K D neK K≡K) (neₜ₌ k m d d′ nf) =
   neₜ₌ (U.wk ρ k) (U.wk ρ m)

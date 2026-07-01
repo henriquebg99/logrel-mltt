@@ -62,12 +62,15 @@ mutual
     let _ , neT , neU = ne~↓! x₁
     in ne x , ne neT , ne neU
   whnfConv↓Term (ℕ-refl x) = Uₙ , ℕₙ , ℕₙ
+  whnfConv↓Term (ℕ2-refl x) = Uₙ , ℕ2ₙ , ℕ2ₙ
   whnfConv↓Term (Empty-refl x) = Uₙ , Emptyₙ , Emptyₙ
   whnfConv↓Term (Π-cong _ _ _ _ _ _ x x₁ x₂) = Uₙ , Πₙ , Πₙ
   whnfConv↓Term (Id-cong x x₁ x₂) = Uₙ , Idₙ , Idₙ
   whnfConv↓Term (U-refl _ _) = Uₙ , Uₙ , Uₙ
   whnfConv↓Term (zero-refl x) = ℕₙ , zeroₙ , zeroₙ
+  whnfConv↓Term (zero2-refl x) = ℕ2ₙ , zero2ₙ , zero2ₙ
   whnfConv↓Term (suc-cong x) = ℕₙ , sucₙ , sucₙ
+  whnfConv↓Term (suc2-cong x) = ℕ2ₙ , suc2ₙ , suc2ₙ
   whnfConv↓Term (η-eq _ _ x x₁ x₂ y y₁ x₃) = Πₙ , functionWhnf y , functionWhnf y₁
   
   -- Extraction of WHNF from algorithmic equality of types in WHNF.

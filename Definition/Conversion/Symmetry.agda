@@ -219,6 +219,9 @@ mutual
   symConv↓Term Γ≡Δ (ℕ-refl x) =
     let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in  ℕ-refl ⊢Δ
+  symConv↓Term Γ≡Δ (ℕ2-refl x) =
+    let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
+    in  ℕ2-refl ⊢Δ
   symConv↓Term Γ≡Δ (Empty-refl _) =
     let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in  Empty-refl ⊢Δ
@@ -242,7 +245,11 @@ mutual
   symConv↓Term Γ≡Δ (zero-refl x) =
     let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in  zero-refl ⊢Δ
+  symConv↓Term Γ≡Δ (zero2-refl x) =
+    let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
+    in  zero2-refl ⊢Δ
   symConv↓Term Γ≡Δ (suc-cong t<>u) = suc-cong (symConv↑Term Γ≡Δ t<>u)
+  symConv↓Term Γ≡Δ (suc2-cong t<>u) = suc2-cong (symConv↑Term Γ≡Δ t<>u)
   symConv↓Term Γ≡Δ (η-eq l< l<' x x₁ x₂ y y₁ t<>u) =
     η-eq l<  l<' (stability Γ≡Δ x) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₁)
          y₁ y (symConv↑Term (Γ≡Δ ∙ refl x) t<>u)

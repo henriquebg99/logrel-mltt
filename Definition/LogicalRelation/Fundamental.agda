@@ -23,6 +23,7 @@ open import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv
 open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Natrec equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Natrec2 equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv
@@ -109,6 +110,7 @@ abstract
 
 -- Fundamental theorem for terms.
   fundamentalTerm (ℕⱼ x) = valid x , maybeEmbᵛ {A = Univ _ _} (valid x) (Uᵛ emb< (valid x)) ,  maybeEmbTermᵛ {A = Univ _ _} {t = ℕ} (valid x) (Uᵛ emb< (valid x)) (ℕᵗᵛ (valid x))
+  fundamentalTerm (ℕ2ⱼ x) = valid x , maybeEmbᵛ {A = Univ _ _} (valid x) (Uᵛ emb< (valid x)) ,  maybeEmbTermᵛ {A = Univ _ _} {t = ℕ2} (valid x) (Uᵛ emb< (valid x)) (ℕ2ᵗᵛ (valid x))
   fundamentalTerm (Emptyⱼ ⊢Γ) = let [Γ] = valid ⊢Γ
                                     [U] = Uᵛ (proj₂ (levelBounded _)) [Γ]
                                  in [Γ] , maybeEmbᵛ {A = Univ _ _} [Γ] [U] , maybeEmbTermᵛ {A = Univ _ _} {t = sEmpty} [Γ] [U] (Emptyᵗᵛ [Γ] (proj₂ (levelBounded _)))
@@ -194,9 +196,13 @@ abstract
   fundamentalTerm (_▹_▹_▹_∘ⱼ_ {g} {a} {F} {rF} {lF} {G} {lG = ¹} {r = %} {lΠ} l% [F] DG Dt Du) = let e , _ = l% PE.refl in ⊥-elim (⁰≢¹ (PE.sym e))
   fundamentalTerm (_▹_▹_▹_∘ⱼ_ {g} {a} {F} {rF} {lF} {G} {lG} {r = %} {lΠ = ¹} l% [F] DG Dt Du) = let _ , e = l% PE.refl in ⊥-elim (⁰≢¹ (PE.sym e))
   fundamentalTerm (zeroⱼ x) = valid x , ℕᵛ (valid x) , zeroᵛ {l = ∞} (valid x)
+  fundamentalTerm (zero2ⱼ x) = valid x , ℕ2ᵛ (valid x) , zero2ᵛ {l = ∞} (valid x)
   fundamentalTerm (sucⱼ {n} t) with fundamentalTerm t
   fundamentalTerm (sucⱼ {n} t) | [Γ] , [ℕ] , [n] =
     [Γ] , [ℕ] , sucᵛ {n = n} [Γ] [ℕ] [n]
+  fundamentalTerm (suc2ⱼ {n} t) with fundamentalTerm t
+  fundamentalTerm (suc2ⱼ {n} t) | [Γ] , [ℕ2] , [n] =
+    [Γ] , [ℕ2] , suc2ᵛ {n = n} [Γ] [ℕ2] [n]
   fundamentalTerm (natrecⱼ {G} {rG} {lG} {s} {z} {n} rGlG ⊢G ⊢z ⊢s ⊢n)
     with fundamental ⊢G | fundamentalTerm ⊢z | fundamentalTerm ⊢s
        | fundamentalTerm ⊢n
@@ -491,6 +497,14 @@ abstract
       in  [Γ] , modelsTermEq [A] [suct] [sucu]
                              (λ ⊢Δ [σ] →
                                 sucEqTerm (proj₁ ([A] ⊢Δ [σ])) ([t≡u] ⊢Δ [σ]))
+  fundamentalTermEq (suc2-cong x) with fundamentalTermEq x
+  fundamentalTermEq (suc2-cong {t} {u} x)
+    | [Γ] , modelsTermEq [A] [t] [u] [t≡u] =
+      let [suct] = suc2ᵛ {n = t} [Γ] [A] [t]
+          [sucu] = suc2ᵛ {n = u} [Γ] [A] [u]
+      in  [Γ] , modelsTermEq [A] [suct] [sucu]
+                             (λ ⊢Δ [σ] →
+                                suc2EqTerm (proj₁ ([A] ⊢Δ [σ])) ([t≡u] ⊢Δ [σ]))
   fundamentalTermEq (natrec-cong {z} {z′} {s} {s′} {n} {n′} {F} {F′}
                                  F≡F′ z≡z′ s≡s′ n≡n′)
     with fundamentalEq F≡F′ |
@@ -561,6 +575,76 @@ abstract
                                      [F₊]′ [F′₊]′ [F₊≡F′₊]′ [Fₙ]′
                                      [z]′ [z′]′ [z≡z′]′
                                      [s]′ [s′]′ [s≡s′]′ [n] [n′] [n≡n′]) 
+  fundamentalTermEq (natrec2-cong {z} {z′} {s} {s′} {n} {n′} {F} {F′}
+                                  F≡F′ z≡z′ s≡s′ n≡n′)
+    with fundamentalEq F≡F′ |
+         fundamentalTermEq z≡z′      |
+         fundamentalTermEq s≡s′      |
+         fundamentalTermEq n≡n′
+  fundamentalTermEq (natrec2-cong {z} {z′} {s} {s′} {n} {n′} {F} {F′} {l}
+                                  F≡F′ z≡z′ s≡s′ n≡n′) |
+    [Γ]  , [F] , [F′] , [F≡F′] |
+    [Γ]₁ , modelsTermEq [F₀] [z] [z′] [z≡z′] |
+    [Γ]₂ , modelsTermEq [F₊] [s] [s′] [s≡s′] |
+    [Γ]₃ , modelsTermEq [ℕ2] [n] [n′] [n≡n′] =
+      let sType = Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc2 (var 0) ]↑ ° l ° l ^ !) ° l ° l ^ !
+          s′Type = Π ℕ2 ^ ! ° ⁰ ▹ (F′ ^ ! ° l ▹▹ F′ [ suc2 (var 0) ]↑ ° l ° l ^ !) ° l ° l ^ !
+          [0] = S.irrelevanceTerm {l = ∞} {A = ℕ2} {t = zero2}
+                                  [Γ]₃ [Γ]₃ (ℕ2ᵛ [Γ]₃) [ℕ2] (zero2ᵛ {l = ∞} [Γ]₃)
+          [F]′ = S.irrelevance {A = F} [Γ] ([Γ]₃ ∙ [ℕ2]) [F]
+          [F₀]′ = S.irrelevance {A = F [ zero2 ]} [Γ]₁ [Γ]₃ [F₀]
+          [F₊]′ = S.irrelevance {A = sType} [Γ]₂ [Γ]₃ [F₊]
+          [Fₙ]′ = substS {ℕ2} {F} {n} [Γ]₃ [ℕ2] [F]′ [n]
+          [F′]′ = S.irrelevance {A = F′} [Γ] ([Γ]₃ ∙ [ℕ2]) [F′]
+          [F₀]″ = substS {ℕ2} {F} {zero2} [Γ]₃ [ℕ2] [F]′ [0]
+          [F′₀]′ = substS {ℕ2} {F′} {zero2} [Γ]₃ [ℕ2] [F′]′ [0]
+          [F′₊]′ = suc2Case {F′} (λ abs → ⊥-elim (!≢% abs)) [Γ]₃ [ℕ2] [F′]′
+          [F′ₙ′]′ = substS {ℕ2} {F′} {n′} [Γ]₃ [ℕ2] [F′]′ [n′]
+          [ℕ2≡ℕ2] = reflᵛ {ℕ2} [Γ]₃ [ℕ2]
+          [0≡0] = reflᵗᵛ {ℕ2} {zero2} [Γ]₃ [ℕ2] [0]
+          [F≡F′]′ = S.irrelevanceEq {A = F} {B = F′}
+                                    [Γ] ([Γ]₃ ∙ [ℕ2]) [F] [F]′ [F≡F′]
+          [F₀≡F′₀] = substSEq {ℕ2} {ℕ2} {F} {F′} {zero2} {zero2}
+                              [Γ]₃ [ℕ2] [ℕ2] [ℕ2≡ℕ2]
+                              [F]′ [F′]′ [F≡F′]′ [0] [0] [0≡0]
+          [F₀≡F′₀]′ = S.irrelevanceEq {A = F [ zero2 ]} {B = F′ [ zero2 ]}
+                                      [Γ]₃ [Γ]₃ [F₀]″ [F₀]′ [F₀≡F′₀]
+          [F₊≡F′₊] = suc2CaseCong {F} {F′} (λ abs → ⊥-elim (!≢% abs)) [Γ]₃ [ℕ2] [F]′ [F′]′ [F≡F′]′
+          [F₊≡F′₊]′ = S.irrelevanceEq {A = sType} {B = s′Type}
+                                      [Γ]₃ [Γ]₃ (suc2Case {F} (λ abs → ⊥-elim (!≢% abs)) [Γ]₃ [ℕ2] [F]′)
+                                      [F₊]′ [F₊≡F′₊]
+          [Fₙ≡F′ₙ′]′ = substSEq {ℕ2} {ℕ2} {F} {F′} {n} {n′}
+                                [Γ]₃ [ℕ2] [ℕ2] [ℕ2≡ℕ2] [F]′ [F′]′ [F≡F′]′
+                                [n] [n′] [n≡n′]
+          [z]′ = S.irrelevanceTerm {A = F [ zero2 ]} {t = z}
+                                   [Γ]₁ [Γ]₃ [F₀] [F₀]′ [z]
+          [z′]′ = convᵛ {z′} {F [ zero2 ]} {F′ [ zero2 ]}
+                        [Γ]₃ [F₀]′ [F′₀]′ [F₀≡F′₀]′
+                        (S.irrelevanceTerm {A = F [ zero2 ]} {t = z′}
+                                           [Γ]₁ [Γ]₃ [F₀] [F₀]′ [z′])
+          [z≡z′]′ = S.irrelevanceEqTerm {A = F [ zero2 ]} {t = z} {u = z′}
+                                        [Γ]₁ [Γ]₃ [F₀] [F₀]′ [z≡z′]
+          [s]′ = S.irrelevanceTerm {A = sType} {t = s} [Γ]₂ [Γ]₃ [F₊] [F₊]′ [s]
+          [s′]′ = convᵛ {s′} {sType} {s′Type} [Γ]₃ [F₊]′ [F′₊]′ [F₊≡F′₊]′
+                        (S.irrelevanceTerm {A = sType} {t = s′}
+                                           [Γ]₂ [Γ]₃ [F₊] [F₊]′ [s′])
+          [s≡s′]′ = S.irrelevanceEqTerm {A = sType} {t = s} {u = s′}
+                                        [Γ]₂ [Γ]₃ [F₊] [F₊]′ [s≡s′]
+      in  [Γ]₃
+      ,   modelsTermEq [Fₙ]′
+                       (natrec2ᵛ {F} { ! } {l} {z} {s} {n} (λ abs → ⊥-elim (!≢% abs))
+                                [Γ]₃ [ℕ2] [F]′ [F₀]′ [F₊]′ [Fₙ]′ [z]′ [s]′ [n])
+                       (conv₂ᵛ {natrec2 l F′ z′ s′ n′} {F [ n ]} {F′ [ n′ ]}
+                               [Γ]₃ [Fₙ]′ [F′ₙ′]′ [Fₙ≡F′ₙ′]′
+                               (natrec2ᵛ {F′} { ! } {l} {z′} {s′} {n′} (λ abs → ⊥-elim (!≢% abs))
+                                        [Γ]₃ [ℕ2] [F′]′ [F′₀]′ [F′₊]′ [F′ₙ′]′
+                                        [z′]′ [s′]′ [n′]))
+                       (natrec2-congᵛ {F} {F′} { ! } {l} {z} {z′} {s} {s′} {n} {n′} (λ abs → ⊥-elim (!≢% abs))
+                                     [Γ]₃ [ℕ2] [F]′ [F′]′ [F≡F′]′
+                                     [F₀]′ [F′₀]′ [F₀≡F′₀]′
+                                     [F₊]′ [F′₊]′ [F₊≡F′₊]′ [Fₙ]′
+                                     [z]′ [z′]′ [z≡z′]′
+                                     [s]′ [s′]′ [s≡s′]′ [n] [n′] [n≡n′])
   fundamentalTermEq (natrec-zero {z} {s} {F} ⊢F ⊢z ⊢s)
     with fundamental ⊢F | fundamentalTerm ⊢z | fundamentalTerm ⊢s
   fundamentalTermEq (natrec-zero {z} {s} {F} {l} ⊢F ⊢z ⊢s) | [Γ] , [F]

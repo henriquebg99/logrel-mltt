@@ -88,6 +88,7 @@ mutual
   soundnessConv↓Term : ∀ {a b A lA Γ} → Γ ⊢ a [conv↓] b ∷ A ^ lA → Γ ⊢ a ≡ b ∷ A ^ [ ! , lA ]
   soundnessConv↓Term (ne x) = soundness~↓! x
   soundnessConv↓Term (ℕ-refl ⊢Γ) = refl (ℕⱼ ⊢Γ)
+  soundnessConv↓Term (ℕ2-refl ⊢Γ) = refl (ℕ2ⱼ ⊢Γ)
   soundnessConv↓Term (Empty-refl ⊢Γ) = refl (Emptyⱼ ⊢Γ)
   soundnessConv↓Term (Π-cong PE.refl PE.refl PE.refl PE.refl l< l<' F c c₁) =
     Π-cong l< l<' F (soundnessConv↑Term c) (soundnessConv↑Term c₁)
@@ -102,7 +103,9 @@ mutual
         _ , M≡A' = neTypeEq neA t∷M t -- soundnessConv↑ M≡A
     in conv X M≡A'
   soundnessConv↓Term (zero-refl ⊢Γ) = refl (zeroⱼ ⊢Γ)
+  soundnessConv↓Term (zero2-refl ⊢Γ) = refl (zero2ⱼ ⊢Γ)
   soundnessConv↓Term (suc-cong c) = suc-cong (soundnessConv↑Term c)
+  soundnessConv↓Term (suc2-cong c) = suc2-cong (soundnessConv↑Term c)
   soundnessConv↓Term (η-eq l< l<' F x x₁ y y₁ c) = η-eq l< l<' F x x₁ (soundnessConv↑Term c)
   soundnessConv↓Term (U-refl PE.refl ⊢Γ) = refl (univ 0<1 ⊢Γ)
 
@@ -121,6 +124,14 @@ natrec-cong′ : ∀ {Γ k l h g a b F lF G}
              → Γ ⊢ k ~ l ↓! ℕ ^ ι ⁰
              → Γ ⊢ natrec lF F a h k ~ natrec lF G b g l ↑ F [ k ] ^ [ ! , ι lF ]
 natrec-cong′ F=G a=b h=g k~l = ~↑! (natrec-cong F=G a=b h=g k~l)
+
+natrec2-cong′ : ∀ {Γ k l h g a b F lF G}
+             → Γ ∙ ℕ2 ^ [ ! , ι ⁰ ]  ⊢ F [conv↑] G ^ [ ! , ι lF ]
+             → Γ ⊢ a [conv↑] b ∷ F [ zero2 ] ^ ι lF
+             → Γ ⊢ h [conv↑] g ∷ Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° lF ▹▹ F [ suc2 (var 0) ]↑ ° lF ° lF ^ !) ° lF ° lF ^ ! ^ ι lF
+             → Γ ⊢ k ~ l ↓! ℕ2 ^ ι ⁰
+             → Γ ⊢ natrec2 lF F a h k ~ natrec2 lF G b g l ↑ F [ k ] ^ [ ! , ι lF ]
+natrec2-cong′ F=G a=b h=g k~l = ~↑! (natrec2-cong F=G a=b h=g k~l)
 
 Emptyrec-cong′ : ∀ {Γ k l F lF G}
                → Γ ⊢ F [conv↑] G ^ [ ! , ι lF ]
