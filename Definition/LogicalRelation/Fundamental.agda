@@ -656,6 +656,103 @@ abstract
                                      [F₊]′ [F′₊]′ [F₊≡F′₊]′ [Fₙ]′
                                      [z]′ [z′]′ [z≡z′]′
                                      [s]′ [s′]′ [s≡s′]′ [n] [n′] [n≡n′])
+  fundamentalTermEq (natrec2-zero {z} {s} {F} ⊢F ⊢z ⊢s)
+    with fundamental ⊢F | fundamentalTerm ⊢z | fundamentalTerm ⊢s
+  fundamentalTermEq (natrec2-zero {z} {s} {F} {l} ⊢F ⊢z ⊢s) | [Γ] , [F]
+    | [Γ]₁ , [F₀] , [z] | [Γ]₂ , [F₊] , [s] =
+    let sType = Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc2 (var 0) ]↑ ° l ° l ^ !) ° l ° l ^ !
+        [Γ]′ = [Γ]₁
+        [ℕ2]′ = ℕ2ᵛ {l = ∞} [Γ]′
+        [F₊]′ = S.irrelevance {A = sType} [Γ]₂ [Γ]′ [F₊]
+        [s]′ = S.irrelevanceTerm {A = sType} {t = s} [Γ]₂ [Γ]′ [F₊] [F₊]′ [s]
+        [F]′ = S.irrelevance {A = F} [Γ] ([Γ]′ ∙ [ℕ2]′) [F]
+        d , r =
+          redSubstTermᵛ {F [ zero2 ]} {natrec2 l F z s zero2} {z} [Γ]′
+            (λ {Δ} {σ} ⊢Δ [σ] →
+               let ⊢ℕ2 = escape (proj₁ ([ℕ2]′ ⊢Δ [σ]))
+                   ⊢F = escape (proj₁ ([F]′ (⊢Δ ∙ ⊢ℕ2)
+                                               (liftSubstS {F = ℕ2}
+                                                           [Γ]′ ⊢Δ [ℕ2]′ [σ])))
+                   ⊢z = PE.subst (λ x → Δ ⊢ subst σ z ∷ x ^ _)
+                                 (singleSubstLift F zero2)
+                                 (escapeTerm (proj₁ ([F₀] ⊢Δ [σ]))
+                                                (proj₁ ([z] ⊢Δ [σ])))
+                   ⊢s = PE.subst (λ x → Δ ⊢ subst σ s ∷ x ^ [ ! , ι l ] )
+                                 (natrec2SucCase σ F ! l)
+                                 (escapeTerm (proj₁ ([F₊]′ ⊢Δ [σ]))
+                                                (proj₁ ([s]′ ⊢Δ [σ])))
+               in PE.subst (λ x → Δ ⊢ subst σ (natrec2 l F z s zero2)
+                                    ⇒ subst σ z ∷ x ^ _)
+                           (PE.sym (singleSubstLift F zero2))
+                           (natrec2-zero ⊢F ⊢z ⊢s))
+                        [F₀] [z]
+    in  [Γ]′ , modelsTermEq [F₀] d [z] r
+  fundamentalTermEq (natrec2-suc {n} {z} {s} {F} {lF} ⊢n ⊢F ⊢z ⊢s)
+    with fundamentalTerm ⊢n | fundamental ⊢F
+       | fundamentalTerm ⊢z | fundamentalTerm ⊢s
+  ... | [Γ] , [ℕ2] , [n] | [Γ]₁ , [F] | [Γ]₂ , [F₀] , [z] | [Γ]₃ , [F₊] , [s] =
+    let [ℕ2]′ = S.irrelevance {A = ℕ2} [Γ] [Γ]₃ [ℕ2]
+        [n]′ = S.irrelevanceTerm {A = ℕ2} {t = n} [Γ] [Γ]₃ [ℕ2] [ℕ2]′ [n]
+        [sucn] = suc2ᵛ {n = n} [Γ]₃ [ℕ2]′ [n]′
+        [F₀]′ = S.irrelevance {A = F [ zero2 ]} [Γ]₂ [Γ]₃ [F₀]
+        [z]′ = S.irrelevanceTerm {A = F [ zero2 ]} {t = z}
+                                 [Γ]₂ [Γ]₃ [F₀] [F₀]′ [z]
+        [F]′ = S.irrelevance {A = F} [Γ]₁ ([Γ]₃ ∙ [ℕ2]′) [F]
+        [F[sucn]] = substS {ℕ2} {F} {suc2 n} [Γ]₃ [ℕ2]′ [F]′ [sucn]
+        [Fₙ]′ = substS {ℕ2} {F} {n} [Γ]₃ [ℕ2]′ [F]′ [n]′
+        [F+n] = substSΠ {ℕ2} {F ^ ! ° lF ▹▹ F [ suc2 (var 0) ]↑ ° lF ° lF ^ !} {n} [Γ]₃ [ℕ2]′ [F₊] [n]′
+        [natrec₂ₙ] = natrec2ᵛ {F} { ! } {lF} {z} {s} {n} (λ abs → ⊥-elim (!≢% abs))
+                            [Γ]₃ [ℕ2]′ [F]′ [F₀]′ [F₊] [Fₙ]′ [z]′ [s] [n]′
+        t = (s ∘ n ^ lF) ∘ (natrec2 lF F z s n) ^ lF
+        q = subst (liftSubst (sgSubst n))
+                  (wk1 (F [ suc2 (var 0) ]↑))
+        y = S.irrelevanceTerm′
+              {A = q [ natrec2 lF F z s n ]} {A′ = F [ suc2 n ]} {t = t}
+              (natrec2IrrelevantSubst′ F z s n) PE.refl [Γ]₃ [Γ]₃
+              (substSΠ {F [ n ]} {q} {natrec2 lF F z s n} [Γ]₃
+                [Fₙ]′
+                [F+n]
+                [natrec₂ₙ])
+              [F[sucn]]
+              (appᵛ {F [ n ]} {q} { ! } {lF} {lF} {lF} {s ∘ n ^ lF} {natrec2 lF F z s n} [Γ]₃ [Fₙ]′ (decompΠᵛ {F = F [ n ]} {G = q} [Γ]₃ [Fₙ]′ [F+n])
+                (substSΠ {ℕ2} {F ^ ! ° lF ▹▹ F [ suc2 (var 0) ]↑ ° lF ° lF ^ !} {n}
+                         [Γ]₃ [ℕ2]′ [F₊] [n]′)
+                (appᵛ {ℕ2} {F ^ ! ° lF ▹▹ F [ suc2 (var 0) ]↑ ° lF ° lF ^ !} { ! } {⁰} {lF} {lF} {s} {n}
+                      [Γ]₃ [ℕ2]′ (decompΠᵛ {F = ℕ2} {G = F ^ ! ° lF ▹▹ F [ suc2 (var 0) ]↑ ° lF ° lF ^ !} [Γ]₃ [ℕ2]′ [F₊]) [F₊] [s] [n]′)
+                [natrec₂ₙ])
+        d , r =
+          redSubstTermᵛ {F [ suc2 n ]} {natrec2 lF F z s (suc2 n)} {t } {∞} {_} [Γ]₃
+            (λ {Δ} {σ} ⊢Δ [σ] →
+               let ⊢n = escapeTerm (proj₁ ([ℕ2]′ ⊢Δ [σ]))
+                                      (proj₁ ([n]′ ⊢Δ [σ]))
+                   ⊢ℕ2 = escape (proj₁ ([ℕ2]′ ⊢Δ [σ]))
+                   ⊢F = escape (proj₁ ([F]′ (⊢Δ ∙ ⊢ℕ2)
+                                               (liftSubstS {F = ℕ2}
+                                                           [Γ]₃ ⊢Δ [ℕ2]′ [σ])))
+                   ⊢z = PE.subst (λ x → Δ ⊢ subst σ z ∷ x ^ _)
+                                 (singleSubstLift F zero2)
+                                 (escapeTerm (proj₁ ([F₀]′ ⊢Δ [σ]))
+                                                (proj₁ ([z]′ ⊢Δ [σ])))
+                   ⊢s = PE.subst (λ x → Δ ⊢ subst σ s ∷ x ^ [ ! , ι lF ])
+                                 (natrec2SucCase σ F ! lF)
+                                 (escapeTerm (proj₁ ([F₊] ⊢Δ [σ]))
+                                                (proj₁ ([s] ⊢Δ [σ])))
+                   r = _⊢_⇒_∷_^_.natrec2-suc {n = subst σ n}
+                                          {z = subst σ z} {s = subst σ s}
+                                          {F = subst (liftSubst σ) F}
+                                          ⊢n ⊢F ⊢z ⊢s
+               in PE.subst (λ x → Δ ⊢ subst σ (natrec2 lF F z s (suc2 n))
+                                    ⇒ (subst σ t) ∷ x ^ _)
+                           (PE.trans (PE.trans (substCompEq F)
+                             (substVar-to-subst (λ { 0 → PE.refl
+                                         ; (1+ x) → PE.trans (subst-wk (σ x))
+                                                              (subst-id (σ x))
+                                         })
+                                      F))
+                             (PE.sym (substCompEq F)))
+                           r)
+                        [F[sucn]] y
+    in  [Γ]₃ , modelsTermEq [F[sucn]] d y r
   fundamentalTermEq (natrec-zero {z} {s} {F} ⊢F ⊢z ⊢s)
     with fundamental ⊢F | fundamentalTerm ⊢z | fundamentalTerm ⊢s
   fundamentalTermEq (natrec-zero {z} {s} {F} {l} ⊢F ⊢z ⊢s) | [Γ] , [F]
@@ -892,7 +989,27 @@ abstract
         [id] , [eq] = redSubstTermᵛ {ℕ} {cast ⁰ ℕ ℕ e (suc n)} {suc (cast ⁰ ℕ ℕ e n)} {∞} [Γ]₁
                                     (λ {Δ} {σ} ⊢Δ [σ] → cast-ℕ-S (⊢eΔ {Δ} {σ} ⊢Δ [σ]) (⊢nΔ {Δ} {σ} ⊢Δ [σ]))
                                     [ℕ] [suc-cast]
-    in [Γ]₁ , modelsTermEq [ℕ] [id] [suc-cast] [eq] 
+    in [Γ]₁ , modelsTermEq [ℕ] [id] [suc-cast] [eq]
+  fundamentalTermEq (cast-ℕ2-0 {e} ⊢e) with fundamentalTerm ⊢e
+  ... | [Γ] , [Id] , [e]ₜ =
+    let ⊢eΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([Id] {Δ} {σ} ⊢Δ [σ])) (proj₁ ([e]ₜ {Δ} {σ} ⊢Δ [σ]))
+        [zero] = zero2ᵛ {l = ∞} [Γ]
+        [id] , [eq] = redSubstTermᵛ {ℕ2} {cast ⁰ ℕ2 ℕ2 e zero2} {zero2} {∞} [Γ]
+                                    (λ {Δ} {σ} ⊢Δ [σ] → cast-ℕ2-0 (⊢eΔ {Δ} {σ} ⊢Δ [σ]))
+                                    (ℕ2ᵛ [Γ]) [zero]
+    in [Γ] , modelsTermEq (ℕ2ᵛ [Γ]) [id] [zero] [eq]
+  fundamentalTermEq (cast-ℕ2-S {e} {n} ⊢e ⊢n) with fundamentalTerm ⊢e | fundamentalTerm ⊢n
+  ... | [Γ] , [Id] , [e]ₜ | [Γ]₁ , [ℕ2] , [n]ₜ =
+    let [Id]′  = S.irrelevance {A = Id (U _) ℕ2 ℕ2} [Γ] [Γ]₁ [Id]
+        [e]ₜ′ = S.irrelevanceTerm {A = Id (U _) ℕ2 ℕ2} {t = e} [Γ] [Γ]₁ [Id] [Id]′ [e]ₜ
+        ⊢eΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([Id]′ {Δ} {σ} ⊢Δ [σ])) (proj₁ ([e]ₜ′ {Δ} {σ} ⊢Δ [σ]))
+        ⊢nΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([ℕ2] {Δ} {σ} ⊢Δ [σ])) (proj₁ ([n]ₜ {Δ} {σ} ⊢Δ [σ]))
+        [suc-cast] = suc2ᵛ {n = cast ⁰ ℕ2 ℕ2 e n} [Γ]₁ [ℕ2] (castᵗᵛ {ℕ2} {ℕ2} { ! } {n} {e} [Γ]₁ (maybeEmbᵛ {A = Univ _ _} [Γ]₁ (Uᵛ emb< [Γ]₁))
+                                                                (ℕ2ᵗᵛ [Γ]₁) (ℕ2ᵗᵛ [Γ]₁) [ℕ2] [ℕ2] [n]ₜ [Id]′ [e]ₜ′)
+        [id] , [eq] = redSubstTermᵛ {ℕ2} {cast ⁰ ℕ2 ℕ2 e (suc2 n)} {suc2 (cast ⁰ ℕ2 ℕ2 e n)} {∞} [Γ]₁
+                                    (λ {Δ} {σ} ⊢Δ [σ] → cast-ℕ2-S (⊢eΔ {Δ} {σ} ⊢Δ [σ]) (⊢nΔ {Δ} {σ} ⊢Δ [σ]))
+                                    [ℕ2] [suc-cast]
+    in [Γ]₁ , modelsTermEq [ℕ2] [id] [suc-cast] [eq]
   fundamentalTermEq {Γ} (cast-Π {A} {A'} {rA} {B} {B'} {e} {f} ⊢A ⊢B ⊢A' ⊢B' ⊢e ⊢f)
     with fundamentalTerm ⊢A | fundamentalTerm ⊢B | fundamentalTerm ⊢A' | fundamentalTerm ⊢B' | fundamentalTerm ⊢e | fundamentalTerm ⊢f 
   ... | [ΓA] , [UA] , [A]ₜ | [ΓB] ∙ [AB] , [UB] , [B]ₜ | [ΓA'] , [UA'] , [A']ₜ | [ΓB'] ∙ [AB'] , [UB'] , [B']ₜ | [Γ] , [Id] , [e]ₜ | [Γ]₁ , [ΠAB] , [f]ₜ =

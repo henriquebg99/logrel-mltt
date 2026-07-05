@@ -667,6 +667,28 @@ natrec2IrrelevantSubst F z s m σ =
            (trans (substCompEq F)
                      (substVar-to-subst (natrec2IrrelevantSubstLemma F z s m σ) F)))))
 
+natrec2IrrelevantSubstLemma′ : ∀ {l} F z s n (x : Nat)
+  → (sgSubst (natrec2 l F z s n)
+     ₛ•ₛ liftSubst (sgSubst n)
+     ₛ•  step id
+     ₛ•ₛ consSubst (tail idSubst) (suc2 (var 0))) x
+  ≡ (consSubst var (suc2 n)) x
+natrec2IrrelevantSubstLemma′ F z s n 0 =
+  cong suc2 (trans (subst-wk n) (subst-id n))
+natrec2IrrelevantSubstLemma′ F z s n (1+ x) = refl
+
+natrec2IrrelevantSubst′ : ∀ {l} F z s n
+  → subst (liftSubst (sgSubst n))
+      (wk1 (F [ suc2 (var 0) ]↑))
+      [ natrec2 l F z s n ]
+  ≡ F [ suc2 n ]
+natrec2IrrelevantSubst′ F z s n =
+  trans (substCompEq (wk (step id)
+                         (subst (consSubst (tail idSubst) (suc2 (var 0))) F)))
+        (trans (subst-wk (subst (consSubst (tail idSubst) (suc2 (var 0))) F))
+               (trans (substCompEq F)
+                      (substVar-to-subst (natrec2IrrelevantSubstLemma′ F z s n) F)))
+
 cons0wkLift1-id : ∀ σ G
     → subst (sgSubst (var 0))
             (wk (lift (step id)) (subst (liftSubst σ) G))
