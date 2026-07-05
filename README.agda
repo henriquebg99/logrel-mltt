@@ -152,6 +152,10 @@ open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Natrec equiv
 
+-- Validity of second natural numbers and its eliminator
+open import Definition.LogicalRelation.Substitution.Introductions.Nat2 equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Natrec2 equiv
+
 -- Validity of Π-types, abstractions and applications
 open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Application equiv
@@ -170,6 +174,7 @@ open import Definition.LogicalRelation.Substitution.Introductions.Transp equiv
 -- Validity of identity types, and reflexivity
 open import Definition.LogicalRelation.Substitution.Introductions.Id equiv
 open import Definition.LogicalRelation.Substitution.Introductions.IdRefl equiv
+open import Definition.LogicalRelation.Substitution.Introductions.EquivEq equiv
 
 -- Reducibility of well-formedness.
 open import Definition.LogicalRelation.Fundamental.Reducibility equiv

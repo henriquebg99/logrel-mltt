@@ -22,7 +22,7 @@ open import Definition.LogicalRelation.Substitution.Properties equiv
 import Definition.LogicalRelation.Substitution.Irrelevance equiv as S
 open import Definition.LogicalRelation.Substitution.Reflexivity equiv
 open import Definition.LogicalRelation.Substitution.Weakening equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Nat2 equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv
 open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv
 

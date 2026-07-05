@@ -472,7 +472,6 @@ mutual
                      → Γ ⊢ cast ⁰ ℕ2 ℕ e n
                          ⇒ (emb_oterm_term (Equiv.bwd equiv)) ∘ n ^ ⁰
                          ∷ ℕ ^ ι ⁰
-    
 
   -- Type reduction
   data _⊢_⇒_^_ (Γ : Con Term) : Term → Term → TypeInfo → Set where

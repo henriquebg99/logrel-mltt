@@ -9,6 +9,7 @@ open import Definition.Typed.EqualityRelation equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Application equiv public
 open import Definition.LogicalRelation.Substitution.Introductions.Lambda equiv public
 open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv public
+open import Definition.LogicalRelation.Substitution.Introductions.Nat2 equiv public
 open import Definition.LogicalRelation.Substitution.Introductions.Natrec equiv public
 open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv public
 open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec equiv public

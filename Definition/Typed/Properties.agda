@@ -231,6 +231,7 @@ neRedTerm (cast-ne-subst A neA tr e x) (castnℕₙ tn) = whnfRedTerm tr ℕₙ
 neRedTerm (cast-ne-subst A neA tr e x) (castnℕ2ₙ tn) = whnfRedTerm tr ℕ2ₙ
 neRedTerm (cast-Π-subst A B tr e x) (castΠₙ tn) = neRedTerm tr tn
 neRedTerm (cast-Π-subst A B tr e x) (castΠℕₙ) = whnfRedTerm tr ℕₙ
+neRedTerm (cast-Π-subst A B tr e x) (castΠℕ2ₙ) = whnfRedTerm tr ℕ2ₙ
 neRedTerm (cast-subst tr x x₁ x₂) (castℕₙ tn) = whnfRedTerm tr ℕₙ
 neRedTerm (cast-subst tr x x₁ x₂) (castΠₙ tn) = whnfRedTerm tr Πₙ
 neRedTerm (cast-subst tr x x₁ x₂) (castnℕₙ tn) = neRedTerm tr tn
@@ -241,9 +242,12 @@ neRedTerm (cast-subst tr x x₁ x₂) (castℕ2ₙ tn) = whnfRedTerm tr ℕ2ₙ
 neRedTerm (cast-subst tr x x₁ x₂) (castℕ2ℕ2ₙ tn) = whnfRedTerm tr ℕ2ₙ
 neRedTerm (cast-subst tr x x₁ x₂) (castℕΠₙ) = whnfRedTerm tr ℕₙ
 neRedTerm (cast-subst tr x x₁ x₂) (castΠℕₙ) = whnfRedTerm tr Πₙ
+neRedTerm (cast-subst tr x x₁ x₂) (castℕ2Πₙ) = whnfRedTerm tr ℕ2ₙ
+neRedTerm (cast-subst tr x x₁ x₂) (castΠℕ2ₙ) = whnfRedTerm tr Πₙ
 neRedTerm (cast-ℕ-subst tr x x₁) (castℕₙ tn) = neRedTerm tr tn
 neRedTerm (cast-ℕ-subst tr x x₁) (castℕℕₙ tn) = whnfRedTerm tr ℕₙ
 neRedTerm (cast-ℕ-subst tr x x₁) (castℕΠₙ) = whnfRedTerm tr Πₙ
+neRedTerm (cast-ℕ2-subst tr x x₁) (castℕ2Πₙ) = whnfRedTerm tr Πₙ
 neRedTerm (cast-ℕ2-subst tr x x₁) (castℕ2ₙ tn) = neRedTerm tr tn
 neRedTerm (cast-ℕ2-subst tr x x₁) (castℕ2ℕ2ₙ tn) = whnfRedTerm tr ℕ2ₙ
 neRedTerm (cast-Π A B A' B' e f) (castₙ () _ _)
@@ -296,6 +300,8 @@ whnfRedTerm (cast-subst d x x₁ x₂) (ne (castℕℕₙ x₃)) = whnfRedTerm d
 whnfRedTerm (cast-subst d x x₁ x₂) (ne (castℕ2ℕ2ₙ x₃)) = whnfRedTerm d ℕ2ₙ
 whnfRedTerm (cast-subst d x x₁ x₂) (ne castℕΠₙ) = whnfRedTerm d ℕₙ
 whnfRedTerm (cast-subst d x x₁ x₂) (ne castΠℕₙ) = whnfRedTerm d Πₙ
+whnfRedTerm (cast-subst d x x₁ x₂) (ne castℕ2Πₙ) = whnfRedTerm d ℕ2ₙ
+whnfRedTerm (cast-subst d x x₁ x₂) (ne castΠℕ2ₙ) = whnfRedTerm d Πₙ
 whnfRedTerm (cast-ne-subst x nex d x₁ x₂) (ne (castₙ x₃ y _)) = neRedTerm d y
 whnfRedTerm (cast-ne-subst x nex d x₁ x₂) (ne (castnℕₙ x₃)) = whnfRedTerm d ℕₙ
 whnfRedTerm (cast-ne-subst x nex d x₁ x₂) (ne (castnℕ2ₙ x₃)) = whnfRedTerm d ℕ2ₙ
@@ -307,13 +313,17 @@ whnfRedTerm (cast-ne-subst x () d x₁ x₂) (ne (castℕℕₙ x₃))
 whnfRedTerm (cast-ne-subst x () d x₁ x₂) (ne (castℕ2ℕ2ₙ x₃))
 whnfRedTerm (cast-ne-subst x () d x₁ x₂) (ne castℕΠₙ)
 whnfRedTerm (cast-ne-subst x () d x₁ x₂) (ne castΠℕₙ)
+whnfRedTerm (cast-ne-subst x () d x₁ x₂) (ne castℕ2Πₙ)
+whnfRedTerm (cast-ne-subst x () d x₁ x₂) (ne castΠℕ2ₙ)
 whnfRedTerm (cast-ℕ-subst d x x₁) (ne (castℕₙ x₂)) = neRedTerm d x₂
 whnfRedTerm (cast-ℕ-subst d x x₁) (ne (castℕℕₙ x₂)) = whnfRedTerm d ℕₙ
 whnfRedTerm (cast-ℕ-subst d x x₁) (ne castℕΠₙ) = whnfRedTerm d Πₙ
+whnfRedTerm (cast-ℕ2-subst d x x₁) (ne castℕ2Πₙ) = whnfRedTerm d Πₙ
 whnfRedTerm (cast-ℕ2-subst d x x₁) (ne (castℕ2ₙ x₂)) = neRedTerm d x₂
 whnfRedTerm (cast-ℕ2-subst d x x₁) (ne (castℕ2ℕ2ₙ x₂)) = whnfRedTerm d ℕ2ₙ
 whnfRedTerm (cast-Π-subst x x₁ d x₂ x₃) (ne (castΠₙ x₄)) = neRedTerm d x₄
 whnfRedTerm (cast-Π-subst x x₁ d x₂ x₃) (ne castΠℕₙ) = whnfRedTerm d ℕₙ
+whnfRedTerm (cast-Π-subst x x₁ d x₂ x₃) (ne castΠℕ2ₙ) = whnfRedTerm d ℕ2ₙ
 whnfRedTerm (cast-Π x x₁ x₂ x₃ x₄ x₅) (ne (castₙ () _ _))
 whnfRedTerm (cast-Π x x₁ x₂ x₃ x₄ x₅) (ne (castΠₙ ()))
 whnfRedTerm (cast-ℕ-0 x) (ne (castₙ () _ _))
@@ -828,7 +838,6 @@ CastRed*Termℕ2zero ⊢e =
   [[ castⱼ (ℕ2ⱼ (wfTerm ⊢e)) (ℕ2ⱼ (wfTerm ⊢e)) ⊢e (zero2ⱼ (wfTerm ⊢e)) ,
      zero2ⱼ (wfTerm ⊢e) ,
        cast-ℕ2-0 ⊢e ⇨ id (zero2ⱼ (wfTerm ⊢e)) ]]
-
 
 CastRed*TermΠ′ : ∀ {Γ F rF G A B e t}
          (⊢F : Γ ⊢ F ∷ (Univ rF ⁰) ^ [ ! , next ⁰ ])

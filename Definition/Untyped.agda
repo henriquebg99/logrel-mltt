@@ -244,6 +244,8 @@ data Neutral : Term → Set where
   castℕ2ℕ2ₙ : ∀ {l e t} → Neutral t → Neutral (cast l ℕ2 ℕ2 e t)
   castℕΠₙ : ∀ {l A rA r B e t} → Neutral (cast l ℕ (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) e t)
   castΠℕₙ : ∀ {l A rA r B e t} → Neutral (cast l (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) ℕ e t)
+  castℕ2Πₙ : ∀ {l A rA r B e t} → Neutral (cast l ℕ2 (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) e t)
+  castΠℕ2ₙ : ∀ {l A rA r B e t} → Neutral (cast l (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) ℕ2 e t)
   castΠΠ%!ₙ : ∀ {l A B A' B' r r' e t} → Neutral (cast l (Π A ^ % ° ⁰ ▹ B ° ⁰ ° l ^ r) (Π A' ^ ! ° ⁰ ▹ B' ° ⁰ ° l ^ r') e t)
   castΠΠ!%ₙ : ∀ {l A B A' B' r r' e t} → Neutral (cast l (Π A ^ ! ° ⁰ ▹ B ° ⁰ ° l ^ r) (Π A' ^ % ° ⁰ ▹ B' ° ⁰ ° l ^ r') e t)
   Emptyrecₙ : ∀ {l lEmpty A e} -> Neutral (Emptyrec l lEmpty A e)
@@ -524,6 +526,8 @@ wkNeutral ρ (castℕ2ₙ A) = castℕ2ₙ (wkNeutral ρ A)
 wkNeutral ρ (castℕ2ℕ2ₙ t) = castℕ2ℕ2ₙ (wkNeutral ρ t)
 wkNeutral ρ castℕΠₙ = castℕΠₙ
 wkNeutral ρ castΠℕₙ = castΠℕₙ
+wkNeutral ρ castℕ2Πₙ = castℕ2Πₙ
+wkNeutral ρ castΠℕ2ₙ = castΠℕ2ₙ
 wkNeutral ρ castΠΠ%!ₙ = castΠΠ%!ₙ
 wkNeutral ρ castΠΠ!%ₙ = castΠΠ!%ₙ
 

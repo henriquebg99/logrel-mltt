@@ -3,7 +3,8 @@
 
 import Definition.Equiv as E
 import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Fundamental (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.LogicalRelation.Fundamental (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} {{equivRed : ERd.EquivRed equiv}} where
 open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
@@ -22,6 +23,7 @@ open import Definition.LogicalRelation.Substitution.Reflexivity equiv
 open import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv
 open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Nat2 equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Natrec equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Natrec2 equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv
@@ -39,6 +41,7 @@ open import Definition.LogicalRelation.Substitution.Introductions.Snd equiv
 open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv
 open import Definition.LogicalRelation.Substitution.Introductions.Transp equiv
 open import Definition.LogicalRelation.Substitution.Introductions.IdRefl equiv
+open import Definition.LogicalRelation.Substitution.Introductions.EquivEq equiv
 open import Definition.LogicalRelation.Fundamental.Variable equiv
 import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv as PI
 import Definition.LogicalRelation.Substitution.Irrelevance equiv as S
@@ -271,6 +274,14 @@ abstract
   ... | [Γ] , [A] , [t]  =
     let [Id] = Idᵛ {A = A} {t = t} {u = t } [Γ] [A] [t] [t]
     in [Γ] , [Id] , Idreflᵛ {Γ} {A} {l} {t} [Γ] [A] [t]
+
+  fundamentalTerm (equiv-eqⱼ ⊢Γ) =
+    let [Γ] = valid ⊢Γ
+        [U0] = maybeEmbᵛ {A = U ⁰} [Γ] (Uᵛ emb< [Γ])
+        [ℕ]  = maybeEmbTermᵛ {A = U ⁰} {t = ℕ} [Γ] [U0] (ℕᵗᵛ [Γ])
+        [ℕ2] = maybeEmbTermᵛ {A = U ⁰} {t = ℕ2} [Γ] [U0] (ℕ2ᵗᵛ [Γ])
+        [Id] = Idᵛ {A = U ⁰} {t = ℕ} {u = ℕ2} [Γ] [U0] [ℕ] [ℕ2]
+    in [Γ] , [Id] , equivEqᵛ [Γ]
 
   fundamentalTerm (transpⱼ {A} {l} {P} {t} {s} {u} {e} ⊢A ⊢P ⊢t ⊢s ⊢u ⊢e)
     with fundamental ⊢A | fundamental ⊢P  | fundamentalTerm ⊢t | fundamentalTerm ⊢s | fundamentalTerm ⊢u | fundamentalTerm ⊢e
