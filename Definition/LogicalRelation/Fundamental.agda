@@ -43,9 +43,12 @@ open import Definition.LogicalRelation.Substitution.Introductions.Transp equiv
 open import Definition.LogicalRelation.Substitution.Introductions.IdRefl equiv
 open import Definition.LogicalRelation.Substitution.Introductions.EquivEq equiv
 open import Definition.LogicalRelation.Fundamental.Variable equiv
+open ERd equiv using (EquivRed; Πℕℕ2; Πℕ2ℕ)
+open import Definition.Typed.Weakening equiv using (subst-emb-fwd; subst-emb-bwd)
 import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv as PI
 import Definition.LogicalRelation.Substitution.Irrelevance equiv as S
 open import Definition.LogicalRelation.Substitution.Weakening equiv
+open import Definition.LogicalRelation.ShapeView equiv
 
 open import Tools.Product
 open import Tools.Unit
@@ -54,7 +57,7 @@ import Tools.PropositionalEquality as PE
 open import Tools.Empty using (⊥; ⊥-elim)
 
 
-  -- Fundamental theorem for contexts.
+-- Fundamental theorem for contexts.
 valid : ∀ {Γ} → ⊢ Γ → ⊩ᵛ Γ
 fundamental : ∀ {Γ A rA} (⊢A : Γ ⊢ A ^ rA) → Σ (⊩ᵛ Γ) (λ [Γ] → Γ ⊩ᵛ⟨ ∞ ⟩ A ^ rA / [Γ])
 fundamentalEq : ∀{Γ A B rA} → Γ ⊢ A ≡ B ^ rA
@@ -68,6 +71,178 @@ fundamentalTerm : ∀{Γ A rA t} → Γ ⊢ t ∷ A ^ rA
 fundamentalTermEq : ∀{Γ A t t′ rA} → Γ ⊢ t ≡ t′ ∷ A ^ rA
                     → ∃ λ ([Γ] : ⊩ᵛ Γ)
                     → [ Γ ⊩ᵛ⟨ ∞ ⟩ t ≡ t′ ∷ A ^ rA / [Γ] ]
+
+Πℕℕ2ᵛ : ∀ {Γ} ([Γ] : ⊩ᵛ Γ)
+      → Γ ⊩ᵛ⟨ ∞ ⟩ Π ℕ ^ ! ° ⁰ ▹ ℕ2 ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / [Γ]
+Πℕℕ2ᵛ {Γ} [Γ] =
+  ▹▹ᵛ {F = ℕ} {G = ℕ2} {rF = !} {lF = ⁰} {lG = ⁰} {lΠ = ⁰} {l = ∞}
+        (≡is≤ PE.refl) (≡is≤ PE.refl) [Γ] (ℕᵛ {l = ∞} [Γ]) (ℕ2ᵛ {l = ∞} [Γ])
+
+Πℕ2ℕᵛ : ∀ {Γ} ([Γ] : ⊩ᵛ Γ)
+      → Γ ⊩ᵛ⟨ ∞ ⟩ Π ℕ2 ^ ! ° ⁰ ▹ ℕ ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / [Γ]
+Πℕ2ℕᵛ {Γ} [Γ] =
+  ▹▹ᵛ {F = ℕ2} {G = ℕ} {rF = !} {lF = ⁰} {lG = ⁰} {lΠ = ⁰} {l = ∞}
+        (≡is≤ PE.refl) (≡is≤ PE.refl) [Γ] (ℕ2ᵛ {l = ∞} [Γ]) (ℕᵛ {l = ∞} [Γ])
+
+subst-Πℕℕ2 : ∀ σ →
+  subst σ (Π ℕ ^ ! ° ⁰ ▹ (wk1 ℕ2) ° ⁰ ° ⁰ ^ !) PE.≡ Π ℕ ^ ! ° ⁰ ▹ (wk1 ℕ2) ° ⁰ ° ⁰ ^ !
+subst-Πℕℕ2 σ = PE.refl
+
+subst-Πℕ2ℕ : ∀ σ →
+  subst σ (Π ℕ2 ^ ! ° ⁰ ▹ (wk1 ℕ) ° ⁰ ° ⁰ ^ !) PE.≡ Π ℕ2 ^ ! ° ⁰ ▹ (wk1 ℕ) ° ⁰ ° ⁰ ^ !
+subst-Πℕ2ℕ σ = PE.refl
+
+subst-emb-fwd-closed : ∀ σ →
+  subst σ (emb_oterm_term (E.Equiv.fwd equiv)) PE.≡ emb_oterm_term (E.Equiv.fwd equiv)
+subst-emb-fwd-closed σ = subst-emb-fwd σ
+
+subst-emb-bwd-closed : ∀ σ →
+  subst σ (emb_oterm_term (E.Equiv.bwd equiv)) PE.≡ emb_oterm_term (E.Equiv.bwd equiv)
+subst-emb-bwd-closed σ = subst-emb-bwd σ
+
+embFwdᵛ : ∀ {Γ} ([Γ] : ⊩ᵛ Γ)
+        → let [Π] = Πℕℕ2ᵛ [Γ]
+          in Γ ⊩ᵛ⟨ ∞ ⟩ emb_oterm_term (E.Equiv.fwd equiv)
+               ∷ Π ℕ ^ ! ° ⁰ ▹ ℕ2 ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / [Γ] / [Π]
+embFwdᵛ [Γ] {σ = σ₀} ⊢Δ [σ₀] =
+  let [Π] = Πℕℕ2ᵛ [Γ]
+      [Πσ] = proj₁ ([Π] ⊢Δ [σ₀])
+      [ΠΔ] = Πℕℕ2 ⊢Δ
+      fwdAt = λ {σ′} [σ′] →
+        let [Πσ′] = proj₁ ([Π] ⊢Δ [σ′])
+        in irrelevanceTerm″ (PE.sym (subst-Πℕℕ2 σ′)) PE.refl PE.refl (PE.sym (subst-emb-fwd-closed σ′))
+                             (maybeEmb {l = ι ⁰} [ΠΔ]) [Πσ′]
+                             (maybeEmbTerm {l = ι ⁰} [ΠΔ] (EquivRed.[fwd] equivRed ⊢Δ))
+      [fwdσ] = fwdAt {σ′ = σ₀} [σ₀]
+  in [fwdσ]
+  , λ {σ′} [σ′] [σ≡σ′] →
+      let [Πσ′] = proj₁ ([Π] ⊢Δ [σ′])
+          [Πσ≡Πσ′] = proj₂ ([Π] ⊢Δ [σ₀]) [σ′] [σ≡σ′]
+          [fwdσ′] = fwdAt {σ′ = σ′} [σ′]
+          [emb≡substσemb] =
+            irrelevanceEqTerm″ PE.refl PE.refl PE.refl (subst-emb-fwd-closed σ₀) PE.refl
+              [Πσ] [Πσ] (reflEqTerm [Πσ] [fwdσ])
+          [emb≡substσ′emb]₀ =
+            irrelevanceEqTerm″ PE.refl PE.refl PE.refl (subst-emb-fwd-closed σ′) PE.refl
+              [Πσ′] [Πσ′] (reflEqTerm [Πσ′] [fwdσ′])
+          [emb≡substσ′emb] =
+            convEqTerm₂ [Πσ] [Πσ′] [Πσ≡Πσ′] [emb≡substσ′emb]₀
+      in transEqTerm [Πσ]
+           [emb≡substσemb]
+           (symEqTerm [Πσ] [emb≡substσ′emb])
+
+embBwdᵛ : ∀ {Γ} ([Γ] : ⊩ᵛ Γ)
+        → let [Π] = Πℕ2ℕᵛ [Γ]
+          in Γ ⊩ᵛ⟨ ∞ ⟩ emb_oterm_term (E.Equiv.bwd equiv)
+               ∷ Π ℕ2 ^ ! ° ⁰ ▹ ℕ ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / [Γ] / [Π]
+embBwdᵛ [Γ] {σ = σ₀} ⊢Δ [σ₀] =
+  let [Π] = Πℕ2ℕᵛ [Γ]
+      [Πσ] = proj₁ ([Π] ⊢Δ [σ₀])
+      [ΠΔ] = Πℕ2ℕ ⊢Δ
+      bwdAt = λ {σ′} [σ′] →
+        let [Πσ′] = proj₁ ([Π] ⊢Δ [σ′])
+        in irrelevanceTerm″ (PE.sym (subst-Πℕ2ℕ σ′)) PE.refl PE.refl (PE.sym (subst-emb-bwd-closed σ′))
+                             (maybeEmb {l = ι ⁰} [ΠΔ]) [Πσ′]
+                             (maybeEmbTerm {l = ι ⁰} [ΠΔ] (EquivRed.[bwd] equivRed ⊢Δ))
+      [bwdσ] = bwdAt {σ′ = σ₀} [σ₀]
+  in [bwdσ]
+  , λ {σ′} [σ′] [σ≡σ′] →
+      let [Πσ′] = proj₁ ([Π] ⊢Δ [σ′])
+          [Πσ≡Πσ′] = proj₂ ([Π] ⊢Δ [σ₀]) [σ′] [σ≡σ′]
+          [bwdσ′] = bwdAt {σ′ = σ′} [σ′]
+          [emb≡substσemb] =
+            irrelevanceEqTerm″ PE.refl PE.refl PE.refl (subst-emb-bwd-closed σ₀) PE.refl
+              [Πσ] [Πσ] (reflEqTerm [Πσ] [bwdσ])
+          [emb≡substσ′emb]₀ =
+            irrelevanceEqTerm″ PE.refl PE.refl PE.refl (subst-emb-bwd-closed σ′) PE.refl
+              [Πσ′] [Πσ′] (reflEqTerm [Πσ′] [bwdσ′])
+          [emb≡substσ′emb] =
+            convEqTerm₂ [Πσ] [Πσ′] [Πσ≡Πσ′] [emb≡substσ′emb]₀
+      in transEqTerm [Πσ]
+           [emb≡substσemb]
+           (symEqTerm [Πσ] [emb≡substσ′emb])
+
+cast-subst-cast-fwd : ∀ σ e n →
+  subst σ (cast ⁰ ℕ ℕ2 e n) PE.≡
+  cast ⁰ ℕ ℕ2 (subst (repeat liftSubst σ 0) e) (subst (repeat liftSubst σ 0) n)
+cast-subst-cast-fwd σ e n = PE.refl
+
+cast-subst-cast-bwd : ∀ σ e n →
+  subst σ (cast ⁰ ℕ2 ℕ e n) PE.≡
+  cast ⁰ ℕ2 ℕ (subst (repeat liftSubst σ 0) e) (subst (repeat liftSubst σ 0) n)
+cast-subst-cast-bwd σ e n = PE.refl
+
+subst-app0 : ∀ σ f a →
+  subst σ (f ∘ a ^ ⁰) PE.≡ subst σ f ∘ subst σ a ^ ⁰
+subst-app0 σ f a = PE.refl
+
+subst-ℕ : ∀ σ → subst σ ℕ PE.≡ ℕ
+subst-ℕ σ = PE.refl
+
+subst-ℕ2 : ∀ σ → subst σ ℕ2 PE.≡ ℕ2
+subst-ℕ2 σ = PE.refl
+
+cast-subst-app-fwd : ∀ σ n →
+  let emb = emb_oterm_term (E.Equiv.fwd equiv)
+  in emb ∘ subst (repeat liftSubst σ 0) n ^ ⁰
+     PE.≡ subst σ (emb ∘ n ^ ⁰)
+cast-subst-app-fwd σ n =
+  let emb = emb_oterm_term (E.Equiv.fwd equiv)
+  in PE.trans
+       (PE.sym (PE.cong (λ f → f ∘ subst (repeat liftSubst σ 0) n ^ ⁰)
+                        (subst-emb-fwd σ)))
+       (PE.sym (subst-app0 σ emb n))
+
+cast-subst-app-bwd : ∀ σ n →
+  let emb = emb_oterm_term (E.Equiv.bwd equiv)
+  in emb ∘ subst (repeat liftSubst σ 0) n ^ ⁰
+     PE.≡ subst σ (emb ∘ n ^ ⁰)
+cast-subst-app-bwd σ n =
+  let emb = emb_oterm_term (E.Equiv.bwd equiv)
+  in PE.trans
+       (PE.sym (PE.cong (λ f → f ∘ subst (repeat liftSubst σ 0) n ^ ⁰)
+                        (subst-emb-bwd σ)))
+       (PE.sym (subst-app0 σ emb n))
+
+cast-equiv-fwd-subst : ∀ {Δ σ e n} (⊢Δ : ⊢ Δ)
+  (⊢e : Δ ⊢ subst (repeat liftSubst σ 0) e ∷ Id (U ⁰) ℕ ℕ2 ^ [ % , ι ⁰ ])
+  (⊢n : Δ ⊢ subst (repeat liftSubst σ 0) n ∷ ℕ ^ [ ! , ι ⁰ ])
+  → Δ ⊢ subst σ (cast ⁰ ℕ ℕ2 e n)
+    ⇒ subst σ (emb_oterm_term (E.Equiv.fwd equiv) ∘ n ^ ⁰)
+    ∷ subst σ ℕ2 ^ ι ⁰
+cast-equiv-fwd-subst {Δ = Δ} {σ = σ} {e = e} {n = n} ⊢Δ ⊢e ⊢n =
+  let emb = emb_oterm_term (E.Equiv.fwd equiv)
+  in PE.subst (λ B → Δ ⊢ subst σ (cast ⁰ ℕ ℕ2 e n)
+                    ⇒ subst σ (emb ∘ n ^ ⁰) ∷ B ^ ι ⁰)
+             (PE.sym (subst-ℕ2 σ))
+             (PE.subst (λ t → Δ ⊢ t ⇒ subst σ (emb ∘ n ^ ⁰) ∷ ℕ2 ^ ι ⁰)
+                       (PE.sym (cast-subst-cast-fwd σ e n))
+                       (PE.subst (λ u → Δ ⊢ cast ⁰ ℕ ℕ2
+                                             (subst (repeat liftSubst σ 0) e)
+                                             (subst (repeat liftSubst σ 0) n)
+                                       ⇒ u ∷ ℕ2 ^ ι ⁰)
+                                 (cast-subst-app-fwd σ n)
+                                 (cast-equiv-fwd ⊢e ⊢n)))
+
+cast-equiv-bwd-subst : ∀ {Δ σ e n} (⊢Δ : ⊢ Δ)
+  (⊢e : Δ ⊢ subst (repeat liftSubst σ 0) e ∷ Id (U ⁰) ℕ2 ℕ ^ [ % , ι ⁰ ])
+  (⊢n : Δ ⊢ subst (repeat liftSubst σ 0) n ∷ ℕ2 ^ [ ! , ι ⁰ ])
+  → Δ ⊢ subst σ (cast ⁰ ℕ2 ℕ e n)
+    ⇒ subst σ (emb_oterm_term (E.Equiv.bwd equiv) ∘ n ^ ⁰)
+    ∷ subst σ ℕ ^ ι ⁰
+cast-equiv-bwd-subst {Δ = Δ} {σ = σ} {e = e} {n = n} ⊢Δ ⊢e ⊢n =
+  let emb = emb_oterm_term (E.Equiv.bwd equiv)
+  in PE.subst (λ B → Δ ⊢ subst σ (cast ⁰ ℕ2 ℕ e n)
+                    ⇒ subst σ (emb ∘ n ^ ⁰) ∷ B ^ ι ⁰)
+             (PE.sym (subst-ℕ σ))
+             (PE.subst (λ t → Δ ⊢ t ⇒ subst σ (emb ∘ n ^ ⁰) ∷ ℕ ^ ι ⁰)
+                       (PE.sym (cast-subst-cast-bwd σ e n))
+                       (PE.subst (λ u → Δ ⊢ cast ⁰ ℕ2 ℕ
+                                             (subst (repeat liftSubst σ 0) e)
+                                             (subst (repeat liftSubst σ 0) n)
+                                       ⇒ u ∷ ℕ ^ ι ⁰)
+                                 (cast-subst-app-bwd σ n)
+                                 (cast-equiv-bwd ⊢e ⊢n)))
 
 abstract
   valid ε = ε
@@ -221,6 +396,21 @@ abstract
         [s]′ = S.irrelevanceTerm {A = sType} {t = s} [Γ]₂ [Γ]′ [G₊] [G₊]′ [s]
     in  [Γ]′ , [Gₙ]′
     ,   natrecᵛ {G} {rG} {lG} {z} {s} {n} rGlG [Γ]′ [ℕ] [G]′ [G₀]′ [G₊]′ [Gₙ]′ [z]′ [s]′ [n]
+  fundamentalTerm (natrec2ⱼ {G} {rG} {lG} {s} {z} {n} rGlG ⊢G ⊢z ⊢s ⊢n)
+    with fundamental ⊢G | fundamentalTerm ⊢z | fundamentalTerm ⊢s
+       | fundamentalTerm ⊢n
+  ... | [Γ] , [G] | [Γ]₁ , [G₀] , [z] | [Γ]₂ , [G₊] , [s] | [Γ]₃ , [ℕ2] , [n] =
+    let sType = Π ℕ2 ^ ! ° ⁰ ▹ (G ^ rG ° _  ▹▹ G [ suc2 (var 0) ]↑ ° _  ° lG ^ rG) ° _ ° lG ^ rG
+        [Γ]′ = [Γ]₃
+        [G]′ = S.irrelevance {A = G} [Γ] ([Γ]′ ∙ [ℕ2]) [G]
+        [G₀]′ = S.irrelevance {A = G [ zero2 ]} [Γ]₁ [Γ]′ [G₀]
+        [G₊]′ = S.irrelevance {A = sType} [Γ]₂ [Γ]′ [G₊]
+        [Gₙ]′ = substS {F = ℕ2} {G = G} {t = n} [Γ]′ [ℕ2] [G]′ [n]
+        [z]′ = S.irrelevanceTerm {A = G [ zero2 ]} {t = z} [Γ]₁ [Γ]′
+                                 [G₀] [G₀]′ [z]
+        [s]′ = S.irrelevanceTerm {A = sType} {t = s} [Γ]₂ [Γ]′ [G₊] [G₊]′ [s]
+    in  [Γ]′ , [Gₙ]′
+    ,   natrec2ᵛ {G} {rG} {lG} {z} {s} {n} rGlG [Γ]′ [ℕ2] [G]′ [G₀]′ [G₊]′ [Gₙ]′ [z]′ [s]′ [n]
 
   fundamentalTerm (fstⱼ {A} {A'} {rA} {B} {B'} {e} ⊢A ⊢B ⊢A' ⊢B' ⊢e)
     with fundamentalTerm ⊢A | fundamentalTerm ⊢B | fundamentalTerm ⊢A' | fundamentalTerm ⊢B' | fundamentalTerm ⊢e
@@ -319,7 +509,6 @@ abstract
       ,   convᵛ {t} {A} {B} [Γ]′ [A′]₁ [A] [A′≡A] [t]′
   fundamentalTerm (univ 0<1 ⊢Γ) = let [Γ] = valid ⊢Γ
                                   in [Γ] , (Uᵛ ∞< [Γ] , Uᵗᵛ [Γ])
-
 
   -- Fundamental theorem for term equality.
   fundamentalTermEq (refl D) with fundamentalTerm D
@@ -1010,6 +1199,56 @@ abstract
                                     (λ {Δ} {σ} ⊢Δ [σ] → cast-ℕ2-S (⊢eΔ {Δ} {σ} ⊢Δ [σ]) (⊢nΔ {Δ} {σ} ⊢Δ [σ]))
                                     [ℕ2] [suc-cast]
     in [Γ]₁ , modelsTermEq [ℕ2] [id] [suc-cast] [eq]
+  fundamentalTermEq {Γ} (cast-equiv-fwd {e} {n} ⊢e ⊢n) with fundamentalTerm ⊢e | fundamentalTerm ⊢n
+  ... | [Γ] , [Id] , [e]ₜ | [Γ]₁ , [ℕ] , [n]ₜ =
+    let [Id]′  = S.irrelevance {A = Id (U _) ℕ ℕ2} [Γ] [Γ]₁ [Id]
+        [e]ₜ′ = S.irrelevanceTerm {A = Id (U _) ℕ ℕ2} {t = e} [Γ] [Γ]₁ [Id] [Id]′ [e]ₜ
+        ⊢eΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([Id]′ {Δ} {σ} ⊢Δ [σ])) (proj₁ ([e]ₜ′ {Δ} {σ} ⊢Δ [σ]))
+        ⊢nΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([ℕ] {Δ} {σ} ⊢Δ [σ])) (proj₁ ([n]ₜ {Δ} {σ} ⊢Δ [σ]))
+        [ℕ2] = ℕ2ᵛ {l = ∞} [Γ]₁
+        [Π] = Πℕℕ2ᵛ [Γ]₁
+        [G] : Γ ∙ ℕ ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ ∞ ⟩ wk1 ℕ2 ^ [ ! , ι ⁰ ] / [Γ]₁ ∙ [ℕ]
+        [G] {Δ} {σ} ⊢Δ [σ] =
+          wk1ᵛ {A = ℕ2} {F = ℕ} {rA = [ ! , ι ⁰ ]} {rF = [ ! , ι ⁰ ]} {l = ∞} {l' = ∞}
+                [Γ]₁ [ℕ] [ℕ2] {Δ = Δ} {σ = σ} ⊢Δ [σ]
+        [ℕ2ₙ] = substSΠ {F = ℕ} {G = wk1 ℕ2} {t = n} {rF = !} {lF = ⁰} {lG = ⁰} {lΠ = ⁰} {l = ∞}
+                          [Γ]₁ [ℕ] [Π] [n]ₜ
+        [fwd∘n] = appᵛ {F = ℕ} {G = wk1 ℕ2} {rF = !} {lF = ⁰} {lG = ⁰} {lΠ = ⁰}
+                       {t = emb_oterm_term (E.Equiv.fwd equiv)} {u = n} {l = ∞}
+                       [Γ]₁ [ℕ] (λ {Δ} {σ} ⊢Δ [σ] → [G] {Δ = Δ} {σ = σ} ⊢Δ [σ]) [Π] (embFwdᵛ [Γ]₁) [n]ₜ
+        [id] , [eq] = redSubstTermᵛ {ℕ2} {cast ⁰ ℕ ℕ2 e n}
+                                    {(emb_oterm_term (E.Equiv.fwd equiv)) ∘ n ^ ⁰} {∞} [Γ]₁
+                                    (λ {Δ} {σ} ⊢Δ [σ] →
+                                       cast-equiv-fwd-subst {Δ = Δ} {σ = σ} {e = e} {n = n} ⊢Δ
+                                         (⊢eΔ {Δ} {σ} ⊢Δ [σ])
+                                         (⊢nΔ {Δ} {σ} ⊢Δ [σ]))
+                                    [ℕ2ₙ] [fwd∘n]
+    in [Γ]₁ , modelsTermEq [ℕ2ₙ] [id] [fwd∘n] [eq]
+  fundamentalTermEq {Γ} (cast-equiv-bwd {e} {n} ⊢e ⊢n) with fundamentalTerm ⊢e | fundamentalTerm ⊢n
+  ... | [Γ] , [Id] , [e]ₜ | [Γ]₁ , [ℕ2] , [n]ₜ =
+    let [Id]′  = S.irrelevance {A = Id (U _) ℕ2 ℕ} [Γ] [Γ]₁ [Id]
+        [e]ₜ′ = S.irrelevanceTerm {A = Id (U _) ℕ2 ℕ} {t = e} [Γ] [Γ]₁ [Id] [Id]′ [e]ₜ
+        ⊢eΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([Id]′ {Δ} {σ} ⊢Δ [σ])) (proj₁ ([e]ₜ′ {Δ} {σ} ⊢Δ [σ]))
+        ⊢nΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([ℕ2] {Δ} {σ} ⊢Δ [σ])) (proj₁ ([n]ₜ {Δ} {σ} ⊢Δ [σ]))
+        [ℕ] = ℕᵛ {l = ∞} [Γ]₁
+        [Π] = Πℕ2ℕᵛ [Γ]₁
+        [G] : Γ ∙ ℕ2 ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ ∞ ⟩ wk1 ℕ ^ [ ! , ι ⁰ ] / [Γ]₁ ∙ [ℕ2]
+        [G] {Δ} {σ} ⊢Δ [σ] =
+          wk1ᵛ {A = ℕ} {F = ℕ2} {rA = [ ! , ι ⁰ ]} {rF = [ ! , ι ⁰ ]} {l = ∞} {l' = ∞}
+                [Γ]₁ [ℕ2] [ℕ] {Δ = Δ} {σ = σ} ⊢Δ [σ]
+        [ℕₙ] = substSΠ {F = ℕ2} {G = wk1 ℕ} {t = n} {rF = !} {lF = ⁰} {lG = ⁰} {lΠ = ⁰} {l = ∞}
+                       [Γ]₁ [ℕ2] [Π] [n]ₜ
+        [bwd∘n] = appᵛ {F = ℕ2} {G = wk1 ℕ} {rF = !} {lF = ⁰} {lG = ⁰} {lΠ = ⁰}
+                       {t = emb_oterm_term (E.Equiv.bwd equiv)} {u = n} {l = ∞}
+                       [Γ]₁ [ℕ2] (λ {Δ} {σ} ⊢Δ [σ] → [G] {Δ = Δ} {σ = σ} ⊢Δ [σ]) [Π] (embBwdᵛ [Γ]₁) [n]ₜ
+        [id] , [eq] = redSubstTermᵛ {ℕ} {cast ⁰ ℕ2 ℕ e n}
+                                    {(emb_oterm_term (E.Equiv.bwd equiv)) ∘ n ^ ⁰} {∞} [Γ]₁
+                                    (λ {Δ} {σ} ⊢Δ [σ] →
+                                       cast-equiv-bwd-subst {Δ = Δ} {σ = σ} {e = e} {n = n} ⊢Δ
+                                         (⊢eΔ {Δ} {σ} ⊢Δ [σ])
+                                         (⊢nΔ {Δ} {σ} ⊢Δ [σ]))
+                                    [ℕₙ] [bwd∘n]
+    in [Γ]₁ , modelsTermEq [ℕₙ] [id] [bwd∘n] [eq]
   fundamentalTermEq {Γ} (cast-Π {A} {A'} {rA} {B} {B'} {e} {f} ⊢A ⊢B ⊢A' ⊢B' ⊢e ⊢f)
     with fundamentalTerm ⊢A | fundamentalTerm ⊢B | fundamentalTerm ⊢A' | fundamentalTerm ⊢B' | fundamentalTerm ⊢e | fundamentalTerm ⊢f 
   ... | [ΓA] , [UA] , [A]ₜ | [ΓB] ∙ [AB] , [UB] , [B]ₜ | [ΓA'] , [UA'] , [A']ₜ | [ΓB'] ∙ [AB'] , [UB'] , [B']ₜ | [Γ] , [Id] , [e]ₜ | [Γ]₁ , [ΠAB] , [f]ₜ =

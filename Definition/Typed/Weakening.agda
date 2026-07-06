@@ -34,6 +34,12 @@ wk-emb-bwd ρ =
            (PE.trans (PE.sym (emb-wk (otwk ρ) (E.Equiv.bwd equiv)))
                      (PE.cong emb_oterm_term (E.Equiv.bwd-wk equiv (otwk ρ))))
 
+subst-emb-fwd : ∀ σ → U.subst (repeat liftSubst σ 0) (emb_oterm_term (E.Equiv.fwd equiv)) PE.≡ emb_oterm_term (E.Equiv.fwd equiv)
+subst-emb-fwd σ = E.Equiv.fwd-emb-subst equiv σ
+
+subst-emb-bwd : ∀ σ → U.subst (repeat liftSubst σ 0) (emb_oterm_term (E.Equiv.bwd equiv)) PE.≡ emb_oterm_term (E.Equiv.bwd equiv)
+subst-emb-bwd σ = E.Equiv.bwd-emb-subst equiv σ
+
 
 -- Weakening type
 
