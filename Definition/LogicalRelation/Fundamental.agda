@@ -4,7 +4,7 @@
 import Definition.Equiv as E
 import Definition.Typed.EqualityRelation as ER
 import Definition.LogicalRelation.EquivRed as ERd
-module Definition.LogicalRelation.Fundamental (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} {{equivRed : ERd.EquivRed equiv}} where
+module Definition.LogicalRelation.Fundamental (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
@@ -22,32 +22,32 @@ open import Definition.LogicalRelation.Substitution.Reduction equiv
 open import Definition.LogicalRelation.Substitution.Reflexivity equiv
 open import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv
 open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Nat2 equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Natrec equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Natrec2 equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Id equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Cast equiv
-open import Definition.LogicalRelation.Substitution.Introductions.CastRefl equiv
-open import Definition.LogicalRelation.Substitution.Introductions.CastPi equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Lambda equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Application equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Fst equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Snd equiv
-open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Transp equiv
-open import Definition.LogicalRelation.Substitution.Introductions.IdRefl equiv
-open import Definition.LogicalRelation.Substitution.Introductions.EquivEq equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Nat2 equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Natrec equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Natrec2 equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Id equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Cast equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.CastRefl equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.CastPi equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Lambda equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Application equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Fst equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Snd equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Transp equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.IdRefl equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.EquivEq equiv equivRed
 open import Definition.LogicalRelation.Fundamental.Variable equiv
-open ERd equiv using (EquivRed; Πℕℕ2; Πℕ2ℕ)
+open ERd equiv eqrel using (EquivRed; Πℕℕ2; Πℕ2ℕ)
 open import Definition.Typed.Weakening equiv using (subst-emb-fwd; subst-emb-bwd)
 import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv as PI
 import Definition.LogicalRelation.Substitution.Irrelevance equiv as S
-open import Definition.LogicalRelation.Substitution.Weakening equiv
+open import Definition.LogicalRelation.Substitution.Weakening equiv equivRed
 open import Definition.LogicalRelation.ShapeView equiv
 
 open import Tools.Product
@@ -112,7 +112,7 @@ embFwdᵛ [Γ] {σ = σ₀} ⊢Δ [σ₀] =
         let [Πσ′] = proj₁ ([Π] ⊢Δ [σ′])
         in irrelevanceTerm″ (PE.sym (subst-Πℕℕ2 σ′)) PE.refl PE.refl (PE.sym (subst-emb-fwd-closed σ′))
                              (maybeEmb {l = ι ⁰} [ΠΔ]) [Πσ′]
-                             (maybeEmbTerm {l = ι ⁰} [ΠΔ] (EquivRed.[fwd] equivRed ⊢Δ))
+                             (maybeEmbTerm {l = ι ⁰} [ΠΔ] (EquivRed.[fwd] (equivRed eqrel) ⊢Δ))
       [fwdσ] = fwdAt {σ′ = σ₀} [σ₀]
   in [fwdσ]
   , λ {σ′} [σ′] [σ≡σ′] →
@@ -143,7 +143,7 @@ embBwdᵛ [Γ] {σ = σ₀} ⊢Δ [σ₀] =
         let [Πσ′] = proj₁ ([Π] ⊢Δ [σ′])
         in irrelevanceTerm″ (PE.sym (subst-Πℕ2ℕ σ′)) PE.refl PE.refl (PE.sym (subst-emb-bwd-closed σ′))
                              (maybeEmb {l = ι ⁰} [ΠΔ]) [Πσ′]
-                             (maybeEmbTerm {l = ι ⁰} [ΠΔ] (EquivRed.[bwd] equivRed ⊢Δ))
+                             (maybeEmbTerm {l = ι ⁰} [ΠΔ] (EquivRed.[bwd] (equivRed eqrel) ⊢Δ))
       [bwdσ] = bwdAt {σ′ = σ₀} [σ₀]
   in [bwdσ]
   , λ {σ′} [σ′] [σ≡σ′] →

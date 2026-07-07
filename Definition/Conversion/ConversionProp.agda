@@ -1,22 +1,26 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Conversion.ConversionProp (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Conversion.ConversionProp
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped
 open import Definition.Typed equiv
 open import Definition.Typed.RedSteps equiv
 open import Definition.Typed.Properties equiv
 open import Definition.Conversion equiv
-open import Definition.Conversion.Stability equiv
-open import Definition.Conversion.StabilityProp equiv
-open import Definition.Conversion.Conversion equiv
+open import Definition.Conversion.Stability equiv equivRed
+open import Definition.Conversion.StabilityProp equiv equivRed
+open import Definition.Conversion.Conversion equiv equivRed
 open import Definition.Conversion.ConvSize equiv
-open import Definition.Conversion.Soundness equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Typed.Consequences.Injectivity equiv
-open import Definition.Typed.Consequences.Equality equiv
-open import Definition.Typed.Consequences.Reduction equiv
+open import Definition.Conversion.Soundness equiv equivRed
+open import Definition.Typed.Consequences.Syntactic equiv equivRed
+open import Definition.Typed.Consequences.Injectivity equiv equivRed
+open import Definition.Typed.Consequences.Equality equiv equivRed
+open import Definition.Typed.Consequences.Reduction equiv equivRed
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE
@@ -52,6 +56,7 @@ mutual
   convConv↓TermSize Γ≡Δ A≡B whnfB (U-refl x x₁) rewrite U≡A-whnf A≡B whnfB = PE.refl
   convConv↓TermSize Γ≡Δ A≡B whnfB (ne x) rewrite U≡A-whnf A≡B whnfB = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
   convConv↓TermSize Γ≡Δ A≡B whnfB (ℕ-refl x) rewrite U≡A-whnf A≡B whnfB = PE.refl
+  convConv↓TermSize Γ≡Δ A≡B whnfB (ℕ2-refl x) rewrite U≡A-whnf A≡B whnfB = PE.refl
   convConv↓TermSize Γ≡Δ A≡B whnfB (Empty-refl x) rewrite U≡A-whnf A≡B whnfB = PE.refl
   convConv↓TermSize Γ≡Δ A≡B whnfB (Π-cong lΠ rF lF lG l< l<' x x₁ x₂) rewrite U≡A-whnf A≡B whnfB = PE.cong₂ (λ n m → 1 + (n + m))
     (stabilitySizeConv↑Term Γ≡Δ x₁)
@@ -62,11 +67,16 @@ mutual
     (stabilitySizeConv↑Term Γ≡Δ x₂)
   convConv↓TermSize Γ≡Δ A≡B whnfB (ℕ-ins x) rewrite ℕ≡A A≡B whnfB =
     PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
+  convConv↓TermSize Γ≡Δ A≡B whnfB (ℕ2-ins x) rewrite ℕ2≡A A≡B whnfB =
+    PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
   convConv↓TermSize Γ≡Δ A≡B whnfB (ne-ins t u x x₁) with ne≡A x A≡B whnfB
   convConv↓TermSize Γ≡Δ A≡B whnfB (ne-ins t u x x₁) | B , neB , PE.refl =
     PE.cong 1+ (stabilitySize~↓! Γ≡Δ x₁)
   convConv↓TermSize Γ≡Δ A≡B whnfB (zero-refl x) rewrite ℕ≡A A≡B whnfB = PE.refl
+  convConv↓TermSize Γ≡Δ A≡B whnfB (zero2-refl x) rewrite ℕ2≡A A≡B whnfB = PE.refl
   convConv↓TermSize Γ≡Δ A≡B whnfB (suc-cong x) rewrite ℕ≡A A≡B whnfB =
+    PE.cong 1+ (stabilitySizeConv↑Term Γ≡Δ x)
+  convConv↓TermSize Γ≡Δ A≡B whnfB (suc2-cong x) rewrite ℕ2≡A A≡B whnfB =
     PE.cong 1+ (stabilitySizeConv↑Term Γ≡Δ x)
   convConv↓TermSize Γ≡Δ A≡B whnfB (η-eq l< l<' x x₁ x₂ y y₁ x₃) =
     let F′ , G′ , eqΠ = Π≡A A≡B whnfB

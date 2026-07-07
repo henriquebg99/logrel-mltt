@@ -4,10 +4,10 @@
 import Definition.Equiv as E
 import Definition.Typed.EqualityRelation as ER
 import Definition.LogicalRelation.EquivRed as ERd
-module Definition.LogicalRelation.Substitution.Introductions.Cast (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} {{equivRed : ERd.EquivRed equiv}} where
+module Definition.LogicalRelation.Substitution.Introductions.Cast (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
-open ERd equiv using (EquivRed; Πℕℕ2; Πℕ2ℕ)
+open ERd equiv eqrel using (EquivRed; Πℕℕ2; Πℕ2ℕ)
 
 open import Definition.Untyped
 open import Definition.Untyped.Properties
@@ -24,15 +24,15 @@ import Definition.LogicalRelation.Weakening equiv as Lwk
 open import Definition.LogicalRelation.Substitution.Properties equiv
 import Definition.LogicalRelation.Substitution.Irrelevance equiv as S
 open import Definition.LogicalRelation.Substitution.Reflexivity equiv
-open import Definition.LogicalRelation.Substitution.Weakening equiv
+open import Definition.LogicalRelation.Substitution.Weakening equiv equivRed
 -- open import Definition.LogicalRelation.Substitution.Introductions.Nat
-open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv equivRed
 open import Definition.LogicalRelation.ShapeView equiv
 -- open import Definition.LogicalRelation.Substitution.Introductions.Pi
 -- open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst
-open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv equivRed
 open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Castlemmas equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Castlemmas equiv equivRed
 
 open import Tools.Product
 open import Tools.Empty using (⊥; ⊥-elim)
@@ -546,7 +546,7 @@ import Tools.PropositionalEquality as PE
       [ℕ] = ℕᵣ (idRed:*: (univ (ℕⱼ ⊢Γ)))
       [ℕ2] = ℕ2ᵣ (idRed:*: (univ (ℕ2ⱼ ⊢Γ)))
       [Π] = Πℕℕ2 ⊢Γ
-      [fwd] = EquivRed.[fwd] equivRed ⊢Γ
+      [fwd] = EquivRed.[fwd] (equivRed eqrel) ⊢Γ
       [A≡ℕ] = id (univ (ℕⱼ ⊢Γ))
       [tℕ] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕᵣ natA) [ℕ] [A≡ℕ] [t]
       [t′ℕ] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕᵣ natA') [ℕ] [A≡ℕ] [t′]
@@ -602,7 +602,7 @@ import Tools.PropositionalEquality as PE
       [ℕ] = ℕᵣ (idRed:*: (univ (ℕⱼ ⊢Γ)))
       [ℕ2] = ℕ2ᵣ (idRed:*: (univ (ℕ2ⱼ ⊢Γ)))
       [Π] = Πℕ2ℕ ⊢Γ
-      [bwd] = EquivRed.[bwd] equivRed ⊢Γ
+      [bwd] = EquivRed.[bwd] (equivRed eqrel) ⊢Γ
       [A≡ℕ2] = id (univ (ℕ2ⱼ ⊢Γ))
       [tℕ2] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕ2ᵣ nat2A) [ℕ2] [A≡ℕ2] [t]
       [t′ℕ2] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕ2ᵣ nat2A') [ℕ2] [A≡ℕ2] [t′]
@@ -691,7 +691,7 @@ import Tools.PropositionalEquality as PE
          [ℕ] = ℕᵣ (idRed:*: (univ (ℕⱼ ⊢Γ)))
          [ℕ2] = ℕ2ᵣ (idRed:*: (univ (ℕ2ⱼ ⊢Γ)))
          [Π] = Πℕℕ2 ⊢Γ
-         [fwd] = EquivRed.[fwd] equivRed ⊢Γ
+         [fwd] = EquivRed.[fwd] (equivRed eqrel) ⊢Γ
          [A≡ℕ] = id (univ (ℕⱼ ⊢Γ))
          [tℕ] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕᵣ natD) [ℕ] [A≡ℕ] [t]
          [fwd∘t] = appTerm PE.refl [ℕ] [ℕ2] [Π] [fwd] [tℕ]
@@ -710,7 +710,7 @@ import Tools.PropositionalEquality as PE
          [ℕ] = ℕᵣ (idRed:*: (univ (ℕⱼ ⊢Γ)))
          [ℕ2] = ℕ2ᵣ (idRed:*: (univ (ℕ2ⱼ ⊢Γ)))
          [Π] = Πℕ2ℕ ⊢Γ
-         [bwd] = EquivRed.[bwd] equivRed ⊢Γ
+         [bwd] = EquivRed.[bwd] (equivRed eqrel) ⊢Γ
          [B≡ℕ2] = id (univ (ℕ2ⱼ ⊢Γ))
          [tℕ2] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕ2ᵣ nat2D) [ℕ2] [B≡ℕ2] [t]
          [bwd∘t] = appTerm PE.refl [ℕ2] [ℕ] [Π] [bwd] [tℕ2]
@@ -730,7 +730,7 @@ import Tools.PropositionalEquality as PE
          [ℕ] = ℕᵣ (idRed:*: (univ (ℕⱼ ⊢Γ)))
          [ℕ2] = ℕ2ᵣ (idRed:*: (univ (ℕ2ⱼ ⊢Γ)))
          [Π] = Πℕ2ℕ ⊢Γ
-         [bwd] = EquivRed.[bwd] equivRed ⊢Γ
+         [bwd] = EquivRed.[bwd] (equivRed eqrel) ⊢Γ
          [B≡ℕ2] = id (univ (ℕ2ⱼ ⊢Γ))
          [tℕ2] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕ2ᵣ x) [ℕ2] [B≡ℕ2] [t]
          [bwd∘t] = appTerm PE.refl [ℕ2] [ℕ] [Π] [bwd] [tℕ2]
@@ -749,7 +749,7 @@ import Tools.PropositionalEquality as PE
          [ℕ] = ℕᵣ (idRed:*: (univ (ℕⱼ ⊢Γ)))
          [ℕ2] = ℕ2ᵣ (idRed:*: (univ (ℕ2ⱼ ⊢Γ)))
          [Π] = Πℕℕ2 ⊢Γ
-         [fwd] = EquivRed.[fwd] equivRed ⊢Γ
+         [fwd] = EquivRed.[fwd] (equivRed eqrel) ⊢Γ
          [A≡ℕ] = id (univ (ℕⱼ ⊢Γ))
          [tℕ] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕᵣ x₁) [ℕ] [A≡ℕ] [t]
          [fwd∘t] = appTerm PE.refl [ℕ] [ℕ2] [Π] [fwd] [tℕ]

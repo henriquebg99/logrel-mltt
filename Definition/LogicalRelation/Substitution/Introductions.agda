@@ -3,16 +3,17 @@
 
 import Definition.Equiv as E
 import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Substitution.Introductions (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.LogicalRelation.Substitution.Introductions (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 open import Definition.Typed.EqualityRelation equiv
 
-open import Definition.LogicalRelation.Substitution.Introductions.Application equiv public
-open import Definition.LogicalRelation.Substitution.Introductions.Lambda equiv public
-open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv public
-open import Definition.LogicalRelation.Substitution.Introductions.Nat2 equiv public
-open import Definition.LogicalRelation.Substitution.Introductions.Natrec equiv public
-open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv public
-open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec equiv public
-open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv public
-open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv public
-open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv public
+open import Definition.LogicalRelation.Substitution.Introductions.Application equiv equivRed public
+open import Definition.LogicalRelation.Substitution.Introductions.Lambda equiv equivRed public
+open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv equivRed public
+open import Definition.LogicalRelation.Substitution.Introductions.Nat2 equiv equivRed public
+open import Definition.LogicalRelation.Substitution.Introductions.Natrec equiv equivRed public
+open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv equivRed public
+open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec equiv equivRed public
+open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv equivRed public
+open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv equivRed public
+open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv equivRed public

@@ -1,7 +1,11 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Typed.Consequences.Consistency (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Typed.Consequences.Consistency
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped
 open import Definition.Typed equiv
@@ -10,7 +14,7 @@ open import Definition.Typed.EqRelInstance equiv
 open import Definition.LogicalRelation equiv
 open import Definition.LogicalRelation.Irrelevance equiv
 open import Definition.LogicalRelation.ShapeView equiv
-open import Definition.LogicalRelation.Fundamental.Reducibility equiv
+open import Definition.LogicalRelation.Fundamental.Reducibility equiv equivRed
 
 open import Tools.Empty
 open import Tools.Product

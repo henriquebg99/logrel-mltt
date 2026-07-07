@@ -3,7 +3,8 @@
 
 import Definition.Equiv as E
 import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Substitution.Introductions.Castlemmas (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.LogicalRelation.Substitution.Introductions.Castlemmas (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
@@ -22,12 +23,12 @@ import Definition.LogicalRelation.Weakening equiv as Lwk
 open import Definition.LogicalRelation.Substitution.Properties equiv
 import Definition.LogicalRelation.Substitution.Irrelevance equiv as S
 open import Definition.LogicalRelation.Substitution.Reflexivity equiv
-open import Definition.LogicalRelation.Substitution.Weakening equiv
+open import Definition.LogicalRelation.Substitution.Weakening equiv equivRed
 -- open import Definition.LogicalRelation.Substitution.Introductions.Nat
-open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv equivRed
 -- open import Definition.LogicalRelation.Substitution.Introductions.Pi
 -- open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst
-open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv equivRed
 open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
 
 open import Tools.Product

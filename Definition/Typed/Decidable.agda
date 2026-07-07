@@ -1,7 +1,11 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Typed.Decidable (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Typed.Decidable
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped
 open import Definition.Typed equiv

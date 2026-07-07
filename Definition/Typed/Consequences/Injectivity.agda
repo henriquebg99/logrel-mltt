@@ -1,7 +1,11 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Typed.Consequences.Injectivity (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Typed.Consequences.Injectivity
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped hiding (wk)
 import Definition.Untyped as U
@@ -9,14 +13,15 @@ open import Definition.Untyped.Properties
 
 open import Definition.Typed equiv
 open import Definition.Typed.Weakening equiv
-open import Definition.Typed.Properties equiv
 open import Definition.Typed.EqRelInstance equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.ShapeView equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Fundamental.Reducibility equiv
-open import Definition.LogicalRelation.Fundamental equiv
+open import Definition.Typed.Properties equiv
+open import Definition.LogicalRelation equiv 
+open import Definition.LogicalRelation.Properties.Escape equiv 
+open import Definition.LogicalRelation.Properties.Neutral equiv 
+open import Definition.LogicalRelation.Irrelevance equiv 
+open import Definition.LogicalRelation.ShapeView equiv 
+open import Definition.LogicalRelation.Fundamental.Reducibility equiv equivRed
+open import Definition.LogicalRelation.Fundamental equiv equivRed
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE
@@ -31,7 +36,7 @@ injectivity′ : ∀ {F G H E rF lF rH lH lG lE Γ lΠ l}
              × lF PE.≡ lH
              × lG PE.≡ lE
              × Γ ∙ F ^ [ rF , ι lF ] ⊢ G ≡ E ^ [ ! , ι  lG ]
-injectivity′ {F₁} {G₁} {H} {E} {lF = lF₁} {Γ = Γ} 
+injectivity′ {F₁} {G₁} {H} {E} {lF = lF₁} {Γ = Γ}
          (noemb (Πᵣ ! lF lG lF≤ lG≤ F G D ⊢F ⊢G A≡A [F] [G] G-ext))
          (Π₌ F′ G′ D′ A≡B [F≡F′] [G≡G′]) =
   let F≡F₁ , rF≡rF₁ , lF≡lF₁ , G≡G₁ , lG≡lG₁ , _ = Π-PE-injectivity (whnfRed* (red D) Πₙ)
@@ -48,7 +53,7 @@ injectivity′ {F₁} {G₁} {H} {E} {lF = lF₁} {Γ = Γ}
       [F≡H]₁ = [F≡F′] id ⊢Γ
       [F≡H]′ = irrelevanceEq″ (PE.trans (wk-id _) (PE.sym F≡F₁))
                               (PE.trans (wk-id _) (PE.sym H≡F′))
-                              PE.refl PE.refl 
+                              PE.refl PE.refl
                               [F]₁ [F]′ [F≡H]₁
       [G≡E]₁ = [G≡G′] (step id) (⊢Γ ∙ ⊢F) [x∷F]
       [G≡E]′ = irrelevanceEqLift″ (PE.trans (wkSingleSubstId _) (PE.sym G≡G₁))
@@ -65,7 +70,7 @@ injectivity′ {F₁} {G₁} {H} {E} {lF = lF₁} {Γ = Γ}
           (PE.subst (λ l → (Γ ∙ F₁ ^ [ ! , l ] ) ⊢ G₁ ≡ E ^  [ ! , ι lG ]) (PE.cong ι (PE.sym lF≡lF₁))
            (escapeEq [G]′ [G≡E]′))))))
 
-injectivity′ {F₁} {G₁} {H} {E} {lF = lF₁} {Γ = Γ} 
+injectivity′ {F₁} {G₁} {H} {E} {lF = lF₁} {Γ = Γ}
          (noemb (Πᵣ % lF lG lF≤ lG≤ F G D ⊢F ⊢G A≡A [F] [G] G-ext))
          (Π₌ F′ G′ D′ A≡B [F≡F′] [G≡G′]) =
   let F≡F₁ , rF≡rF₁ , lF≡lF₁ , G≡G₁ , lG≡lG₁ , _ = Π-PE-injectivity (whnfRed* (red D) Πₙ)
@@ -74,16 +79,15 @@ injectivity′ {F₁} {G₁} {H} {E} {lF = lF₁} {Γ = Γ}
       [F]₁ = [F] id ⊢Γ
       [F]′ = irrelevance′ (PE.trans (wk-id _) (PE.sym F≡F₁)) [F]₁
       [x∷F] = neuTerm ([F] (step id) (⊢Γ ∙ ⊢F)) (var 0) (var (⊢Γ ∙ ⊢F) here)
-                      (proof-irrelevance (var (⊢Γ ∙ ⊢F) here) (var (⊢Γ ∙ ⊢F) here))
+                     (proof-irrelevance (var (⊢Γ ∙ ⊢F) here) (var (⊢Γ ∙ ⊢F) here))
       [G]₁ = [G] (step id) (⊢Γ ∙ ⊢F) [x∷F]
       [G]′ = PE.subst₂ (λ x y → _ ∙ y ^ _ ⊩⟨ _ ⟩ x ^ _)
                        (PE.trans (wkSingleSubstId _) (PE.sym G≡G₁))
                        (PE.sym F≡F₁) [G]₁
       [F≡H]₁ = [F≡F′] id ⊢Γ
-      [F≡H]₁ = [F≡F′] id ⊢Γ
       [F≡H]′ = irrelevanceEq″ (PE.trans (wk-id _) (PE.sym F≡F₁))
                               (PE.trans (wk-id _) (PE.sym H≡F′))
-                              PE.refl PE.refl 
+                              PE.refl PE.refl
                               [F]₁ [F]′ [F≡H]₁
       [G≡E]₁ = [G≡G′] (step id) (⊢Γ ∙ ⊢F) [x∷F]
       [G≡E]′ = irrelevanceEqLift″ (PE.trans (wkSingleSubstId _) (PE.sym G≡G₁))
@@ -134,7 +138,7 @@ Uinjectivity′ : ∀ {Γ r₁ r₂ l₁ l₂ lU l}
              → Γ ⊩⟨ l ⟩ Univ r₁ l₁ ≡ Univ r₂ l₂ ^ [ ! , lU ] / U-intr [U]
              → r₁ PE.≡ r₂ × l₁ PE.≡ l₂ × next l₁ PE.≡ lU
 Uinjectivity′ (noemb (Uᵣ r l′ l< eq d)) D =
-  let A , B = Univ-PE-injectivity (whnfRed* D Uₙ) 
+  let A , B = Univ-PE-injectivity (whnfRed* D Uₙ)
       A' , B' = Univ-PE-injectivity (whnfRed* (red d) Uₙ)
   in (PE.trans A' (PE.sym A)) , (PE.trans B' (PE.sym B)) , PE.trans (PE.cong next B') eq
 Uinjectivity′ (emb emb< a) b = Uinjectivity′ a b
@@ -169,7 +173,7 @@ Uinjectivity ⊢U≡U =
              → Γ ⊩⟨ l ⟩ ∃ F ▹ G ≡ ∃ H ▹ E ^ [ % , ι ⁰ ] / ∃-intr [∃FG]
              → Γ ⊢ F ≡ H ^ [ % , ι ⁰ ]
              × Γ ∙ F ^ [ % , ι ⁰ ] ⊢ G ≡ E ^ [ % , ι ⁰ ]
-∃injectivity′ {F₁} {G₁} {H} {E} {Γ = Γ} 
+∃injectivity′ {F₁} {G₁} {H} {E} {Γ = Γ}
          _ [F] [G] [F≡F′] [G≡G′]
          (∃₌ F′ G′ D′ A≡B) =
   let F≡F₁ , G≡G₁ = ∃-PE-injectivity (whnfRed* (red D) ∃ₙ)
@@ -177,7 +181,7 @@ Uinjectivity ⊢U≡U =
       ⊢Γ = wf ⊢F
       [F]₁ = [F] id ⊢Γ
       [F]′ = irrelevance′ (PE.trans (wk-id _) (PE.sym F≡F₁)) [F]₁
-      [x∷F] = neuTerm ([F] (step id) (⊢Γ ∙ ⊢F)) (var 0) (var (⊢Γ ∙ ⊢F) here) (proof-irrelevance (var (⊢Γ ∙ ⊢F) here) (var (⊢Γ ∙ ⊢F) here))  
+      [x∷F] = neuTerm ([F] (step id) (⊢Γ ∙ ⊢F)) (var 0) (var (⊢Γ ∙ ⊢F) here) (~-var (var (⊢Γ ∙ ⊢F) here))
       [G]₁ = [G] (step id) (⊢Γ ∙ ⊢F) [x∷F]
       [G]′ = PE.subst₂ (λ x y → _ ∙ y ^ _ ⊩⟨ _ ⟩ x ^ _)
                        (PE.trans (wkSingleSubstId _) (PE.sym G≡G₁))
@@ -185,13 +189,13 @@ Uinjectivity ⊢U≡U =
       [F≡H]₁ = [F≡F′] id ⊢Γ
       [F≡H]′ = irrelevanceEq″ (PE.trans (wk-id _) (PE.sym F≡F₁))
                               (PE.trans (wk-id _) (PE.sym H≡F′))
-                              PE.refl PE.refl 
+                              PE.refl PE.refl
                               [F]₁ [F]′ [F≡H]₁
       [G≡E]₁ = [G≡G′] (step id) (⊢Γ ∙ ⊢F) [x∷F]
       [G≡E]′ = irrelevanceEqLift″ (PE.trans (wkSingleSubstId _) (PE.sym G≡G₁))
                                    (PE.trans (wkSingleSubstId _) (PE.sym E≡G′))
                                    (PE.sym F≡F₁) [G]₁ [G]′ [G≡E]₁
-  in escapeEq [F]′ [F≡H]′ , escapeEq [G]′ [G≡E]′
+  in ≅-eq (escapeEq [F]′ [F≡H]′) , ≅-eq (escapeEq [G]′ [G≡E]′)
 ∃injectivity′ (emb emb< x) [F] [G] [F≡F′] [G≡G′] [∃FG≡∃HE] = ∃injectivity′ x [F] [G] [F≡F′] [G≡G′] [∃FG≡∃HE]
 ∃injectivity′ (emb ∞< x) [F] [G] [F≡F′] [G≡G′] [∃FG≡∃HE] = ∃injectivity′ x [F] [G] [F≡F′] [G≡G′] [∃FG≡∃HE]
 

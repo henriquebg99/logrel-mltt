@@ -1,15 +1,20 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Typed.Consequences.NeTypeEq (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Typed.Consequences.NeTypeEq
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped
 open import Definition.Typed equiv
 open import Definition.Typed.Properties equiv
+open import Definition.Typed.EqRelInstance equiv
 open import Definition.Typed.Weakening equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Typed.Consequences.Injectivity equiv
-open import Definition.Typed.Consequences.Substitution equiv
+open import Definition.Typed.Consequences.Syntactic equiv equivRed
+open import Definition.Typed.Consequences.Injectivity equiv equivRed
+open import Definition.Typed.Consequences.Substitution equiv equivRed
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE
@@ -47,6 +52,8 @@ neTypeEq (∘ₙ neT) (_ ▹ _ ▹ _ ▹ t∷A ∘ⱼ t∷A₁) (_ ▹ _ ▹ _ �
 ... | e , q = let _ , _ , _ , elG , w = injectivity q
               in PE.cong _ elG , substTypeEq w (genRefl t∷A₁)
 neTypeEq (natrecₙ neT) (natrecⱼ _ x t∷A t∷A₁ t∷A₂) (natrecⱼ _ x₁ t∷B t∷B₁ t∷B₂) =
+  PE.refl , refl (substType x₁ t∷B₂)
+neTypeEq (natrec2ₙ neT) (natrec2ⱼ _ x t∷A t∷A₁ t∷A₂) (natrec2ⱼ _ x₁ t∷B t∷B₁ t∷B₂) =
   PE.refl , refl (substType x₁ t∷B₂)
 neTypeEq Emptyrecₙ (Emptyrecⱼ x t∷A) (Emptyrecⱼ x₁ t∷B) =
   PE.refl , refl x₁

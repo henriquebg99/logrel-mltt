@@ -1,22 +1,26 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Typed.Consequences.TypeUnicity (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Typed.Consequences.TypeUnicity
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
 open import Definition.Untyped.Properties using (subst-Univ-either)
 open import Definition.Typed equiv
 open import Definition.Typed.Properties equiv
 open import Definition.Typed.Weakening equiv
-open import Definition.Typed.Consequences.Equality equiv
+open import Definition.Typed.Consequences.Equality equiv equivRed
 -- import Definition.Typed.Consequences.Inequality as Ineq
-open import Definition.Typed.Consequences.Injectivity equiv
-open import Definition.Typed.Consequences.NeTypeEq equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Typed.Consequences.RelevanceUnicity equiv
-open import Definition.Typed.Consequences.Substitution equiv
-open import Definition.Conversion.Stability equiv
-open import Definition.Typed.Consequences.InjectivitySProp equiv
+open import Definition.Typed.Consequences.Injectivity equiv equivRed
+open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
+open import Definition.Typed.Consequences.Syntactic equiv equivRed
+open import Definition.Typed.Consequences.RelevanceUnicity equiv equivRed
+open import Definition.Typed.Consequences.Substitution equiv equivRed
+open import Definition.Conversion.Stability equiv equivRed
+open import Definition.Typed.Consequences.InjectivitySProp equiv equivRed
 
 open import Tools.Product
 open import Tools.Empty

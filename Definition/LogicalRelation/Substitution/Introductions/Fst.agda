@@ -3,7 +3,8 @@
 
 import Definition.Equiv as E
 import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Substitution.Introductions.Fst (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.LogicalRelation.Substitution.Introductions.Fst (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
@@ -22,11 +23,11 @@ open import Definition.LogicalRelation.Application equiv
 open import Definition.LogicalRelation.Substitution equiv
 open import Definition.LogicalRelation.Substitution.Properties equiv
 open import Definition.LogicalRelation.Substitution.Reflexivity equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Id equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv
-open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Id equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv equivRed
 open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv equivRed
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE

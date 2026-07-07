@@ -1,11 +1,19 @@
 {-# OPTIONS --safe #-}
 
+-- We define a record with witnesses that the forward and backward
+-- equivalences are reducible in the logical relation, for an instance of the 
+-- generic equality
+
 import Definition.Equiv as E
 import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.EquivRed (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+
+module Definition.LogicalRelation.EquivRed (equiv : E.Equiv) (eqrel : ER.EqRelSet equiv) where
+
+instance eqrelInstance : ER.EqRelSet equiv
+eqrelInstance = eqrel
+
 open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
-
 open import Definition.Untyped hiding (wk)
 open import Definition.Typed equiv
 open import Definition.Typed.Properties equiv

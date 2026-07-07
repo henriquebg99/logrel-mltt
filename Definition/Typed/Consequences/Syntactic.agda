@@ -1,7 +1,11 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Typed.Consequences.Syntactic (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Typed.Consequences.Syntactic
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped
 open import Definition.Typed equiv
@@ -9,13 +13,14 @@ open import Definition.Typed.Properties equiv
 open import Definition.Typed.EqRelInstance equiv
 open import Definition.LogicalRelation equiv
 open import Definition.LogicalRelation.Substitution equiv
-open import Definition.LogicalRelation.Substitution.Escape equiv
-open import Definition.LogicalRelation.Fundamental equiv
-open import Definition.Typed.Consequences.Injectivity equiv
+open import Definition.LogicalRelation.Substitution.Escape equiv 
+open import Definition.LogicalRelation.Fundamental equiv equivRed
+open import Definition.Typed.Consequences.Injectivity equiv equivRed
 
 open import Tools.Product
 
--- the `with` syntax does not work 
+
+-- the `with` syntax does not work
 
 -- Syntactic validity of type equality.
 syntacticEq : ∀ {A B rA Γ} → Γ ⊢ A ≡ B ^ rA → Γ ⊢ A ^ rA × Γ ⊢ B ^ rA

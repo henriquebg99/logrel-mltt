@@ -1,7 +1,11 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Typed.Consequences.Substitution (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Typed.Consequences.Substitution
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped
 open import Definition.Untyped.Properties
@@ -9,12 +13,13 @@ open import Definition.Typed equiv
 open import Definition.Typed.Properties equiv
 open import Definition.Typed.EqRelInstance equiv
 open import Definition.Typed.Weakening equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Substitution equiv
-open import Definition.LogicalRelation.Substitution.Irrelevance equiv
-open import Definition.LogicalRelation.Fundamental equiv
+open import Definition.Typed.Consequences.Syntactic equiv equivRed
+open import Definition.LogicalRelation equiv 
+open import Definition.LogicalRelation.Properties.Escape equiv 
+open import Definition.LogicalRelation.Properties.Transitivity equiv 
+open import Definition.LogicalRelation.Substitution equiv 
+open import Definition.LogicalRelation.Substitution.Irrelevance equiv 
+open import Definition.LogicalRelation.Fundamental equiv equivRed
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE

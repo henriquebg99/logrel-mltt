@@ -1,18 +1,22 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Conversion.Conversion (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Conversion.Conversion
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped
 open import Definition.Typed equiv
 open import Definition.Typed.RedSteps equiv
 open import Definition.Typed.Properties equiv
 open import Definition.Conversion equiv
-open import Definition.Conversion.Stability equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Typed.Consequences.Injectivity equiv
-open import Definition.Typed.Consequences.Equality equiv
-open import Definition.Typed.Consequences.Reduction equiv
+open import Definition.Conversion.Stability equiv equivRed
+open import Definition.Typed.Consequences.Syntactic equiv equivRed
+open import Definition.Typed.Consequences.Injectivity equiv equivRed
+open import Definition.Typed.Consequences.Equality equiv equivRed
+open import Definition.Typed.Consequences.Reduction equiv equivRed
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE
@@ -46,6 +50,10 @@ mutual
     let eqN = ℕ≡A A≡B whnfB 
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
                 (ℕ-ins (stability~↓! Γ≡Δ x))
+  convConv↓Term Γ≡Δ A≡B whnfB (ℕ2-ins x) =
+    let eqN = ℕ2≡A A≡B whnfB 
+    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
+                (ℕ2-ins (stability~↓! Γ≡Δ x))
   convConv↓Term Γ≡Δ A≡B whnfB (ne x) =
     let eqU = U≡A-whnf A≡B whnfB
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU) (ne (stability~↓! Γ≡Δ x))
@@ -58,10 +66,19 @@ mutual
         _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
        (zero-refl ⊢Δ)
+  convConv↓Term Γ≡Δ A≡B whnfB (zero2-refl x) =
+    let eqN = ℕ2≡A A≡B whnfB 
+        _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
+    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
+       (zero2-refl ⊢Δ)
   convConv↓Term Γ≡Δ A≡B whnfB (suc-cong x) =
     let eqN = ℕ≡A A≡B whnfB 
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
                 (suc-cong (stabilityConv↑Term Γ≡Δ x))
+  convConv↓Term Γ≡Δ A≡B whnfB (suc2-cong x) =
+    let eqN = ℕ2≡A A≡B whnfB 
+    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
+                (suc2-cong (stabilityConv↑Term Γ≡Δ x))
   convConv↓Term Γ≡Δ A≡B whnfB (η-eq l< l<' x x₁ x₂ y y₁ x₃) =
     let F′ , G′ , eqΠ = Π≡A A≡B whnfB
         A≡B' = PE.subst (λ X → _ ⊢ _ ≡ X ^ _) eqΠ A≡B
@@ -80,6 +97,10 @@ mutual
     let eqU = U≡A-whnf A≡B whnfB
         _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU) (ℕ-refl ⊢Δ)
+  convConv↓Term Γ≡Δ A≡B whnfB (ℕ2-refl x) =
+    let eqU = U≡A-whnf A≡B whnfB
+        _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
+    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU) (ℕ2-refl ⊢Δ)
   convConv↓Term Γ≡Δ A≡B whnfB (Empty-refl _) =
     let eqU = U≡A-whnf A≡B whnfB
         _ , ⊢Δ , _ = contextConvSubst Γ≡Δ

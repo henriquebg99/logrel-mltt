@@ -1,7 +1,11 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Conversion.Lift (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Conversion.Lift
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped
 open import Definition.Untyped.Properties
@@ -11,15 +15,15 @@ open import Definition.Typed.Properties equiv
 open import Definition.Typed.EqRelInstance equiv
 open import Definition.Conversion equiv
 open import Definition.Conversion.Whnf equiv
-open import Definition.Conversion.Soundness equiv
+open import Definition.Conversion.Soundness equiv equivRed
 open import Definition.Conversion.Reduction equiv
 open import Definition.Conversion.Weakening equiv
 open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Fundamental.Reducibility equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Typed.Consequences.Reduction equiv
-open import Definition.Typed.Consequences.Equality equiv
+open import Definition.LogicalRelation.Properties.Neutral equiv
+open import Definition.LogicalRelation.Fundamental.Reducibility equiv equivRed
+open import Definition.Typed.Consequences.Syntactic equiv equivRed
+open import Definition.Typed.Consequences.Reduction equiv equivRed
+open import Definition.Typed.Consequences.Equality equiv equivRed
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE
@@ -57,6 +61,9 @@ mutual
   lift~toConv↓!′ (ℕᵣ D) D₁ ([~] A D₂ whnfB k~l)
                 rewrite PE.sym (whrDet* (red D , ℕₙ) (D₁ , whnfB)) =
     ℕ-ins ([~] A D₂ ℕₙ k~l)
+  lift~toConv↓!′ (ℕ2ᵣ D) D₁ ([~] A D₂ whnfB k~l)
+                rewrite PE.sym (whrDet* (red D , ℕ2ₙ) (D₁ , whnfB)) =
+    ℕ2-ins ([~] A D₂ ℕ2ₙ k~l)
   lift~toConv↓!′ (ne′ K D neK K≡K) D₁ ([~] A D₂ whnfB k~l)
                 rewrite PE.sym (whrDet* (red D , ne neK) (D₁ , whnfB)) =
     let _ , ⊢t , ⊢u = syntacticEqTerm (soundness~↑! k~l)
@@ -68,7 +75,7 @@ mutual
         neT , neU = ne~↑! k~l
         ⊢Γ = wf ⊢F
         var0 = neuTerm ([F] (step id) (⊢Γ ∙ ⊢F)) (var 0) (var (⊢Γ ∙ ⊢F) here)
-                       (genRefl (var (⊢Γ ∙ ⊢F) here))
+                       (~-var (var (⊢Γ ∙ ⊢F) here))
         0≡0 = lift~toConv↑′ ([F] (step id) (⊢Γ ∙ ⊢F)) (var-refl′ (var (⊢Γ ∙ ⊢F) here))
         k∘0≡l∘0 = lift~toConv↑′ ([G] (step id) (⊢Γ ∙ ⊢F) var0)
                                 (~↑! (app-cong (wk~↓! (step id) (⊢Γ ∙ ⊢F) ([~] A D₂ Πₙ k~l)) 0≡0))
@@ -81,7 +88,7 @@ mutual
         neT , neU = ne~↑! k~l
         ⊢Γ = wf ⊢F
         var0 = neuTerm ([F] (step id) (⊢Γ ∙ ⊢F)) (var 0) (var (⊢Γ ∙ ⊢F) here)
-                       (genRefl (var (⊢Γ ∙ ⊢F) here))
+                       (~-var (var (⊢Γ ∙ ⊢F) here))
         k∘0≡l∘0 = lift~toConv↑′ ([G] (step id) (⊢Γ ∙ ⊢F) var0)
                                  (~↑! (app-cong (wk~↓! (step id) (⊢Γ ∙ ⊢F) ([~] A D₂ Πₙ k~l)) (%~↑ (var (⊢Γ ∙ ⊢F) here) (var (⊢Γ ∙ ⊢F) here))))
     in  η-eq l< l<' ⊢F ⊢t ⊢u (ne neT) (ne neU)

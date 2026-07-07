@@ -3,7 +3,11 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Conversion.ConversionGenEquiv (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Conversion.ConversionGenEquiv
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped
 open import Definition.Typed equiv
@@ -14,21 +18,21 @@ import Tools.PropositionalEquality as PE
 open import Definition.LogicalRelation equiv
 open import Definition.Conversion equiv
 open import Definition.ConversionGen equiv
-open import Definition.Conversion.Lift equiv
+open import Definition.Conversion.Lift equiv equivRed
 open import Definition.Conversion.Whnf equiv as W
 open import Definition.Conversion.WhnfGen equiv as WG
-open import Definition.Conversion.Soundness equiv as S
+open import Definition.Conversion.Soundness equiv equivRed as S
 open import Definition.Conversion.SoundnessGen equiv as SG
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Typed.Consequences.Inversion equiv
-open import Definition.Typed.Consequences.Equality equiv
-open import Definition.Typed.Consequences.TypeUnicity equiv
-open import Definition.Typed.Consequences.Injectivity equiv
-open import Definition.Typed.Consequences.NeTypeEq equiv
-open import Definition.Typed.Consequences.Inequality equiv as I
+open import Definition.Typed.Consequences.Syntactic equiv equivRed
+open import Definition.Typed.Consequences.Inversion equiv equivRed
+open import Definition.Typed.Consequences.Equality equiv equivRed
+open import Definition.Typed.Consequences.TypeUnicity equiv equivRed
+open import Definition.Typed.Consequences.Injectivity equiv equivRed
+open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
+open import Definition.Typed.Consequences.Inequality equiv equivRed as I
 open import Definition.Typed.Properties equiv
-open import Definition.Conversion.Symmetry equiv
-open import Definition.Conversion.Stability equiv
+open import Definition.Conversion.Symmetry equiv equivRed
+open import Definition.Conversion.Stability equiv equivRed
 open import Definition.Typed.EqRelInstance equiv
 
 open import Tools.Empty

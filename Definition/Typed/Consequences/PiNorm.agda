@@ -1,8 +1,11 @@
 {-# OPTIONS --safe #-}
 
-
 import Definition.Equiv as E
-module Definition.Typed.Consequences.PiNorm (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Typed.Consequences.PiNorm
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped
 open import Definition.Untyped.Properties
@@ -13,11 +16,11 @@ open import Definition.Typed.EqRelInstance equiv
 open import Definition.LogicalRelation equiv
 open import Definition.LogicalRelation.Properties equiv
 open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.Fundamental.Reducibility equiv
-open import Definition.Typed.Consequences.Inversion equiv
-open import Definition.Typed.Consequences.Injectivity equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Conversion.Stability equiv
+open import Definition.LogicalRelation.Fundamental.Reducibility equiv equivRed
+open import Definition.Typed.Consequences.Inversion equiv equivRed
+open import Definition.Typed.Consequences.Injectivity equiv equivRed
+open import Definition.Typed.Consequences.Syntactic equiv equivRed
+open import Definition.Conversion.Stability equiv equivRed
 
 open import Tools.Product
 open import Tools.Empty
@@ -36,6 +39,7 @@ data ΠNorm : Term → Set where
   Πirrₙ : ∀ {F rF lF G} → ΠNorm (Π F ^ rF ° lF ▹ G ° ⁰ ° ⁰ ^ %)
   Idₙ : ∀ {A t u} → ΠNorm (Id A t u)
   ℕₙ : ΠNorm ℕ
+  ℕ2ₙ : ΠNorm ℕ2
   Emptyₙ : ΠNorm sEmpty
   ne   : ∀ {n} → Neutral n → ΠNorm n
 
@@ -118,6 +122,7 @@ doΠNorm′ : ∀ {A rA Γ l} ([A] : Γ ⊩⟨ l ⟩ A ^ rA)
          → ∃ λ B → ΠNorm B × Γ ⊢ B ^ rA × Γ ⊢ A ⇒*Π B ^ rA
 doΠNorm′ (Uᵣ (Uᵣ r l′ l< PE.refl [[ A , U , d ]])) = Univ r l′ , Uₙ , Ugenⱼ (wf A) , regular* d
 doΠNorm′ (ℕᵣ [[ ⊢A , ⊢B , D ]]) = ℕ , ℕₙ , ⊢B , regular* D
+doΠNorm′ (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) = ℕ2 , ℕ2ₙ , ⊢B , regular* D
 doΠNorm′ (Emptyᵣ [[ ⊢A , ⊢B , D ]]) = sEmpty , Emptyₙ , ⊢B , regular* D
 doΠNorm′ (ne′ K [[ ⊢A , ⊢B , D ]] neK K≡K) = K , ne neK , ⊢B , regular* D
 doΠNorm′ (Πᵣ′ rF lF lG lF≤ lG≤ F G [[ ⊢A , ⊢B , D ]] ⊢F ⊢G A≡A [F] [G] G-ext) =
@@ -143,6 +148,7 @@ doΠNorm ⊢A = doΠNorm′ (reducible ⊢A)
 ΠNorm-whnf Πirrₙ = Πₙ
 ΠNorm-whnf Idₙ = Idₙ
 ΠNorm-whnf ℕₙ = ℕₙ
+ΠNorm-whnf ℕ2ₙ = ℕ2ₙ
 ΠNorm-whnf Emptyₙ = Emptyₙ
 ΠNorm-whnf (ne x) = ne x
 

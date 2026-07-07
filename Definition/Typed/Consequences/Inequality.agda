@@ -1,19 +1,23 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Typed.Consequences.Inequality (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Typed.Consequences.Inequality
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne; ℕ≢ℕ2; ℕ2≢ℕ)
 open import Definition.Typed equiv
 open import Definition.Typed.Properties equiv
 open import Definition.Typed.EqRelInstance equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.ShapeView equiv
-open import Definition.LogicalRelation.Fundamental.Reducibility equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Typed.Consequences.Inversion equiv
-open import Definition.Typed.Consequences.Equality equiv
+open import Definition.LogicalRelation equiv 
+open import Definition.LogicalRelation.Irrelevance equiv 
+open import Definition.LogicalRelation.ShapeView equiv 
+open import Definition.LogicalRelation.Fundamental.Reducibility equiv equivRed
+open import Definition.Typed.Consequences.Syntactic equiv equivRed
+open import Definition.Typed.Consequences.Inversion equiv equivRed
+open import Definition.Typed.Consequences.Equality equiv equivRed
 
 open import Tools.Product
 open import Tools.Empty
@@ -217,6 +221,61 @@ Empty≢Π% Empty≡Π =
 ℕ2≢ℕ! ℕ2≡ℕ =
   let ⊢ℕ2 , ⊢ℕ = syntacticEq ℕ2≡ℕ
   in  ℕ2≢ℕ-red (id ⊢ℕ2) (id ⊢ℕ) ℕ2≡ℕ
+
+U≢ℕ2′ : ∀ {Γ A ll B l l′}
+       ([U] : Γ ⊩′⟨ l ⟩U A ^ ll)
+       ([ℕ2] : Γ ⊩ℕ2 B)
+     → ShapeView Γ l l′ _ _ [ ! , _ ] [ ! , _ ] (Uᵣ {ll = ll} [U]) (ℕ2ᵣ [ℕ2]) → ⊥
+U≢ℕ2′ a b ()
+
+U≢ℕ2-red : ∀ {ll r lU B Γ} → Γ ⊢ B ⇒* ℕ2 ^ [ ! , ll ] → Γ ⊢ Univ r lU ≡ B ^ [ ! , ll ] → ⊥
+U≢ℕ2-red {ll} D = A≢B (λ Γ l A → Γ ⊩′⟨ l ⟩U A ^ ll) (λ Γ l B → Γ ⊩ℕ2 B) Uᵣ ℕ2ᵣ
+                (λ x → extractMaybeEmb (U-elim x))
+                (λ x → extractMaybeEmb (ℕ2-elim′ D x))
+                U≢ℕ2′
+
+U≢ℕ2! : ∀ {r l ll Γ} → Γ ⊢ Univ r l ≡ ℕ2 ^ [ ! , ll ] → ⊥
+U≢ℕ2! U≡ℕ2 =
+  let _ , ⊢ℕ2 = syntacticEq U≡ℕ2
+  in  U≢ℕ2-red (id ⊢ℕ2) U≡ℕ2
+
+ℕ2≢Π′ : ∀ {A B Γ ll l l′}
+       ([ℕ2] : Γ ⊩ℕ2 A)
+       ([Π] : Γ ⊩′⟨ l′ ⟩Π B ^[ ll ])
+     → ShapeView Γ l l′ _ _ _ _ (ℕ2ᵣ [ℕ2]) (Πᵣ [Π]) → ⊥
+ℕ2≢Π′ a b ()
+
+ℕ2≢Π-red : ∀ {A B F rF lF lG G Γ} → Γ ⊢ A ⇒* ℕ2 ^ [ ! , ι ⁰ ] → Γ ⊢ B ⇒* Π F ^ rF ° lF ▹ G ° lG ° ⁰ ^ ! ^ [ ! , ι ⁰ ] → Γ ⊢ A ≡ B ^ [ ! , ι ⁰ ] → ⊥
+ℕ2≢Π-red D D′ = A≢B (λ Γ l A → Γ ⊩ℕ2 A)
+                   (λ Γ l A → Γ ⊩′⟨ l ⟩Π A ^[ ⁰ ]) ℕ2ᵣ Πᵣ
+                   (λ x → extractMaybeEmb (ℕ2-elim′ D x))
+                   (λ x → extractMaybeEmb (Π-elim′ D′ x))
+                   ℕ2≢Π′
+
+ℕ2≢Π! : ∀ {F rF G lF lG r Γ} → Γ ⊢ ℕ2 ≡ Π F ^ rF ° lF ▹ G ° lG ° ⁰ ^ r ^ [ ! , ι ⁰ ]  → ⊥
+ℕ2≢Π! ℕ2≡Π =
+  let ⊢ℕ2 , ⊢Π = syntacticEq ℕ2≡Π
+      rG , _ , _ , _ , _ , U=U , err , _ = inversion-Π (un-univ ⊢Π)
+      r=r , _ = Univ-PE-injectivity (U≡A-whnf U=U Uₙ)
+      eqr = PE.trans (PE.sym err) r=r
+  in  ℕ2≢Π-red (id ⊢ℕ2) (id (PE.subst (λ X → _ ⊢ Π _ ^ _ ° _ ▹ _ ° _ ° _ ^ X ^ [ _ , _ ] ) eqr ⊢Π)) (PE.subst (λ X → _ ⊢ _ ≡ Π _ ^ _ ° _ ▹ _ ° _ ° _ ^ X ^ [ _ , _ ] ) eqr ℕ2≡Π)
+
+ℕ2≢ne′ : ∀ {ll A K Γ l l′}
+       ([ℕ2] : Γ ⊩ℕ2 A)
+       ([K] : Γ ⊩ne K ^[ ! , ll ])
+     → ShapeView Γ l l′ _ _ _ _ (ℕ2ᵣ [ℕ2]) (ne [K]) → ⊥
+ℕ2≢ne′ a b ()
+
+ℕ2≢ne-red : ∀ {A B K Γ} → Γ ⊢ A ⇒* ℕ2 ^ [ ! , ι ⁰ ] → Γ ⊢ B ⇒* K ^ [ ! , ι ⁰ ] → Neutral K → Γ ⊢ A ≡ B ^ [ ! , ι ⁰ ] → ⊥
+ℕ2≢ne-red D D′ neK = A≢B (λ Γ l A → Γ ⊩ℕ2 A) (λ Γ l B → Γ ⊩ne B ^[ ! , ⁰ ]) ℕ2ᵣ ne
+                        (λ x → extractMaybeEmb (ℕ2-elim′ D x))
+                        (λ x → extractMaybeEmb (ne-elim′ D′ neK x PE.refl ))
+                        ℕ2≢ne′
+
+ℕ2≢ne! : ∀ {K Γ} → Neutral K → Γ ⊢ ℕ2 ≡ K ^ [ ! , ι ⁰ ] → ⊥
+ℕ2≢ne! neK ℕ2≡K =
+  let ⊢ℕ2 , ⊢K = syntacticEq ℕ2≡K
+  in  ℕ2≢ne-red (id ⊢ℕ2) (id ⊢K) neK ℕ2≡K
 
 -- Empty and neutral
 Empty≢ne′ : ∀ {A K Γ l l′}

@@ -1,7 +1,11 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Conversion.Transitivity (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Conversion.Transitivity
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped
 open import Definition.Untyped.Properties
@@ -9,26 +13,25 @@ open import Definition.Typed equiv
 open import Definition.Typed.Properties equiv
 open import Definition.Typed.RedSteps equiv
 open import Definition.Conversion equiv
-open import Definition.Conversion.Soundness equiv
-open import Definition.Conversion.Stability equiv
-open import Definition.Conversion.Conversion equiv
+open import Definition.Conversion.Soundness equiv equivRed
+open import Definition.Conversion.Stability equiv equivRed
+open import Definition.Conversion.Conversion equiv equivRed
 open import Definition.Conversion.ConvSize equiv
-open import Definition.Conversion.ConversionProp equiv
-open import Definition.Conversion.StabilityProp equiv
-open import Definition.Conversion.Inversion equiv
+open import Definition.Conversion.ConversionProp equiv equivRed
+open import Definition.Conversion.StabilityProp equiv equivRed
+open import Definition.Conversion.Inversion equiv equivRed
 open import Definition.Conversion.Whnf equiv
-open import Definition.Conversion.TransitivityHelper equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Typed.Consequences.Reduction equiv
-open import Definition.Typed.Consequences.Injectivity equiv
-import Definition.Typed.Consequences.Inequality equiv as WF
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Typed.Consequences.Substitution equiv
-open import Definition.Typed.Consequences.NeTypeEq equiv
-open import Definition.Typed.Consequences.SucCong equiv
-open import Definition.Typed.Consequences.RelevanceUnicity equiv
-open import Definition.Typed.Consequences.Equality equiv
-open import Definition.Typed.Consequences.Inversion equiv
+open import Definition.Conversion.TransitivityHelper
+open import Definition.Typed.Consequences.Syntactic equiv equivRed
+open import Definition.Typed.Consequences.Reduction equiv equivRed
+open import Definition.Typed.Consequences.Injectivity equiv equivRed
+import Definition.Typed.Consequences.Inequality equiv equivRed as WF
+open import Definition.Typed.Consequences.Substitution equiv equivRed
+open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
+open import Definition.Typed.Consequences.SucCong equiv equivRed
+open import Definition.Typed.Consequences.RelevanceUnicity equiv equivRed
+open import Definition.Typed.Consequences.Equality equiv equivRed
+open import Definition.Typed.Consequences.Inversion equiv equivRed
 
 open import Tools.Nat as Nat
 open import Tools.Product
@@ -135,6 +138,28 @@ mutual
                                             sizet~v))
             (<=-help-nat-cong {a = sizeConv↑ A<>B} {b = sizeConv↑ B<>C}))
 
+  trans~↑! {n = 1+ n} {Γ = Γ} PE.refl Γ≡Δ (natrec2-cong {k = k} A<>B a₀<>b₀ aₛ<>bₛ t~u) (natrec2-cong {l = l} B<>C b₀<>c₀ bₛ<>cₛ u~v) (leS e) =
+    let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
+        A≡B = soundnessConv↑ A<>B
+        F[0]≡F₁[0] = substTypeEq A≡B (refl (zero2ⱼ ⊢Γ))
+        Πℕ2Fs≡Πℕ2F₁s = suc2Cong A≡B
+        A<>C , sizeA<>C = transConv↑ {n = n} (Γ≡Δ ∙ (refl (univ (ℕ2ⱼ ⊢Γ)))) A<>B B<>C
+                                     (<<-trans (leS (<=-help-nat-cong-ab {b = sizeConv↑ B<>C})) e)
+        a₀<>c₀ , sizea₀<>c₀ = transConv↑Term {n = n} PE.refl Γ≡Δ F[0]≡F₁[0] a₀<>b₀ b₀<>c₀
+                                             (<<-trans (<=-help-nat-congb'c' {a = sizeConv↑ A<>B} {b = sizeConv↑ B<>C}) e)
+        aₛ<>cₛ , sizeaₛ<>cₛ = transConv↑Term {n = n} PE.refl Γ≡Δ Πℕ2Fs≡Πℕ2F₁s aₛ<>bₛ bₛ<>cₛ
+                                             (<<-trans (<=-help-nat-congb''c'' {a = sizeConv↑ A<>B} {b = sizeConv↑ B<>C}) e)
+        C , wC ,  t~v , ℕ2≡C , _ , sizet~v = trans~↓! {n = n} PE.refl Γ≡Δ t~u u~v
+                                                     (<<-trans (<=-help-nat-congb'''c''' {a = sizeConv↑ A<>B} {b = sizeConv↑ B<>C}) e)
+        ℕ2≡C' = ℕ2≡A ℕ2≡C wC
+    in  _ , natrec2-cong A<>C a₀<>c₀ aₛ<>cₛ (PE.subst (λ X → Γ ⊢ k ~ l ↓! X ^ ι ⁰) ℕ2≡C' t~v) ,
+        substTypeEq (refl (proj₁ (syntacticEq A≡B))) (refl (proj₁ (proj₂ (syntacticEqTerm (soundness~↓! t~u))))) ,
+        substTypeEq A≡B (soundness~↓! t~u) ,
+        leS (<=-trans (<=-cong-+4 sizeA<>C sizea₀<>c₀ sizeaₛ<>cₛ
+                                  (<=-trans (≡-to-<= (sizeSubst-gen (λ X →  _ ⊢ _ ~ _ ↓! X ^ ι _) size~↓! t~v ℕ2≡C'))
+                                            sizet~v))
+            (<=-help-nat-cong {a = sizeConv↑ A<>B} {b = sizeConv↑ B<>C}))
+
   trans~↑! {n = 1+ n} PE.refl Γ≡Δ (Emptyrec-cong A<>B t~u) (Emptyrec-cong B<>C u~v) (leS e) =
     let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
         A≡B = soundnessConv↑ A<>B
@@ -179,6 +204,17 @@ mutual
     in _ , cast-ℕ XY' t~t x₁ (stabilityTerm (symConEq Γ≡Δ) x₅) , refl (proj₂ (syntacticEq (univ (soundness~↓! X)))) , sym (univ (soundness~↓! X)) ,
        leS (<=-trans (<=-cong-+ sizeXY' sizet~t) (<=-help-3-abcd- {a = size~↓! X} {b = size~↓! Y}))
 
+  trans~↑! {n = 1+ n} {Γ = Γ} el Γ≡Δ (cast-ℕ2 {A = A} X x x₁ x₂) (cast-ℕ2 {A' = A'} Y x₃ x₄ x₅) (leS e) =
+    let K , wK , XY- , [U] , _ , sizeXY = trans~↓! {n = n} PE.refl (symConEq Γ≡Δ) Y X (<<bind-suc <=-help-ab'- e)
+        eqU = U≡A-whnf [U] wK
+        XY = stability~↓! (symConEq Γ≡Δ) XY-
+        XY' = PE.subst (λ X →  Γ ⊢ A' ~ A ↓! X ^ ι ¹) eqU XY
+        ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
+        sizeXY' = <=-trans (≡-to-<= (sizeSubst-gen (λ X →  Γ ⊢ A' ~ A ↓! X ^ ι ¹) size~↓! XY eqU)) (<=-trans (≡-to-<= (stabilitySize~↓! (symConEq Γ≡Δ) XY-)) sizeXY)
+        t~t , sizet~t = transConv↑Term {n = n} PE.refl Γ≡Δ (refl (univ (ℕ2ⱼ  ⊢Γ))) x x₃ (<<-trans (<=-help-ab'' {a = size~↓! X} {c = size~↓! Y}) e)
+    in _ , cast-ℕ2 XY' t~t x₁ (stabilityTerm (symConEq Γ≡Δ) x₅) , refl (proj₂ (syntacticEq (univ (soundness~↓! X)))) , sym (univ (soundness~↓! X)) ,
+       leS (<=-trans (<=-cong-+ sizeXY' sizet~t) (<=-help-3-abcd- {a = size~↓! X} {b = size~↓! Y}))
+
   trans~↑! {n = 1+ n} {Γ = Γ} el Γ≡Δ (cast-Π {B = B} x X x₁ x₂ x₃) (cast-Π {B' = B'} x₄ Y x₅ x₆ x₇) (leS e) =
     let K , wK , XY- , [U] , [U]' , sizeXY = trans~↓! {n = n} PE.refl (symConEq Γ≡Δ) Y X (<<-trans (<=-help-b'c'- {a = sizeConv↑Term x} {b = sizeConv↑Term x₄} ) e)
         eqU = U≡A-whnf [U] wK
@@ -208,6 +244,17 @@ mutual
     in _ , cast-Πℕ t~t u~u x₂ (stabilityTerm (symConEq Γ≡Δ) x₇) , refl (univ (ℕⱼ  ⊢Γ)) , refl (univ (ℕⱼ  ⊢Γ)) ,
         leS (<=-trans (<=-cong-+ sizet~t sizeu~u) (<=-help-3-abcd {a = sizeConv↑Term x}))
 
+  trans~↑! {n = 1+ n} el Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) (cast-Πℕ2 x₄ x₅ x₆ x₇) (leS e) =
+    let Y≡Y = univ (soundnessConv↑Term x₄)
+        ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
+        t~t , sizet~t = transConv↑Term {n = n} PE.refl Γ≡Δ (refl (Ugenⱼ ⊢Γ)) x x₄
+                                       (<<-trans (<=-help-ab' {a = sizeConv↑Term x} {b = sizeConv↑Term x₄}) e)
+        Y≡Z = univ (soundnessConv↑Term t~t)
+        u~u , sizeu~u = transConv↑Term {n = n} PE.refl Γ≡Δ (trans Y≡Z (sym (stabilityEq (symConEq Γ≡Δ) Y≡Y))) x₁ x₅
+                                       (<<-trans (<=-help-ab'' {a = sizeConv↑Term x} {c = sizeConv↑Term x₄}) e)
+    in _ , cast-Πℕ2 t~t u~u x₂ (stabilityTerm (symConEq Γ≡Δ) x₇) , refl (univ (ℕ2ⱼ  ⊢Γ)) , refl (univ (ℕ2ⱼ  ⊢Γ)) ,
+        leS (<=-trans (<=-cong-+ sizet~t sizeu~u) (<=-help-3-abcd {a = sizeConv↑Term x}))
+
   trans~↑! {n = 1+ n} el Γ≡Δ (cast-ℕΠ x x₁ x₂ x₃) (cast-ℕΠ x₄ x₅ x₆ x₇) (leS e) =
     let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
         t~t , sizet~t = transConv↑Term {n = n} PE.refl (symConEq Γ≡Δ) (refl (Ugenⱼ ⊢Δ)) x₄ x 
@@ -216,7 +263,17 @@ mutual
                                        (<<-trans (<=-help-ab'' {a = sizeConv↑Term x} {c = sizeConv↑Term x₄}) e)
         Π≡Π = univ (soundnessConv↑Term x)
     in _ , cast-ℕΠ (stabilityConv↑Term (symConEq Γ≡Δ) t~t) u~u x₂ (stabilityTerm (symConEq Γ≡Δ) x₇) , refl (proj₂ (syntacticEq Π≡Π)) , sym Π≡Π ,
-       leS (<=-trans (<=-cong-+ (<=-trans (≡-to-<= (stabilitySizeConv↑Term (symConEq Γ≡Δ) t~t)) sizet~t) sizeu~u) (<=-help-3-abcd- {a = sizeConv↑Term x} {b = sizeConv↑Term x₄})) 
+       leS (<=-trans (<=-cong-+ (<=-trans (≡-to-<= (stabilitySizeConv↑Term (symConEq Γ≡Δ) t~t)) sizet~t) sizeu~u) (<=-help-3-abcd- {a = sizeConv↑Term x} {b = sizeConv↑Term x₄}))
+
+  trans~↑! {n = 1+ n} el Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) (cast-ℕ2Π x₄ x₅ x₆ x₇) (leS e) =
+    let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
+        t~t , sizet~t = transConv↑Term {n = n} PE.refl (symConEq Γ≡Δ) (refl (Ugenⱼ ⊢Δ)) x₄ x
+                                       (<<bind-suc <=-help-ab'- e)
+        u~u , sizeu~u = transConv↑Term {n = n} PE.refl Γ≡Δ (refl (univ (ℕ2ⱼ  ⊢Γ))) x₁ x₅
+                                       (<<-trans (<=-help-ab'' {a = sizeConv↑Term x} {c = sizeConv↑Term x₄}) e)
+        Π≡Π = univ (soundnessConv↑Term x)
+    in _ , cast-ℕ2Π (stabilityConv↑Term (symConEq Γ≡Δ) t~t) u~u x₂ (stabilityTerm (symConEq Γ≡Δ) x₇) , refl (proj₂ (syntacticEq Π≡Π)) , sym Π≡Π ,
+       leS (<=-trans (<=-cong-+ (<=-trans (≡-to-<= (stabilitySizeConv↑Term (symConEq Γ≡Δ) t~t)) sizet~t) sizeu~u) (<=-help-3-abcd- {a = sizeConv↑Term x} {b = sizeConv↑Term x₄}))
 
   trans~↑! {n = 1+ n} el Γ≡Δ (cast-ΠΠ%! x x₁ x₂ x₃ x₄) (cast-ΠΠ%! x₅ x₆ x₇ x₈ x₉) (leS e) =
     let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
@@ -297,6 +354,32 @@ mutual
     in _ , castℕ-refl ([~] _ DN ℕₙ t~v) x₃  , refl (proj₁ (syntacticEq A≡ℕ)) , A≡ℕ ,
        leS (leS sizet~v)
 
+  trans~↑! {n = 1+ n} PE.refl Γ≡Δ t~u (castℕ2-refl' ([~] A D whnfB u~v) x₃) (leS e) =
+    let net , neu = ne~↑! t~u
+        t≡u = soundness~↑! t~u
+        ⊢A , ⊢t , ⊢u' = syntacticEqTerm t≡u
+        C , t~v , A≡C , C≡B , sizet~v = trans~↑! {n = n} PE.refl Γ≡Δ t~u u~v (<=-trans <=-help-1-2 e)
+        _ , ⊢C = syntacticEq A≡C
+        X , wX , DX = whNorm ⊢C
+        eqℕ2 = ℕ2≡A (trans (sym (subset* D)) (trans (stabilityEq Γ≡Δ (sym C≡B)) (stabilityEq Γ≡Δ (subset* (red DX))))) wX
+        DN =  PE.subst (λ X → _ ⊢ C ⇒* X ^ [ ! , ι ⁰ ]) eqℕ2 (red DX)
+        A≡ℕ2 = trans A≡C (trans C≡B (stabilityEq (symConEq Γ≡Δ) (subset* D)))
+    in _ , castℕ2-refl' ([~] _ DN ℕ2ₙ t~v) (stabilityTerm (symConEq Γ≡Δ) x₃) , A≡ℕ2 , refl (proj₁ (syntacticEq (sym A≡ℕ2))) ,
+       <=-trans (leS (leS sizet~v)) <=-help-2
+
+  trans~↑! {n = 1+ n} PE.refl Γ≡Δ (castℕ2-refl ([~] A D whnfB t~u) x₃) u~v (leS e) =
+    let neu , nev = ne~↑! u~v
+        u≡v = soundness~↑! u~v
+        ⊢B , ⊢u , ⊢v = syntacticEqTerm u≡v
+        C , t~v , A≡C , C≡B , sizet~v = trans~↑! {n = n} PE.refl Γ≡Δ t~u u~v (<=-trans (leS (le-suc (le-refl _))) e)
+        _ , ⊢C = syntacticEq A≡C
+        X , wX , DX = whNorm ⊢C
+        eqℕ2 = ℕ2≡A (trans (sym (subset* D)) (trans A≡C (subset* (red DX)))) wX
+        DN =  PE.subst (λ X → _ ⊢ C ⇒* X ^ [ ! , ι ⁰ ]) eqℕ2 (red DX)
+        A≡ℕ2 = trans (sym (subset* D)) (trans A≡C C≡B)
+    in _ , castℕ2-refl ([~] _ DN ℕ2ₙ t~v) x₃  , refl (proj₁ (syntacticEq A≡ℕ2)) , A≡ℕ2 ,
+       leS (leS sizet~v)
+
   trans~↑! {n = 1+ n} {A = A} {Γ = Γ} el Γ≡Δ (cast-cong {A'} x x₁ x₄' x₅ x₆) (cast-refl A~B x₃ x₄) (leS e) =
     let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
         t~v , sizet~v = transConv↓Term {n = n} Γ≡Δ (univ (soundness~↓! x)) PE.refl x₄' x₃ (<<-trans (<=-help-b''c'' {a = size~↓! x} {b = 0} {c' = size~↓! A~B}) e)
@@ -362,6 +445,16 @@ mutual
     in _ , t~t'' , sym (subset* D) , subset* D ,
        <=-trans (<=inv-suc sizet~t') <=-help-2-1
 
+  trans~↑! {n = 1+ n} el Γ≡Δ (castℕ2-refl' x x₁) (castℕ2-refl x₂ x₃) (leS e) =
+    let X , wX , t~t , ℕ2≡X , X≡ℕ2 , sizet~t = trans~↓! {n = n} PE.refl Γ≡Δ x x₂ (<<-trans (<=-help-ab1' {a = size~↓! x}) e)
+        ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
+        eqℕ2 = ℕ2≡A ℕ2≡X wX
+        t~t' =  PE.subst (λ X →  _ ⊢ _ ~ _ ↓! X ^ _) eqℕ2 t~t
+        [~] K D wK t~t'' = t~t'
+        sizet~t' = <=-trans (≡-to-<= (sizeSubst-gen (λ X →  _ ⊢ _ ~ _ ↓! X ^ _) size~↓! t~t eqℕ2)) sizet~t
+    in _ , t~t'' , sym (subset* D) , subset* D ,
+       <=-trans (<=inv-suc sizet~t') <=-help-2-1
+
   trans~↑! {n = 1+ n} {Γ = Γ} PE.refl Γ≡Δ (cast-neℕ {A = A} x₁ x₂ x₃ x₄) (cast-neℕ {A' = A'} x₅ x₆ x₇ x₈) (leS e) =
     let K , wK , XY , [U] , _ , sizeXY = trans~↓! {n = n} PE.refl Γ≡Δ x₁ x₅ (<<-trans (<=-help-ab' {a = size~↓! x₁} {b = size~↓! x₅} ) e)
         eqU = U≡A-whnf [U] wK
@@ -370,6 +463,16 @@ mutual
         sizeXY' = <=-trans (≡-to-<= (sizeSubst-gen (λ X → Γ ⊢ A ~ A' ↓! X ^ ι ¹) size~↓! XY eqU)) sizeXY
         t~t , sizet~t = transConv↑Term {n = n} PE.refl Γ≡Δ (univ (soundness~↓! x₁)) x₂ x₆ (<<-trans (<=-help-ab'' {a = size~↓! x₁} {c = size~↓! x₅}) e)
     in _ , cast-neℕ XY' t~t x₃ (stabilityTerm (symConEq Γ≡Δ) x₈) , refl (univ (ℕⱼ ⊢Γ)) , refl (univ (ℕⱼ ⊢Γ)) ,
+       leS (<=-trans (<=-cong-+ sizeXY' sizet~t) (<=-help-3-abcd {a = size~↓! x₁} {b = size~↓! x₅}))
+
+  trans~↑! {n = 1+ n} {Γ = Γ} PE.refl Γ≡Δ (cast-neℕ2 {A = A} x₁ x₂ x₃ x₄) (cast-neℕ2 {A' = A'} x₅ x₆ x₇ x₈) (leS e) =
+    let K , wK , XY , [U] , _ , sizeXY = trans~↓! {n = n} PE.refl Γ≡Δ x₁ x₅ (<<-trans (<=-help-ab' {a = size~↓! x₁} {b = size~↓! x₅} ) e)
+        eqU = U≡A-whnf [U] wK
+        XY' = PE.subst (λ X → Γ ⊢ A ~ A' ↓! X ^ ι ¹) eqU XY
+        ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
+        sizeXY' = <=-trans (≡-to-<= (sizeSubst-gen (λ X → Γ ⊢ A ~ A' ↓! X ^ ι ¹) size~↓! XY eqU)) sizeXY
+        t~t , sizet~t = transConv↑Term {n = n} PE.refl Γ≡Δ (univ (soundness~↓! x₁)) x₂ x₆ (<<-trans (<=-help-ab'' {a = size~↓! x₁} {c = size~↓! x₅}) e)
+    in _ , cast-neℕ2 XY' t~t x₃ (stabilityTerm (symConEq Γ≡Δ) x₈) , refl (univ (ℕ2ⱼ ⊢Γ)) , refl (univ (ℕ2ⱼ ⊢Γ)) ,
        leS (<=-trans (<=-cong-+ sizeXY' sizet~t) (<=-help-3-abcd {a = size~↓! x₁} {b = size~↓! x₅}))
 
   trans~↑! {n = 1+ n} {Γ = Γ} PE.refl Γ≡Δ (cast-neΠ {B = B} x₁ x₂ x₃ x₄ x₅) (cast-neΠ {B' = B'} x₆ x₇ x₈ x₉ x₁₀) (leS e) =
@@ -511,6 +614,14 @@ mutual
     in ℕ-ins x~x' , PE.subst (λ X → 1+ X <= 1+ (1+ (size~↑! (_⊢_~_↓!_^_.k~l x) + 1+ (size~↓! x₁))))
                              (PE.sym (sizeSubst-gen (λ X →  Γ ⊢ t ~ v ↓! X ^ l) size~↓! x~x eqℕ))
                              (leS (<=-trans size leq))
+  transConv↓Term {1+ n} {t} {u} {v} {A} {B} {Γ} {Δ} {l} Γ≡Δ A≡B el (ℕ2-ins x) (ℕ2-ins x₁) (leS e) =
+    let leq = leS (<=-cong-+ (le-refl _) (le-suc (le-refl _)))
+        C , wC , x~x , A≡C , C≡B , size = trans~↓! {n = n}  PE.refl Γ≡Δ x x₁ (<<-trans leq e)
+        eqℕ2 = ℕ2≡A A≡C wC
+        x~x' = PE.subst (λ X →  Γ ⊢ t ~ v ↓! X ^ l) eqℕ2 x~x
+    in ℕ2-ins x~x' , PE.subst (λ X → 1+ X <= 1+ (1+ (size~↑! (_⊢_~_↓!_^_.k~l x) + 1+ (size~↓! x₁))))
+                             (PE.sym (sizeSubst-gen (λ X →  Γ ⊢ t ~ v ↓! X ^ l) size~↓! x~x eqℕ2))
+                             (leS (<=-trans size leq))
   transConv↓Term {n = 1+ n} {Δ = Δ} Γ≡Δ A≡B el (ne-ins t u x x₁) (ne-ins {k} {l} {M} {N} t′ u′ x₂ x₃) (leS e) =
     let leq = leS (<=-cong-+ (le-refl _) (le-suc (le-refl _)))
         C , wC , x~x , A≡C , C≡B , size = trans~↓! {n = n} el Γ≡Δ x₁ x₃ (<<-trans leq e)
@@ -520,10 +631,17 @@ mutual
        leS (<=-trans size leq)
   transConv↓Term Γ≡Δ A≡B el (zero-refl x) (zero-refl x₁) _ =
     zero-refl x , leS (le0)
+  transConv↓Term Γ≡Δ A≡B el (zero2-refl x) (zero2-refl x₁) _ =
+    zero2-refl x , leS (le0)
   transConv↓Term {n = 1+ n} Γ≡Δ A≡B el (suc-cong x) (suc-cong x₁) (leS e) =
     let leq = leS (<=-cong-+ (le-refl _) (le-suc (le-refl _)))
         t~v , size = transConv↑Term {n = n} el Γ≡Δ A≡B x x₁ (<<-trans leq e)
     in suc-cong t~v ,
+       leS (<=-trans size leq)
+  transConv↓Term {n = 1+ n} Γ≡Δ A≡B el (suc2-cong x) (suc2-cong x₁) (leS e) =
+    let leq = leS (<=-cong-+ (le-refl _) (le-suc (le-refl _)))
+        t~v , size = transConv↑Term {n = n} el Γ≡Δ A≡B x x₁ (<<-trans leq e)
+    in suc2-cong t~v ,
        leS (<=-trans size leq)
   transConv↓Term {n = 1+ n} {Δ = Δ} Γ≡Δ A≡B el
                  (η-eq {rF = rF₁} l< l<' x x₁ x₂ y y₁ x₃)
@@ -546,6 +664,7 @@ mutual
              y y₃ t~v ,
        leS (<=-trans size leq)
   transConv↓Term Γ≡Δ A≡B el (ℕ-refl x) (ℕ-refl x₁) _ = ℕ-refl x , leS le0
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-refl x) (ℕ2-refl x₁) _ = ℕ2-refl x , leS le0
   transConv↓Term Γ≡Δ A≡B el (Empty-refl x) (Empty-refl x₁) _ = Empty-refl x , leS le0
   transConv↓Term Γ≡Δ A≡B el (U-refl e x) (U-refl e₁ x₁) _ = U-refl (PE.trans e e₁) x , leS le0
   transConv↓Term {n = 1+ n} Γ≡Δ A≡B el
@@ -585,6 +704,7 @@ mutual
            (<=-help-id-cong' {a = sizeConv↑Term X}))                                    
 
   transConv↓Term Γ≡Δ A≡B PE.refl (ℕ-refl x) (η-eq x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) = ⊥-elim (WF.U≢Π! A≡B)
+  transConv↓Term Γ≡Δ A≡B PE.refl (ℕ2-refl x) (η-eq x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) = ⊥-elim (WF.U≢Π! A≡B)
   transConv↓Term {Γ = Γ} Γ≡Δ A≡B el (Empty-refl x) (η-eq {F = F} {G = G} {rF = rF} {lF = lF} {lG = lG} {l = l} x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) =
     let X = PE.subst (λ lx → Γ ⊢ SProp ≡  Π F ^ rF ° lF ▹ G ° lG ° l ^ ! ^ [ ! , lx ]) el A≡B
     in ⊥-elim (WF.U≢Π! X)
@@ -596,31 +716,49 @@ mutual
     in ⊥-elim (WF.U≢Π! X)
 
   transConv↓Term Γ≡Δ A≡B el (ne x) (ℕ-ins x₁) = ⊥-elim (WF.U≢ℕ! A≡B)
+  transConv↓Term Γ≡Δ A≡B el (ne x) (ℕ2-ins x₁) = ⊥-elim (WF.U≢ℕ2! A≡B)
   transConv↓Term Γ≡Δ A≡B PE.refl (ne x) (ne-ins x₁ x₂ x₃ x₄) = ⊥-elim (WF.U≢ne! x₃ A≡B)
   transConv↓Term Γ≡Δ A≡B PE.refl (ne x) (η-eq x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) = ⊥-elim (WF.U≢Π! A≡B)
   transConv↓Term Γ≡Δ A≡B el (ℕ-ins x) (ne-ins t u x₂ x₃) = ⊥-elim (WF.ℕ≢ne! x₂ A≡B)
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-ins x) (ne-ins t u x₂ x₃) = ⊥-elim (WF.ℕ2≢ne! x₂ A≡B)
   transConv↓Term Γ≡Δ A≡B PE.refl (ℕ-ins x) (η-eq _ _ x₂ x₃ x₄ y y₁ x₅) = ⊥-elim (WF.ℕ≢Π! A≡B)
+  transConv↓Term Γ≡Δ A≡B PE.refl (ℕ2-ins x) (η-eq _ _ x₂ x₃ x₄ y y₁ x₅) = ⊥-elim (WF.ℕ2≢Π! A≡B)
   transConv↓Term Γ≡Δ A≡B el (ℕ-ins x) (ne x₁) = ⊥-elim (WF.U≢ℕ! (sym A≡B))
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-ins x) (ne x₁) = ⊥-elim (WF.U≢ℕ2! (sym A≡B))
   transConv↓Term Γ≡Δ A≡B PE.refl (ne-ins x x₁ x₂ x₃) (ne x₄) = ⊥-elim (WF.U≢ne! x₂ (sym A≡B))
   transConv↓Term  Γ≡Δ A≡B PE.refl (ne-ins t u x x₁) (ℕ-ins x₂) =
     ⊥-elim (WF.ℕ≢ne! x (sym A≡B))
+  transConv↓Term  Γ≡Δ A≡B PE.refl (ne-ins t u x x₁) (ℕ2-ins x₂) =
+    ⊥-elim (WF.ℕ2≢ne! x (sym A≡B))
   transConv↓Term Γ≡Δ A≡B PE.refl (ne-ins x x₁ x₂ x₃) (η-eq x₄ x₅ x₆ x₇ x₈ x₉ x₁₀ x₁₁) = ⊥-elim (WF.Π≢ne x₂ (sym A≡B))
   transConv↓Term Γ≡Δ A≡B PE.refl (zero-refl x) (η-eq x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) =  ⊥-elim (WF.ℕ≢Π! A≡B)
+  transConv↓Term Γ≡Δ A≡B PE.refl (zero2-refl x) (η-eq x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) =  ⊥-elim (WF.ℕ2≢Π! A≡B)
   transConv↓Term Γ≡Δ A≡B PE.refl (suc-cong x) (η-eq x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) =  ⊥-elim (WF.ℕ≢Π! A≡B)
+  transConv↓Term Γ≡Δ A≡B PE.refl (suc2-cong x) (η-eq x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) =  ⊥-elim (WF.ℕ2≢Π! A≡B)
   transConv↓Term Γ≡Δ A≡B el (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) (ne x₈) = ⊥-elim (WF.U≢Π! (sym A≡B))
   transConv↓Term Γ≡Δ A≡B el (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) (ℕ-refl x₈) = ⊥-elim (WF.U≢Π! (sym A≡B))
+  transConv↓Term Γ≡Δ A≡B el (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) (ℕ2-refl x₈) = ⊥-elim (WF.U≢Π! (sym A≡B))
   transConv↓Term Γ≡Δ A≡B el (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) (Empty-refl x₈) = ⊥-elim (WF.U≢Π! (sym A≡B))
   transConv↓Term Γ≡Δ A≡B el (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) (Π-cong x₀ x₈ x₉ x₁₀ x₁₁ x₁₂ x₁₃ x₁₄ x₁₅) = ⊥-elim (WF.U≢Π! (sym A≡B))
   transConv↓Term Γ≡Δ A≡B el (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) (Id-cong x₁₃ x₁₄ x₁₅) = ⊥-elim (WF.U≢Π! (sym A≡B))
   transConv↓Term Γ≡Δ A≡B PE.refl (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) (ℕ-ins x₈) = ⊥-elim (WF.ℕ≢Π! (sym A≡B))
+  transConv↓Term Γ≡Δ A≡B PE.refl (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) (ℕ2-ins x₈) = ⊥-elim (WF.ℕ2≢Π! (sym A≡B))
   transConv↓Term Γ≡Δ A≡B el (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) (ne-ins x₈ x₉ x₁₀ x₁₁) = ⊥-elim (WF.Π≢ne x₁₀ A≡B)
   transConv↓Term Γ≡Δ A≡B PE.refl (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) (zero-refl x₈) = ⊥-elim (WF.ℕ≢Π! (sym A≡B))
+  transConv↓Term Γ≡Δ A≡B PE.refl (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) (zero2-refl x₈) = ⊥-elim (WF.ℕ2≢Π! (sym A≡B))
   transConv↓Term Γ≡Δ A≡B PE.refl (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) (suc-cong x₈) = ⊥-elim (WF.ℕ≢Π! (sym A≡B))
+  transConv↓Term Γ≡Δ A≡B PE.refl (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) (suc2-cong x₈) = ⊥-elim (WF.ℕ2≢Π! (sym A≡B))
+  transConv↓Term Γ≡Δ A≡B el (ℕ-ins x) (ℕ2-ins x₁) = ⊥-elim (WF.ℕ≢ℕ2! A≡B)
+  transConv↓Term Γ≡Δ A≡B el (ℕ-ins x) (zero2-refl x₁) = ⊥-elim (WF.ℕ≢ℕ2! A≡B)
+  transConv↓Term Γ≡Δ A≡B el (ℕ-ins x) (suc2-cong x₁) = ⊥-elim (WF.ℕ≢ℕ2! A≡B)
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-ins x) (ℕ-ins x₁) = ⊥-elim (WF.ℕ2≢ℕ! A≡B)
 
   transConv↓Term Γ≡Δ A≡B el (ne x) (U-refl x₁ x₂) with ne~↓! x
   transConv↓Term Γ≡Δ A≡B el (ne x) (U-refl x₁ x₂) | _ , _ , ()
   transConv↓Term Γ≡Δ A≡B el (ne x) (ℕ-refl x₁) with ne~↓! x
   transConv↓Term Γ≡Δ A≡B el (ne x) (ℕ-refl x₁) | _ , _ , ()
+  transConv↓Term Γ≡Δ A≡B el (ne x) (ℕ2-refl x₁) with ne~↓! x
+  transConv↓Term Γ≡Δ A≡B el (ne x) (ℕ2-refl x₁) | _ , _ , ()
   transConv↓Term Γ≡Δ A≡B el (ne x) (Empty-refl x₁) with ne~↓! x
   transConv↓Term Γ≡Δ A≡B el (ne x) (Empty-refl x₁) | _ , _ , ()
   transConv↓Term Γ≡Δ A≡B el (ne x) (Π-cong x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉) with ne~↓! x
@@ -629,10 +767,16 @@ mutual
   transConv↓Term Γ≡Δ A≡B el (ne x) (Id-cong x₁ x₂ x₃) | _ , _ , ()
   transConv↓Term Γ≡Δ A≡B el (ne x) (zero-refl x₁) = ⊥-elim (WF.U≢ℕ! A≡B)
   transConv↓Term Γ≡Δ A≡B el (ne x) (suc-cong x₁) = ⊥-elim (WF.U≢ℕ! A≡B)
+  transConv↓Term Γ≡Δ A≡B el (ne x) (zero2-refl x₁) = ⊥-elim (WF.U≢ℕ2! A≡B)
+  transConv↓Term Γ≡Δ A≡B el (ne x) (suc2-cong x₁) = ⊥-elim (WF.U≢ℕ2! A≡B)
   transConv↓Term Γ≡Δ A≡B el (ℕ-refl x) (ne x₁) with ne~↓! x₁
   transConv↓Term Γ≡Δ A≡B el (ℕ-refl x) (ne x₁) | _ , () , _
   transConv↓Term Γ≡Δ A≡B el (ℕ-refl x) (ne-ins x₁ x₂ x₃ x₄) with ne~↓! x₄
   transConv↓Term Γ≡Δ A≡B el (ℕ-refl x) (ne-ins x₁ x₂ x₃ x₄) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-refl x) (ne x₁) with ne~↓! x₁
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-refl x) (ne x₁) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-refl x) (ne-ins x₁ x₂ x₃ x₄) with ne~↓! x₄
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-refl x) (ne-ins x₁ x₂ x₃ x₄) | _ , () , _
   transConv↓Term Γ≡Δ A≡B el (Empty-refl x) (ne x₁) with ne~↓! x₁
   transConv↓Term Γ≡Δ A≡B el (Empty-refl x) (ne x₁) | _ , () , _
   transConv↓Term Γ≡Δ A≡B el (Empty-refl x) (ne-ins x₁ x₂ x₃ x₄) with ne~↓! x₄
@@ -640,6 +784,7 @@ mutual
   transConv↓Term Γ≡Δ A≡B el (Π-cong x x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) (ne x₉) with ne~↓! x₉
   transConv↓Term Γ≡Δ A≡B el (Π-cong x x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) (ne x₉) | _ , () , _
   transConv↓Term Γ≡Δ A≡B el (Π-cong x x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) (ℕ-ins x₉) = ⊥-elim (WF.U≢ℕ! A≡B)
+  transConv↓Term Γ≡Δ A≡B el (Π-cong x x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) (ℕ2-ins x₉) = ⊥-elim (WF.U≢ℕ2! A≡B)
   transConv↓Term Γ≡Δ A≡B el (Π-cong x x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) (ne-ins x₉ x₁₀ x₁₁ x₁₂) with ne~↓! x₁₂
   transConv↓Term Γ≡Δ A≡B el (Π-cong x x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) (ne-ins x₉ x₁₀ x₁₁ x₁₂) | _ , () , _
   transConv↓Term Γ≡Δ A≡B el (Id-cong x x₁ x₂) (ne x₃) with ne~↓! x₃
@@ -647,12 +792,23 @@ mutual
   transConv↓Term Γ≡Δ A≡B el (Id-cong x x₁ x₂) (ne-ins x₃ x₄ x₅ x₆) with ne~↓! x₆
   transConv↓Term Γ≡Δ A≡B el (Id-cong x x₁ x₂) (ne-ins x₃ x₄ x₅ x₆) | _ , () , _
   transConv↓Term Γ≡Δ A≡B el (ℕ-ins x) (Π-cong x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉) = ⊥-elim (WF.U≢ℕ! (sym A≡B))
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-ins x) (Π-cong x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉) = ⊥-elim (WF.U≢ℕ2! (sym A≡B))
   transConv↓Term Γ≡Δ A≡B el (ℕ-ins x) (zero-refl x₁) with ne~↓! x
   transConv↓Term Γ≡Δ A≡B el (ℕ-ins x) (zero-refl x₁) | _ , _ , ()
   transConv↓Term Γ≡Δ A≡B el (ℕ-ins x) (suc-cong x₁) with ne~↓! x
   transConv↓Term Γ≡Δ A≡B el (ℕ-ins x) (suc-cong x₁) | _ , _ , ()
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-ins x) (zero-refl x₁) with ne~↓! x
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-ins x) (zero-refl x₁) | _ , _ , ()
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-ins x) (zero2-refl x₁) with ne~↓! x
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-ins x) (zero2-refl x₁) | _ , _ , ()
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-ins x) (suc-cong x₁) with ne~↓! x
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-ins x) (suc-cong x₁) | _ , _ , ()
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-ins x) (suc2-cong x₁) with ne~↓! x
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-ins x) (suc2-cong x₁) | _ , _ , ()
   transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (ℕ-refl x₄) with ne~↓! x₃
   transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (ℕ-refl x₄) | _ , _ , ()
+  transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (ℕ2-refl x₄) with ne~↓! x₃
+  transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (ℕ2-refl x₄) | _ , _ , ()
   transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (Empty-refl x₄) with ne~↓! x₃
   transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (Empty-refl x₄) | _ , _ , () 
   transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (Π-cong x₄ x₅ x₆ x₇ x₈ x₉ x₁₀ x₁₁ x₁₂) with ne~↓! x₃
@@ -661,20 +817,44 @@ mutual
   transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (Id-cong x₄ x₅ x₆) | _ , _ , () 
   transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (zero-refl x₄) with ne~↓! x₃ 
   transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (zero-refl x₄) | _ , _ , () 
+  transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (zero2-refl x₄) with ne~↓! x₃ 
+  transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (zero2-refl x₄) | _ , _ , () 
   transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (suc-cong x₄) with ne~↓! x₃
   transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (suc-cong x₄) | _ , _ , ()
+  transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (suc2-cong x₄) with ne~↓! x₃
+  transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (suc2-cong x₄) | _ , _ , ()
   transConv↓Term Γ≡Δ A≡B el (zero-refl x) (ne x₁) with ne~↓! x₁
   transConv↓Term Γ≡Δ A≡B el (zero-refl x) (ne x₁) | _ , () , _
   transConv↓Term Γ≡Δ A≡B el (zero-refl x) (ℕ-ins x₁) with ne~↓! x₁
   transConv↓Term Γ≡Δ A≡B el (zero-refl x) (ℕ-ins x₁) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (zero-refl x) (ℕ2-ins x₁) with ne~↓! x₁
+  transConv↓Term Γ≡Δ A≡B el (zero-refl x) (ℕ2-ins x₁) | _ , () , _
   transConv↓Term Γ≡Δ A≡B el (zero-refl x) (ne-ins x₁ x₂ x₃ x₄) with ne~↓! x₄
   transConv↓Term Γ≡Δ A≡B el (zero-refl x) (ne-ins x₁ x₂ x₃ x₄) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (zero2-refl x) (ne x₁) with ne~↓! x₁
+  transConv↓Term Γ≡Δ A≡B el (zero2-refl x) (ne x₁) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (zero2-refl x) (ℕ-ins x₁) with ne~↓! x₁
+  transConv↓Term Γ≡Δ A≡B el (zero2-refl x) (ℕ-ins x₁) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (zero2-refl x) (ℕ2-ins x₁) with ne~↓! x₁
+  transConv↓Term Γ≡Δ A≡B el (zero2-refl x) (ℕ2-ins x₁) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (zero2-refl x) (ne-ins x₁ x₂ x₃ x₄) with ne~↓! x₄
+  transConv↓Term Γ≡Δ A≡B el (zero2-refl x) (ne-ins x₁ x₂ x₃ x₄) | _ , () , _
   transConv↓Term Γ≡Δ A≡B el (suc-cong x) (ne x₁) with ne~↓! x₁
   transConv↓Term Γ≡Δ A≡B el (suc-cong x) (ne x₁) | _ , () , _
   transConv↓Term Γ≡Δ A≡B el (suc-cong x) (ℕ-ins x₁) with ne~↓! x₁
   transConv↓Term Γ≡Δ A≡B el (suc-cong x) (ℕ-ins x₁) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (suc-cong x) (ℕ2-ins x₁) with ne~↓! x₁
+  transConv↓Term Γ≡Δ A≡B el (suc-cong x) (ℕ2-ins x₁) | _ , () , _
   transConv↓Term Γ≡Δ A≡B el (suc-cong x) (ne-ins x₁ x₂ x₃ x₄) with ne~↓! x₄
   transConv↓Term Γ≡Δ A≡B el (suc-cong x) (ne-ins x₁ x₂ x₃ x₄) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (suc2-cong x) (ne x₁) with ne~↓! x₁
+  transConv↓Term Γ≡Δ A≡B el (suc2-cong x) (ne x₁) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (suc2-cong x) (ℕ-ins x₁) with ne~↓! x₁
+  transConv↓Term Γ≡Δ A≡B el (suc2-cong x) (ℕ-ins x₁) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (suc2-cong x) (ℕ2-ins x₁) with ne~↓! x₁
+  transConv↓Term Γ≡Δ A≡B el (suc2-cong x) (ℕ2-ins x₁) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (suc2-cong x) (ne-ins x₁ x₂ x₃ x₄) with ne~↓! x₄
+  transConv↓Term Γ≡Δ A≡B el (suc2-cong x) (ne-ins x₁ x₂ x₃ x₄) | _ , () , _
   transConv↓Term Γ≡Δ A≡B el (U-refl x x₁) (ne x₂) with ne~↓! x₂
   transConv↓Term Γ≡Δ A≡B el (U-refl x x₁) (ne x₂) | _ , () , _
 

@@ -1,8 +1,11 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Conversion.EqRelInstance (equiv : E.Equiv) where
-open import Definition.Typed.EqualityRelation equiv
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Conversion.EqRelInstance
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped
 open import Definition.Untyped.Properties using (wkSingleSubstId)
@@ -11,21 +14,21 @@ open import Definition.Typed.Properties equiv
 open import Definition.Typed.Weakening equiv using (_∷_⊆_; wkEq; step; id)
 open import Definition.Conversion equiv
 open import Definition.Conversion.Reduction equiv
-open import Definition.Conversion.Universe equiv
-open import Definition.Conversion.Stability equiv
-open import Definition.Conversion.Soundness equiv
-open import Definition.Conversion.Lift equiv
-open import Definition.Conversion.Conversion equiv
-open import Definition.Conversion.Transitivity equiv
+open import Definition.Conversion.Universe equiv equivRed
+open import Definition.Conversion.Stability equiv equivRed
+open import Definition.Conversion.Soundness equiv equivRed
+open import Definition.Conversion.Lift equiv equivRed
+open import Definition.Conversion.Conversion equiv equivRed
+open import Definition.Conversion.Transitivity equiv equivRed
 open import Definition.Conversion.Weakening equiv
 open import Definition.Conversion.Whnf equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Typed.Consequences.Substitution equiv
-open import Definition.Typed.Consequences.Injectivity equiv
-open import Definition.Typed.Consequences.Equality equiv
-open import Definition.Typed.Consequences.Reduction equiv
-open import Definition.Typed.Consequences.NeTypeEq equiv
-open import Definition.Conversion.Symmetry equiv
+open import Definition.Typed.Consequences.Syntactic equiv equivRed
+open import Definition.Typed.Consequences.Substitution equiv equivRed
+open import Definition.Typed.Consequences.Injectivity equiv equivRed
+open import Definition.Typed.Consequences.Equality equiv equivRed
+open import Definition.Typed.Consequences.Reduction equiv equivRed
+open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
+open import Definition.Conversion.Symmetry equiv equivRed
 
 -- open import Definition.Conversion.HelperDecidable
 
@@ -47,6 +50,17 @@ abstract -- Agda will do some slow unfolding without abstract
         l≡l , ⊢ℕ≡A = neTypeEq neT ⊢t∷ℕ ⊢t
         A≡ℕ = ℕ≡A ⊢ℕ≡A whnfA
     in PE.subst₂ (λ X Y → _ ⊢ _ ~ _ ↓! X ^ Y) A≡ℕ (PE.sym l≡l) t~u
+
+  ~atℕ2 : ∀ {Γ t u}
+    → Γ ⊢ t ∷ ℕ2 ^ [ ! , ι ⁰ ]
+    → (∃ λ A → ∃ λ lA → Γ ⊢ t ~ u ↓! A ^ lA)
+    → Γ ⊢ t ~ u ↓! ℕ2 ^ ι ⁰
+  ~atℕ2 ⊢t∷ℕ2 (A , lA , t~u) =
+    let whnfA , neT , neU = ne~↓! t~u
+        ⊢A , ⊢t , ⊢u = syntacticEqTerm (soundness~↓! t~u)
+        l≡l , ⊢ℕ2≡A = neTypeEq neT ⊢t∷ℕ2 ⊢t
+        A≡ℕ2 = ℕ2≡A ⊢ℕ2≡A whnfA
+    in PE.subst₂ (λ X Y → _ ⊢ _ ~ _ ↓! X ^ Y) A≡ℕ2 (PE.sym l≡l) t~u
   
 -- Algorithmic equality of neutrals with injected conversion.
 data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
@@ -174,6 +188,21 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
                       ([~] _ (red D) whnfB′ x)
      in ↑ (refl (univ (ℕⱼ (wf ⊢B')))) (~↑! (cast-neℕ t~t′ t<>u ⊢e ⊢e'))
 
+~-castneℕ2 : ∀ {A A' e e' t t' : Term} {Γ : Con Term} →
+    Γ ⊢ A ~ A' ∷ U ⁰ ^ [ ! , next ⁰ ] →
+    Γ ⊢ t [genconv↑] t' ∷ A ^ [ ! , ι ⁰ ] →
+    Γ ⊢ e ∷ Id (U ⁰) A ℕ2 ^ [ % , ι ⁰ ] →
+    Γ ⊢ e' ∷ Id (U ⁰) A' ℕ2 ^ [ % , ι ⁰ ] →
+    Γ ⊢ cast ⁰ A ℕ2 e t ~ cast ⁰ A' ℕ2 e' t' ∷ ℕ2 ^ [ ! , ι ⁰ ]
+~-castneℕ2 (↑ A≡B (~↑! x)) t<>u ⊢e ⊢e' =
+     let _ , ⊢B' = syntacticEq A≡B
+         B′ , whnfB′ , D = whNorm ⊢B'
+         U≡B′ = trans A≡B (subset* (red D))
+         B≡U = U≡A-whnf U≡B′ whnfB′
+         t~t′ = PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) B≡U
+                      ([~] _ (red D) whnfB′ x)
+     in ↑ (refl (univ (ℕ2ⱼ (wf ⊢B')))) (~↑! (cast-neℕ2 t~t′ t<>u ⊢e ⊢e'))
+
 ~-castneΠ : ∀ {A A' P P' B B' : Term} {rB : Relevance} {e e' t t' : Term}
     {Γ : Con Term} →
     Γ ⊢ A ~ A' ∷ U ⁰ ^ [ ! , next ⁰ ] →
@@ -225,7 +254,18 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
      let ⊢Bt , ⊢t , ⊢u = syntacticEqTerm (soundness~↑! t<>u)
          Bt , whnfBt , Dt = whNorm ⊢Bt
      in ↑ (refl (univ (ℕⱼ (wfTerm ⊢t))))
-          (~↑! (castℕ-refl (~atℕ (conv ⊢t (sym T≡U)) (_ , _ , [~] _ (red Dt) whnfBt t<>u)) ⊢e)) 
+          (~↑! (castℕ-refl (~atℕ (conv ⊢t (sym T≡U)) (_ , _ , [~] _ (red Dt) whnfBt t<>u)) ⊢e))
+
+~-castℕ2-refl : ∀ {e t u : Term} {Γ : Con Term} →
+    Γ ⊢ t ~ u ∷ ℕ2 ^ [ ! , ι ⁰ ] →
+    Γ ⊢ t ∷ ℕ2 ^ [ ! , ι ⁰ ] →
+    Γ ⊢ e ∷ Id (U ⁰) ℕ2 ℕ2 ^ [ % , ι ⁰ ] →
+    Γ ⊢ cast ⁰ ℕ2 ℕ2 e t ~ u ∷ ℕ2 ^ [ ! , ι ⁰ ]
+~-castℕ2-refl (↑ T≡U (~↑! t<>u)) ⊢t ⊢e =
+     let ⊢Bt , ⊢t , ⊢u = syntacticEqTerm (soundness~↑! t<>u)
+         Bt , whnfBt , Dt = whNorm ⊢Bt
+     in ↑ (refl (univ (ℕ2ⱼ (wfTerm ⊢t))))
+          (~↑! (castℕ2-refl (~atℕ2 (conv ⊢t (sym T≡U)) (_ , _ , [~] _ (red Dt) whnfBt t<>u)) ⊢e))
 
 ~-castℕ : ∀ {B B' e e' t t' : Term} {Γ : Con Term} →
     ⊢ Γ →
@@ -249,6 +289,29 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
                       ([~] _ (red D') whnfBU′ x'')
          _ , _ , ⊢B = syntacticEqTerm (soundness~↓! t~t′)
      in ↑ (refl (univ ⊢B)) (~↑! (cast-ℕ t~t′ X ⊢e ⊢e'))
+
+~-castℕ2 : ∀ {B B' e e' t t' : Term} {Γ : Con Term} →
+    ⊢ Γ →
+    Γ ⊢ B ~ B' ∷ U ⁰ ^ [ ! , next ⁰ ] →
+    Γ ⊢ t [genconv↑] t' ∷ ℕ2 ^ [ ! , ι ⁰ ] →
+    Γ ⊢ e ∷ Id (U ⁰) ℕ2 B ^ [ % , ι ⁰ ] →
+    Γ ⊢ e' ∷ Id (U ⁰) ℕ2 B' ^ [ % , ι ⁰ ] →
+    Γ ⊢ cast ⁰ ℕ2 B e t ~ cast ⁰ ℕ2 B' e' t' ∷ B ^ [ ! , ι ⁰ ]
+~-castℕ2 ⊢Γ (↑ A≡B (~↑! x)) X ⊢e ⊢e' =
+     let _ , ⊢B' = syntacticEq A≡B
+         B′ , whnfB′ , D = whNorm ⊢B'
+         U≡B′ = trans A≡B (subset* (red D))
+         B≡U = U≡A-whnf U≡B′ whnfB′
+         _ , eqX , x'' = sym~↑! (reflConEq (wf ⊢B')) x
+         ⊢BU , _ , ⊢B   = syntacticEqTerm (soundness~↑! x'')
+         A≡B'' = trans A≡B eqX
+         BU′ , whnfBU′ , D' = whNorm ⊢BU
+         U≡B' = trans A≡B'' (subset* (red D'))
+         B≡U' = U≡A-whnf U≡B' whnfBU′
+         t~t′ = PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) B≡U'
+                      ([~] _ (red D') whnfBU′ x'')
+         _ , _ , ⊢B = syntacticEqTerm (soundness~↓! t~t′)
+     in ↑ (refl (univ ⊢B)) (~↑! (cast-ℕ2 t~t′ X ⊢e ⊢e'))
 
 ~-castΠ : ∀ {A A' : Term} {rA : Relevance} {P P' B B' e e' t t' : Term}
     {Γ : Con Term} →
@@ -286,6 +349,18 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
     Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ]
 ~-castℕΠ ⊢A ⊢P X Y ⊢e ⊢e' = ↑ (refl (univ (Πⱼ (λ x → ≡is≤ PE.refl , ≡is≤ PE.refl) ▹ (λ x → ⊥-elim (!≢% x)) ▹ ⊢A ▹ ⊢P))) (~↑! (cast-ℕΠ (symConv↑Term (reflConEq (wfTerm ⊢e)) X) Y ⊢e ⊢e'))
 
+~-castℕ2Π : ∀ {A A' : Term} {rA : Relevance} {P P' e e' t t' : Term}
+    {Γ : Con Term} →
+    Γ ⊢ A ∷ Univ rA ⁰ ^ [ ! , next ⁰ ] →
+    (Γ ∙ A ^ [ rA , ι ⁰ ]) ⊢ P ∷ U ⁰ ^ [ ! , next ⁰ ] →
+    Γ ⊢ Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ ! [genconv↑] Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ ! ∷ U ⁰ ^ [ ! , next ⁰ ] →
+    Γ ⊢ t [genconv↑] t' ∷ ℕ2 ^ [ ! , ι ⁰ ] →
+    Γ ⊢ e ∷ Id (U ⁰) ℕ2 (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) ^ [ % , ι ⁰ ] →
+    Γ ⊢ e' ∷ Id (U ⁰) ℕ2 (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !) ^ [ % , ι ⁰ ] →
+    Γ ⊢ cast ⁰ ℕ2 (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) e t ~ cast ⁰ ℕ2 (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !) e' t' ∷
+    Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ]
+~-castℕ2Π ⊢A ⊢P X Y ⊢e ⊢e' = ↑ (refl (univ (Πⱼ (λ x → ≡is≤ PE.refl , ≡is≤ PE.refl) ▹ (λ x → ⊥-elim (!≢% x)) ▹ ⊢A ▹ ⊢P))) (~↑! (cast-ℕ2Π (symConv↑Term (reflConEq (wfTerm ⊢e)) X) Y ⊢e ⊢e'))
+
 ~-castΠℕ : ∀ {A A' : Term} {rA : Relevance} {P P' e e' t t' : Term}
     {Γ : Con Term} →
     Γ ⊢ A ∷ Univ rA ⁰ ^ [ ! , next ⁰ ] →
@@ -298,6 +373,20 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
     Γ ⊢ cast ⁰ (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) ℕ e t ~
     cast ⁰ (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !) ℕ e' t' ∷ ℕ ^ [ ! , ι ⁰ ]
 ~-castΠℕ ⊢A ⊢P X Y ⊢e ⊢e' = ↑ (refl (univ (ℕⱼ (wfTerm ⊢A)))) (~↑! (cast-Πℕ X Y ⊢e ⊢e'))
+
+~-castΠℕ2 : ∀ {A A' : Term} {rA : Relevance} {P P' e e' t t' : Term}
+    {Γ : Con Term} →
+    Γ ⊢ A ∷ Univ rA ⁰ ^ [ ! , next ⁰ ] →
+    (Γ ∙ A ^ [ rA , ι ⁰ ]) ⊢ P ∷ U ⁰ ^ [ ! , next ⁰ ] →
+    Γ ⊢ Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ ! [genconv↑] Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !
+    ∷ U ⁰ ^ [ ! , next ⁰ ] →
+    Γ ⊢ t [genconv↑] t' ∷ Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] →
+    Γ ⊢ e ∷ Id (U ⁰) (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) ℕ2 ^ [ % , ι ⁰ ] →
+    Γ ⊢ e' ∷ Id (U ⁰) (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !) ℕ2 ^
+    [ % , ι ⁰ ] →
+    Γ ⊢ cast ⁰ (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) ℕ2 e t ~
+    cast ⁰ (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !) ℕ2 e' t' ∷ ℕ2 ^ [ ! , ι ⁰ ]
+~-castΠℕ2 ⊢A ⊢P X Y ⊢e ⊢e' = ↑ (refl (univ (ℕ2ⱼ (wfTerm ⊢A)))) (~↑! (cast-Πℕ2 X Y ⊢e ⊢e'))
 
 ~-castΠΠ%! : ∀ {A A' P P' B B' Q Q' e e' t t' : Term} {Γ : Con Term} →
     Γ ⊢ A ∷ Univ % ⁰ ^ [ ! , next ⁰ ] →
@@ -438,6 +527,6 @@ eqRelInstance = eqRel _⊢_[conv↑]_^_ _⊢_[genconv↑]_∷_^_ _⊢_~_∷_^_
                       (λ l< l<' x x₁ x₂ x₃ x₄ x₅ → liftConvTerm (η-eq l< l<' x x₁ x₂ x₃ x₄ x₅))
                       ~-var ~-app ~-natrec ~-natrec2 ~-Emptyrec
                       (λ x x₁ x₂ → liftConvTerm (Id-cong x x₁ x₂))
-                      ~-castcong ~-castneℕ ~-castneΠ ~-cast-refl ~-castℕ-refl
-                      ~-castℕ ~-castΠ ~-castℕΠ ~-castΠℕ ~-castΠΠ%! ~-castΠΠ!%
+                      ~-castcong ~-castneℕ ~-castneℕ2 ~-castneΠ ~-cast-refl ~-castℕ-refl ~-castℕ2-refl
+                      ~-castℕ ~-castℕ2 ~-castΠ ~-castℕΠ ~-castℕ2Π ~-castΠℕ ~-castΠℕ2 ~-castΠΠ%! ~-castΠΠ!%
                       ~-irrelevance

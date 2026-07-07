@@ -1,21 +1,26 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Typed.Consequences.RelevanceUnicity (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Typed.Consequences.RelevanceUnicity
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
 open import Definition.Untyped.Properties using (subst-Univ-either)
 open import Definition.Typed equiv
 open import Definition.Typed.Properties equiv
 open import Definition.Typed.Weakening equiv
-open import Definition.Typed.Consequences.Equality equiv
-import Definition.Typed.Consequences.Inequality equiv as Ineq
-open import Definition.Typed.Consequences.Inversion equiv
-open import Definition.Typed.Consequences.Injectivity equiv
-open import Definition.Typed.Consequences.NeTypeEq equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Typed.Consequences.PiNorm equiv
-open import Definition.Typed.Consequences.Substitution equiv
+open import Definition.Typed.EqRelInstance equiv
+open import Definition.Typed.Consequences.Equality equiv equivRed
+import Definition.Typed.Consequences.Inequality equiv equivRed as Ineq
+open import Definition.Typed.Consequences.Inversion equiv equivRed
+open import Definition.Typed.Consequences.Injectivity equiv equivRed
+open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
+open import Definition.Typed.Consequences.Syntactic equiv equivRed
+open import Definition.Typed.Consequences.PiNorm equiv equivRed
+open import Definition.Typed.Consequences.Substitution equiv equivRed
 
 open import Tools.Product
 open import Tools.Empty
@@ -59,6 +64,10 @@ mutual
     let e₁′ , el₁′ , _ = Uinjectivity e₁
         e₂′ , el₂′ , _ = Uinjectivity (trans (sym e₂) (proj₁ (inversion-ℕ y)) ) 
     in PE.sym (PE.trans e₂′ e₁′) , PE.cong next (PE.sym el₂′)
+  Univ-uniq′ e₁ e₂ el₁ PE.refl w (ℕ2ⱼ x) y =
+    let e₁′ , el₁′ , _ = Uinjectivity e₁
+        e₂′ , el₂′ , _ = Uinjectivity (trans (sym e₂) (proj₁ (inversion-ℕ2 y)) ) 
+    in PE.sym (PE.trans e₂′ e₁′) , PE.cong next (PE.sym el₂′)
   Univ-uniq′ e₁ e₂ el₁ el₂ w (Emptyⱼ x) y =
     let e₁′ , el₁′ , _ = Uinjectivity e₁
         e₂′ , el₂′ , _ = Uinjectivity (trans (sym e₂) (proj₁ (inversion-Empty y)) ) 
@@ -88,7 +97,10 @@ mutual
     in r≡r , PE.cong ι lG≡lG
   Univ-uniq′ e₁ e₂ el₁ el₂ (ne ()) (zeroⱼ x) y 
   Univ-uniq′ e₁ e₂ el₁ el₂ (ne ()) (sucⱼ X) y 
+  Univ-uniq′ e₁ e₂ el₁ el₂ (ne ()) (zero2ⱼ x) y 
+  Univ-uniq′ e₁ e₂ el₁ el₂ (ne ()) (suc2ⱼ X) y 
   Univ-uniq′ e₁ e₂ el₁ el₂ w (natrecⱼ _ x x₁ x₂ x₃) (natrecⱼ _ x₄ y y₁ y₂) = proj₁ (Uinjectivity (trans (sym e₁) e₂)) , PE.refl
+  Univ-uniq′ e₁ e₂ el₁ el₂ w (natrec2ⱼ _ x x₁ x₂ x₃) (natrec2ⱼ _ x₄ y y₁ y₂) = proj₁ (Uinjectivity (trans (sym e₁) e₂)) , PE.refl
   Univ-uniq′ e₁ e₂ el₁ el₂ w (Emptyrecⱼ x x₁) (Emptyrecⱼ y y₁) = proj₁ (Uinjectivity (trans (sym e₁) e₂)) , PE.refl
   Univ-uniq′ e₁ e₂ el₁ el₂ w (castⱼ X X₁ X₂ X₃) (castⱼ y y₁ y₂ y₃) = proj₁ (Uinjectivity (trans (sym e₁) e₂)) , PE.refl
   Univ-uniq′ e₁ e₂ el₁ el₂ w (conv x x₁) y = Univ-uniq′ (trans x₁ e₁) e₂ el₁ el₂ w x y 
@@ -174,6 +186,7 @@ relevance-uniq : ∀ {Γ t T₁ T₂ r₁ r₂ l₁ l₂} → Γ ⊢ t ∷ T₁ 
                  r₁ PE.≡ r₂
 relevance-uniq (univ 0<1 x) (univ 0<1 x') = PE.refl 
 relevance-uniq (ℕⱼ x) (ℕⱼ x₁) = PE.refl 
+relevance-uniq (ℕ2ⱼ x) (ℕ2ⱼ x₁) = PE.refl 
 relevance-uniq (Emptyⱼ x) (Emptyⱼ x₁) = PE.refl
 relevance-uniq (Πⱼ x ▹ x₁ ▹ X ▹ X₁) (Πⱼ x₂ ▹ x₃ ▹ Y ▹ Y₁) =
           PE.refl 
@@ -191,8 +204,12 @@ relevance-uniq (fstⱼ X X₁ X₂ _ _) (fstⱼ Y Y₁ Y₂ _ _) =
 relevance-uniq (sndⱼ X X₁ X₂ _ _) (sndⱼ Y Y₁ Y₂ _ _) = PE.refl
 relevance-uniq (zeroⱼ x) (zeroⱼ x₁) = PE.refl 
 relevance-uniq (sucⱼ X) (sucⱼ Y) = PE.refl 
+relevance-uniq (zero2ⱼ x) (zero2ⱼ x₁) = PE.refl 
+relevance-uniq (suc2ⱼ X) (suc2ⱼ Y) = PE.refl 
 relevance-uniq (natrecⱼ _ x X X₁ X₂) (natrecⱼ _ y Y Y₁ Y₂) = relevance-uniq X₁ Y₁
+relevance-uniq (natrec2ⱼ _ x X X₁ X₂) (natrec2ⱼ _ y Y Y₁ Y₂) = relevance-uniq X₁ Y₁
 relevance-uniq (Emptyrecⱼ x X) (Emptyrecⱼ y Y) = let er , el = relevance-unicity x y in er
+relevance-uniq (equiv-eqⱼ x) (equiv-eqⱼ x₁) = PE.refl
 relevance-uniq (Idreflⱼ X) (Idreflⱼ Y) =
     PE.refl 
 relevance-uniq (transpⱼ x x₁ X X₁ X₂ X₃) (transpⱼ x₂ x₃ Y Y₁ Y₂ Y₃) =

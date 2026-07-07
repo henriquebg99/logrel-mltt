@@ -4,7 +4,9 @@
 import Definition.Equiv as E
 import Definition.Typed.EqualityRelation as ER
 import Definition.LogicalRelation.EquivRed as ERd
-module Definition.LogicalRelation.Substitution.Introductions.Transp (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} {{equivRed : ERd.EquivRed equiv}} where
+
+module Definition.LogicalRelation.Substitution.Introductions.Transp (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
+
 open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
@@ -24,18 +26,18 @@ open import Definition.LogicalRelation.Substitution equiv
 open import Definition.LogicalRelation.Substitution.Properties equiv
 open import Definition.LogicalRelation.Substitution.Irrelevance equiv as S
 open import Definition.LogicalRelation.Substitution.Reflexivity equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Fst equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Lambda equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Application equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Cast equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Id equiv
-open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Fst equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Lambda equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Application equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Cast equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Id equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv equivRed
 open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
 open import Definition.LogicalRelation.Substitution.Escape equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv equivRed
 open import Definition.LogicalRelation.Substitution.Reduction equiv
-open import Definition.LogicalRelation.Substitution.Weakening equiv
+open import Definition.LogicalRelation.Substitution.Weakening equiv equivRed
 open import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv
 
 open import Tools.Product

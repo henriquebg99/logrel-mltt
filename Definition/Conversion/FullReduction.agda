@@ -1,7 +1,12 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Conversion.FullReduction (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Conversion.FullReduction
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
+
 
 open import Definition.Untyped as U hiding (wk)
 open import Definition.Untyped.Properties
@@ -11,19 +16,19 @@ open import Definition.Typed.EqRelInstance equiv
 open import Definition.Typed.Weakening equiv
 open import Definition.Conversion equiv
 open import Definition.Conversion.Whnf equiv
-open import Definition.Conversion.Soundness equiv
-open import Definition.Conversion.Stability equiv
-open import Definition.Typed.Consequences.Inversion equiv
-open import Definition.Typed.Consequences.Injectivity equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Typed.Consequences.NeTypeEq equiv
-open import Definition.Typed.Consequences.Equality equiv
+open import Definition.Conversion.Soundness equiv equivRed
+open import Definition.Conversion.Stability equiv equivRed
+open import Definition.Typed.Consequences.Inversion equiv equivRed
+open import Definition.Typed.Consequences.Injectivity equiv equivRed
+open import Definition.Typed.Consequences.Syntactic equiv equivRed
+open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
+open import Definition.Typed.Consequences.Equality equiv equivRed
 open import Definition.LogicalRelation equiv
 open import Definition.LogicalRelation.Properties.Escape equiv
 open import Definition.LogicalRelation.Irrelevance equiv
 open import Definition.LogicalRelation.ShapeView equiv
-open import Definition.LogicalRelation.Fundamental.Reducibility equiv
-open import Definition.Typed.Consequences.RelevanceUnicity equiv
+open import Definition.LogicalRelation.Fundamental.Reducibility equiv equivRed
+open import Definition.Typed.Consequences.RelevanceUnicity equiv equivRed
 
 open import Tools.Empty using (⊥; ⊥-elim)
 open import Tools.Product
@@ -338,7 +343,7 @@ mutual
     in cast ⁰ ℕ ℕ e t′ ,
        castℕℕₙ net′ ,
        cast-cong ℕ≡ℕ ℕ≡ℕ t≡t′ ⊢e ⊢e
-    
+  
   fullRedNe (cast-refl' x x₁ x₂) =
     let A′ , nfA′ , A≡A′ = fullRedNe′ x
         _ , _ , neA = ne~↓! x

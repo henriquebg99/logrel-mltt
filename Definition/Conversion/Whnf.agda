@@ -21,6 +21,8 @@ mutual
                          in  ∘ₙ q , ∘ₙ w
   ne~↑! (natrec-cong x x₁ x₂ x₃) = let _ , q , w = ne~↓! x₃
                                   in  natrecₙ q , natrecₙ w
+  ne~↑! (natrec2-cong x x₁ x₂ x₃) = let _ , q , w = ne~↓! x₃
+                                   in  natrec2ₙ q , natrec2ₙ w
   ne~↑! (Emptyrec-cong x x₁) = Emptyrecₙ , Emptyrecₙ
   ne~↑! (cast-cong X x x₁ x₂ x₃) =
     let _ , nX , nX' = ne~↓! X
@@ -28,9 +30,12 @@ mutual
         nt , nt' = whnfConv↓TermNe nX x₁
     in castₙ nX nx nt , castₙ nX' nx' nt'
   ne~↑! (cast-ℕ X x x₁ x₂) = let _ , nt , nu = ne~↓! X in castℕₙ nu , castℕₙ nt
+  ne~↑! (cast-ℕ2 X x x₁ x₂) = let _ , nt , nu = ne~↓! X in castℕ2ₙ nu , castℕ2ₙ nt
   ne~↑! (cast-Π x X x₁ x₂ x₃) = let _ , nt , nu = ne~↓! X in castΠₙ nu , castΠₙ nt
   ne~↑! (cast-Πℕ x x₁ x₂ x₃) = castΠℕₙ , castΠℕₙ
+  ne~↑! (cast-Πℕ2 x x₁ x₂ x₃) = castΠℕ2ₙ , castΠℕ2ₙ
   ne~↑! (cast-ℕΠ x x₁ x₂ x₃) = castℕΠₙ , castℕΠₙ
+  ne~↑! (cast-ℕ2Π x x₁ x₂ x₃) = castℕ2Πₙ , castℕ2Πₙ
   ne~↑! (cast-ΠΠ%! x x₁ x₂ x₃ x₄) = castΠΠ%!ₙ , castΠΠ%!ₙ
   ne~↑! (cast-ΠΠ!% x x₁ x₂ x₃ x₄) = castΠΠ!%ₙ , castΠΠ!%ₙ
   ne~↑! (cast-refl x x₁ x₂) =
@@ -38,12 +43,15 @@ mutual
         nt , nt' = whnfConv↓TermNe nA x₁
      in castₙ nA nB nt , nt'
   ne~↑! (castℕ-refl x x₁) = let _ , nt , nu = ne~↓! x in castℕℕₙ nt , nu
+  ne~↑! (castℕ2-refl x x₁) = let _ , nt , nu = ne~↓! x in castℕ2ℕ2ₙ nt , nu
   ne~↑! (cast-refl' x x₁ x₂) =
     let _ , nB , nA = ne~↓! x
         nt , nt' = whnfConv↓TermNe nA x₁
     in nt , castₙ nA nB nt'
   ne~↑! (castℕ-refl' x x₁) = let _ , nt , nu = ne~↓! x in nt , castℕℕₙ nu
+  ne~↑! (castℕ2-refl' x x₁) = let _ , nt , nu = ne~↓! x in nt , castℕ2ℕ2ₙ nu
   ne~↑! (cast-neℕ x x₁ x₂ x₃) = let _ , nA , nB = ne~↓! x in castnℕₙ nA , castnℕₙ nB
+  ne~↑! (cast-neℕ2 x x₁ x₂ x₃) = let _ , nA , nB = ne~↓! x in castnℕ2ₙ nA , castnℕ2ₙ nB
   ne~↑! (cast-neΠ x x₁ x₂ x₃ x₄) = let _ , nA , nB = ne~↓! x₁ in castnΠₙ nA , castnΠₙ nB
 
   ne~↓! : ∀ {t u A Γ l}
@@ -57,6 +65,8 @@ mutual
                 → Whnf A × Whnf t × Whnf u
   whnfConv↓Term (ℕ-ins x) = let _ , neT , neU = ne~↓! x
                             in ℕₙ , ne neT , ne neU
+  whnfConv↓Term (ℕ2-ins x) = let _ , neT , neU = ne~↓! x
+                             in ℕ2ₙ , ne neT , ne neU
   whnfConv↓Term (ne x) = let wA , nt , nu = ne~↓! x in wA , ne nt , ne nu
   whnfConv↓Term (ne-ins t u x x₁) =
     let _ , neT , neU = ne~↓! x₁

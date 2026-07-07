@@ -1,15 +1,20 @@
 {-# OPTIONS --safe #-}
 
 import Definition.Equiv as E
-module Definition.Conversion.Soundness (equiv : E.Equiv) where
+import Definition.Typed.EqualityRelation as ER
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.Conversion.Soundness
+  (equiv : E.Equiv)
+  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 
 open import Definition.Untyped
 open import Definition.Typed equiv
 open import Definition.Typed.Properties equiv
 open import Definition.Conversion equiv
 open import Definition.Conversion.Whnf equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Typed.Consequences.NeTypeEq equiv
+open import Definition.Typed.EqRelInstance equiv
+open import Definition.Typed.Consequences.Syntactic equiv equivRed
+open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
 
 open import Tools.Product
 import Tools.PropositionalEquality as PE
@@ -24,13 +29,19 @@ mutual
   soundness~↑! (natrec-cong x₁ x₂ x₃ k~l) =
     natrec-cong (soundnessConv↑ x₁) (soundnessConv↑Term x₂)
                 (soundnessConv↑Term x₃) (soundness~↓! k~l)
+  soundness~↑! (natrec2-cong x₁ x₂ x₃ k~l) =
+    natrec2-cong (soundnessConv↑ x₁) (soundnessConv↑Term x₂)
+                 (soundnessConv↑Term x₃) (soundness~↓! k~l)
   soundness~↑! (Emptyrec-cong x₁ k~l) = let ⊢k , ⊢l , _ = soundness~↑% k~l in
     Emptyrec-cong (soundnessConv↑ x₁) ⊢k ⊢l
   soundness~↑! (cast-cong X x x₁ x₂ x₃) = cast-cong (soundness~↓! X) (sym (soundness~↓! x)) (soundnessConv↓Term x₁) x₂ x₃
   soundness~↑! (cast-ℕ X x x₁ x₂) = let XX = sym (soundness~↓! X) in cast-cong (refl (ℕⱼ (wfEqTerm XX))) XX (soundnessConv↑Term x) x₁ x₂
+  soundness~↑! (cast-ℕ2 X x x₁ x₂) = let XX = sym (soundness~↓! X) in cast-cong (refl (ℕ2ⱼ (wfEqTerm XX))) XX (soundnessConv↑Term x) x₁ x₂
   soundness~↑! (cast-Π x X x₁ x₂ x₃) = cast-cong (soundnessConv↑Term x) (sym (soundness~↓! X)) (soundnessConv↑Term x₁) x₂ x₃
   soundness~↑! (cast-Πℕ x x₁ x₂ x₃) = let XX = (soundnessConv↑Term x) in cast-cong XX (refl (ℕⱼ (wfEqTerm XX))) (soundnessConv↑Term x₁) x₂ x₃
+  soundness~↑! (cast-Πℕ2 x x₁ x₂ x₃) = let XX = (soundnessConv↑Term x) in cast-cong XX (refl (ℕ2ⱼ (wfEqTerm XX))) (soundnessConv↑Term x₁) x₂ x₃
   soundness~↑! (cast-ℕΠ x x₁ x₂ x₃) = let XX = (sym (soundnessConv↑Term x)) in cast-cong (refl (ℕⱼ (wfEqTerm XX))) XX (soundnessConv↑Term x₁) x₂ x₃
+  soundness~↑! (cast-ℕ2Π x x₁ x₂ x₃) = let XX = (sym (soundnessConv↑Term x)) in cast-cong (refl (ℕ2ⱼ (wfEqTerm XX))) XX (soundnessConv↑Term x₁) x₂ x₃
   soundness~↑! (cast-ΠΠ%! x x₁ x₂ x₃ x₄) = cast-cong (soundnessConv↑Term x) (sym (soundnessConv↑Term x₁)) (soundnessConv↑Term x₂) x₃ x₄
   soundness~↑! (cast-ΠΠ!% x x₁ x₂ x₃ x₄) = cast-cong (soundnessConv↑Term x) (sym (soundnessConv↑Term x₁)) (soundnessConv↑Term x₂) x₃ x₄
   soundness~↑! (cast-refl x x₁ x₂) =
@@ -42,6 +53,10 @@ mutual
     let t≡u = soundness~↓! x
         _ , ⊢t , _ = syntacticEqTerm t≡u
     in trans (cast-refl (refl (ℕⱼ (wfTerm ⊢t))) x₁ ⊢t) t≡u
+  soundness~↑! (castℕ2-refl x x₁) =
+    let t≡u = soundness~↓! x
+        _ , ⊢t , _ = syntacticEqTerm t≡u
+    in trans (cast-refl (refl (ℕ2ⱼ (wfTerm ⊢t))) x₁ ⊢t) t≡u
   soundness~↑! (cast-refl' x x₁ x₂) =
     let A≡B = sym (soundness~↓! x)
         t≡u = soundnessConv↓Term x₁
@@ -51,7 +66,12 @@ mutual
     let t≡u = soundness~↓! x
         _ , ⊢t , ⊢u = syntacticEqTerm t≡u
     in trans t≡u (sym (cast-refl (refl (ℕⱼ (wfTerm ⊢t))) x₁ ⊢u))
+  soundness~↑! (castℕ2-refl' x x₁) =
+    let t≡u = soundness~↓! x
+        _ , ⊢t , ⊢u = syntacticEqTerm t≡u
+    in trans t≡u (sym (cast-refl (refl (ℕ2ⱼ (wfTerm ⊢t))) x₁ ⊢u))
   soundness~↑! (cast-neℕ x x₁ x₂ x₃) = cast-cong (soundness~↓! x) (refl (ℕⱼ (wfTerm x₂))) (soundnessConv↑Term x₁) x₂ x₃
+  soundness~↑! (cast-neℕ2 x x₁ x₂ x₃) = cast-cong (soundness~↓! x) (refl (ℕ2ⱼ (wfTerm x₂))) (soundnessConv↑Term x₁) x₂ x₃
   soundness~↑! (cast-neΠ x x₁ x₂ x₃ x₄) = cast-cong (soundness~↓! x₁) (sym (soundnessConv↑Term x)) (soundnessConv↑Term x₂) x₃ x₄
   
 
@@ -95,6 +115,7 @@ mutual
   soundnessConv↓Term (Id-cong A c c₁) =
     Id-cong (soundnessConv↑Term A) (soundnessConv↑Term c) (soundnessConv↑Term c₁)
   soundnessConv↓Term (ℕ-ins x) = soundness~↓! x
+  soundnessConv↓Term (ℕ2-ins x) = soundness~↓! x
   -- soundnessConv↓Term (Empty-ins x) = soundness~↓% x
   soundnessConv↓Term (ne-ins t u x x₁) =
     let whnfM , neA , neB = ne~↓! x₁

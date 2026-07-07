@@ -3,7 +3,8 @@
 
 import Definition.Equiv as E
 import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Substitution.Introductions.IdRefl (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
+import Definition.LogicalRelation.EquivRed as ERd
+module Definition.LogicalRelation.Substitution.Introductions.IdRefl (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
 open import Definition.Typed.EqualityRelation equiv
 open EqRelSet {{...}}
 
@@ -11,7 +12,7 @@ open import Definition.Untyped
 open import Definition.Typed equiv
 open import Definition.LogicalRelation.Properties.Escape equiv
 open import Definition.LogicalRelation.Substitution equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Id equiv
+open import Definition.LogicalRelation.Substitution.Introductions.Id equiv equivRed
 open import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv
 
 open import Tools.Product
