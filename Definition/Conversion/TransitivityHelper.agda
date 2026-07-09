@@ -1,16 +1,11 @@
-{-# OPTIONS --safe #-}
-
 module Definition.Conversion.TransitivityHelper where
-
 open import Tools.Nat as Nat
 open import Tools.List
 open import Tools.Product
 open import Tools.Sum using (_⊎_ ; inj₁ ; inj₂)
 open import Tools.Empty
 open import Tools.Inequality
-
 import Tools.PropositionalEquality as PE
-
 abstract
 
         <=inv-suc :  ∀ {n m : Nat} → 1+ n <= 1+ m → n <= m

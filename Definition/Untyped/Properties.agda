@@ -1,18 +1,11 @@
 -- Laws for weakenings and substitutions.
-
-{-# OPTIONS --safe #-}
-
 module Definition.Untyped.Properties where
-
 open import Definition.Untyped
-
 open import Tools.Nat
 open import Tools.List
 open import Tools.PropositionalEquality renaming (subst to PEsubst)
 open import Tools.Empty using (⊥; ⊥-elim)
-
 -- helper function on relevance
-
 relevance-discr : ! ≡ % → ⊥
 relevance-discr ()
 

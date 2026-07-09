@@ -1,24 +1,15 @@
-{-# OPTIONS --safe #-}
-
+open import Definition.LogicalRelation.Properties.Conversion
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Typed.Consequences.Reduction
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Typed.Consequences.Reduction where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.EqRelInstance equiv
-open import Definition.LogicalRelation equiv 
-open import Definition.LogicalRelation.Properties.Conversion equiv 
-open import Definition.LogicalRelation.Fundamental.Reducibility equiv equivRed
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.EqRelInstance
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Fundamental.Reducibility
 import Tools.PropositionalEquality as PE
-
 open import Tools.Product
-
-
 -- Helper function where all reducible types can be reduced to WHNF.
 whNorm′ : ∀ {A rA Γ l} ([A] : Γ ⊩⟨ l ⟩ A ^ rA)
                 → ∃ λ B → Whnf B × Γ ⊢ A :⇒*: B ^ rA

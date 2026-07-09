@@ -1,20 +1,12 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Properties.Reflexivity (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
-
+module Definition.LogicalRelation.Properties.Reflexivity {{eqrel : EqRelSet}} where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.LogicalRelation equiv
-
+open import Definition.Typed
+open import Definition.LogicalRelation
 open import Tools.Product
 open import Tools.Empty
 import Tools.PropositionalEquality as PE
-
-
 -- Reflexivity of reducible types.
 reflEq : ∀ {l Γ A r} ([A] : Γ ⊩⟨ l ⟩ A ^ r) → Γ ⊩⟨ l ⟩ A ≡ A ^ r / [A]
 reflEq (Uᵣ′ _ _ _ _ l< PE.refl D) = red D

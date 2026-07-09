@@ -1,16 +1,11 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-module Definition.Conversion.Weakening (equiv : E.Equiv) where
-
+module Definition.Conversion.Weakening where
 open import Definition.Untyped as U hiding (wk)
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Weakening equiv
-open import Definition.Conversion equiv
-
+open import Definition.Typed
+open import Definition.Typed.Weakening
+open import Definition.Conversion
 import Tools.PropositionalEquality as PE
-
 mutual
   -- Weakening of algorithmic equality of neutrals.
   wk~↑! : ∀ {ρ t u A Γ Δ l} ([ρ] : ρ ∷ Δ ⊆ Γ) → ⊢ Δ

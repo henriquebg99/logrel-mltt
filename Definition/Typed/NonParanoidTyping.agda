@@ -1,21 +1,16 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-module Definition.Typed.NonParanoidTyping (equiv : E.Equiv) where
-
+module Definition.Typed.NonParanoidTyping where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv as T hiding (wf ; wfTerm)
-open import Definition.Typed.Weakening equiv
-open import Definition.Typed.Consequences.Injectivity equiv
-open import Definition.Typed.Consequences.Inversion equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-
+open import Definition.Typed
+open import Definition.Typed.Properties as T hiding (wf ; wfTerm)
+open import Definition.Typed.Weakening
+open import Definition.Typed.Consequences.Injectivity
+open import Definition.Typed.Consequences.Inversion
+open import Definition.Typed.Consequences.Syntactic
 open import Tools.Nat using (Nat)
 open import Tools.Product
 open import Tools.Empty
 import Tools.PropositionalEquality as PE
-
 infixl 30 _∙_
 infix 30 Πⱼ_▹_▹_
 

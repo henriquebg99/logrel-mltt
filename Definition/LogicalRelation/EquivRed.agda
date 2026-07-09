@@ -1,28 +1,42 @@
-{-# OPTIONS --safe #-}
-
 -- We define a record with witnesses that the forward and backward
 -- equivalences are reducible in the logical relation, for an instance of the 
 -- generic equality
 
-import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
+open import Definition.Typed.EqualityRelation
 
-module Definition.LogicalRelation.EquivRed (equiv : E.Equiv) (eqrel : ER.EqRelSet equiv) where
+import Definition.Equiv as E
+module Definition.LogicalRelation.EquivRed {{eqrel : EqRelSet}} where
+open EqRelSet {{...}}
+
+open import Definition.Untyped hiding (wk)
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.RedSteps
+import Definition.Typed.Weakening as Twk
+open Twk using (_∷_⊆_)
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Irrelevance
+import Definition.LogicalRelation.Weakening as Lwk
+
+open import Tools.Product
+open import Tools.Empty using (⊥-elim)
+import Tools.PropositionalEquality as PE
 
 instance eqrelInstance : ER.EqRelSet equiv
 eqrelInstance = eqrel
 
-open import Definition.Typed.EqualityRelation equiv
+open import Definition.Typed.EqualityRelation
 open EqRelSet {{...}}
 open import Definition.Untyped hiding (wk)
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.RedSteps equiv
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.RedSteps
 import Definition.Typed.Weakening equiv as Twk
 open Twk using (_∷_⊆_)
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Irrelevance equiv
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Irrelevance
 import Definition.LogicalRelation.Weakening equiv as Lwk
 
 open import Tools.Product

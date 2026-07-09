@@ -1,26 +1,17 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Fundamental.Variable (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Fundamental.Variable {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped 
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Substitution equiv
-
+open import Definition.Typed 
+open import Definition.Typed.Properties
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Substitution
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
-
-
 -- Fundamental theorem for variables.
 fundamentalVar : ∀ {Γ A rA x}
                → x ∷ A ^ rA ∈ Γ

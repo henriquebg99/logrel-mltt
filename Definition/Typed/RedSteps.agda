@@ -1,14 +1,8 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-
-module Definition.Typed.RedSteps (equiv : E.Equiv) where
-
+module Definition.Typed.RedSteps where
 open import Definition.Untyped
-open import Definition.Typed equiv
+open import Definition.Typed
 open import Tools.Empty using (⊥; ⊥-elim)
-
-
 -- Concatenation of type reduction closures
 _⇨*_ : ∀ {Γ A B C r} → Γ ⊢ A ⇒* B ^ r → Γ ⊢ B ⇒* C ^ r → Γ ⊢ A ⇒* C ^ r
 id ⊢B ⇨* B⇒C = B⇒C

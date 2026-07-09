@@ -1,39 +1,31 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Conversion.Inversion
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Conversion.Inversion where
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.RedSteps equiv
-open import Definition.Conversion equiv
-open import Definition.Conversion.Soundness equiv equivRed
-open import Definition.Conversion.Stability equiv equivRed
-open import Definition.Conversion.Conversion equiv equivRed
-open import Definition.Conversion.Whnf equiv
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Typed.Consequences.Reduction equiv equivRed
-open import Definition.Typed.Consequences.Injectivity equiv equivRed
-import Definition.Typed.Consequences.Inequality equiv equivRed as WF
-open import Definition.Typed.Consequences.Substitution equiv equivRed
-open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
-open import Definition.Typed.Consequences.SucCong equiv equivRed
-open import Definition.Typed.Consequences.RelevanceUnicity equiv equivRed
-open import Definition.Typed.Consequences.Equality equiv equivRed
-open import Definition.Typed.Consequences.Inversion equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.RedSteps
+open import Definition.Conversion
+open import Definition.Conversion.Soundness
+open import Definition.Conversion.Stability
+open import Definition.Conversion.Conversion
+open import Definition.Conversion.Whnf
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.Reduction
+open import Definition.Typed.Consequences.Injectivity
+import Definition.Typed.Consequences.Inequality as WF
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.Substitution
+open import Definition.Typed.Consequences.NeTypeEq
+open import Definition.Typed.Consequences.SucCong
+open import Definition.Typed.Consequences.RelevanceUnicity
+open import Definition.Typed.Consequences.Equality
+open import Definition.Typed.Consequences.Inversion
 open import Tools.Nat
 open import Tools.Product
 open import Tools.Sum using (_⊎_ ; inj₁ ; inj₂)
 open import Tools.Empty
 import Tools.PropositionalEquality as PE
-
 abstract
   [conv↓]ne : ∀ {Γ t u A l} → Neutral A → Γ ⊢ t [conv↓] u ∷ A ^ l → ∃ λ B → Γ ⊢ t ~ u ↓! B ^ l × Γ ⊢ A ≡ B ^ [ ! , l ]
   [conv↓]ne neA (ne-ins x x₁ x₂ x₃) =

@@ -1,23 +1,15 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Substitution.Irrelevance (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.Irrelevance {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped 
-open import Definition.Typed equiv
-open import Definition.LogicalRelation equiv
-import Definition.LogicalRelation.Irrelevance equiv as LR
-open import Definition.LogicalRelation.Substitution equiv
-
+open import Definition.Typed
+open import Definition.LogicalRelation
+import Definition.LogicalRelation.Irrelevance as LR
+open import Definition.LogicalRelation.Substitution
 open import Tools.Product
 open import Tools.Unit
 import Tools.PropositionalEquality as PE
-
-
 -- Irrelevance of valid substitutions with different derivations of contexts
 irrelevanceSubst : ∀ {σ Γ Δ}
                    ([Γ] [Γ]′ : ⊩ᵛ Γ)
@@ -77,8 +69,7 @@ irrelevance′ : ∀ {l A A′ r Γ} (eq : A PE.≡ A′)
 irrelevance′ {l} {A} PE.refl [Γ] [Γ]′ [A] ⊢Δ [σ] = irrelevance {A = A} [Γ] [Γ]′ [A] ⊢Δ [σ]
 
 
-open import Definition.LogicalRelation.Properties equiv
-
+open import Definition.LogicalRelation.Properties
 -- Irrelevance of valid types with different derivations of contexts
 -- with lifting of equal types
 irrelevanceLift : ∀ {l A rA F H rF Γ}

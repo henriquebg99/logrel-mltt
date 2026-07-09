@@ -1,32 +1,22 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Typed.Consequences.InjectivitySProp
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Typed.Consequences.InjectivitySProp where
 open import Definition.Untyped hiding (wk)
 import Definition.Untyped as U
 open import Definition.Untyped.Properties
-
-open import Definition.Typed equiv
-open import Definition.Typed.Weakening equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.EqRelInstance equiv
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Conversion equiv
+open import Definition.Typed
+open import Definition.Typed.Weakening
+open import Definition.Typed.Properties
+open import Definition.Typed.EqRelInstance
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Conversion
 -- open import Definition.Conversion.Decidable
-open import Definition.Conversion.Soundness equiv equivRed
-open import Definition.Conversion.Stability equiv equivRed
-open import Definition.Conversion.EqRelInstance equiv equivRed
-open import Definition.Conversion.Universe equiv equivRed
-open import Definition.Conversion.Consequences.Completeness equiv equivRed
-
+open import Definition.Conversion.Soundness
+open import Definition.Conversion.Stability
+open import Definition.Conversion.EqRelInstance
+open import Definition.Conversion.Universe
+open import Definition.Conversion.Consequences.Completeness
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
 injectivity-irr↓ : ∀ {Γ F G H E rF lF lH rH} →
               Γ ⊢ Π F ^ rF ° lF ▹ G ° ⁰ ° ⁰ ^ % [conv↓] Π H ^ rH ° lH ▹ E ° ⁰ ° ⁰ ^ % ^ [ % , ι ⁰ ]
             → Γ ⊢ F [conv↑] H ^ [ rF , ι lF ]

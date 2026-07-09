@@ -1,25 +1,16 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Weakening (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Weakening {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped as U hiding (wk)
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Weakening equiv as T hiding (wk; wkEq; wkTerm; wkEqTerm)
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-
+open import Definition.Typed
+open import Definition.Typed.Weakening as T hiding (wk; wkEq; wkTerm; wkEqTerm)
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Irrelevance
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
-
 -- Weakening of neutrals in WHNF
-
 wkTermNe : ∀ {ρ Γ Δ k A rA} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
          → Γ ⊩neNf k ∷ A ^ rA → Δ ⊩neNf U.wk ρ k ∷ U.wk ρ A ^ rA
 wkTermNe {ρ} [ρ] ⊢Δ (neNfₜ neK ⊢k k≡k) =

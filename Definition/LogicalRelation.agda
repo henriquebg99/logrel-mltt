@@ -1,27 +1,17 @@
-{-# OPTIONS   --safe  #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped as U
-open import Definition.Typed equiv
-open import Definition.Typed.Weakening equiv
-open import Definition.Typed.Reduction equiv
-
+open import Definition.Typed
+open import Definition.Typed.Weakening
+open import Definition.Typed.Reduction
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
 -- The different cases of the logical relation are spread out through out
 -- this file. This is due to them having different dependencies.
-
 -- We will refer to expressions that satisfies the logical relation as reducible.
-
 -- Reducibility of Neutrals:
-
 -- Neutral type
 record _⊩ne_^[_,_] (Γ : Con Term) (A : Term) (r : Relevance) (l : Level) : Set where
   constructor ne

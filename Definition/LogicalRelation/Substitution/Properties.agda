@@ -1,29 +1,21 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Substitution.Properties (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.Properties {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Weakening equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Substitution equiv
-open import Definition.LogicalRelation.Substitution.Irrelevance equiv
+open import Definition.Typed
+open import Definition.Typed.Weakening
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Substitution.Irrelevance
      using (irrelevanceSubst′)
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.Properties equiv
-import Definition.LogicalRelation.Weakening equiv as LR
-
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.Properties
+import Definition.LogicalRelation.Weakening as LR
 open import Tools.Unit
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
-
 -- Valid substitutions are well-formed
 wellformedSubst : ∀ {Γ Δ σ} ([Γ] : ⊩ᵛ Γ) (⊢Δ : ⊢ Δ)
       → Δ ⊩ˢ σ ∷ Γ / [Γ] / ⊢Δ

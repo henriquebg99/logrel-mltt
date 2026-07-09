@@ -1,25 +1,16 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.LogicalRelation.Substitution.Weakening (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.Weakening {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.Substitution equiv
-open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv equivRed
-
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Substitution.MaybeEmbed
+open import Definition.LogicalRelation.Substitution.Introductions.Universe
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
-
 -- Weakening of valid types by one.
 wk1ᵛ : ∀ {A F rA rF Γ l l'}
       ([Γ] : ⊩ᵛ Γ)

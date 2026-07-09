@@ -1,18 +1,14 @@
-{-# OPTIONS --safe #-}
-
 open import Definition.Equiv
-
-module Definition.Typed (equiv : Equiv) where
-
+module Definition.Typed where
 open import Definition.Untyped
-
 open import Tools.Nat using (Nat)
 open import Tools.Product
 open import Tools.Empty
 import Tools.PropositionalEquality as PE
-
 infixl 30 _∙_
 infix 30 Πⱼ_▹_▹_▹_
+
+postulate equiv : Equiv
 
 -- Well-typed variables
 data _∷_^_∈_ : (x : Nat) (A : Term) (r : TypeInfo) (Γ : Con Term) → Set where
@@ -563,9 +559,9 @@ Ugenⱼ : ∀ {r Γ l} → ⊢ Γ → Γ ⊢ Univ r l ^ [ ! , next l ]
 Ugenⱼ {l = ⁰} ⊢Γ = univ (univ 0<1 ⊢Γ)
 Ugenⱼ {l = ¹} ⊢Γ = Uⱼ ⊢Γ
 
+
 import Definition.OTyped as OT
 import Definition.OUntyped as OU
-
 emb-∈ : ∀ {x A r Γ} (h : OT._∷_^_∈_ x A r Γ) →
   x ∷ emb_oterm_term A ^ r ∈ emb_con Γ
 emb-∈ (OT.here {Γ = Γ} {A = A} {r = r}) =

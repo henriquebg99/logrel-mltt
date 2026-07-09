@@ -1,27 +1,20 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Application (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Application {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Weakening equiv using (id)
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.RedSteps equiv
-open import Definition.Typed.Reduction equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.ShapeView equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.Properties equiv
-
+open import Definition.Typed
+open import Definition.Typed.Weakening using (id)
+open import Definition.Typed.Properties
+open import Definition.Typed.RedSteps
+open import Definition.Typed.Reduction
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.ShapeView
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.Properties
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
 -- Helper function for application of specific type derivations.
 appTerm′ : ∀ {F G t u Γ rF lF lΠ lG l l′ l″}
           ([F] : Γ ⊩⟨ l″ ⟩ F ^ [ rF , ι lF ])

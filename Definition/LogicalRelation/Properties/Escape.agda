@@ -1,22 +1,15 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Properties.Escape (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Properties.Escape {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Typed.Weakening equiv
-open import Definition.Typed.Properties equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Properties.Reflexivity equiv
-
+open import Definition.Typed
+open import Definition.Typed.Weakening
+open import Definition.Typed.Properties
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Properties.Reflexivity
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
 -- Reducible types are well-formed.
 escape : ∀ {l Γ A r} → Γ ⊩⟨ l ⟩ A ^ r → Γ ⊢ A ^ r
 escape (Uᵣ′ _ _ _ _ _ PE.refl [[ ⊢A , ⊢B , D ]]) = ⊢A

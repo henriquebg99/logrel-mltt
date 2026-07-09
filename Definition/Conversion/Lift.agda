@@ -1,34 +1,25 @@
-{-# OPTIONS --safe #-}
-
+open import Definition.LogicalRelation.Properties.Neutral
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Conversion.Lift
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Conversion.Lift where
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Weakening equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.EqRelInstance equiv
-open import Definition.Conversion equiv
-open import Definition.Conversion.Whnf equiv
-open import Definition.Conversion.Soundness equiv equivRed
-open import Definition.Conversion.Reduction equiv
-open import Definition.Conversion.Weakening equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Properties.Neutral equiv
-open import Definition.LogicalRelation.Fundamental.Reducibility equiv equivRed
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Typed.Consequences.Reduction equiv equivRed
-open import Definition.Typed.Consequences.Equality equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Weakening
+open import Definition.Typed.Properties
+open import Definition.Typed.EqRelInstance
+open import Definition.Conversion
+open import Definition.Conversion.Whnf
+open import Definition.Conversion.Soundness
+open import Definition.Conversion.Reduction
+open import Definition.Conversion.Weakening
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Fundamental.Reducibility
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.Reduction
+open import Definition.Typed.Consequences.Equality
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
-
 -- Lifting of algorithmic equality of types from WHNF to generic types.
 liftConv : ∀ {A B rA Γ}
           → Γ ⊢ A [conv↓] B ^ rA

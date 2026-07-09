@@ -1,21 +1,13 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Substitution.MaybeEmbed (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.MaybeEmbed {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Substitution equiv
-
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Substitution
 open import Tools.Product
-
-
 -- Any level can be embedded into the highest level (validity variant).
 maybeEmbᵛ : ∀ {l A r Γ}
             ([Γ] : ⊩ᵛ Γ)

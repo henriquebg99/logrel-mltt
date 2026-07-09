@@ -1,7 +1,5 @@
 -- Raw terms, weakening (renaming) and substitution.
 
-{-# OPTIONS --safe #-}
-
 module Definition.Untyped where
 
 open import Tools.Nat
@@ -10,7 +8,6 @@ open import Tools.List
 import Tools.PropositionalEquality as PE
 open import Definition.Sort public
 import Definition.OUntyped as O
-
 OTerm = O.Term
 OKind = O.Kind
 

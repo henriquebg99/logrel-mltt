@@ -1,27 +1,19 @@
-{-# OPTIONS --safe #-}
-
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.LogicalRelation.Substitution.Introductions.EquivEq (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.Introductions.EquivEq where
+open import Definition.Typed.EqualityRelation
 open EqRelSet {{...}}
-
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.LogicalRelation.Properties.Escape equiv
-open import Definition.LogicalRelation.Substitution equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Id equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Nat2 equiv equivRed
-open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
-open import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv
-
+open import Definition.Typed
+open import Definition.LogicalRelation.Properties.Escape
+open import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Substitution.Introductions.Id
+open import Definition.LogicalRelation.Substitution.Introductions.Universe
+open import Definition.LogicalRelation.Substitution.Introductions.Nat
+open import Definition.LogicalRelation.Substitution.Introductions.Nat2
+open import Definition.LogicalRelation.Substitution.MaybeEmbed
+open import Definition.LogicalRelation.Substitution.ProofIrrelevance
 open import Tools.Product
-
--- Validity of the equivalence witness between ℕ and ℕ2.
+-- Validity of thealence witness between ℕ and ℕ2.
 equivEqᵛ : ∀ {Γ}
   → ([Γ] : ⊩ᵛ Γ)
   → let [U0] = maybeEmbᵛ {A = U ⁰} [Γ] (Uᵛ emb< [Γ])

@@ -1,15 +1,10 @@
-{-# OPTIONS --safe #-}
-
 module Definition.Equiv where
-
 open import Definition.OUntyped
 open import Definition.OTyped
 open import Definition.Sort
 import Definition.Untyped as U
 import Tools.PropositionalEquality as PE
-
--- An equivalence between ℕ and ℕ2.
-
+-- Analence between ℕ and ℕ2.
 ℕ→ℕ2 : Term
 ℕ→ℕ2 = Π ℕ ^ ! ° ⁰ ▹ ℕ2 ° ⁰ ° ⁰ ^ !
 

@@ -1,40 +1,31 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.LogicalRelation.Substitution.Introductions.Emptyrec (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.Introductions.Emptyrec {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped as U hiding (wk)
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-import Definition.Typed.Weakening equiv as T
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.RedSteps equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.ShapeView equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Application equiv
-open import Definition.LogicalRelation.Substitution equiv
-open import Definition.LogicalRelation.Substitution.Properties equiv
-import Definition.LogicalRelation.Substitution.Irrelevance equiv as S
-open import Definition.LogicalRelation.Substitution.Reflexivity equiv
-open import Definition.LogicalRelation.Substitution.Weakening equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv equivRed
-
+open import Definition.Typed
+import Definition.Typed.Weakening as T
+open import Definition.Typed.Properties
+open import Definition.Typed.RedSteps
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.ShapeView
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Application
+open import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Substitution.Properties
+import Definition.LogicalRelation.Substitution.Irrelevance as S
+open import Definition.LogicalRelation.Substitution.Reflexivity
+open import Definition.LogicalRelation.Substitution.Weakening
+open import Definition.LogicalRelation.Substitution.Introductions.Empty
+open import Definition.LogicalRelation.Substitution.Introductions.Pi
+open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst
 open import Tools.Product
 open import Tools.Unit
 open import Tools.Empty
 open import Tools.Nat
-
 import Tools.PropositionalEquality as PE
-
 -- Reducibility of natural recursion under a valid substitution.
 EmptyrecTerm : ∀ {F rF lF n Γ Δ σ l}
              ([Γ]  : ⊩ᵛ Γ)

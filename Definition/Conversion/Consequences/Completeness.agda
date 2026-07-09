@@ -1,31 +1,18 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Conversion.Consequences.Completeness
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Conversion.Consequences.Completeness where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Conversion equiv
-open import Definition.Typed.Properties equiv
-
-open import Definition.Conversion.EqRelInstance equiv equivRed using (eqRelInstance)
-open import Definition.Conversion.Inversion equiv equivRed
-
-import Definition.LogicalRelation.Fundamental as FundamentalJ
-import Definition.LogicalRelation.Substitution as SubstitutionConv
-import Definition.LogicalRelation.Substitution.Escape as EscapeConv
-open FundamentalJ equiv {{eqrel = eqRelInstance}} {{equivRed = equivRed}}
-open SubstitutionConv equiv {{eqrel = eqRelInstance}}
-open EscapeConv equiv {{eqrel = eqRelInstance}}
-
+open import Definition.Typed
+open import Definition.Conversion
+open import Definition.Typed.Properties
+open import Definition.Conversion.EqRelInstance
+open import Definition.Conversion.Inversion
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Substitution.Escape
+open import Definition.LogicalRelation.Fundamental
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 open import Tools.Empty
-
 -- Algorithmic equality is derivable from judgemental equality of types.
 completeEq : ∀ {A B r Γ} → Γ ⊢ A ≡ B ^ r → Γ ⊢ A [conv↑] B ^ r
 completeEq A≡B =

@@ -1,25 +1,15 @@
-{-# OPTIONS --safe #-}
-
+open import Definition.Typed.EqRelInstance
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Typed.Consequences.SucCong
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Typed.Consequences.SucCong where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Typed.Weakening equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.EqRelInstance equiv
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Typed.Consequences.Substitution equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Weakening
+open import Definition.Typed.Properties
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.Substitution
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 open import Tools.Empty using (⊥; ⊥-elim)
-
-
 -- Congurence of the type of the successor case in natrec.
 sucCong : ∀ {F G lF Γ} → Γ ∙ ℕ ^ [ ! , ι ⁰ ] ⊢ F ≡ G ^ [ ! , ι lF ]
         → Γ ⊢ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° lF ▹▹ F [ suc (var 0) ]↑ ° lF ° lF ^ !) ° lF ° lF ^ !

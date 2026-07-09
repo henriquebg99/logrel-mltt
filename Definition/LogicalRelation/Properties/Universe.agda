@@ -1,29 +1,24 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
+import Definition.Typed.Weakening as Twk
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Properties.Universe (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Properties.Universe {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-import Definition.Typed.Weakening equiv as Twk
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Weakening equiv as Lwk
-open import Definition.LogicalRelation.ShapeView equiv
-open import Definition.LogicalRelation.Irrelevance equiv as Irr
-open import Definition.Typed.Properties equiv
-open import Definition.LogicalRelation.Properties.MaybeEmb equiv
-open import Definition.LogicalRelation.Properties.Escape equiv
-open import Definition.LogicalRelation.Properties.Reduction equiv
-open import Definition.LogicalRelation.Properties.Conversion equiv
+open import Definition.Typed
+open import Definition.Typed.Weakening
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Weakening as Lwk
+open import Definition.LogicalRelation.ShapeView
+open import Definition.LogicalRelation.Irrelevance as Irr
+open import Definition.Typed.Properties
+open import Definition.LogicalRelation.Properties.MaybeEmb
+open import Definition.LogicalRelation.Properties.Escape
+open import Definition.LogicalRelation.Properties.Reduction
+open import Definition.LogicalRelation.Properties.Conversion
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 open import Tools.Empty using (⊥; ⊥-elim)
-
 Ugen : ∀ {Γ rU l} → (⊢Γ : ⊢ Γ) →  Γ ⊩⟨ next l ⟩ Univ rU l ^ [ ! , next l ]
 Ugen {Γ} {rU} {⁰} ⊢Γ = Uᵣ′ (Univ rU ⁰) (ι ¹) rU ⁰ emb< PE.refl ((idRed:*: (Ugenⱼ ⊢Γ)))
 Ugen {Γ} {rU} {¹} ⊢Γ = Uᵣ′ (Univ rU ¹) ∞ rU ¹ ∞< PE.refl (idRed:*: (Uⱼ ⊢Γ))

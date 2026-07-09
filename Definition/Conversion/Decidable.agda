@@ -1,55 +1,43 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Conversion.Decidable
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Conversion.Decidable where
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv as T
-open import Definition.Typed.Properties equiv
-open import Definition.Conversion equiv
-open import Definition.Conversion.Whnf equiv
-open import Definition.Conversion.Soundness equiv equivRed
-open import Definition.Conversion.Symmetry equiv equivRed
-open import Definition.Conversion.SymmetrySize equiv equivRed
-open import Definition.Conversion.Stability equiv equivRed
-open import Definition.Conversion.StabilityProp equiv equivRed
-open import Definition.Conversion.Conversion equiv equivRed
-open import Definition.Conversion.ConversionProp equiv equivRed
-open import Definition.Conversion.ConvSize equiv
-open import Definition.Conversion.Lift equiv equivRed
-open import Definition.Conversion.EqRelInstance equiv equivRed
-open import Definition.Conversion.Inversion equiv equivRed
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Typed.Consequences.Substitution equiv equivRed
-open import Definition.Typed.Consequences.Injectivity equiv equivRed
-open import Definition.Typed.Consequences.Reduction equiv equivRed
-open import Definition.Typed.Consequences.Equality equiv equivRed
-open import Definition.Typed.Consequences.Inequality equiv equivRed as IE
-open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
-open import Definition.Typed.Consequences.SucCong equiv equivRed
-open import Definition.Typed.Consequences.Inversion equiv equivRed
-open import Definition.Typed.Consequences.TypeUnicity equiv equivRed
-
-open import Definition.Conversion.HelperDecidable equiv equivRed
-open import Definition.Conversion.DecidableLemmas equiv equivRed
-open import Definition.Conversion.DecView equiv equivRed
-
-open import Definition.Conversion.Consequences.Completeness equiv equivRed
+open import Definition.Typed as T
+open import Definition.Typed.Properties
+open import Definition.Conversion
+open import Definition.Conversion.Whnf
+open import Definition.Conversion.Soundness
+open import Definition.Conversion.Symmetry
+open import Definition.Conversion.SymmetrySize
+open import Definition.Conversion.Stability
+open import Definition.Conversion.StabilityProp
+open import Definition.Conversion.Conversion
+open import Definition.Conversion.ConversionProp
+open import Definition.Conversion.ConvSize
+open import Definition.Conversion.Lift
+open import Definition.Conversion.EqRelInstance
+open import Definition.Conversion.Inversion
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.Substitution
+open import Definition.Typed.Consequences.Injectivity
+open import Definition.Typed.Consequences.Reduction
+open import Definition.Typed.Consequences.Equality
+open import Definition.Typed.Consequences.Inequality as IE
+open import Definition.Typed.Consequences.NeTypeEq
+open import Definition.Typed.Consequences.SucCong
+open import Definition.Typed.Consequences.Inversion
+open import Definition.Typed.Consequences.TypeUnicity
+open import Definition.Conversion.HelperDecidable
+open import Definition.Conversion.DecidableLemmas
+open import Definition.Conversion.DecView
+open import Definition.Conversion.Consequences.Completeness
 open import Definition.Conversion.TransitivityHelper
-
 -- open import Definition.Conversion.Transitivity
-
 open import Tools.Nat
 open import Tools.Product
 open import Tools.Empty
 open import Tools.Nullary
 import Tools.PropositionalEquality as PE
-
 mutual
   -- Decidability of algorithmic equality of neutrals.
   dec~↑! : ∀ {n k k' l l' R T Γ Δ lR lT}

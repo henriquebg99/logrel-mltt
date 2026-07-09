@@ -1,25 +1,18 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Properties.Conversion (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Properties.Conversion {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Typed.RedSteps equiv
-open import Definition.Typed.Reduction equiv
-import Definition.Typed.Weakening equiv as W
-open import Definition.Typed.Properties equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.ShapeView equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-
+open import Definition.Typed
+open import Definition.Typed.RedSteps
+open import Definition.Typed.Reduction
+import Definition.Typed.Weakening as W
+open import Definition.Typed.Properties
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.ShapeView
+open import Definition.LogicalRelation.Irrelevance
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
 -- Conversion of syntactic reduction closures.
 convRed:*: : ∀ {t u A B Γ l} → Γ ⊢ t :⇒*: u ∷ A ^ l → Γ ⊢ A ≡ B ^ [ ! , l ] → Γ ⊢ t :⇒*: u ∷ B ^ l
 convRed:*: [[ ⊢t , ⊢u , d ]] A≡B = [[ conv ⊢t  A≡B , conv ⊢u  A≡B , conv* d  A≡B ]]

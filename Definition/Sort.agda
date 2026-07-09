@@ -1,15 +1,10 @@
 -- Sorts (level and relevance) of types.
 -- Contexts Con
-
-{-# OPTIONS --safe #-}
-
 module Definition.Sort where
-
 open import Tools.Nat
 open import Tools.Product
 open import Tools.List
 import Tools.PropositionalEquality as PE
-
 infixl 30 _∙_^_
 
 data Relevance : Set where

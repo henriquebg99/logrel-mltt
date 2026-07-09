@@ -1,63 +1,53 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
+open import Definition.LogicalRelation.ShapeView
+open import Definition.LogicalRelation.Substitution.Introductions.EquivEq
+open import Definition.LogicalRelation.Substitution.Introductions.Nat2
+open import Definition.LogicalRelation.Substitution.Introductions.Natrec2
+open import Definition.Typed.Weakening using (subst-emb-fwd; subst-emb-bwd)
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.LogicalRelation.Fundamental (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Fundamental {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Substitution equiv
-open import Definition.LogicalRelation.Substitution.Properties equiv
-open import Definition.LogicalRelation.Substitution.Conversion equiv
-open import Definition.LogicalRelation.Substitution.Reduction equiv
-open import Definition.LogicalRelation.Substitution.Reflexivity equiv
-open import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv
-open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Nat2 equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Natrec equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Natrec2 equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Id equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Cast equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.CastRefl equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.CastPi equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Lambda equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Application equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Fst equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Snd equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Transp equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.IdRefl equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.EquivEq equiv equivRed
-open import Definition.LogicalRelation.Fundamental.Variable equiv
-open ERd equiv eqrel using (EquivRed; Πℕℕ2; Πℕ2ℕ)
-open import Definition.Typed.Weakening equiv using (subst-emb-fwd; subst-emb-bwd)
-import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv as PI
-import Definition.LogicalRelation.Substitution.Irrelevance equiv as S
-open import Definition.LogicalRelation.Substitution.Weakening equiv equivRed
-open import Definition.LogicalRelation.ShapeView equiv
-
+open import Definition.Typed 
+open import Definition.Typed.Properties
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Substitution.Properties
+open import Definition.LogicalRelation.Substitution.Conversion
+open import Definition.LogicalRelation.Substitution.Reduction
+open import Definition.LogicalRelation.Substitution.Reflexivity
+open import Definition.LogicalRelation.Substitution.ProofIrrelevance
+open import Definition.LogicalRelation.Substitution.MaybeEmbed
+open import Definition.LogicalRelation.Substitution.Introductions.Nat
+open import Definition.LogicalRelation.Substitution.Introductions.Natrec
+open import Definition.LogicalRelation.Substitution.Introductions.Empty
+open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec
+open import Definition.LogicalRelation.Substitution.Introductions.Universe
+open import Definition.LogicalRelation.Substitution.Introductions.Pi
+open import Definition.LogicalRelation.Substitution.Introductions.Id
+open import Definition.LogicalRelation.Substitution.Introductions.Cast
+open import Definition.LogicalRelation.Substitution.Introductions.CastRefl
+open import Definition.LogicalRelation.Substitution.Introductions.CastPi
+open import Definition.LogicalRelation.Substitution.Introductions.Lambda
+open import Definition.LogicalRelation.Substitution.Introductions.Application
+open import Definition.LogicalRelation.Substitution.Introductions.Fst
+open import Definition.LogicalRelation.Substitution.Introductions.Snd
+open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst
+open import Definition.LogicalRelation.Substitution.Introductions.Transp
+open import Definition.LogicalRelation.Substitution.Introductions.IdRefl
+open import Definition.LogicalRelation.Fundamental.Variable
+import Definition.LogicalRelation.Substitution.ProofIrrelevance as PI
+import Definition.LogicalRelation.Substitution.Irrelevance as S
+open import Definition.LogicalRelation.Substitution.Weakening
 open import Tools.Product
 open import Tools.Unit
 open import Tools.Nat
 import Tools.PropositionalEquality as PE
 open import Tools.Empty using (⊥; ⊥-elim)
-
-
--- Fundamental theorem for contexts.
+  -- Fundamental theorem for contexts.
 valid : ∀ {Γ} → ⊢ Γ → ⊩ᵛ Γ
 fundamental : ∀ {Γ A rA} (⊢A : Γ ⊢ A ^ rA) → Σ (⊩ᵛ Γ) (λ [Γ] → Γ ⊩ᵛ⟨ ∞ ⟩ A ^ rA / [Γ])
 fundamentalEq : ∀{Γ A B rA} → Γ ⊢ A ≡ B ^ rA

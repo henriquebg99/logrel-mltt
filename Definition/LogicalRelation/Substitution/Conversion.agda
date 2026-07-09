@@ -1,19 +1,11 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Substitution.Conversion (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.Conversion {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Substitution equiv
-
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Substitution
 open import Tools.Product
-
-
 -- Conversion from left to right of valid terms.
 convᵛ : ∀ {t A B r Γ l}
         ([Γ] : ⊩ᵛ Γ)

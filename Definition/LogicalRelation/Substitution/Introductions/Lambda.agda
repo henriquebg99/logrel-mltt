@@ -1,33 +1,25 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.LogicalRelation.Substitution.Introductions.Lambda (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.Introductions.Lambda {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped as U hiding (wk)
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.Weakening equiv as T hiding (wk; wkTerm; wkEqTerm)
-open import Definition.Typed.RedSteps equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.ShapeView equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.Weakening equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Application equiv
-open import Definition.LogicalRelation.Substitution equiv
-open import Definition.LogicalRelation.Substitution.Properties equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.Weakening as T hiding (wk; wkTerm; wkEqTerm)
+open import Definition.Typed.RedSteps
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.ShapeView
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.Weakening
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Application
+open import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Substitution.Properties
+open import Definition.LogicalRelation.Substitution.Introductions.Pi
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 open import Tools.Empty using (⊥; ⊥-elim)
-
 -- Valid lambda term construction.
 lamᵛ : ∀ {F G rF lF lG lΠ t Γ l}
        (lF≤ : lF ≤ lΠ)

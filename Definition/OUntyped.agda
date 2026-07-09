@@ -1,15 +1,10 @@
 -- Raw terms, weakening (renaming) and substitution.
-
-{-# OPTIONS --safe #-}
-
 module Definition.OUntyped where
-
 open import Tools.Nat
 open import Tools.Product
 open import Tools.List
 import Tools.PropositionalEquality as PE
 open import Definition.Sort
-
 infix 30 Π_^_°_▹_°_°_^_
 infixr 22 _^_°_▹▹_°_°_^_
 infixl 30 _ₛ•ₛ_ _•ₛ_ _ₛ•_

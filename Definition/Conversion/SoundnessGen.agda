@@ -1,24 +1,18 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-module Definition.Conversion.SoundnessGen (equiv : E.Equiv) where
-
+module Definition.Conversion.SoundnessGen where
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.Weakening equiv as T hiding (wk; wkTerm; wkEqTerm)
-open import Definition.ConversionGen equiv
-open import Definition.Conversion.WhnfGen equiv
-open import Definition.Typed.Consequences.Syntactic equiv
-open import Definition.Typed.Consequences.NeTypeEq equiv
-open import Definition.Typed.Consequences.Inversion equiv
-open import Definition.Typed.Consequences.Equality equiv
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.Weakening as T hiding (wk; wkTerm; wkEqTerm)
+open import Definition.ConversionGen
+open import Definition.Conversion.WhnfGen
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.NeTypeEq
+open import Definition.Typed.Consequences.Inversion
+open import Definition.Typed.Consequences.Equality
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
-
 inversion-lam' : ∀ {t F F' G rF lF lG lΠ Γ} → Γ ⊢ lam F ▹ t ^ lΠ ∷ Π F' ^ rF ° lF ▹ G ° lG ° lΠ ^ ! ^ [ ! , ι lΠ ] →
       Γ ⊢ F ^ [ rF , ι lF ]
     -- × Γ ∙ F ^ [ rF , ι lF ] ⊢ t ∷ G ^ [ ! , ι lG ]

@@ -1,37 +1,29 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
+import Definition.Typed.Weakening as Twk
+open Twk using (_∷_⊆_ ; _•ₜ_)
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.LogicalRelation.Substitution.Introductions.Pi (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.Introductions.Pi {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped as U hiding (wk)
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-import Definition.Typed.Weakening equiv as Twk
-open Twk using (_∷_⊆_ ; _•ₜ_)
-open import Definition.Typed.Properties equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.ShapeView equiv
-open import Definition.LogicalRelation.Weakening equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Substitution equiv
-open import Definition.LogicalRelation.Substitution.Weakening equiv equivRed
-open import Definition.LogicalRelation.Substitution.Properties equiv
-open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
-import Definition.LogicalRelation.Substitution.Irrelevance equiv as S
-open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Weakening using (_∷_⊆_ ; _•ₜ_)
+open import Definition.Typed.Properties
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.ShapeView
+open import Definition.LogicalRelation.Weakening
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Substitution.Weakening
+open import Definition.LogicalRelation.Substitution.Properties
+open import Definition.LogicalRelation.Substitution.MaybeEmbed
+import Definition.LogicalRelation.Substitution.Irrelevance as S
+open import Definition.LogicalRelation.Substitution.Introductions.Universe
 open import Tools.Nat
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 open import Tools.Empty using (⊥; ⊥-elim)
-
-
 GappGen : ∀ {F G Γ rF lF lG rΠ l Δ σ ρ Δ₁}
          ([Γ] : ⊩ᵛ Γ)
          ([F] : Γ ⊩ᵛ⟨ l ⟩ F ^ [ rF , ι lF ] / [Γ])

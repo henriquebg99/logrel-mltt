@@ -1,34 +1,25 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Conversion.SymmetrySize
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Conversion.SymmetrySize where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Conversion equiv
-open import Definition.Conversion.Stability equiv equivRed
-open import Definition.Conversion.Soundness equiv equivRed
-open import Definition.Conversion.Conversion equiv equivRed
-open import Definition.Conversion.Whnf equiv
-open import Definition.Conversion.ConvSize equiv
-open import Definition.Conversion.ConversionProp equiv equivRed
-open import Definition.Conversion.Symmetry equiv equivRed
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Typed.Consequences.Equality equiv equivRed
-open import Definition.Typed.Consequences.Reduction equiv equivRed
-open import Definition.Typed.Consequences.Injectivity equiv equivRed
-open import Definition.Typed.Consequences.Substitution equiv equivRed
-open import Definition.Typed.Consequences.SucCong equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Conversion
+open import Definition.Conversion.Stability
+open import Definition.Conversion.Soundness
+open import Definition.Conversion.Conversion
+open import Definition.Conversion.Whnf
+open import Definition.Conversion.ConvSize
+open import Definition.Conversion.ConversionProp
+open import Definition.Conversion.Symmetry
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.Equality
+open import Definition.Typed.Consequences.Reduction
+open import Definition.Typed.Consequences.Injectivity
+open import Definition.Typed.Consequences.Substitution
+open import Definition.Typed.Consequences.SucCong
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 open import Tools.Nat
-
 size-subst : ∀ {t u A B Γ r} (A≡B : A PE.≡ B) (t~u : Γ ⊢ t ~ u ↓! A ^ r)
            → size~↓! (PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) A≡B t~u) PE.≡ size~↓! t~u
 size-subst PE.refl t~u = PE.refl

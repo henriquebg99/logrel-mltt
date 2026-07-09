@@ -1,32 +1,23 @@
-{-# OPTIONS --safe #-}
-
+open import Definition.Typed.EqRelInstance
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Typed.Consequences.RelevanceUnicity
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Typed.Consequences.RelevanceUnicity where
 open import Definition.Untyped hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
 open import Definition.Untyped.Properties using (subst-Univ-either)
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.Weakening equiv
-open import Definition.Typed.EqRelInstance equiv
-open import Definition.Typed.Consequences.Equality equiv equivRed
-import Definition.Typed.Consequences.Inequality equiv equivRed as Ineq
-open import Definition.Typed.Consequences.Inversion equiv equivRed
-open import Definition.Typed.Consequences.Injectivity equiv equivRed
-open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Typed.Consequences.PiNorm equiv equivRed
-open import Definition.Typed.Consequences.Substitution equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.Weakening
+open import Definition.Typed.Consequences.Equality
+import Definition.Typed.Consequences.Inequality as Ineq
+open import Definition.Typed.Consequences.Inversion
+open import Definition.Typed.Consequences.Injectivity
+open import Definition.Typed.Consequences.NeTypeEq
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.PiNorm
+open import Definition.Typed.Consequences.Substitution
 open import Tools.Product
 open import Tools.Empty
 open import Tools.Sum using (_⊎_; inj₁; inj₂)
 import Tools.PropositionalEquality as PE
-
 ℕ-relevant-term : ∀ {Γ A r} → Γ ⊢ ℕ ∷ A ^ r → Whnf A → A PE.≡ Univ ! ⁰
 ℕ-relevant-term [ℕ] whnfA = let [[N]] , e = inversion-ℕ [ℕ]
                              in U≡A-whnf (sym (PE.subst (λ r → _ ⊢ _ ≡ _ ^ r) e [[N]])) whnfA

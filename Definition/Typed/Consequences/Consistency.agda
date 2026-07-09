@@ -1,26 +1,16 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Typed.Consequences.Consistency
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Typed.Consequences.Consistency where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.EqRelInstance equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.ShapeView equiv
-open import Definition.LogicalRelation.Fundamental.Reducibility equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.EqRelInstance
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.ShapeView
+open import Definition.LogicalRelation.Fundamental.Reducibility
 open import Tools.Empty
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
-
 zero≢one′ : ∀ {Γ l} ([ℕ] : Γ ⊩⟨ l ⟩ℕ ℕ)
            → Γ ⊩⟨ l ⟩ zero ≡ suc zero ∷ ℕ ^ [ ! , ι ⁰ ] / ℕ-intr [ℕ] → ⊥
 zero≢one′ (noemb x) (ℕₜ₌ .(suc _) .(suc _) d d′ k≡k′ (sucᵣ x₁)) =

@@ -1,32 +1,23 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Typed.Consequences.TypeUnicity
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Typed.Consequences.TypeUnicity where
 open import Definition.Untyped hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
 open import Definition.Untyped.Properties using (subst-Univ-either)
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.Weakening equiv
-open import Definition.Typed.Consequences.Equality equiv equivRed
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.Weakening
+open import Definition.Typed.Consequences.Equality
 -- import Definition.Typed.Consequences.Inequality as Ineq
-open import Definition.Typed.Consequences.Injectivity equiv equivRed
-open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Typed.Consequences.RelevanceUnicity equiv equivRed
-open import Definition.Typed.Consequences.Substitution equiv equivRed
-open import Definition.Conversion.Stability equiv equivRed
-open import Definition.Typed.Consequences.InjectivitySProp equiv equivRed
-
+open import Definition.Typed.Consequences.Injectivity
+open import Definition.Typed.Consequences.NeTypeEq
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.RelevanceUnicity
+open import Definition.Typed.Consequences.Substitution
+open import Definition.Conversion.Stability
+open import Definition.Typed.Consequences.InjectivitySProp
 open import Tools.Product
 open import Tools.Empty
 open import Tools.Sum using (_⊎_; inj₁; inj₂)
 import Tools.PropositionalEquality as PE
-
 type-uniq : ∀ {Γ t T₁ T₂ r₁ l₁ l₂} → Γ ⊢ t ∷ T₁ ^ [ r₁ , l₁ ] → Γ ⊢ t ∷ T₂ ^ [ r₁ , l₂ ] →
                  l₁ PE.≡ l₂ × Γ ⊢ T₁ ≡ T₂ ^ [ r₁ , l₁ ]
 type-uniq (univ 0<1 x) (univ 0<1 x') = PE.refl , refl (Ugenⱼ x)

@@ -1,17 +1,13 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-module Definition.Typed.EqRelInstance (equiv : E.Equiv) where
-open import Definition.Typed.EqualityRelation equiv
-
+module Definition.Typed.EqRelInstance where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.Weakening equiv
-open import Definition.Typed.Reduction equiv
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.Weakening
+open import Definition.Typed.Properties
+open import Definition.Typed.Reduction
+open import Definition.Typed.EqualityRelation
 open import Tools.Function
-
 Urefl   : ∀ {r l Γ} → ⊢ Γ → Γ ⊢ (Univ r l) ≡ (Univ r l) ^ [ ! , next l ]
 Urefl {l = ⁰} ⊢Γ = refl (univ (univ 0<1 ⊢Γ))
 Urefl {l = ¹} ⊢Γ = refl (Uⱼ ⊢Γ)

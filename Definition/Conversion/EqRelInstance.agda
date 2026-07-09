@@ -1,44 +1,34 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Conversion.EqRelInstance
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Conversion.EqRelInstance where
 open import Definition.Untyped
 open import Definition.Untyped.Properties using (wkSingleSubstId)
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.Weakening equiv using (_∷_⊆_; wkEq; step; id)
-open import Definition.Conversion equiv
-open import Definition.Conversion.Reduction equiv
-open import Definition.Conversion.Universe equiv equivRed
-open import Definition.Conversion.Stability equiv equivRed
-open import Definition.Conversion.Soundness equiv equivRed
-open import Definition.Conversion.Lift equiv equivRed
-open import Definition.Conversion.Conversion equiv equivRed
-open import Definition.Conversion.Transitivity equiv equivRed
-open import Definition.Conversion.Weakening equiv
-open import Definition.Conversion.Whnf equiv
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Typed.Consequences.Substitution equiv equivRed
-open import Definition.Typed.Consequences.Injectivity equiv equivRed
-open import Definition.Typed.Consequences.Equality equiv equivRed
-open import Definition.Typed.Consequences.Reduction equiv equivRed
-open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
-open import Definition.Conversion.Symmetry equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.Weakening using (_∷_⊆_; wkEq; step; id)
+open import Definition.Conversion
+open import Definition.Conversion.Reduction
+open import Definition.Conversion.Universe
+open import Definition.Conversion.Stability
+open import Definition.Conversion.Soundness
+open import Definition.Conversion.Lift
+open import Definition.Conversion.Conversion
+open import Definition.Conversion.Transitivity
+open import Definition.Conversion.Weakening
+open import Definition.Conversion.Whnf
+open import Definition.Typed.EqualityRelation
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.Substitution
+open import Definition.Typed.Consequences.Injectivity
+open import Definition.Typed.Consequences.Equality
+open import Definition.Typed.Consequences.Reduction
+open import Definition.Typed.Consequences.NeTypeEq
+open import Definition.Conversion.Symmetry
 -- open import Definition.Conversion.HelperDecidable
-
 open import Tools.Nat
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 open import Tools.Function
 open import Tools.Empty using (⊥; ⊥-elim)
-
-
 abstract -- Agda will do some slow unfolding without abstract
   ~atℕ : ∀ {Γ t u}
     → Γ ⊢ t ∷ ℕ ^ [ ! , ι ⁰ ]

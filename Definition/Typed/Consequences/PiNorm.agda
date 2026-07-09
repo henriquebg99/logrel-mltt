@@ -1,38 +1,27 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Typed.Consequences.PiNorm
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Typed.Consequences.PiNorm where
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.Weakening equiv
-open import Definition.Typed.EqRelInstance equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.Fundamental.Reducibility equiv equivRed
-open import Definition.Typed.Consequences.Inversion equiv equivRed
-open import Definition.Typed.Consequences.Injectivity equiv equivRed
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Conversion.Stability equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.Weakening
+open import Definition.Typed.EqRelInstance
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.Fundamental.Reducibility
+open import Definition.Typed.Consequences.Inversion
+open import Definition.Typed.Consequences.Injectivity
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Conversion.Stability
 open import Tools.Product
 open import Tools.Empty
 import Tools.PropositionalEquality as PE
-
 -- reduction including in the codomain of Pis
 -- useful to get unicity of relevance
-
 -- there are 2 kinds of fat arrows!!!
 -- the constructor for transitivity closure is closed on the left ⇨
 -- the ones in types aren't ⇒
-
 data ΠNorm : Term → Set where
   Uₙ : ∀ {r l} → ΠNorm (Univ r l)
   Πₙ : ∀ {F rF lF G lG lΠ} → ΠNorm G → ΠNorm (Π F ^ rF ° lF ▹ G ° lG ° lΠ ^ !)

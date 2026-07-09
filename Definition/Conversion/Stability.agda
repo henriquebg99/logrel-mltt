@@ -1,24 +1,14 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Conversion.Stability
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Conversion.Stability where
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Weakening equiv
-open import Definition.Conversion equiv
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Typed.Consequences.Substitution equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Weakening
+open import Definition.Conversion
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.Substitution
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
-
 -- Equality of contexts.
 data ⊢_≡_ : (Γ Δ : Con Term) → Set where
   ε : ⊢ ε ≡ ε

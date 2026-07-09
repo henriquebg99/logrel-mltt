@@ -1,25 +1,15 @@
-{-# OPTIONS --safe #-}
-
+open import Definition.Typed.EqRelInstance
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Conversion.Soundness
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Conversion.Soundness where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Conversion equiv
-open import Definition.Conversion.Whnf equiv
-open import Definition.Typed.EqRelInstance equiv
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Conversion
+open import Definition.Conversion.Whnf
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.NeTypeEq
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
-
 mutual
   -- Algorithmic equality of neutrals is well-formed.
   soundness~↑! : ∀ {k l A lA Γ} → Γ ⊢ k ~ l ↑! A ^ lA → Γ ⊢ k ≡ l ∷ A ^ [ ! , lA ]

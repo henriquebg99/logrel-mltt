@@ -1,32 +1,22 @@
-{-# OPTIONS --safe #-}
-
+open import Definition.LogicalRelation.Properties.Escape
+open import Definition.LogicalRelation.Properties.Neutral
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Typed.Consequences.Injectivity
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Typed.Consequences.Injectivity where
 open import Definition.Untyped hiding (wk)
 import Definition.Untyped as U
 open import Definition.Untyped.Properties
-
-open import Definition.Typed equiv
-open import Definition.Typed.Weakening equiv
-open import Definition.Typed.EqRelInstance equiv
-open import Definition.Typed.Properties equiv
-open import Definition.LogicalRelation equiv 
-open import Definition.LogicalRelation.Properties.Escape equiv 
-open import Definition.LogicalRelation.Properties.Neutral equiv 
-open import Definition.LogicalRelation.Irrelevance equiv 
-open import Definition.LogicalRelation.ShapeView equiv 
-open import Definition.LogicalRelation.Fundamental.Reducibility equiv equivRed
-open import Definition.LogicalRelation.Fundamental equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Weakening
+open import Definition.Typed.Properties
+open import Definition.Typed.EqRelInstance
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.ShapeView
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Fundamental.Reducibility
+open import Definition.LogicalRelation.Fundamental
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
-
 -- Helper function of injectivity for specific reducible Π-types
 injectivity′ : ∀ {F G H E rF lF rH lH lG lE Γ lΠ l}
                ([ΠFG] : Γ ⊩⟨ l ⟩Π Π F ^ rF ° lF  ▹ G ° lG ° lΠ ^ ! ^[ lΠ ] )

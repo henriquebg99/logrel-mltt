@@ -1,41 +1,34 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.LogicalRelation.Substitution.Introductions.Castlemmas (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.Introductions.Castlemmas {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-import Definition.Typed.Weakening equiv as Twk
-open import Definition.Typed.RedSteps equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Application equiv
-open import Definition.LogicalRelation.Substitution equiv
-import Definition.LogicalRelation.Weakening equiv as Lwk
-open import Definition.LogicalRelation.Substitution.Properties equiv
-import Definition.LogicalRelation.Substitution.Irrelevance equiv as S
-open import Definition.LogicalRelation.Substitution.Reflexivity equiv
-open import Definition.LogicalRelation.Substitution.Weakening equiv equivRed
+open import Definition.Typed
+open import Definition.Typed.Properties
+import Definition.Typed.Weakening as Twk
+open import Definition.Typed.EqualityRelation
+open import Definition.Typed.RedSteps
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Application
+open import Definition.LogicalRelation.Substitution
+import Definition.LogicalRelation.Weakening as Lwk
+open import Definition.LogicalRelation.Substitution.Properties
+import Definition.LogicalRelation.Substitution.Irrelevance as S
+open import Definition.LogicalRelation.Substitution.Reflexivity
+open import Definition.LogicalRelation.Substitution.Weakening
 -- open import Definition.LogicalRelation.Substitution.Introductions.Nat
-open import Definition.LogicalRelation.Substitution.Introductions.Empty equiv equivRed
+open import Definition.LogicalRelation.Substitution.Introductions.Empty
 -- open import Definition.LogicalRelation.Substitution.Introductions.Pi
 -- open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst
-open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv equivRed
-open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
-
+open import Definition.LogicalRelation.Substitution.Introductions.Universe
+open import Definition.LogicalRelation.Substitution.MaybeEmbed
 open import Tools.Product
 open import Tools.Empty
 import Tools.Unit as TU
 import Tools.PropositionalEquality as PE
-
 module cast-ΠΠ-lemmas
        {Γ rF F F₁}
        (⊢Γ : ⊢ Γ)

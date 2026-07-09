@@ -1,28 +1,20 @@
-{-# OPTIONS --safe #-}
-
-import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Typed.Consequences.Inequality
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
 open import Definition.Untyped hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne; ℕ≢ℕ2; ℕ2≢ℕ)
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.EqRelInstance equiv
-open import Definition.LogicalRelation equiv 
-open import Definition.LogicalRelation.Irrelevance equiv 
-open import Definition.LogicalRelation.ShapeView equiv 
-open import Definition.LogicalRelation.Fundamental.Reducibility equiv equivRed
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Typed.Consequences.Inversion equiv equivRed
-open import Definition.Typed.Consequences.Equality equiv equivRed
-
+import Definition.Equiv as E
+module Definition.Typed.Consequences.Inequality where
+open import Definition.Untyped hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.EqRelInstance
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.ShapeView
+open import Definition.LogicalRelation.Fundamental.Reducibility
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.Inversion
+open import Definition.Typed.Consequences.Equality
 open import Tools.Product
 open import Tools.Empty
 import Tools.PropositionalEquality as PE
-
 A≢B : ∀ {A B rA rB Γ} (_⊩′⟨_⟩A_ _⊩′⟨_⟩B_ : Con Term → TypeLevel → Term → Set)
       (A-intr : ∀ {l} → Γ ⊩′⟨ l ⟩A A → Γ ⊩⟨ l ⟩ A ^ rA)
       (B-intr : ∀ {l} → Γ ⊩′⟨ l ⟩B B → Γ ⊩⟨ l ⟩ B ^ rB)

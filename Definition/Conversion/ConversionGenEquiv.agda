@@ -1,42 +1,31 @@
 -- Algorithmic equality.
-
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Conversion.ConversionGenEquiv
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Conversion.ConversionGenEquiv where
 open import Definition.Untyped
-open import Definition.Typed equiv
-
+open import Definition.Typed
 open import Tools.Nat
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-open import Definition.LogicalRelation equiv
-open import Definition.Conversion equiv
-open import Definition.ConversionGen equiv
-open import Definition.Conversion.Lift equiv equivRed
-open import Definition.Conversion.Whnf equiv as W
-open import Definition.Conversion.WhnfGen equiv as WG
-open import Definition.Conversion.Soundness equiv equivRed as S
-open import Definition.Conversion.SoundnessGen equiv as SG
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Typed.Consequences.Inversion equiv equivRed
-open import Definition.Typed.Consequences.Equality equiv equivRed
-open import Definition.Typed.Consequences.TypeUnicity equiv equivRed
-open import Definition.Typed.Consequences.Injectivity equiv equivRed
-open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
-open import Definition.Typed.Consequences.Inequality equiv equivRed as I
-open import Definition.Typed.Properties equiv
-open import Definition.Conversion.Symmetry equiv equivRed
-open import Definition.Conversion.Stability equiv equivRed
-open import Definition.Typed.EqRelInstance equiv
-
+open import Definition.LogicalRelation
+open import Definition.Conversion
+open import Definition.ConversionGen
+open import Definition.Conversion.Lift
+open import Definition.Conversion.Whnf as W
+open import Definition.Conversion.WhnfGen as WG
+open import Definition.Conversion.Soundness as S
+open import Definition.Conversion.SoundnessGen as SG
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.Inversion
+open import Definition.Typed.Consequences.Equality
+open import Definition.Typed.Consequences.TypeUnicity
+open import Definition.Typed.Consequences.Injectivity
+open import Definition.Typed.Consequences.NeTypeEq
+open import Definition.Typed.Consequences.Inequality as I
+open import Definition.Typed.Properties
+open import Definition.Conversion.Symmetry
+open import Definition.Conversion.Stability
+open import Definition.Typed.EqRelInstance
 open import Tools.Empty
-
 notIdU : ∀ {Γ A t u l} → Γ ⊢ Id A t u ^ [ ! , l ] → ⊥
 notIdU (univ x) =
   let _ , _ , _ , _ , U=SProp , _ = inversion-Id x

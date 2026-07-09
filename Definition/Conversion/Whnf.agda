@@ -1,16 +1,10 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-module Definition.Conversion.Whnf (equiv : E.Equiv) where
-
+module Definition.Conversion.Whnf where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Conversion equiv
-open import Definition.Typed.Consequences.Inversion equiv
-
+open import Definition.Typed
+open import Definition.Conversion
+open import Definition.Typed.Consequences.Inversion
 open import Tools.Product
-
-
 mutual
   -- Extraction of neutrality from algorithmic equality of neutrals.
   ne~↑! : ∀ {t u A Γ l}

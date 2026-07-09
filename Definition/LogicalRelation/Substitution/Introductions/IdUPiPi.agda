@@ -1,50 +1,42 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.LogicalRelation.Substitution.Introductions.IdUPiPi (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.Introductions.IdUPiPi {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped as U hiding (wk)
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.Weakening equiv as T hiding (wk; wkTerm; wkEqTerm)
-open import Definition.Typed.RedSteps equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.ShapeView equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.Weakening equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Application equiv
-open import Definition.LogicalRelation.Substitution equiv
-open import Definition.LogicalRelation.Substitution.Properties equiv
-open import Definition.LogicalRelation.Substitution.Irrelevance equiv as S
-open import Definition.LogicalRelation.Substitution.Reflexivity equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Sigma equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Fst equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Lambda equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Application equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Cast equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Id equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Transp equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst equiv equivRed
-open import Definition.LogicalRelation.Substitution.MaybeEmbed equiv
-open import Definition.LogicalRelation.Substitution.Escape equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv equivRed
-open import Definition.LogicalRelation.Substitution.Reduction equiv
-open import Definition.LogicalRelation.Substitution.Weakening equiv equivRed
-open import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv
-open import Definition.LogicalRelation.Fundamental.Variable equiv
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.Weakening as T hiding (wk; wkTerm; wkEqTerm)
+open import Definition.Typed.RedSteps
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.ShapeView
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.Weakening
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Application
+open import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Substitution.Properties
+open import Definition.LogicalRelation.Substitution.Irrelevance as S
+open import Definition.LogicalRelation.Substitution.Reflexivity
+open import Definition.LogicalRelation.Substitution.Introductions.Sigma
+open import Definition.LogicalRelation.Substitution.Introductions.Fst
+open import Definition.LogicalRelation.Substitution.Introductions.Pi
+open import Definition.LogicalRelation.Substitution.Introductions.Lambda
+open import Definition.LogicalRelation.Substitution.Introductions.Application
+open import Definition.LogicalRelation.Substitution.Introductions.Cast
+open import Definition.LogicalRelation.Substitution.Introductions.Id
+open import Definition.LogicalRelation.Substitution.Introductions.Transp
+open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst
+open import Definition.LogicalRelation.Substitution.MaybeEmbed
+open import Definition.LogicalRelation.Substitution.Escape
+open import Definition.LogicalRelation.Substitution.Introductions.Universe
+open import Definition.LogicalRelation.Substitution.Reduction
+open import Definition.LogicalRelation.Substitution.Weakening
+open import Definition.LogicalRelation.Substitution.ProofIrrelevance
+open import Definition.LogicalRelation.Fundamental.Variable
 open import Tools.Product
 open import Tools.Nat
 import Tools.PropositionalEquality as PE
-
 lemma0 : ∀ σ A → (wk1 (wk1 (subst σ A))) PE.≡ subst (liftSubst (liftSubst σ)) (wk1 (wk1 A))
 lemma0 σ A = PE.trans (PE.cong wk1 (PE.sym (Idsym-subst-lemma σ A))) (PE.sym (Idsym-subst-lemma (liftSubst σ) (wk1 A)))
 

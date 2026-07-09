@@ -1,13 +1,8 @@
-{-# OPTIONS  --safe #-}
-
 import Definition.Equiv as E
-module Definition.Typed.Reduction (equiv : E.Equiv) where
-
+module Definition.Typed.Reduction where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-
-
+open import Definition.Typed
+open import Definition.Typed.Properties
 -- Weak head expansion of type equality
 reduction : ∀ {A A′ B B′ r Γ}
           → Γ ⊢ A ⇒* A′ ^ r

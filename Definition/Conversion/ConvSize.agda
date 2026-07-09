@@ -1,20 +1,12 @@
 -- Algorithmic equality.
-
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-module Definition.Conversion.ConvSize (equiv : E.Equiv) where
-
+module Definition.Conversion.ConvSize where
 open import Definition.Untyped
-open import Definition.Typed equiv
-
+open import Definition.Typed
 open import Tools.Nat
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-open import Definition.Conversion equiv
-
-
-
+open import Definition.Conversion
 mutual
   -- Neutral equality.
   size~↑! : ∀ {t u A Γ l} → Γ ⊢ t ~ u ↑! A ^ l → Nat

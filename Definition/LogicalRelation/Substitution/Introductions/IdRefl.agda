@@ -1,22 +1,14 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.LogicalRelation.Substitution.Introductions.IdRefl (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.Introductions.IdRefl {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.LogicalRelation.Properties.Escape equiv
-open import Definition.LogicalRelation.Substitution equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Id equiv equivRed
-open import Definition.LogicalRelation.Substitution.ProofIrrelevance equiv
-
+open import Definition.Typed 
+open import Definition.LogicalRelation.Properties.Escape
+open import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Substitution.Introductions.Id
+open import Definition.LogicalRelation.Substitution.ProofIrrelevance
 open import Tools.Product
-
 Idreflᵛ : ∀{Γ A l t}
   → ([Γ] : ⊩ᵛ Γ)
   → ([A] : Γ ⊩ᵛ⟨ ∞ ⟩ A ^ [ ! , ι l ] / [Γ])

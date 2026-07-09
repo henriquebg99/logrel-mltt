@@ -1,23 +1,13 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Conversion.Universe
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Conversion.Universe where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.RedSteps equiv
-open import Definition.Conversion equiv
-open import Definition.Conversion.Reduction equiv
-open import Definition.Conversion.Lift equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.RedSteps
+open import Definition.Conversion
+open import Definition.Conversion.Reduction
+open import Definition.Conversion.Lift
 import Tools.PropositionalEquality as PE
-
-
 -- Algorithmic equality of terms in WHNF of type U are equal as types.
 univConv↓ : ∀ {A B r Γ l}
           → Γ ⊢ A [conv↓] B ∷ Univ r l ^ next l

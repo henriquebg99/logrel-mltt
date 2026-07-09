@@ -1,17 +1,11 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Properties.MaybeEmb (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Properties.MaybeEmb {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.LogicalRelation equiv
+open import Definition.Typed
+open import Definition.LogicalRelation
 import Tools.PropositionalEquality as PE
-
 -- Any level can be embedded into the highest level.
 maybeEmb : ∀ {l A r Γ}
          → Γ ⊩⟨ l ⟩ A ^ r

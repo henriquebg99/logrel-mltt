@@ -1,18 +1,10 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Substitution.Reflexivity (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.Reflexivity {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Substitution equiv
-
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Substitution
 open import Tools.Product
-
-
 -- Reflexivity of valid types.
 reflᵛ : ∀ {A Γ rA l}
         ([Γ] : ⊩ᵛ Γ)

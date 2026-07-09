@@ -1,23 +1,14 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.LogicalRelation.Fundamental.Reducibility (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Fundamental.Reducibility {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Substitution equiv
-open import Definition.LogicalRelation.Substitution.Reducibility equiv
-open import Definition.LogicalRelation.Fundamental equiv equivRed
-
+open import Definition.Typed
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Substitution.Reducibility
+open import Definition.LogicalRelation.Fundamental
 open import Tools.Product
-
-
 -- Well-formed types are reducible.
 reducible : ∀ {A rA Γ} → Γ ⊢ A ^ rA → Γ ⊩⟨ ∞ ⟩ A ^ rA
 reducible A = let [Γ] , [A] = fundamental A

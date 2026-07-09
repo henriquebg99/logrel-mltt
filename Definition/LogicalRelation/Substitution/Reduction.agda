@@ -1,19 +1,11 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Substitution.Reduction (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.Reduction {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
-
 open import Definition.Untyped
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Substitution equiv
-
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Substitution
 open import Tools.Product
-
-
 -- Weak head expansion of valid terms.
 redSubstTermᵛ : ∀ {A t u l l′ Γ}
               → ([Γ] : ⊩ᵛ Γ)

@@ -1,15 +1,10 @@
-{-# OPTIONS --safe #-}
-
 module Definition.OTyped where
-
 open import Definition.OUntyped
-
 open import Tools.Nat using (Nat)
 open import Tools.Product
 open import Tools.Empty
 import Tools.PropositionalEquality as PE
 open import Definition.Sort
-
 infixl 30 _∙_
 infix 30 Πⱼ_▹_▹_▹_
 

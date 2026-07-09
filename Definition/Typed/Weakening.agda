@@ -1,17 +1,12 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-
-module Definition.Typed.Weakening (equiv : E.Equiv) where
-
+module Definition.Typed.Weakening where
 open import Definition.Untyped as U hiding (wk)
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-
+open import Definition.Typed
 import Definition.OUntyped as O
 import Tools.PropositionalEquality as PE
 
-
+-- Weakening type
 otwk : Wk → O.Wk
 otwk id = O.id
 otwk (step ρ) = O.step (otwk ρ)

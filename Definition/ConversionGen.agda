@@ -1,17 +1,11 @@
 -- Algorithmic equality.
-
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-module Definition.ConversionGen (equiv : E.Equiv) where
-
+module Definition.ConversionGen where
 open import Definition.Untyped
-open import Definition.Typed equiv
-
+open import Definition.Typed
 open import Tools.Nat
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
 infix 10 _⊢⊢_~_↑_^_
 infix 10 _⊢⊢_[conv↑]_^_
 infix 10 _⊢⊢_[conv↓]_^_

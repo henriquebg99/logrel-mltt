@@ -1,24 +1,15 @@
-{-# OPTIONS --safe #-}
-
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.LogicalRelation.Substitution.Introductions.Nat2 (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-open import Definition.Typed.EqualityRelation equiv
+module Definition.LogicalRelation.Substitution.Introductions.Nat2 where
+open import Definition.Typed.EqualityRelation
 open EqRelSet {{...}}
-
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Properties equiv
-open import Definition.LogicalRelation.Substitution equiv
-open import Definition.LogicalRelation.Substitution.Introductions.Universe equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Substitution.Introductions.Universe
 open import Tools.Product
-
-
 -- Validity of the second natural number type.
 ℕ2ᵛ : ∀ {Γ l} ([Γ] : ⊩ᵛ Γ) → Γ ⊩ᵛ⟨ l ⟩ ℕ2 ^ [ ! , ι ⁰ ] / [Γ]
 ℕ2ᵛ [Γ] ⊢Δ [σ] = ℕ2ᵣ (idRed:*: (univ (ℕ2ⱼ ⊢Δ))) , λ _ x₂ → id (univ (ℕ2ⱼ ⊢Δ))

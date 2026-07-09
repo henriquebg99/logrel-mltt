@@ -1,27 +1,17 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Conversion.Conversion
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Conversion.Conversion where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Typed.RedSteps equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Conversion equiv
-open import Definition.Conversion.Stability equiv equivRed
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Typed.Consequences.Injectivity equiv equivRed
-open import Definition.Typed.Consequences.Equality equiv equivRed
-open import Definition.Typed.Consequences.Reduction equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.RedSteps
+open import Definition.Typed.Properties
+open import Definition.Conversion
+open import Definition.Conversion.Stability
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.Injectivity
+open import Definition.Typed.Consequences.Equality
+open import Definition.Typed.Consequences.Reduction
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
-
 mutual
 
   -- Conversion of algorithmic equality.

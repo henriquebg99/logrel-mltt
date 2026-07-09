@@ -1,40 +1,29 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Conversion.FullReduction
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
-
+module Definition.Conversion.FullReduction where
 open import Definition.Untyped as U hiding (wk)
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.EqRelInstance equiv
-open import Definition.Typed.Weakening equiv
-open import Definition.Conversion equiv
-open import Definition.Conversion.Whnf equiv
-open import Definition.Conversion.Soundness equiv equivRed
-open import Definition.Conversion.Stability equiv equivRed
-open import Definition.Typed.Consequences.Inversion equiv equivRed
-open import Definition.Typed.Consequences.Injectivity equiv equivRed
-open import Definition.Typed.Consequences.Syntactic equiv equivRed
-open import Definition.Typed.Consequences.NeTypeEq equiv equivRed
-open import Definition.Typed.Consequences.Equality equiv equivRed
-open import Definition.LogicalRelation equiv
-open import Definition.LogicalRelation.Properties.Escape equiv
-open import Definition.LogicalRelation.Irrelevance equiv
-open import Definition.LogicalRelation.ShapeView equiv
-open import Definition.LogicalRelation.Fundamental.Reducibility equiv equivRed
-open import Definition.Typed.Consequences.RelevanceUnicity equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.EqRelInstance
+open import Definition.Typed.Weakening
+open import Definition.Conversion
+open import Definition.Conversion.Whnf
+open import Definition.Conversion.Soundness
+open import Definition.Conversion.Stability
+open import Definition.Typed.Consequences.Inversion
+open import Definition.Typed.Consequences.Injectivity
+open import Definition.Typed.Consequences.Syntactic
+open import Definition.Typed.Consequences.NeTypeEq
+open import Definition.Typed.Consequences.Equality
+open import Definition.LogicalRelation
+open import Definition.LogicalRelation.Properties.Escape
+open import Definition.LogicalRelation.Irrelevance
+open import Definition.LogicalRelation.ShapeView
+open import Definition.LogicalRelation.Fundamental.Reducibility
+open import Definition.Typed.Consequences.RelevanceUnicity
 open import Tools.Empty using (⊥; ⊥-elim)
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
-
 mutual
   data NfNeutral (Γ : Con Term) : Term → Set where
     var     : ∀ n                     → NfNeutral Γ (var n)

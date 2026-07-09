@@ -1,28 +1,19 @@
-{-# OPTIONS --safe #-}
-
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-import Definition.LogicalRelation.EquivRed as ERd
-module Definition.Typed.Consequences.Decidable
-  (equiv : E.Equiv)
-  (equivRed : forall (eqrel : ER.EqRelSet equiv) → ERd.EquivRed equiv eqrel) where
-
+module Definition.Typed.Consequences.Decidable where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.Typed.Properties equiv
-open import Definition.Typed.EqRelInstance equiv
-open import Definition.Conversion equiv
-open import Definition.Conversion.Stability equiv equivRed
-open import Definition.Conversion.Soundness equiv equivRed
-open import Definition.Conversion.Decidable equiv equivRed
-open import Definition.Conversion.Consequences.Completeness equiv equivRed
-
+open import Definition.Typed
+open import Definition.Typed.Properties
+open import Definition.Typed.EqRelInstance
+open import Definition.Conversion
+open import Definition.Conversion.Stability
+open import Definition.Conversion.Soundness
+open import Definition.Conversion.Decidable
+open import Definition.Conversion.Consequences.Completeness
 open import Tools.Nat
 open import Tools.Product
 open import Tools.Empty
 open import Tools.Nullary
 import Tools.PropositionalEquality as PE
-
 -- Decidability of algorithmic equality of neutrals.
 dec-aux : ∀ {Γ t u T l}
         → Dec (Γ ⊢ t [conv↑] u ∷ T ^ l)

@@ -1,20 +1,14 @@
-{-# OPTIONS  --safe #-}
-
 import Definition.Equiv as E
-
-module Definition.Typed.Properties (equiv : E.Equiv) where
-
+module Definition.Typed.Properties where
 open import Definition.Untyped
 open import Definition.Untyped.Properties
-open import Definition.Typed equiv
-open import Definition.Typed.RedSteps equiv
-import Definition.Typed.Weakening equiv as Twk
-
+open import Definition.Typed
+open import Definition.Typed.RedSteps
+import Definition.Typed.Weakening as Twk
 open import Tools.Empty using (⊥; ⊥-elim)
 open import Tools.Product
 open import Tools.Sum hiding (id ; sym)
 import Tools.PropositionalEquality as PE
-
 un-univ : ∀ {A r Γ l} → Γ ⊢ A ^ [ r , ι l ] → Γ ⊢ A ∷ Univ r l ^ [ ! , next l ]
 un-univ (univ x) = x
 

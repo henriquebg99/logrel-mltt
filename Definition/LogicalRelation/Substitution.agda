@@ -1,22 +1,13 @@
-{-# OPTIONS --safe #-}
-
-
+open import Definition.Typed.EqualityRelation
 import Definition.Equiv as E
-import Definition.Typed.EqualityRelation as ER
-module Definition.LogicalRelation.Substitution (equiv : E.Equiv) {{eqrel : ER.EqRelSet equiv}} where
-open import Definition.Typed.EqualityRelation equiv
-
+module Definition.LogicalRelation.Substitution {{eqrel : EqRelSet}} where
 open import Definition.Untyped
-open import Definition.Typed equiv
-open import Definition.LogicalRelation equiv
-
+open import Definition.Typed
+open import Definition.LogicalRelation
 open import Tools.Product
 open import Tools.Unit
-
-
 -- The validity judgements:
 -- We consider expressions that satisfy these judgments valid
-
 mutual
   -- Validity of contexts
   data ⊩ᵛ_ : Con Term → Set where
