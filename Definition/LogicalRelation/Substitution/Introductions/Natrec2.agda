@@ -1,5 +1,5 @@
-import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution.Introductions.Natrec2 where
+open import Definition.Typed.EqualityRelation
+module Definition.LogicalRelation.Substitution.Introductions.Natrec2 {{eqrel : EqRelSet}} where
 open import Definition.Typed.EqualityRelation
 open EqRelSet {{...}}
 open import Definition.Untyped

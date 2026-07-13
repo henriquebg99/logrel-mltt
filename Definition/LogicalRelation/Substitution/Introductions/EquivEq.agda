@@ -1,5 +1,6 @@
 import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution.Introductions.EquivEq where
+open import Definition.Typed.EqualityRelation
+module Definition.LogicalRelation.Substitution.Introductions.EquivEq {{eqrel : EqRelSet}} where
 open import Definition.Typed.EqualityRelation
 open EqRelSet {{...}}
 open import Definition.Untyped
@@ -13,7 +14,7 @@ open import Definition.LogicalRelation.Substitution.Introductions.Nat2
 open import Definition.LogicalRelation.Substitution.MaybeEmbed
 open import Definition.LogicalRelation.Substitution.ProofIrrelevance
 open import Tools.Product
--- Validity of thealence witness between ℕ and ℕ2.
+-- Validity of the equivalence witness between ℕ and ℕ2.
 equivEqᵛ : ∀ {Γ}
   → ([Γ] : ⊩ᵛ Γ)
   → let [U0] = maybeEmbᵛ {A = U ⁰} [Γ] (Uᵛ emb< [Γ])

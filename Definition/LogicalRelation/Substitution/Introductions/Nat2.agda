@@ -1,6 +1,6 @@
-import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution.Introductions.Nat2 where
 open import Definition.Typed.EqualityRelation
+import Definition.Equiv as E
+module Definition.LogicalRelation.Substitution.Introductions.Nat2 {{eqrel : EqRelSet}} where
 open EqRelSet {{...}}
 open import Definition.Untyped
 open import Definition.Typed

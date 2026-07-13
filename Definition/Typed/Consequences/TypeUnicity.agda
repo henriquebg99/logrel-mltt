@@ -22,6 +22,7 @@ type-uniq : ∀ {Γ t T₁ T₂ r₁ l₁ l₂} → Γ ⊢ t ∷ T₁ ^ [ r₁ ,
                  l₁ PE.≡ l₂ × Γ ⊢ T₁ ≡ T₂ ^ [ r₁ , l₁ ]
 type-uniq (univ 0<1 x) (univ 0<1 x') = PE.refl , refl (Ugenⱼ x)
 type-uniq (ℕⱼ x) (ℕⱼ x₁) = PE.refl , refl (Ugenⱼ x)
+type-uniq (ℕ2ⱼ x) (ℕ2ⱼ x₁) = PE.refl , refl (Ugenⱼ x)
 type-uniq (Emptyⱼ x) (Emptyⱼ x₁) = PE.refl , refl (Ugenⱼ x)
 type-uniq (Πⱼ x ▹ x₁ ▹ X ▹ X₁) (Πⱼ x₂ ▹ x₃ ▹ Y ▹ Y₁) =
     let _ , eU = type-uniq X₁ Y₁
@@ -111,11 +112,19 @@ type-uniq {Γ = Γ} (sndⱼ {A} {A'} {rA = %} {B} {B'} X X₁ X₂ Z e) (sndⱼ 
         A≡A , erA , elA , elB , B≡B = injectivity (univ (PE.subst (λ R → Γ ⊢ Π A ^ % ° ⁰ ▹ B ° ⁰ ° ⁰ ^ ! ≡ Π AA ^ ! ° ⁰ ▹ BB ° ⁰ ° ⁰ ^ ! ∷ U ⁰ ^ [ ! , R ]) (PE.sym el) Π≡Π))
     in ⊥-elim (!≢% (PE.sym erA))
 type-uniq (zeroⱼ x) (zeroⱼ x₁) = PE.refl , refl (univ (ℕⱼ x))
+type-uniq (zero2ⱼ x) (zero2ⱼ x₁) = PE.refl , refl (univ (ℕ2ⱼ x))
 type-uniq (sucⱼ X) (sucⱼ Y) = PE.refl , refl (univ (ℕⱼ (wfTerm X)))
+type-uniq (suc2ⱼ X) (suc2ⱼ Y) = PE.refl , refl (univ (ℕ2ⱼ (wfTerm X)))
 type-uniq (natrecⱼ _ x X X₁ X₂) (natrecⱼ _ y Y Y₁ Y₂) =
     let _ , U≡U = type-uniq (un-univ x) (un-univ y)
         er , _ = Uinjectivity U≡U
     in PE.refl , refl (substitution x (singleSubst X₂) (wfTerm X) ) 
+type-uniq (natrec2ⱼ _ x X X₁ X₂) (natrec2ⱼ _ y Y Y₁ Y₂) =
+    let _ , U≡U = type-uniq (un-univ x) (un-univ y)
+        er , _ = Uinjectivity U≡U
+    in PE.refl , refl (substitution x (singleSubst X₂) (wfTerm X) )
+type-uniq (equiv-eqⱼ x) (equiv-eqⱼ x₁) =
+    PE.refl , refl (syntacticTerm (equiv-eqⱼ x))
 type-uniq (Emptyrecⱼ x X) (Emptyrecⱼ y Y) =
     let _ , U≡U = type-uniq (un-univ x) (un-univ y)
         er , _ = Uinjectivity U≡U

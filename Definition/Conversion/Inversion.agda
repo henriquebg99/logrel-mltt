@@ -47,5 +47,8 @@ neutralconv↓ net neu (ne x) = x
 neutralℕconv↓ : ∀ {t u l Γ} → Neutral t → Neutral u → Γ ⊢ t [conv↓] u ∷ ℕ ^  l → Γ ⊢ t ~ u ↓! ℕ ^ l
 neutralℕconv↓ net neu (ℕ-ins x) = x
 
+neutralℕ2conv↓ : ∀ {t u l Γ} → Neutral t → Neutral u → Γ ⊢ t [conv↓] u ∷ ℕ2 ^  l → Γ ⊢ t ~ u ↓! ℕ2 ^ l
+neutralℕ2conv↓ net neu (ℕ2-ins x) = x
+
 neutral↓↑ : ∀ {Γ t u A l} → Γ ⊢ t ~ u ↓! A ^ l → ∃ λ B → Γ ⊢ t ~ u ↑! B ^ l
 neutral↓↑ ([~] A D whnfB k~l) = _ , k~l

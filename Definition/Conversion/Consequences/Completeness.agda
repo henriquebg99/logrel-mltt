@@ -33,3 +33,6 @@ completeEqNeutral net neu t≡u = neutralconv↓ net neu (completeEqTerm↓ Uₙ
 
 completeEqℕ : ∀ {t u l Γ} → Neutral t → Neutral u →  Γ ⊢ t ≡ u ∷ ℕ ^  [ ! , l ] → Γ ⊢ t ~ u ↓! ℕ ^ l
 completeEqℕ net neu t≡u = neutralℕconv↓ net neu (completeEqTerm↓ ℕₙ (ne net) (ne neu) t≡u)
+
+completeEqℕ2 : ∀ {t u l Γ} → Neutral t → Neutral u →  Γ ⊢ t ≡ u ∷ ℕ2 ^  [ ! , l ] → Γ ⊢ t ~ u ↓! ℕ2 ^ l
+completeEqℕ2 net neu t≡u = neutralℕ2conv↓ net neu (completeEqTerm↓ ℕ2ₙ (ne net) (ne neu) t≡u)

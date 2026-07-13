@@ -55,11 +55,15 @@ is-diag~↑! e (cast-refl _ _ _) = true
 is-diag~↑! e (cast-cong _ _ _ _ _) = true
 is-diag~↑! e (castℕ-refl _ _) = true
 is-diag~↑! e (castℕ-refl' _ _) = true
+is-diag~↑! e (castℕ2-refl _ _) = true
+is-diag~↑! e (castℕ2-refl' _ _) = true
 is-diag~↑! (cast-refl _ _ _) e = true
 is-diag~↑! (cast-refl' _ _ _) e = true
 is-diag~↑! (castℕ-refl' _ _) e = true
+is-diag~↑! (castℕ2-refl' _ _) e = true
 is-diag~↑! (cast-cong _ _ _ _ _) e = true
 is-diag~↑! (castℕ-refl _ _) e = true
+is-diag~↑! (castℕ2-refl _ _) e = true
 
 is-diag~↑! (var-refl x x₁) (var-refl y y₁) = true
 is-diag~↑! (var-refl x x₁) e' = false
@@ -67,20 +71,30 @@ is-diag~↑! (app-cong x x₁) (app-cong _ _) = true
 is-diag~↑! (app-cong x x₁) e' = false
 is-diag~↑! (natrec-cong x x₁ x₂ x₃) (natrec-cong  _ _ _ _) = true
 is-diag~↑! (natrec-cong x x₁ x₂ x₃) e' = false
+is-diag~↑! (natrec2-cong x x₁ x₂ x₃) (natrec2-cong  _ _ _ _) = true
+is-diag~↑! (natrec2-cong x x₁ x₂ x₃) e' = false
 is-diag~↑! (Emptyrec-cong x x₁) (Emptyrec-cong _ _) = true
 is-diag~↑! (Emptyrec-cong x x₁) e' = false
 is-diag~↑! (cast-neℕ x x₁ x₂ x₃) (cast-neℕ _ _ _ _) = true
 is-diag~↑! (cast-neℕ x x₁ x₂ x₃) e' = false
+is-diag~↑! (cast-neℕ2 x x₁ x₂ x₃) (cast-neℕ2 _ _ _ _) = true
+is-diag~↑! (cast-neℕ2 x x₁ x₂ x₃) e' = false
 is-diag~↑! (cast-ℕ x x₁ x₂ x₃) (cast-ℕ _ _ _ _) = true
 is-diag~↑! (cast-ℕ x x₁ x₂ x₃) e' = false
+is-diag~↑! (cast-ℕ2 x x₁ x₂ x₃) (cast-ℕ2 _ _ _ _) = true
+is-diag~↑! (cast-ℕ2 x x₁ x₂ x₃) e' = false
 is-diag~↑! (cast-neΠ x x₁ x₂ x₃ x₄) (cast-neΠ _ _ _ _ _) = true
 is-diag~↑! (cast-neΠ x x₁ x₂ x₃ x₄) e' = false
 is-diag~↑! (cast-Π x x₁ x₂ x₃ x₄) (cast-Π _ _ _ _ _) = true
 is-diag~↑! (cast-Π x x₁ x₂ x₃ x₄) e' = false
 is-diag~↑! (cast-Πℕ x x₁ x₂ x₃) (cast-Πℕ _ _ _ _) = true
 is-diag~↑! (cast-Πℕ x x₁ x₂ x₃) e' = false
+is-diag~↑! (cast-Πℕ2 x x₁ x₂ x₃) (cast-Πℕ2 _ _ _ _) = true
+is-diag~↑! (cast-Πℕ2 x x₁ x₂ x₃) e' = false
 is-diag~↑! (cast-ℕΠ x x₁ x₂ x₃) (cast-ℕΠ _ _ _ _) = true
 is-diag~↑! (cast-ℕΠ x x₁ x₂ x₃) e' = false
+is-diag~↑! (cast-ℕ2Π x x₁ x₂ x₃) (cast-ℕ2Π _ _ _ _) = true
+is-diag~↑! (cast-ℕ2Π x x₁ x₂ x₃) e' = false
 is-diag~↑! (cast-ΠΠ%! x x₁ x₂ x₃ x₄) (cast-ΠΠ%! _ _ _ _ _) = true
 is-diag~↑! (cast-ΠΠ%! x x₁ x₂ x₃ x₄) e' = false
 is-diag~↑! (cast-ΠΠ!% x x₁ x₂ x₃ x₄) (cast-ΠΠ!% _ _ _ _ _) = true
@@ -98,7 +112,7 @@ abstract
   not-diag~↑! Γ≡Δ (var-refl x x₁) (Emptyrec-cong x₂ x₃) notdiag = no (λ { (_ , ()) })
   not-diag~↑! Γ≡Δ (var-refl x x₁) (cast-neℕ x₂ x₃ x₄ x₅) notdiag = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ  ;
                                                                            (_ , _ , castℕ-refl' x x₁) → let _ , neℕ , _ = ne~↓! x₂ in noNeℕ neℕ })
-  not-diag~↑! Γ≡Δ (var-refl ⊢x n≡n) (cast-ℕ x X x₂ x₃) notdiag = castℕ-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x) (λ {_ _ ()}) (λ {_ ()}) (λ {()})
+  not-diag~↑! Γ≡Δ (var-refl ⊢x n≡n) (cast-ℕ x X x₂ x₃) notdiag = castℕ-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x) (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
   not-diag~↑! Γ≡Δ (var-refl x x₁) (cast-neΠ x₂ x₃ x₄ x₅ x₆) notdiag = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ  })
   not-diag~↑! Γ≡Δ (var-refl x x₁) (cast-Π x₂ x₃ x₄ x₅ x₆) notdiag = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (var-refl x x₁) (cast-Πℕ x₂ x₃ x₄ x₅) notdiag = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
@@ -109,7 +123,7 @@ abstract
   not-diag~↑! Γ≡Δ (app-cong x~x t≡t) (var-refl x x₁) _ = no (λ { (_ , ()) })
   not-diag~↑! Γ≡Δ (app-cong x~x t≡t) (natrec-cong x x₁ x₂ x₃) _ = no (λ { (_ , ()) })
   not-diag~↑! Γ≡Δ (app-cong x~x t≡t) (Emptyrec-cong x x₁) _ = no (λ { (_ , ()) })
-  not-diag~↑! Γ≡Δ (app-cong x~x t≡t) (cast-ℕ x x₁ x₂ x₃) _ = castℕ-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x) (λ {_ _ ()}) (λ {_ ()}) (λ {()})
+  not-diag~↑! Γ≡Δ (app-cong x~x t≡t) (cast-ℕ x x₁ x₂ x₃) _ = castℕ-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x) (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
   not-diag~↑! Γ≡Δ (app-cong x~x t≡t) (cast-Π x x₁ x₂ x₃ x₄) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (app-cong x~x t≡t) (cast-Πℕ x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (app-cong x~x t≡t) (cast-ℕΠ x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
@@ -122,7 +136,7 @@ abstract
   not-diag~↑! Γ≡Δ (natrec-cong x x₁ x₂ x₃) (var-refl x₄ x₅) _ = no (λ { (_ , ()) })
   not-diag~↑! Γ≡Δ (natrec-cong x x₁ x₂ x₃) (app-cong x₄ x₅) _ = no (λ { (_ , ()) })
   not-diag~↑! Γ≡Δ (natrec-cong x x₁ x₂ x₃) (Emptyrec-cong x₄ x₅) _ = no (λ { (_ , ()) })
-  not-diag~↑! Γ≡Δ (natrec-cong x' x'₁ x'₂ x'₃) (cast-ℕ x x₁ x₂ x₃) _ = castℕ-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x) (λ {_ _ ()}) (λ {_ ()}) (λ {()})
+  not-diag~↑! Γ≡Δ (natrec-cong x' x'₁ x'₂ x'₃) (cast-ℕ x x₁ x₂ x₃) _ = castℕ-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x) (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
   not-diag~↑! Γ≡Δ (natrec-cong x' x'₁ x'₂ x'₃) (cast-Π x x₁ x₂ x₃ x₄) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (natrec-cong x' x'₁ x'₂ x'₃) (cast-Πℕ x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (natrec-cong x' x'₁ x'₂ x'₃) (cast-ℕΠ x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
@@ -131,11 +145,16 @@ abstract
   not-diag~↑! Γ≡Δ (natrec-cong x' x'₁ x'₂ x'₃) (cast-neℕ x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ  ;
                                                                                       (_ , _ , castℕ-refl' x x₁) → let _ , neℕ , _ = ne~↓! x₂ in noNeℕ neℕ })
   not-diag~↑! Γ≡Δ (natrec-cong x' x'₁ x'₂ x'₃) (cast-neΠ x₂ x₃ x₄ x₅ x₆) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ  })
+  not-diag~↑! Γ≡Δ (natrec-cong x' x'₁ x'₂ x'₃) (cast-ℕ2 x x₁ x₂ x₃) _ = castℕ2-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x) (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (natrec-cong x' x'₁ x'₂ x'₃) (cast-Πℕ2 x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (natrec-cong x' x'₁ x'₂ x'₃) (cast-ℕ2Π x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (natrec-cong x' x'₁ x'₂ x'₃) (cast-neℕ2 x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2  ;
+                                                                                      (_ , _ , castℕ2-refl' x x₁) → let _ , neℕ2 , _ = ne~↓! x₂ in noNeℕ2 neℕ2 })
 
   not-diag~↑! Γ≡Δ (Emptyrec-cong x x₁) (var-refl x₂ x₃) _ = no (λ { (_ , ()) })
   not-diag~↑! Γ≡Δ (Emptyrec-cong x x₁) (app-cong x₂ x₃) _ = no (λ { (_ , ()) })
   not-diag~↑! Γ≡Δ (Emptyrec-cong x x₁) (natrec-cong x₂ x₃ x₄ x₅) _ = no (λ { (_ , ()) })
-  not-diag~↑! Γ≡Δ (Emptyrec-cong x' x'₁) (cast-ℕ x x₁ x₂ x₃) _ = castℕ-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x) (λ {_ _ ()}) (λ {_ ()}) (λ {()})
+  not-diag~↑! Γ≡Δ (Emptyrec-cong x' x'₁) (cast-ℕ x x₁ x₂ x₃) _ = castℕ-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x) (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
   not-diag~↑! Γ≡Δ (Emptyrec-cong x' x'₁) (cast-Π x x₁ x₂ x₃ x₄) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (Emptyrec-cong x' x'₁) (cast-Πℕ x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (Emptyrec-cong x' x'₁) (cast-ℕΠ x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
@@ -145,10 +164,11 @@ abstract
                                                                                       (_ , _ , castℕ-refl' x x₁) → let _ , neℕ , _ = ne~↓! x₂ in noNeℕ neℕ })
   not-diag~↑! Γ≡Δ (Emptyrec-cong x' x'₁) (cast-neΠ x₂ x₃ x₄ x₅ x₆) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ  })
 
-  not-diag~↑! Γ≡Δ (cast-neℕ x x₁ x₂ x₃) (var-refl x₄ x₅) _ = castneℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()})
-  not-diag~↑! Γ≡Δ (cast-neℕ x x₁ x₂ x₃) (app-cong x₄ x₅) _ = castneℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()})
-  not-diag~↑! Γ≡Δ (cast-neℕ x x₁ x₂ x₃) (natrec-cong x₄ x₅ x₆ x₇) _ = castneℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()})
-  not-diag~↑! Γ≡Δ (cast-neℕ x x₁ x₂ x₃) (Emptyrec-cong x₄ x₅) _ = castneℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neℕ x x₁ x₂ x₃) (var-refl x₄ x₅) _ = castneℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neℕ x x₁ x₂ x₃) (app-cong x₄ x₅) _ = castneℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neℕ x x₁ x₂ x₃) (natrec-cong x₄ x₅ x₆ x₇) _ = castneℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neℕ x x₁ x₂ x₃) (Emptyrec-cong x₄ x₅) _ = castneℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neℕ x x₁ x₂ x₃) (natrec2-cong x₄ x₅ x₆ x₇) _ = castneℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
   not-diag~↑! Γ≡Δ (cast-neℕ B x₁ x₂ x₃) (cast-ℕΠ x₄ x₅ x₆ x₇) _ =
     no (λ (_ , _ , X) → IE.ℕ≢Π! (cast-cast-≡ X))
   not-diag~↑! Γ≡Δ (cast-neℕ B x₁ x₂ x₃) (cast-ΠΠ%! x₄ x₅ x₆ x₇ x₈) _ =
@@ -164,7 +184,12 @@ abstract
                     (λ e → let _ , _ , eB , _ = cast-PE-injectivity e
                                _ , _ , neB = ne~↓! x₅
                            in noNeℕ (PE.subst Neutral eB neB))
+                    (λ {()})
   not-diag~↑! Γ≡Δ (cast-neℕ x' x₁' x₂' x₃') (cast-ℕ x₂ x₃ x₄ x₅) _ =  no (λ (_ , _ , X) → let _ , _ , neA = ne~↓! x₂ in IE.ℕ≢ne! neA (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-neℕ x' x₁' x₂' x₃') (cast-ℕ2 x₂ x₃ x₄ x₅) _ = no (λ (_ , _ , X) → let _ , _ , neA = ne~↓! x₂ in IE.ℕ≢ne! neA (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-neℕ x₁ x₂ x₃ x₄) (cast-neℕ2 x₅ x₆ x₇ x₈) _ = no (λ (_ , _ , X) → IE.ℕ≢ℕ2! (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-neℕ B x₁ x₂ x₃) (cast-ℕ2Π x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → IE.ℕ≢Π! (cast-cast-≡ X))
   not-diag~↑! Γ≡Δ (cast-neℕ B x₁ x₂ x₃) (cast-Πℕ x₄ x₅ x₆ x₇) _ =
     no (λ { (_ , _ , cast-cong x x₁ x₂ x₃ x₄) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ ;
             (_ , _ , cast-refl x x₁ x₂) → let _ , _ , neℕ = ne~↓! x in noNeℕ neℕ ;
@@ -173,11 +198,15 @@ abstract
             (_ , _ , cast-neℕ x x₁ x₂ x₃) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ ;
             (_ , _ , cast-Π x x₁ x₂ x₃ x₄) → let _ , neΠ , _ = ne~↓! B in noNeΠ neΠ ;
             (_ , _ , cast-Πℕ x x₁ x₂ x₃) → let _ , neΠ , _ = ne~↓! B in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (cast-neℕ B x₁ x₂ x₃) (cast-Πℕ2 x₄ x₅ x₆ x₇) _ =
+    no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2 ;
+            (_ , _ , castℕ-refl x x₁) → let _ , neℕ , _ = ne~↓! B in noNeℕ neℕ })
 
-  not-diag~↑! Γ≡Δ (cast-ℕ x x₁ x₂ x₃) (var-refl x₄ x₅) _ = castℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()})
-  not-diag~↑! Γ≡Δ (cast-ℕ x x₁ x₂ x₃) (app-cong x₄ x₅) _ = castℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()})
-  not-diag~↑! Γ≡Δ (cast-ℕ x x₁ x₂ x₃) (natrec-cong x₄ x₅ x₆ x₇) _ = castℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()})
-  not-diag~↑! Γ≡Δ (cast-ℕ x x₁ x₂ x₃) (Emptyrec-cong x₄ x₅) _ = castℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-ℕ x x₁ x₂ x₃) (var-refl x₄ x₅) _ = castℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-ℕ x x₁ x₂ x₃) (app-cong x₄ x₅) _ = castℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-ℕ x x₁ x₂ x₃) (natrec-cong x₄ x₅ x₆ x₇) _ = castℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-ℕ x x₁ x₂ x₃) (Emptyrec-cong x₄ x₅) _ = castℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-ℕ x x₁ x₂ x₃) (natrec2-cong x₄ x₅ x₆ x₇) _ = castℕ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
   not-diag~↑! Γ≡Δ (cast-ℕ B x₁ x₂ x₃) (cast-Πℕ x₄ x₅ x₆ x₇) _ =
     no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
                         in ℕ≢ne! neR (sym (cast-cast-≡ X)))
@@ -190,6 +219,22 @@ abstract
   not-diag~↑! Γ≡Δ (cast-ℕ B x₁ x₂ x₃) (cast-ΠΠ!% x₄ x₅ x₆ x₇ x₈) _ =
     no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
                         in IE.Π≢ne neR (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-ℕ B x₁ x₂ x₃) (cast-Πℕ2 x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in ℕ2≢ne! neR (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-ℕ B x₁ x₂ x₃) (cast-ℕ2Π x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in IE.Π≢ne neR (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-ℕ x' x₁' x₂' x₃') (cast-ℕ2 x₂ x₃ x₄ x₅) _ =
+    castℕ-refl'-dec~ x'
+                    (λ neA neB e → let _ , eA , _ = cast-PE-injectivity e
+                                   in noNeℕ2 (PE.subst Neutral (PE.sym eA) neA))
+                    (λ neA e → let _ , eA , _ = cast-PE-injectivity e
+                              in ℕ2≢ℕ eA)
+                    (λ {()})
+                    (λ e → let _ , _ , eB , _ = cast-PE-injectivity e
+                               _ , _ , neB = ne~↓! x₂
+                           in noNeℕ2 (PE.subst Neutral eB neB))
   not-diag~↑! Γ≡Δ (cast-ℕ x x₁ x₂ x₃) (cast-Π x₄ x₅ x₆ x₇ x₈) _ =
     castℕ-refl'-dec~ x
                     (λ neA neB e → let _ , eA , _ = cast-PE-injectivity e
@@ -198,14 +243,17 @@ abstract
                     (λ e → let _ , _ , eB , _ = cast-PE-injectivity e
                                _ , _ , neB = ne~↓! x₅
                            in noNeℕ (PE.subst Neutral eB neB))
+                    (λ {()})
   not-diag~↑! Γ≡Δ (cast-ℕ x' x₁' x₂' x₃') (cast-neℕ x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ  ;
                                                                                       (_ , _ , castℕ-refl' x x₁) → let _ , neℕ , _ = ne~↓! x₂ in noNeℕ neℕ })
+  not-diag~↑! Γ≡Δ (cast-ℕ x' x₁' x₂' x₃') (cast-neℕ2 x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2  ;
+                                                                                      (_ , _ , castℕ2-refl' x x₁) → let _ , neℕ2 , _ = ne~↓! x₂ in noNeℕ2 neℕ2 })
   not-diag~↑! Γ≡Δ (cast-ℕ x' x₁' x₂' x₃') (cast-neΠ x₂ x₃ x₄ x₅ x₆) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ  })
 
-  not-diag~↑! Γ≡Δ (cast-neΠ _ x x₁ x₂ x₃) (var-refl x₄ x₅) _ = castneΠ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()})
-  not-diag~↑! Γ≡Δ (cast-neΠ _ x x₁ x₂ x₃) (app-cong x₄ x₅) _ = castneΠ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()})
-  not-diag~↑! Γ≡Δ (cast-neΠ _ x x₁ x₂ x₃) (natrec-cong x₄ x₅ x₆ x₇) _ = castneΠ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()})
-  not-diag~↑! Γ≡Δ (cast-neΠ _ x x₁ x₂ x₃) (Emptyrec-cong x₄ x₅) _ = castneΠ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neΠ _ x x₁ x₂ x₃) (var-refl x₄ x₅) _ = castneΠ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neΠ _ x x₁ x₂ x₃) (app-cong x₄ x₅) _ = castneΠ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neΠ _ x x₁ x₂ x₃) (natrec-cong x₄ x₅ x₆ x₇) _ = castneΠ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neΠ _ x x₁ x₂ x₃) (Emptyrec-cong x₄ x₅) _ = castneΠ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
   not-diag~↑! Γ≡Δ (cast-neΠ _ x x₁ x₂ x₃) (cast-Πℕ x₄ x₅ x₆ x₇) _ =
     no (λ (_ , _ , X) → IE.ℕ≢Π! (sym (cast-cast-≡ X)))
 
@@ -215,12 +263,14 @@ abstract
                                    in noNeΠ (PE.subst Neutral (PE.sym eA) neA))
                     (λ neA e → let _ , eA , _ = cast-PE-injectivity e in noNeΠ (PE.subst Neutral (PE.sym eA) neA) )
                     (λ e → let _ , _ , eB , _ = cast-PE-injectivity e in ℕ≢Π (PE.sym eB))
+                    (λ {()})
   not-diag~↑! Γ≡Δ (cast-neΠ _ x x₁ x₂ x₃) (cast-ΠΠ!% x₄ x₅ x₆ x₇ x₈) _ =
       castneΠ-refl'-dec~ x
                     (λ neA neB e → let _ , eA , _ = cast-PE-injectivity e
                                    in noNeΠ (PE.subst Neutral (PE.sym eA) neA))
                     (λ neA e → let _ , eA , _ = cast-PE-injectivity e in noNeΠ (PE.subst Neutral (PE.sym eA) neA) )
                     (λ e → let _ , _ , eB , _ = cast-PE-injectivity e in ℕ≢Π (PE.sym eB))
+                    (λ {()})
   not-diag~↑! Γ≡Δ (cast-neΠ _ x x₁ x₂ x₃) (cast-Π x₄ x₅ x₆ x₇ x₈) _ =  no (λ (_ , _ , X) → let _ , _ , neA = ne~↓! x₅ in IE.Π≢ne neA (cast-cast-≡ X))
 
   not-diag~↑! Γ≡Δ (cast-neΠ Π x₄ x₅ x₆ x₇) (cast-ℕ x₂ x₃ x₄' x₅') _ = no (λ (_ , _ , X) → let _ , _ , neA = ne~↓! x₂ in IE.Π≢ne neA (cast-cast-≡ X))
@@ -244,6 +294,7 @@ abstract
                       (λ e → let _ , _ , eB , _ = cast-PE-injectivity e
                                  _ , _ , neB = ne~↓! x₁
                              in noNeℕ (PE.subst Neutral eB neB))
+                      (λ {()})
   not-diag~↑! Γ≡Δ (cast-Π x B x₂ x₃ x₄) (cast-Πℕ x₅ x₆ x₇ x₈) _ =
     no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
                         in ℕ≢ne! neR (sym (cast-cast-≡ X)))
@@ -258,12 +309,15 @@ abstract
                         in IE.Π≢ne neR (sym (cast-cast-≡ X)))
   not-diag~↑! Γ≡Δ (cast-Π x' B x₁' x₂' x₃') (cast-neℕ x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ  ;
                                                                                         (_ , _ , castℕ-refl' x x₁) → let _ , neℕ , _ = ne~↓! x₂ in noNeℕ neℕ })
+  not-diag~↑! Γ≡Δ (cast-Π x' B x₁' x₂' x₃') (cast-neℕ2 x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2  ;
+                                                                                        (_ , _ , castℕ2-refl' x x₁) → let _ , neℕ2 , _ = ne~↓! x₂ in noNeℕ2 neℕ2 })
   not-diag~↑! Γ≡Δ (cast-Π x' B x₁' x₂' x₃') (cast-neΠ x₂ x₃ x₄ x₅ x₆) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ  })
 
   not-diag~↑! Γ≡Δ (cast-Πℕ x x₁ x₂ x₃) (var-refl x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (cast-Πℕ x x₁ x₂ x₃) (app-cong x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (cast-Πℕ x x₁ x₂ x₃) (natrec-cong x₅ x₆ x₇ x₈) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (cast-Πℕ x x₁ x₂ x₃) (Emptyrec-cong x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (cast-Πℕ x x₁ x₂ x₃) (natrec2-cong x₅ x₆ x₇ x₈) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (cast-Πℕ x x₁ x₂ x₃) (cast-ℕ B x₅ x₆ x₇) _ =
     no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B in ℕ≢ne! neR (cast-cast-≡ X))
   not-diag~↑! Γ≡Δ (cast-Πℕ x x₁ x₂ x₃) (cast-Π x₄ B x₆ x₇ x₈) _ =
@@ -275,14 +329,23 @@ abstract
     no (λ (_ , _ , X) → ℕ≢Π! (cast-cast-≡ X))
   not-diag~↑! Γ≡Δ (cast-Πℕ x x₁ x₂ x₃) (cast-ΠΠ!% x₄ x₅ x₆ x₇ x₈) _ =
     no (λ (_ , _ , X) → ℕ≢Π! (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-Πℕ x x₁ x₂ x₃) (cast-ℕ2 B x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B in ℕ≢ne! neR (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-Πℕ x x₁ x₂ x₃) (cast-Πℕ2 x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → IE.ℕ≢ℕ2! (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-Πℕ x x₁ x₂ x₃) (cast-ℕ2Π x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → ℕ≢Π! (cast-cast-≡ X))
   not-diag~↑! Γ≡Δ (cast-Πℕ x' x₁' x₂' x₃') (cast-neℕ x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ  ;
                                                                                       (_ , _ , castℕ-refl' x x₁) → let _ , neℕ , _ = ne~↓! x₂ in noNeℕ neℕ })
+  not-diag~↑! Γ≡Δ (cast-Πℕ x' x₁' x₂' x₃') (cast-neℕ2 x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2  ;
+                                                                                      (_ , _ , castℕ2-refl' x x₁) → let _ , neℕ2 , _ = ne~↓! x₂ in noNeℕ2 neℕ2 })
   not-diag~↑! Γ≡Δ (cast-Πℕ x' x₁' x₂' x₃') (cast-neΠ x₂ x₃ x₄ x₅ x₆) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ  })
 
   not-diag~↑! Γ≡Δ (cast-ℕΠ x x₁ x₂ x₃) (var-refl x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ })
   not-diag~↑! Γ≡Δ (cast-ℕΠ x x₁ x₂ x₃) (app-cong x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ })
   not-diag~↑! Γ≡Δ (cast-ℕΠ x x₁ x₂ x₃) (natrec-cong x₅ x₆ x₇ x₈) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ })
   not-diag~↑! Γ≡Δ (cast-ℕΠ x x₁ x₂ x₃) (Emptyrec-cong x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ })
+  not-diag~↑! Γ≡Δ (cast-ℕΠ x x₁ x₂ x₃) (natrec2-cong x₅ x₆ x₇ x₈) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ })
   not-diag~↑! Γ≡Δ (cast-ℕΠ x x₁ x₂ x₃) (cast-ℕ B x₅ x₆ x₇) _ =
       no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
                           in IE.Π≢ne neR (cast-cast-≡ X))
@@ -301,16 +364,28 @@ abstract
             (_ , _ , cast-refl () x₁ x₂) ;
             (_ , _ , cast-refl' () x₁ x₂) ;
             (_ , _ , cast-neΠ x () x₂ x₃ x₄)})
+  not-diag~↑! Γ≡Δ (cast-ℕΠ x x₁ x₂ x₃) (cast-Πℕ2 x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → ℕ2≢Π! (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-ℕΠ x x₁ x₂ x₃) (cast-ℕ2 B x₅ x₆ x₇) _ =
+      no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                          in IE.Π≢ne neR (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-ℕΠ x x₁ x₂ x₃) (cast-ℕ2Π x₄ x₅ x₆ x₇) _ =
+    no (λ { (_ , _ , cast-cong () x₁ x₂ x₃ x₄) ;
+            (_ , _ , cast-refl () x₁ x₂) ;
+            (_ , _ , cast-refl' () x₁ x₂) ;
+            (_ , _ , cast-neΠ x () x₂ x₃ x₄)})
 
   not-diag~↑! Γ≡Δ (cast-ℕΠ x' x₁' x₂' x₃') (cast-neℕ x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ  ;
                                                                                       (_ , _ , castℕ-refl' x x₁) → let _ , neℕ , _ = ne~↓! x₂ in noNeℕ neℕ })
+  not-diag~↑! Γ≡Δ (cast-ℕΠ x' x₁' x₂' x₃') (cast-neℕ2 x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2  ;
+                                                                                      (_ , _ , castℕ2-refl' x x₁) → let _ , neℕ2 , _ = ne~↓! x₂ in noNeℕ2 neℕ2 })
   not-diag~↑! Γ≡Δ (cast-ℕΠ x' x₁' x₂' x₃') (cast-neΠ x₂ x₃ x₄ x₅ x₆) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ  })
-
 
   not-diag~↑! Γ≡Δ (cast-ΠΠ%! x x₁ x₂ x₃ x₄) (var-refl x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (cast-ΠΠ%! x x₁ x₂ x₃ x₄) (app-cong x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (cast-ΠΠ%! x x₁ x₂ x₃ x₄) (natrec-cong x₅ x₆ x₇ x₈) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (cast-ΠΠ%! x x₁ x₂ x₃ x₄) (Emptyrec-cong x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (cast-ΠΠ%! x x₁ x₂ x₃ x₄) (natrec2-cong x₅ x₆ x₇ x₈) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (cast-ΠΠ%! x x₁ x₂ x₃ x₄) (cast-ℕ B x₅ x₆ x₇) _ =
     no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
                         in IE.Π≢ne neR (cast-cast-≡ X))
@@ -330,12 +405,15 @@ abstract
             (_ , _ , cast-refl' () x₁ x₂)})
   not-diag~↑! Γ≡Δ (cast-ΠΠ%! x' x₁' x₂' x₃' x₄') (cast-neℕ x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ  ;
                                                                                       (_ , _ , castℕ-refl' x x₁) → let _ , neℕ , _ = ne~↓! x₂ in noNeℕ neℕ })
+  not-diag~↑! Γ≡Δ (cast-ΠΠ%! x' x₁' x₂' x₃' x₄') (cast-neℕ2 x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2  ;
+                                                                                      (_ , _ , castℕ2-refl' x x₁) → let _ , neℕ2 , _ = ne~↓! x₂ in noNeℕ2 neℕ2 })
   not-diag~↑! Γ≡Δ (cast-ΠΠ%! x' x₁' x₂' x₃' x₄') (cast-neΠ x₂ x₃ x₄ x₅ x₆) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ  })
 
   not-diag~↑! Γ≡Δ (cast-ΠΠ!% x x₁ x₂ x₃ x₄) (var-refl x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (cast-ΠΠ!% x x₁ x₂ x₃ x₄) (app-cong x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (cast-ΠΠ!% x x₁ x₂ x₃ x₄) (natrec-cong x₅ x₆ x₇ x₈) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (cast-ΠΠ!% x x₁ x₂ x₃ x₄) (Emptyrec-cong x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (cast-ΠΠ!% x x₁ x₂ x₃ x₄) (natrec2-cong x₅ x₆ x₇ x₈) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
   not-diag~↑! Γ≡Δ (cast-ΠΠ!% x x₁ x₂ x₃ x₄) (cast-ℕ B x₅ x₆ x₇) _ =
     no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
                         in IE.Π≢ne neR (cast-cast-≡ X))
@@ -355,7 +433,253 @@ abstract
             (_ , _ , cast-refl' () x₁ x₂)})
   not-diag~↑! Γ≡Δ (cast-ΠΠ!% x' x₁' x₂' x₃' x₄') (cast-neℕ x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ  ;
                                                                                       (_ , _ , castℕ-refl' x x₁) → let _ , neℕ , _ = ne~↓! x₂ in noNeℕ neℕ })
+  not-diag~↑! Γ≡Δ (cast-ΠΠ!% x' x₁' x₂' x₃' x₄') (cast-neℕ2 x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2  ;
+                                                                                      (_ , _ , castℕ2-refl' x x₁) → let _ , neℕ2 , _ = ne~↓! x₂ in noNeℕ2 neℕ2 })
   not-diag~↑! Γ≡Δ (cast-ΠΠ!% x' x₁' x₂' x₃' x₄') (cast-neΠ x₂ x₃ x₄ x₅ x₆) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ  })
+
+  not-diag~↑! Γ≡Δ (var-refl x x₁) (natrec2-cong x₂ x₃ x₄ x₅) notdiag = no (λ { (_ , ()) })
+  not-diag~↑! Γ≡Δ (var-refl x x₁) (cast-neℕ2 x₂ x₃ x₄ x₅) notdiag = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2  ;
+                                                                           (_ , _ , castℕ2-refl' x x₁) → let _ , neℕ2 , _ = ne~↓! x₂ in noNeℕ2 neℕ2 })
+  not-diag~↑! Γ≡Δ (var-refl ⊢x n≡n) (cast-ℕ2 x X x₂ x₃) notdiag = castℕ2-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x) (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (var-refl x x₁) (cast-Πℕ2 x₂ x₃ x₄ x₅) notdiag = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (var-refl x x₁) (cast-ℕ2Π x₂ x₃ x₄ x₅) notdiag = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+
+  not-diag~↑! Γ≡Δ (app-cong x~x t≡t) (natrec2-cong x x₁ x₂ x₃) _ = no (λ { (_ , ()) })
+  not-diag~↑! Γ≡Δ (app-cong x~x t≡t) (cast-ℕ2 x x₁ x₂ x₃) _ = castℕ2-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x) (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (app-cong x~x t≡t) (cast-Πℕ2 x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (app-cong x~x t≡t) (cast-ℕ2Π x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (app-cong x~x t≡t) (cast-neℕ2 x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2  ;
+                                                                         (_ , _ , castℕ2-refl' x x₁) → let _ , neℕ2 , _ = ne~↓! x₂ in noNeℕ2 neℕ2 })
+
+  not-diag~↑! Γ≡Δ (natrec-cong x x₁ x₂ x₃) (natrec2-cong x₄ x₅ x₆ x₇) _ = no (λ { (_ , ()) })
+  not-diag~↑! Γ≡Δ (natrec2-cong x x₁ x₂ x₃) (var-refl x₄ x₅) _ = no (λ { (_ , ()) })
+  not-diag~↑! Γ≡Δ (natrec2-cong x x₁ x₂ x₃) (app-cong x₄ x₅) _ = no (λ { (_ , ()) })
+  not-diag~↑! Γ≡Δ (natrec2-cong x x₁ x₂ x₃) (natrec-cong x₄ x₅ x₆ x₇) _ = no (λ { (_ , ()) })
+  not-diag~↑! Γ≡Δ (natrec2-cong x x₁ x₂ x₃) (Emptyrec-cong x₄ x₅) _ = no (λ { (_ , ()) })
+  not-diag~↑! Γ≡Δ (natrec2-cong x' x'₁ x'₂ x'₃) (cast-ℕ x x₁ x₂ x₃) _ = castℕ-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x) (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (natrec2-cong x' x'₁ x'₂ x'₃) (cast-Π x x₁ x₂ x₃ x₄) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (natrec2-cong x' x'₁ x'₂ x'₃) (cast-Πℕ x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (natrec2-cong x' x'₁ x'₂ x'₃) (cast-ℕΠ x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (natrec2-cong x' x'₁ x'₂ x'₃) (cast-ℕ2 x x₁ x₂ x₃) _ = castℕ2-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x) (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (natrec2-cong x' x'₁ x'₂ x'₃) (cast-Πℕ2 x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (natrec2-cong x' x'₁ x'₂ x'₃) (cast-ℕ2Π x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (natrec2-cong x' x'₁ x'₂ x'₃) (cast-ΠΠ%! x x₁ x₂ x₃ x₄) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (natrec2-cong x' x'₁ x'₂ x'₃) (cast-ΠΠ!% x x₁ x₂ x₃ x₄) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (natrec2-cong x' x'₁ x'₂ x'₃) (cast-neℕ x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ  ;
+                                                                                      (_ , _ , castℕ-refl' x x₁) → let _ , neℕ , _ = ne~↓! x₂ in noNeℕ neℕ })
+  not-diag~↑! Γ≡Δ (natrec2-cong x' x'₁ x'₂ x'₃) (cast-neℕ2 x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2  ;
+                                                                                      (_ , _ , castℕ2-refl' x x₁) → let _ , neℕ2 , _ = ne~↓! x₂ in noNeℕ2 neℕ2 })
+  not-diag~↑! Γ≡Δ (natrec2-cong x' x'₁ x'₂ x'₃) (cast-neΠ x₂ x₃ x₄ x₅ x₆) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ  })
+
+  not-diag~↑! Γ≡Δ (Emptyrec-cong x x₁) (natrec2-cong x₂ x₃ x₄ x₅) _ = no (λ { (_ , ()) })
+  not-diag~↑! Γ≡Δ (Emptyrec-cong x' x'₁) (cast-ℕ2 x x₁ x₂ x₃) _ = castℕ2-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x) (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (Emptyrec-cong x' x'₁) (cast-Πℕ2 x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (Emptyrec-cong x' x'₁) (cast-ℕ2Π x x₁ x₂ x₃) _ =  no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (Emptyrec-cong x' x'₁) (cast-neℕ2 x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2  ;
+                                                                                      (_ , _ , castℕ2-refl' x x₁) → let _ , neℕ2 , _ = ne~↓! x₂ in noNeℕ2 neℕ2 })
+
+  not-diag~↑! Γ≡Δ (cast-neℕ2 x x₁ x₂ x₃) (var-refl x₄ x₅) _ = castneℕ2-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neℕ2 x x₁ x₂ x₃) (app-cong x₄ x₅) _ = castneℕ2-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neℕ2 x x₁ x₂ x₃) (natrec-cong x₄ x₅ x₆ x₇) _ = castneℕ2-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neℕ2 x x₁ x₂ x₃) (natrec2-cong x₄ x₅ x₆ x₇) _ = castneℕ2-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neℕ2 x x₁ x₂ x₃) (Emptyrec-cong x₄ x₅) _ = castneℕ2-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neℕ2 B x₁ x₂ x₃) (cast-ℕ2Π x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → IE.ℕ2≢Π! (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-neℕ2 B x₁ x₂ x₃) (cast-ΠΠ%! x₄ x₅ x₆ x₇ x₈) _ =
+    no (λ (_ , _ , X) → IE.ℕ2≢Π! (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-neℕ2 B x₁ x₂ x₃) (cast-ΠΠ!% x₄ x₅ x₆ x₇ x₈) _ =
+    no (λ (_ , _ , X) → IE.ℕ2≢Π! (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-neℕ2 x₁ x₂ x₃ x₄) (cast-neΠ x₅ x₆ x₇ x₈ x₉) _ = no (λ (_ , _ , X) → IE.ℕ2≢Π! (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-neℕ2 x x₁ x₂ x₃) (cast-Π x₄ x₅ x₆ x₇ x₈) _ =
+    castneℕ2-refl'-dec~ x
+                    (λ neA neB e → let _ , eA , _ = cast-PE-injectivity e
+                                   in noNeΠ (PE.subst Neutral (PE.sym eA) neA))
+                    (λ neA e → let _ , eA , _ = cast-PE-injectivity e in noNeΠ (PE.subst Neutral (PE.sym eA) neA) )
+                    (λ e → let _ , _ , eB , _ = cast-PE-injectivity e
+                               _ , _ , neB = ne~↓! x₅
+                           in noNeℕ (PE.subst Neutral eB neB))
+                    (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neℕ2 x' x₁' x₂' x₃') (cast-ℕ2 x₂ x₃ x₄ x₅) _ =  no (λ (_ , _ , X) → let _ , _ , neA = ne~↓! x₂ in IE.ℕ2≢ne! neA (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-neℕ2 x' x₁' x₂' x₃') (cast-ℕ x₂ x₃ x₄ x₅) _ =  no (λ (_ , _ , X) → let _ , _ , neA = ne~↓! x₂ in IE.ℕ2≢ne! neA (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-neℕ2 x₁ x₂ x₃ x₄) (cast-neℕ x₅ x₆ x₇ x₈) _ = no (λ (_ , _ , X) → IE.ℕ2≢ℕ! (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-neℕ2 B x₁ x₂ x₃) (cast-ℕΠ x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → IE.ℕ2≢Π! (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-neℕ2 B x₁ x₂ x₃) (cast-Πℕ2 x₄ x₅ x₆ x₇) _ =
+    no (λ { (_ , _ , cast-cong x x₁ x₂ x₃ x₄) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ ;
+            (_ , _ , cast-refl x x₁ x₂) → let _ , _ , neℕ2 = ne~↓! x in noNeℕ2 neℕ2 ;
+            (_ , _ , castℕ2-refl x x₁) → let _ , neℕ2 , _ = ne~↓! B in noNeℕ2 neℕ2 ;
+            (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2 ;
+            (_ , _ , cast-neℕ2 x x₁ x₂ x₃) → let _ , _ , neΠ = ne~↓! x in noNeΠ neΠ ;
+            (_ , _ , cast-Π x x₁ x₂ x₃ x₄) → let _ , neΠ , _ = ne~↓! B in noNeΠ neΠ ;
+            (_ , _ , cast-Πℕ2 x x₁ x₂ x₃) → let _ , neΠ , _ = ne~↓! B in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (cast-neℕ2 B x₁ x₂ x₃) (cast-Πℕ x₄ x₅ x₆ x₇) _ =
+    no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ ;
+            (_ , _ , castℕ2-refl x x₁) → let _ , neℕ2 , _ = ne~↓! B in noNeℕ2 neℕ2 })
+
+  not-diag~↑! Γ≡Δ (cast-ℕ2 x x₁ x₂ x₃) (var-refl x₄ x₅) _ = castℕ2-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-ℕ2 x x₁ x₂ x₃) (app-cong x₄ x₅) _ = castℕ2-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-ℕ2 x x₁ x₂ x₃) (natrec-cong x₄ x₅ x₆ x₇) _ = castℕ2-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-ℕ2 x x₁ x₂ x₃) (natrec2-cong x₄ x₅ x₆ x₇) _ = castℕ2-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-ℕ2 x x₁ x₂ x₃) (Emptyrec-cong x₄ x₅) _ = castℕ2-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-ℕ2 B x₁ x₂ x₃) (cast-Πℕ2 x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in ℕ2≢ne! neR (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-ℕ2 B x₁ x₂ x₃) (cast-ℕ2Π x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in IE.Π≢ne neR (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-ℕ2 B x₁ x₂ x₃) (cast-ΠΠ%! x₄ x₅ x₆ x₇ x₈) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in IE.Π≢ne neR (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-ℕ2 B x₁ x₂ x₃) (cast-ΠΠ!% x₄ x₅ x₆ x₇ x₈) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in IE.Π≢ne neR (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-ℕ2 B x₁ x₂ x₃) (cast-Πℕ x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in ℕ≢ne! neR (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-ℕ2 B x₁ x₂ x₃) (cast-ℕΠ x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in IE.Π≢ne neR (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-ℕ2 x' x₁' x₂' x₃') (cast-ℕ x₂ x₃ x₄ x₅) _ =
+    castℕ2-refl'-dec~ x'
+                     (λ neA neB e → let _ , eA , _ = cast-PE-injectivity e
+                                    in noNeℕ (PE.subst Neutral (PE.sym eA) neA))
+                     (λ neA e → let _ , eA , _ = cast-PE-injectivity e
+                               in ℕ≢ℕ2 eA)
+                     (λ e → let _ , _ , eB , _ = cast-PE-injectivity e
+                                _ , _ , neB = ne~↓! x₂
+                            in noNeℕ (PE.subst Neutral eB neB))
+                     (λ {()})
+  not-diag~↑! Γ≡Δ (cast-ℕ2 x x₁ x₂ x₃) (cast-Π x₄ x₅ x₆ x₇ x₈) _ =
+    castℕ2-refl'-dec~ x
+                    (λ neA neB e → let _ , eA , _ = cast-PE-injectivity e
+                                   in noNeΠ (PE.subst Neutral (PE.sym eA) neA))
+                    (λ neA e → let _ , eA , _ = cast-PE-injectivity e in ℕ2≢Π (PE.sym eA))
+                    (λ e → let _ , _ , eB , _ = cast-PE-injectivity e
+                               _ , _ , neB = ne~↓! x₅
+                           in noNeℕ (PE.subst Neutral eB neB))
+                    (λ {()})
+  not-diag~↑! Γ≡Δ (cast-ℕ2 x' x₁' x₂' x₃') (cast-neℕ2 x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2  ;
+                                                                                      (_ , _ , castℕ2-refl' x x₁) → let _ , neℕ2 , _ = ne~↓! x₂ in noNeℕ2 neℕ2 })
+  not-diag~↑! Γ≡Δ (cast-ℕ2 x' x₁' x₂' x₃') (cast-neℕ x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ  ;
+                                                                                      (_ , _ , castℕ-refl' x x₁) → let _ , neℕ , _ = ne~↓! x₂ in noNeℕ neℕ })
+  not-diag~↑! Γ≡Δ (cast-ℕ2 x' x₁' x₂' x₃') (cast-neΠ x₂ x₃ x₄ x₅ x₆) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ  })
+
+  not-diag~↑! Γ≡Δ (cast-neΠ _ x x₁ x₂ x₃) (natrec2-cong x₄ x₅ x₆ x₇) _ = castneΠ-refl'-dec~ x (λ {_ _ ()}) (λ {_ ()}) (λ {()}) (λ {()})
+  not-diag~↑! Γ≡Δ (cast-neΠ _ x x₁ x₂ x₃) (cast-Πℕ2 x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → IE.ℕ2≢Π! (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-neΠ Π x₄ x₅ x₆ x₇) (cast-ℕ2 x₂ x₃ x₄' x₅') _ = no (λ (_ , _ , X) → let _ , _ , neA = ne~↓! x₂ in IE.Π≢ne neA (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-neΠ Π x₄ x₅ x₆ x₇) (cast-neℕ2 x₂ x₃ x₄' x₅') _ = no (λ (_ , _ , X) → IE.ℕ2≢Π! (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-neΠ Π x₄' x₅' x₆' x₇') (cast-ℕ2Π x₄ x₅ x₆ x₇) _ =
+    no (λ { (_ , _ , cast-cong x x₁ x₂ x₃ x₄) → let _ , _ , neΠ = ne~↓! x in noNeℕ2 neΠ ;
+            (_ , _ , cast-refl x x₁ x₂) → let _ , _ , neℕ2 = ne~↓! x in noNeΠ neℕ2 ;
+            (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeΠ neℕ2 ;
+            (_ , _ , cast-neΠ _ x x₁ x₂ x₃) → let _ , _ , neΠ = ne~↓! x in noNeℕ2 neΠ })
+
+  not-diag~↑! Γ≡Δ (cast-Π x x₁ x₂ x₃ x₄) (natrec2-cong x₅ x₆ x₇ x₈) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (cast-Π x x₁ x₂ x₃ x₄) (cast-ℕ2 x₅ x₆ x₇ x₈) _ =
+      castℕ2-refl-dec~ (stability~↓! (symConEq Γ≡Δ) x₅)
+                      (λ neA neB e → let _ , eA , _ = cast-PE-injectivity e
+                                     in noNeΠ (PE.subst Neutral (PE.sym eA) neA))
+                      (λ neA e → let _ , eA , _ = cast-PE-injectivity e in ℕ2≢Π (PE.sym eA))
+                      (λ e → let _ , _ , eB , _ = cast-PE-injectivity e
+                                 _ , _ , neB = ne~↓! x₁
+                             in noNeℕ (PE.subst Neutral eB neB))
+                      (λ {()})
+  not-diag~↑! Γ≡Δ (cast-Π x B x₂ x₃ x₄) (cast-Πℕ2 x₅ x₆ x₇ x₈) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in ℕ2≢ne! neR (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-Π x B x₂ x₃ x₄) (cast-ℕ2Π x₅ x₆ x₇ x₈) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in IE.Π≢ne neR (sym (cast-cast-≡ X)))
+
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) (var-refl x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) (app-cong x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) (natrec-cong x₅ x₆ x₇ x₈) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) (natrec2-cong x₅ x₆ x₇ x₈) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) (Emptyrec-cong x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ })
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) (cast-ℕ2 B x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B in ℕ2≢ne! neR (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) (cast-ℕ B x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B in ℕ2≢ne! neR (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) (cast-Π x₄ B x₆ x₇ x₈) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in ℕ2≢ne! neR (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) (cast-ℕ2Π x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → ℕ2≢Π! (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) (cast-Πℕ x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → IE.ℕ2≢ℕ! (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) (cast-ℕΠ x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → ℕ2≢Π! (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) (cast-ΠΠ%! x₄ x₅ x₆ x₇ x₈) _ =
+    no (λ (_ , _ , X) → ℕ2≢Π! (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) (cast-ΠΠ!% x₄ x₅ x₆ x₇ x₈) _ =
+    no (λ (_ , _ , X) → ℕ2≢Π! (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x' x₁' x₂' x₃') (cast-neℕ2 x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2  ;
+                                                                                      (_ , _ , castℕ2-refl' x x₁) → let _ , neℕ2 , _ = ne~↓! x₂ in noNeℕ2 neℕ2 })
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x' x₁' x₂' x₃') (cast-neℕ x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ  ;
+                                                                                      (_ , _ , castℕ-refl' x x₁) → let _ , neℕ , _ = ne~↓! x₂ in noNeℕ neℕ })
+  not-diag~↑! Γ≡Δ (cast-Πℕ2 x' x₁' x₂' x₃') (cast-neΠ x₂ x₃ x₄ x₅ x₆) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ  })
+
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) (var-refl x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2 })
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) (app-cong x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2 })
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) (natrec-cong x₅ x₆ x₇ x₈) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2 })
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) (natrec2-cong x₅ x₆ x₇ x₈) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2 })
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) (Emptyrec-cong x₅ x₆) _ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2 })
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) (cast-ℕ B x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in IE.Π≢ne neR (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) (cast-ℕ2 B x₅ x₆ x₇) _ =
+      no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                          in IE.Π≢ne neR (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) (cast-Π x₄ B x₆ x₇ x₈) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in IE.Π≢ne neR (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) (cast-Πℕ x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → ℕ≢Π! (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) (cast-Πℕ2 x₄ x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → ℕ2≢Π! (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) (cast-ℕΠ x₄ x₅ x₆ x₇) _ =
+    no (λ { (_ , _ , cast-cong () x₁ x₂ x₃ x₄) ;
+            (_ , _ , cast-refl () x₁ x₂) ;
+            (_ , _ , cast-refl' () x₁ x₂) ;
+            (_ , _ , cast-neΠ x () x₂ x₃ x₄)})
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) (cast-ΠΠ%! x₄ x₅ x₆ x₇ x₈) _ =
+    no (λ { (_ , _ , cast-cong () x₁ x₂ x₃ x₄) ;
+            (_ , _ , cast-refl () x₁ x₂) ;
+            (_ , _ , cast-refl' () x₁ x₂) ;
+            (_ , _ , cast-neΠ x () x₂ x₃ x₄)})
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) (cast-ΠΠ!% x₄ x₅ x₆ x₇ x₈) _ =
+    no (λ { (_ , _ , cast-cong () x₁ x₂ x₃ x₄) ;
+            (_ , _ , cast-refl () x₁ x₂) ;
+            (_ , _ , cast-refl' () x₁ x₂) ;
+            (_ , _ , cast-neΠ x () x₂ x₃ x₄)})
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x' x₁' x₂' x₃') (cast-neℕ2 x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ2 , _ = ne~↓! x in noNeℕ2 neℕ2  ;
+                                                                                      (_ , _ , castℕ2-refl' x x₁) → let _ , neℕ2 , _ = ne~↓! x₂ in noNeℕ2 neℕ2 })
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x' x₁' x₂' x₃') (cast-neℕ x₂ x₃ x₄ x₅) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neℕ , _ = ne~↓! x in noNeℕ neℕ  ;
+                                                                                      (_ , _ , castℕ-refl' x x₁) → let _ , neℕ , _ = ne~↓! x₂ in noNeℕ neℕ })
+  not-diag~↑! Γ≡Δ (cast-ℕ2Π x' x₁' x₂' x₃') (cast-neΠ x₂ x₃ x₄ x₅ x₆) _ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neΠ , _ = ne~↓! x in noNeΠ neΠ  })
+
+  not-diag~↑! Γ≡Δ (cast-ΠΠ%! x x₁ x₂ x₃ x₄) (cast-ℕ2 B x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in IE.Π≢ne neR (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-ΠΠ%! x x₁ x₂ x₃ x₄) (cast-Πℕ2 A x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → ℕ2≢Π! (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-ΠΠ%! x x₁ x₂ x₃ x₄) (cast-ℕ2Π x₅ x₆ x₇ x₈) _ =
+    no (λ { (_ , _ , cast-cong () x₁ x₂ x₃ x₄) ;
+            (_ , _ , cast-refl () x₁ x₂) ;
+            (_ , _ , cast-refl' () x₁ x₂) ;
+            (_ , _ , cast-neΠ x () x₂ x₃ x₄)})
+
+  not-diag~↑! Γ≡Δ (cast-ΠΠ!% x x₁ x₂ x₃ x₄) (cast-ℕ2 B x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → let _ , _ , neR = ne~↓! B
+                        in IE.Π≢ne neR (cast-cast-≡ X))
+  not-diag~↑! Γ≡Δ (cast-ΠΠ!% x x₁ x₂ x₃ x₄) (cast-Πℕ2 A x₅ x₆ x₇) _ =
+    no (λ (_ , _ , X) → ℕ2≢Π! (sym (cast-cast-≡ X)))
+  not-diag~↑! Γ≡Δ (cast-ΠΠ!% x x₁ x₂ x₃ x₄) (cast-ℕ2Π x₅ x₆ x₇ x₈) _ =
+    no (λ { (_ , _ , cast-cong () x₁ x₂ x₃ x₄) ;
+            (_ , _ , cast-refl () x₁ x₂) ;
+            (_ , _ , cast-refl' () x₁ x₂) ;
+            (_ , _ , cast-neΠ x () x₂ x₃ x₄)})
 
 -- data view~↑! : ∀ {k k' l l' R T Γ Δ lR lT}
 --         → (e : Γ ⊢ k ~ k' ↑! R ^ lR)

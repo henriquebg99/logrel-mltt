@@ -56,6 +56,9 @@ neutralconvTerm~↑! neA (ne-ins x x₁ x₂ ([~] A D whnfB k~l)) = _ , k~l
 noNeℕ : Neutral ℕ → ⊥
 noNeℕ ()
 
+noNeℕ2 : Neutral ℕ2 → ⊥
+noNeℕ2 ()
+
 noNe0 : Neutral zero → ⊥
 noNe0 ()
 
@@ -76,8 +79,14 @@ noNeUniv ()
 neutralZero : Neutral zero → ⊥
 neutralZero ()
 
+neutralZero2 : Neutral zero2 → ⊥
+neutralZero2 ()
+
 neutralSuc : ∀ {n} → Neutral (suc n) → ⊥
 neutralSuc ()
+
+neutralSuc2 : ∀ {n} → Neutral (suc2 n) → ⊥
+neutralSuc2 ()
 
 noℕ~ℕ : ∀ {Γ X l} → Γ ⊢ ℕ ~ ℕ ↓! X ^ l → ⊥
 noℕ~ℕ ()
@@ -177,11 +186,44 @@ decConv↓Term-ℕ-ins (zero-refl x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃))
 decConv↓Term-ℕ-ins (zero-refl x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂))
   with ne~↓! x₁
 ... | _ , () , _
+decConv↓Term-ℕ-ins (zero-refl x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂))
+  with ne~↓! x₁
+... | _ , () , _
 decConv↓Term-ℕ-ins (suc-cong x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) =
   let _ , _ , neA = ne~↓! x₁
       e = whnfRed* D (ne neA)
   in ⊥-elim (ℕ≢ne neA (PE.sym e))
 decConv↓Term-ℕ-ins (suc-cong x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂))
+  with ne~↓! x₁
+... | _ , () , _
+decConv↓Term-ℕ-ins (suc-cong x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂))
+  with ne~↓! x₁
+... | _ , () , _
+
+decConv↓Term-ℕ2-ins : ∀ {t u v Γ l}
+ → Γ ⊢ t [conv↓] u ∷ ℕ2 ^ l
+ → Γ ⊢ t ~ v ↓! ℕ2 ^ l
+ → Γ ⊢ t ~ u ↓! ℕ2 ^ l
+decConv↓Term-ℕ2-ins (ℕ2-ins x) t~t = x
+decConv↓Term-ℕ2-ins (ne-ins x x₁ () x₃) t~t
+decConv↓Term-ℕ2-ins (zero2-refl x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) =
+  let _ , _ , neA = ne~↓! x₁
+      e = whnfRed* D (ne neA)
+  in ⊥-elim (ℕ2≢ne neA (PE.sym e))
+decConv↓Term-ℕ2-ins (zero2-refl x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂))
+  with ne~↓! x₁
+... | _ , () , _
+decConv↓Term-ℕ2-ins (zero2-refl x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂))
+  with ne~↓! x₁
+... | _ , () , _
+decConv↓Term-ℕ2-ins (suc2-cong x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) =
+  let _ , _ , neA = ne~↓! x₁
+      e = whnfRed* D (ne neA)
+  in ⊥-elim (ℕ2≢ne neA (PE.sym e))
+decConv↓Term-ℕ2-ins (suc2-cong x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂))
+  with ne~↓! x₁
+... | _ , () , _
+decConv↓Term-ℕ2-ins (suc2-cong x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂))
   with ne~↓! x₁
 ... | _ , () , _
 
@@ -197,6 +239,9 @@ decConv↓Term-U-ins (Π-cong x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉) ([~]
                                                                               
 decConv↓Term-U-ins (Π-cong x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉) ([~] .ℕ D whnfB (castℕ-refl' x x₁₀)) =
   let e = whnfRed* D ℕₙ in ⊥-elim (U≢ℕ (PE.sym e))
+
+decConv↓Term-U-ins (Π-cong x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉) ([~] .ℕ2 D whnfB (castℕ2-refl' x x₁₀)) =
+  let e = whnfRed* D ℕ2ₙ in ⊥-elim (U≢ℕ2 (PE.sym e))
 
 decConv↓Term-ne-ins : ∀ {t u A Γ l}
   → Neutral A
@@ -220,12 +265,46 @@ decConv↓Term-ℕ (zero-refl x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) ¬u
 decConv↓Term-ℕ (zero-refl x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂)) ¬u~u
  with ne~↓! x₁
 ... | _ , () , _
+decConv↓Term-ℕ (zero-refl x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂)) ¬u~u
+ with ne~↓! x₁
+... | _ , () , _
 decConv↓Term-ℕ (suc-cong x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) ¬u~u =
   let _ , _ , neA = ne~↓! x₁
       e = whnfRed* D (ne neA)
   in ⊥-elim (ℕ≢ne neA (PE.sym e))
 decConv↓Term-ℕ (suc-cong x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂)) ¬u~u
  with ne~↓! x₁
+... | _ , () , _
+decConv↓Term-ℕ (suc-cong x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂)) ¬u~u
+ with ne~↓! x₁
+... | _ , () , _
+
+decConv↓Term-ℕ2 : ∀ {t u v Γ l}
+  → Γ ⊢ t [conv↓] u ∷ ℕ2 ^ l
+  → Γ ⊢ t ~ v ↓! ℕ2 ^ l
+  → ¬ (Γ ⊢ t ~ u ↓! ℕ2 ^ l)
+  → ⊥
+decConv↓Term-ℕ2 (ℕ2-ins x) t~t ¬u~u = ¬u~u x
+decConv↓Term-ℕ2 (ne-ins x x₁ () x₃) t~t ¬u~u
+decConv↓Term-ℕ2 (zero2-refl x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) ¬u~u =
+  let _ , _ , neA = ne~↓! x₁
+      e = whnfRed* D (ne neA)
+  in ⊥-elim (ℕ2≢ne neA (PE.sym e))
+decConv↓Term-ℕ2 (zero2-refl x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂)) ¬u~u
+  with ne~↓! x₁
+... | _ , () , _
+decConv↓Term-ℕ2 (zero2-refl x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂)) ¬u~u
+  with ne~↓! x₁
+... | _ , () , _
+decConv↓Term-ℕ2 (suc2-cong x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) ¬u~u =
+  let _ , _ , neA = ne~↓! x₁
+      e = whnfRed* D (ne neA)
+  in ⊥-elim (ℕ2≢ne neA (PE.sym e))
+decConv↓Term-ℕ2 (suc2-cong x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂)) ¬u~u
+  with ne~↓! x₁
+... | _ , () , _
+decConv↓Term-ℕ2 (suc2-cong x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂)) ¬u~u
+  with ne~↓! x₁
 ... | _ , () , _
 
 decConv↓Term-U : ∀ {t u v Γ r lU l}
@@ -240,6 +319,8 @@ decConv↓Term-U (Π-cong x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉ x₁₀) ([~] 
   in ⊥-elim (U≢ne neA (PE.sym e))
 decConv↓Term-U (Π-cong x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉ x₁₀) ([~] .ℕ D whnfB (castℕ-refl' x x₁₀')) ¬u~u =
   let e = whnfRed* D ℕₙ in ⊥-elim (U≢ℕ (PE.sym e))
+decConv↓Term-U (Π-cong x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉ x₁₀) ([~] .ℕ2 D whnfB (castℕ2-refl' x x₁₀')) ¬u~u =
+  let e = whnfRed* D ℕ2ₙ in ⊥-elim (U≢ℕ2 (PE.sym e))
 
 
 abstract -- Agda will do some slow unfolding without abstract
@@ -335,6 +416,9 @@ abstract
 
   castℕInv : ∀ {l e t} → Neutral (cast l ℕ ℕ e t) → Neutral t 
   castℕInv (castℕℕₙ net) = net
+
+  castℕ2Inv : ∀ {l e t} → Neutral (cast l ℕ2 ℕ2 e t) → Neutral t 
+  castℕ2Inv (castℕ2ℕ2ₙ net) = net
 
   cast-t-≡ : ∀ {Γ A B B' t t' e X lX} 
                 → Γ ⊢ t' ∷ B' ^ [ ! , ι ⁰ ]

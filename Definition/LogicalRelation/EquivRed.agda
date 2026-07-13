@@ -23,26 +23,6 @@ open import Tools.Product
 open import Tools.Empty using (⊥-elim)
 import Tools.PropositionalEquality as PE
 
-instance eqrelInstance : ER.EqRelSet equiv
-eqrelInstance = eqrel
-
-open import Definition.Typed.EqualityRelation
-open EqRelSet {{...}}
-open import Definition.Untyped hiding (wk)
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.RedSteps
-import Definition.Typed.Weakening equiv as Twk
-open Twk using (_∷_⊆_)
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Irrelevance
-import Definition.LogicalRelation.Weakening equiv as Lwk
-
-open import Tools.Product
-open import Tools.Empty using (⊥-elim)
-import Tools.PropositionalEquality as PE
-
 Πℕℕ2 : ∀ {Γ} → (⊢Γ : ⊢ Γ) →
   Γ ⊩⟨ ι ⁰ ⟩ Π ℕ ^ ! ° ⁰ ▹ ℕ2 ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ]
 Πℕℕ2 {Γ} ⊢Γ =

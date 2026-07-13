@@ -60,6 +60,19 @@ mutual
         c = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₂)) (size-symConv↑Term Γ≡Δ x₂)
         d = PE.trans (size-subst B≡ℕ u~t) (size-sym~↓! Γ≡Δ t~u)
     in PE.cong₄ (λ X Y Z T → 1 + X + Y + Z + T) a b c d
+  size-sym~↑! Γ≡Δ (natrec2-cong x x₁ x₂ t~u) =
+    let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
+        B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
+        B≡ℕ2 = ℕ2≡A A≡B whnfB
+        F≡G = stabilityEq (Γ≡Δ ∙ refl (univ (ℕ2ⱼ ⊢Γ))) (soundnessConv↑ x)
+        F[0]≡G[0] = substTypeEq F≡G (refl (zero2ⱼ ⊢Δ))
+        a : sizeConv↑ (symConv↑ (Γ≡Δ ∙ (refl (univ (ℕ2ⱼ ⊢Γ)))) x) PE.≡ sizeConv↑ x
+        a = size-symConv↑ (Γ≡Δ ∙ (refl (univ (ℕ2ⱼ ⊢Γ)))) x
+        b : sizeConv↑Term (convConvTerm (symConv↑Term Γ≡Δ x₁) F[0]≡G[0]) PE.≡ sizeConv↑Term x₁
+        b = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₁)) (size-symConv↑Term Γ≡Δ x₁)
+        c = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₂)) (size-symConv↑Term Γ≡Δ x₂)
+        d = PE.trans (size-subst B≡ℕ2 u~t) (size-sym~↓! Γ≡Δ t~u)
+    in PE.cong₄ (λ X Y Z T → 1 + X + Y + Z + T) a b c d
   size-sym~↑! Γ≡Δ (Emptyrec-cong x t~u) =
     let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
         u~t = sym~↑% Γ≡Δ t~u
@@ -218,6 +231,7 @@ mutual
         a = PE.trans (size-subst U≡B u~t) (size-sym~↓! Γ≡Δ t~u)
     in PE.cong (λ X → 1 + X) a
   size-symConv↓Term Γ≡Δ (ℕ-refl x) = PE.refl
+  size-symConv↓Term Γ≡Δ (ℕ2-refl x) = PE.refl
   size-symConv↓Term Γ≡Δ (Empty-refl x) = PE.refl
   size-symConv↓Term Γ≡Δ (Π-cong PE.refl PE.refl PE.refl PE.refl l< l<' x A<>B A<>B₁) =
     let F≡H = soundnessConv↑Term A<>B
@@ -233,11 +247,18 @@ mutual
         B≡ℕ = ℕ≡A A≡B whnfB
         a = PE.trans (size-subst B≡ℕ u~t) (size-sym~↓! Γ≡Δ t~u)
     in PE.cong (λ X → 1 + X) a
+  size-symConv↓Term Γ≡Δ (ℕ2-ins t~u) =
+    let B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
+        B≡ℕ2 = ℕ2≡A A≡B whnfB
+        a = PE.trans (size-subst B≡ℕ2 u~t) (size-sym~↓! Γ≡Δ t~u)
+    in PE.cong (λ X → 1 + X) a
   size-symConv↓Term Γ≡Δ (ne-ins t u x t~u) =
     let B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
     in PE.cong (λ X → 1 + X) (size-sym~↓! Γ≡Δ t~u)
   size-symConv↓Term Γ≡Δ (zero-refl x) = PE.refl
+  size-symConv↓Term Γ≡Δ (zero2-refl x) = PE.refl
   size-symConv↓Term Γ≡Δ (suc-cong x) = PE.cong (λ X → 1 + X) (size-symConv↑Term Γ≡Δ x)
+  size-symConv↓Term Γ≡Δ (suc2-cong x) = PE.cong (λ X → 1 + X) (size-symConv↑Term Γ≡Δ x)
   size-symConv↓Term Γ≡Δ (η-eq l< l<' x x₁ x₂ y y₁ t<>u) =
     PE.cong (λ X → 1 + X) (size-symConv↑Term (Γ≡Δ ∙ refl x) t<>u)
 

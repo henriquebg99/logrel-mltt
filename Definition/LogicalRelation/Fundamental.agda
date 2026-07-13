@@ -47,6 +47,7 @@ open import Tools.Unit
 open import Tools.Nat
 import Tools.PropositionalEquality as PE
 open import Tools.Empty using (⊥; ⊥-elim)
+open import Definition.LogicalRelation.EquivRed
   -- Fundamental theorem for contexts.
 valid : ∀ {Γ} → ⊢ Γ → ⊩ᵛ Γ
 fundamental : ∀ {Γ A rA} (⊢A : Γ ⊢ A ^ rA) → Σ (⊩ᵛ Γ) (λ [Γ] → Γ ⊩ᵛ⟨ ∞ ⟩ A ^ rA / [Γ])
@@ -102,7 +103,7 @@ embFwdᵛ [Γ] {σ = σ₀} ⊢Δ [σ₀] =
         let [Πσ′] = proj₁ ([Π] ⊢Δ [σ′])
         in irrelevanceTerm″ (PE.sym (subst-Πℕℕ2 σ′)) PE.refl PE.refl (PE.sym (subst-emb-fwd-closed σ′))
                              (maybeEmb {l = ι ⁰} [ΠΔ]) [Πσ′]
-                             (maybeEmbTerm {l = ι ⁰} [ΠΔ] (EquivRed.[fwd] (equivRed eqrel) ⊢Δ))
+                             (maybeEmbTerm {l = ι ⁰} [ΠΔ] (EquivRed.[fwd] equivRed ⊢Δ))
       [fwdσ] = fwdAt {σ′ = σ₀} [σ₀]
   in [fwdσ]
   , λ {σ′} [σ′] [σ≡σ′] →
@@ -133,7 +134,7 @@ embBwdᵛ [Γ] {σ = σ₀} ⊢Δ [σ₀] =
         let [Πσ′] = proj₁ ([Π] ⊢Δ [σ′])
         in irrelevanceTerm″ (PE.sym (subst-Πℕ2ℕ σ′)) PE.refl PE.refl (PE.sym (subst-emb-bwd-closed σ′))
                              (maybeEmb {l = ι ⁰} [ΠΔ]) [Πσ′]
-                             (maybeEmbTerm {l = ι ⁰} [ΠΔ] (EquivRed.[bwd] (equivRed eqrel) ⊢Δ))
+                             (maybeEmbTerm {l = ι ⁰} [ΠΔ] (EquivRed.[bwd] equivRed ⊢Δ))
       [bwdσ] = bwdAt {σ′ = σ₀} [σ₀]
   in [bwdσ]
   , λ {σ′} [σ′] [σ≡σ′] →

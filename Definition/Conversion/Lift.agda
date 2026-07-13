@@ -20,6 +20,10 @@ open import Definition.Typed.Consequences.Reduction
 open import Definition.Typed.Consequences.Equality
 open import Tools.Product
 import Tools.PropositionalEquality as PE
+
+
+
+
 -- Lifting of algorithmic equality of types from WHNF to generic types.
 liftConv : ∀ {A B rA Γ}
           → Γ ⊢ A [conv↓] B ^ rA
@@ -66,7 +70,7 @@ mutual
         neT , neU = ne~↑! k~l
         ⊢Γ = wf ⊢F
         var0 = neuTerm ([F] (step id) (⊢Γ ∙ ⊢F)) (var 0) (var (⊢Γ ∙ ⊢F) here)
-                       (~-var (var (⊢Γ ∙ ⊢F) here))
+                       (genRefl (var (⊢Γ ∙ ⊢F) here))
         0≡0 = lift~toConv↑′ ([F] (step id) (⊢Γ ∙ ⊢F)) (var-refl′ (var (⊢Γ ∙ ⊢F) here))
         k∘0≡l∘0 = lift~toConv↑′ ([G] (step id) (⊢Γ ∙ ⊢F) var0)
                                 (~↑! (app-cong (wk~↓! (step id) (⊢Γ ∙ ⊢F) ([~] A D₂ Πₙ k~l)) 0≡0))
@@ -79,7 +83,7 @@ mutual
         neT , neU = ne~↑! k~l
         ⊢Γ = wf ⊢F
         var0 = neuTerm ([F] (step id) (⊢Γ ∙ ⊢F)) (var 0) (var (⊢Γ ∙ ⊢F) here)
-                       (~-var (var (⊢Γ ∙ ⊢F) here))
+                       (genRefl (var (⊢Γ ∙ ⊢F) here))
         k∘0≡l∘0 = lift~toConv↑′ ([G] (step id) (⊢Γ ∙ ⊢F) var0)
                                  (~↑! (app-cong (wk~↓! (step id) (⊢Γ ∙ ⊢F) ([~] A D₂ Πₙ k~l)) (%~↑ (var (⊢Γ ∙ ⊢F) here) (var (⊢Γ ∙ ⊢F) here))))
     in  η-eq l< l<' ⊢F ⊢t ⊢u (ne neT) (ne neU)

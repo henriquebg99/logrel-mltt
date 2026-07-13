@@ -32,8 +32,8 @@ open import Tools.Empty using (⊥; ⊥-elim)
 import Tools.Unit as TU
 import Tools.PropositionalEquality as PE
 
-import Definition.LogicalRelation.EquivRed
-postulate equivRed : EquivRed
+import Definition.LogicalRelation.EquivRed as ERd
+postulate equivRed : ERd.EquivRed
 
 ~-irrelevanceTerm : ∀ {t t' u u' A A' r Γ} (eqA : A PE.≡ A') (eqt : t PE.≡ t') (equ : u PE.≡ u')
                   → Γ ⊢ t ~ u ∷ A ^ r
@@ -541,8 +541,8 @@ postulate equivRed : EquivRed
       ⊢e′ℕB′ = conv ⊢e′ (univ (Id-cong (refl (univ 0<1 (wf ⊢B'))) (un-univ≡ (subset* DA')) (refl (un-univ ⊢B'))))
       [ℕ] = ℕᵣ (idRed:*: (univ (ℕⱼ ⊢Γ)))
       [ℕ2] = ℕ2ᵣ (idRed:*: (univ (ℕ2ⱼ ⊢Γ)))
-      [Π] = Πℕℕ2 ⊢Γ
-      [fwd] = EquivRed.[fwd] (equivRed eqrel) ⊢Γ
+      [Π] = ERd.Πℕℕ2 ⊢Γ
+      [fwd] = ERd.EquivRed.[fwd] (equivRed) ⊢Γ
       [A≡ℕ] = id (univ (ℕⱼ ⊢Γ))
       [tℕ] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕᵣ natA) [ℕ] [A≡ℕ] [t]
       [t′ℕ] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕᵣ natA') [ℕ] [A≡ℕ] [t′]
@@ -597,8 +597,8 @@ postulate equivRed : EquivRed
       ⊢e′ℕ2A′ = conv ⊢e′ (univ (Id-cong (refl (univ 0<1 (wf ⊢B'))) (un-univ≡ (subset* DA')) (refl (un-univ ⊢B'))))
       [ℕ] = ℕᵣ (idRed:*: (univ (ℕⱼ ⊢Γ)))
       [ℕ2] = ℕ2ᵣ (idRed:*: (univ (ℕ2ⱼ ⊢Γ)))
-      [Π] = Πℕ2ℕ ⊢Γ
-      [bwd] = EquivRed.[bwd] (equivRed eqrel) ⊢Γ
+      [Π] = ERd.Πℕ2ℕ ⊢Γ
+      [bwd] = ERd.EquivRed.[bwd] (equivRed) ⊢Γ
       [A≡ℕ2] = id (univ (ℕ2ⱼ ⊢Γ))
       [tℕ2] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕ2ᵣ nat2A) [ℕ2] [A≡ℕ2] [t]
       [t′ℕ2] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕ2ᵣ nat2A') [ℕ2] [A≡ℕ2] [t′]
@@ -686,8 +686,8 @@ postulate equivRed : EquivRed
          ⊢eℕB = conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B))) (un-univ≡ (subset* DA)) (refl (un-univ ⊢B))))
          [ℕ] = ℕᵣ (idRed:*: (univ (ℕⱼ ⊢Γ)))
          [ℕ2] = ℕ2ᵣ (idRed:*: (univ (ℕ2ⱼ ⊢Γ)))
-         [Π] = Πℕℕ2 ⊢Γ
-         [fwd] = EquivRed.[fwd] (equivRed eqrel) ⊢Γ
+         [Π] = ERd.Πℕℕ2 ⊢Γ
+         [fwd] = ERd.EquivRed.[fwd] (equivRed) ⊢Γ
          [A≡ℕ] = id (univ (ℕⱼ ⊢Γ))
          [tℕ] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕᵣ natD) [ℕ] [A≡ℕ] [t]
          [fwd∘t] = appTerm PE.refl [ℕ] [ℕ2] [Π] [fwd] [tℕ]
@@ -705,8 +705,8 @@ postulate equivRed : EquivRed
          ⊢eℕ2A = conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢A))) (un-univ≡ (subset* DB)) (refl (un-univ ⊢A))))
          [ℕ] = ℕᵣ (idRed:*: (univ (ℕⱼ ⊢Γ)))
          [ℕ2] = ℕ2ᵣ (idRed:*: (univ (ℕ2ⱼ ⊢Γ)))
-         [Π] = Πℕ2ℕ ⊢Γ
-         [bwd] = EquivRed.[bwd] (equivRed eqrel) ⊢Γ
+         [Π] = ERd.Πℕ2ℕ ⊢Γ
+         [bwd] = ERd.EquivRed.[bwd] (equivRed) ⊢Γ
          [B≡ℕ2] = id (univ (ℕ2ⱼ ⊢Γ))
          [tℕ2] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕ2ᵣ nat2D) [ℕ2] [B≡ℕ2] [t]
          [bwd∘t] = appTerm PE.refl [ℕ2] [ℕ] [Π] [bwd] [tℕ2]
@@ -725,8 +725,8 @@ postulate equivRed : EquivRed
          ⊢eℕ2A = conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢A))) (un-univ≡ (subset* DB)) (refl (un-univ ⊢A))))
          [ℕ] = ℕᵣ (idRed:*: (univ (ℕⱼ ⊢Γ)))
          [ℕ2] = ℕ2ᵣ (idRed:*: (univ (ℕ2ⱼ ⊢Γ)))
-         [Π] = Πℕ2ℕ ⊢Γ
-         [bwd] = EquivRed.[bwd] (equivRed eqrel) ⊢Γ
+         [Π] = ERd.Πℕ2ℕ ⊢Γ
+         [bwd] = ERd.EquivRed.[bwd] (equivRed) ⊢Γ
          [B≡ℕ2] = id (univ (ℕ2ⱼ ⊢Γ))
          [tℕ2] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕ2ᵣ x) [ℕ2] [B≡ℕ2] [t]
          [bwd∘t] = appTerm PE.refl [ℕ2] [ℕ] [Π] [bwd] [tℕ2]
@@ -744,8 +744,8 @@ postulate equivRed : EquivRed
          ⊢eℕB = conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B))) (un-univ≡ (subset* DA)) (refl (un-univ ⊢B))))
          [ℕ] = ℕᵣ (idRed:*: (univ (ℕⱼ ⊢Γ)))
          [ℕ2] = ℕ2ᵣ (idRed:*: (univ (ℕ2ⱼ ⊢Γ)))
-         [Π] = Πℕℕ2 ⊢Γ
-         [fwd] = EquivRed.[fwd] (equivRed eqrel) ⊢Γ
+         [Π] = ERd.Πℕℕ2 ⊢Γ
+         [fwd] = ERd.EquivRed.[fwd] (equivRed) ⊢Γ
          [A≡ℕ] = id (univ (ℕⱼ ⊢Γ))
          [tℕ] = convTerm₁ {l = ι ⁰} {l′ = ι ⁰} (ℕᵣ x₁) [ℕ] [A≡ℕ] [t]
          [fwd∘t] = appTerm PE.refl [ℕ] [ℕ2] [Π] [fwd] [tℕ]
