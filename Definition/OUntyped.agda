@@ -5,6 +5,7 @@ open import Tools.Product
 open import Tools.List
 import Tools.PropositionalEquality as PE
 open import Definition.Sort
+import Definition.SUntyped as S
 infix 30 Π_^_°_▹_°_°_^_
 infixr 22 _^_°_▹▹_°_°_^_
 infixl 30 _ₛ•ₛ_ _•ₛ_ _ₛ•_
@@ -13,6 +14,7 @@ infix 25 _[_]↑
 
 data Kind : Set where
   Ukind : Relevance → Level → Kind
+  Indkind : Nat → Kind
   Pikind : Relevance → Level → Level → Level → Relevance → Kind
   Natkind : Kind
   Lamkind : Level → Kind
@@ -35,6 +37,7 @@ data Kind : Set where
   Zero2kind : Kind
   Suc2kind : Kind
   Natrec2kind : Level → Kind
+  Ctrkind : Nat → Nat → Kind -- index of inductive type, index of constructor
 
 data Term : Set where
   var : (x : Nat) → Term
@@ -143,6 +146,14 @@ cast l A B e t = gen (Castkind l) (⟦ 0 , A ⟧ ∷ ⟦ 0 , B ⟧ ∷ ⟦ 0 , e
 castrefl : (A t : Term) → Term
 castrefl A t = gen Castreflkind (⟦ 0 , A ⟧ ∷ ⟦ 0 , t ⟧ ∷ [])
 
+-- inductive type
+Ind : Nat -> Term
+Ind i = gen (Indkind i) []
+
+-- constructor
+ctr : Nat -> Nat -> List Term -> Term
+ctr i j ts = gen (Ctrkind i j) (map (λ t → ⟦ 0 , t ⟧) ts)
+
 -- Injectivity of term constructors w.r.t. propositional equality.
 
 -- If  Π F G = Π H E  then  F = H  and  G = E.
@@ -169,6 +180,7 @@ Univ-PE-injectivity PE.refl = PE.refl , PE.refl
 -- either it has a variable in head position that blocks reduction.
 -- either it is of the form Emptyrec (or terms that should reduce to emptyrec, such as incompatible casts)
 
+-- FIXME add missing cases
 data Neutral : Term → Set where
   var     : ∀ n                     → Neutral (var n)
   ∘ₙ      : ∀ {k u l}     → Neutral k → Neutral (k ∘ u ^ l)
@@ -198,6 +210,7 @@ data Whnf : Term → Set where
   ℕₙ    : Whnf ℕ
   ℕ2ₙ   : Whnf ℕ2
   Emptyₙ : ∀ {l} → Whnf (Empty l)
+  Indₙ : ∀ {i} → Whnf (Ind i)
 
   -- Introductions are whnfs.
   lamₙ  : ∀ {A t l} → Whnf (lam A ▹ t ^ l)
@@ -205,6 +218,7 @@ data Whnf : Term → Set where
   sucₙ  : ∀ {t} → Whnf (suc t)
   zero2ₙ : Whnf zero2
   suc2ₙ  : ∀ {t} → Whnf (suc2 t)
+  ctrₙ : ∀ {i j ts} → Whnf (ctr i j ts)
 
   -- Neutrals are whnfs.
   ne   : ∀ {n} → Neutral n → Whnf n
@@ -215,6 +229,7 @@ data Whnf : Term → Set where
 -- Different whnfs are trivially distinguished by propositional equality.
 -- (The following statements are sometimes called "no-confusion theorems".)
 
+-- FIXME not of them are necessary
 U≢ℕ : ∀ {r l} → Univ r l PE.≢ ℕ
 U≢ℕ ()
 
@@ -317,6 +332,14 @@ suc≢zero2 ()
 suc≢suc2 : ∀ {n} → suc n PE.≢ suc2 n
 suc≢suc2 ()
 
+Ind≢ne : ∀ {i K} → Neutral K → Ind i PE.≢ K
+Ind≢ne () PE.refl
+
+Ctr≢ne : ∀ {i j ts K} → Neutral K → ctr i j ts PE.≢ K
+Ctr≢ne () PE.refl
+
+Ind≢Ctr : ∀ {i j k ts} → Ind i PE.≢ ctr j k ts
+Ind≢Ctr ()
 
 -- Several views on whnfs (note: not recursive).
 
@@ -485,6 +508,19 @@ wkFunction : ∀ {t} ρ → Function t → Function (wk ρ t)
 wkFunction ρ lamₙ    = lamₙ
 wkFunction ρ (ne x) = ne (wkNeutral ρ x)
 
+map-map : ∀ {A B C} (f : B → C) (g : A → B) (xs : List A)
+  → map f (map g xs) PE.≡ map (λ x → f (g x)) xs
+map-map f g [] = PE.refl
+map-map f g (x ∷ xs) = PE.cong (f (g x) ∷_) (map-map f g xs)
+
+wkGen-map0 : ∀ ρ ts → wkGen ρ (map (λ t → ⟦ 0 , t ⟧) ts) PE.≡ map (λ t → ⟦ 0 , wk ρ t ⟧) ts
+wkGen-map0 ρ [] = PE.refl
+wkGen-map0 ρ (t ∷ ts) = PE.cong (⟦ 0 , wk ρ t ⟧ ∷_) (wkGen-map0 ρ ts)
+
+map-map0-wkGen : ∀ ρ ts
+  → map (λ t → ⟦ 0 , t ⟧) (map (wk ρ) ts) PE.≡ wkGen ρ (map (λ t → ⟦ 0 , t ⟧) ts)
+map-map0-wkGen ρ ts = PE.trans (map-map (λ t → ⟦ 0 , t ⟧) (wk ρ) ts) (PE.sym (wkGen-map0 ρ ts))
+
 wkWhnf : ∀ {t} ρ → Whnf t → Whnf (wk ρ t)
 wkWhnf ρ Uₙ      = Uₙ
 wkWhnf ρ Πₙ      = Πₙ
@@ -498,6 +534,8 @@ wkWhnf ρ sucₙ    = sucₙ
 wkWhnf ρ zero2ₙ  = zero2ₙ
 wkWhnf ρ suc2ₙ   = suc2ₙ
 wkWhnf ρ (ne x) = ne (wkNeutral ρ x)
+wkWhnf ρ (ctrₙ {i} {j} {ts}) = PE.subst Whnf (PE.cong (gen (Ctrkind i j)) (map-map0-wkGen ρ ts)) (ctrₙ {ts = map (wk ρ) ts})
+wkWhnf ρ Indₙ = Indₙ
 
 -- Non-dependent version of Π.
 
@@ -665,3 +703,20 @@ sUnit =  Π sEmpty ^ % ° ⁰ ▹ sEmpty ° ⁰ ° ⁰ ^ %
 
 Idsym : (A x y e : Term) → Term
 Idsym A x y e = transp A (Id (wk1 A) (var 0) (wk1 x)) x (Idrefl A x) y e
+
+
+-- embedding of simple terms into OTerm
+emb-stype-oterm : S.Type -> Term
+emb-stype-oterm (S.Ind i) = gen (Indkind i) []
+emb-stype-oterm (S.Arrow A B) = Π (emb-stype-oterm A) ^ ! ° ⁰ ▹ emb-stype-oterm B ° ⁰ ° ⁰ ^ !
+
+mutual
+  emb-sterm-oterm : S.Term -> Term
+  emb-sterm-oterm (S.var x) = var x
+  emb-sterm-oterm (S.app f a) = (emb-sterm-oterm f) ∘ (emb-sterm-oterm a) ^ ⁰
+  emb-sterm-oterm (S.lam A t) = lam (emb-stype-oterm A) ▹ emb-sterm-oterm t ^ ⁰
+  emb-sterm-oterm (S.ctr i j args) = ctr i j (emb-sterm-oterm-all args)
+
+  emb-sterm-oterm-all : List S.Term → List Term
+  emb-sterm-oterm-all [] = []
+  emb-sterm-oterm-all (t ∷ ts) = emb-sterm-oterm t ∷ emb-sterm-oterm-all ts

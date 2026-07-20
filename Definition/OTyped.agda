@@ -1,10 +1,16 @@
 module Definition.OTyped where
 open import Definition.OUntyped
 open import Tools.Nat using (Nat)
+import Agda.Builtin.Nat as BuiltinNat
 open import Tools.Product
 open import Tools.Empty
+open import Tools.List using (List; map)
+import Tools.List as TL
 import Tools.PropositionalEquality as PE
 open import Definition.Sort
+import Definition.SUntyped as SU
+import Definition.STyped as ST
+
 infixl 30 _∙_
 infix 30 Πⱼ_▹_▹_▹_
 
@@ -101,6 +107,10 @@ mutual
            → Γ       ⊢ s ∷ Π ℕ2 ^ ! ° ⁰ ▹ (G ^ rG ° lG ▹▹ G [ suc2 (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ [ rG , ι lG ]
            → Γ       ⊢ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
            → Γ       ⊢ natrec2 lG G z s n ∷ G [ n ] ^ [ rG , ι lG ]
+    Indⱼ    : ∀ {n} → ⊢ Γ → Γ ⊢ Ind n ∷ U ⁰ ^ [ ! , ι ¹ ]
+    Ctrⱼ    : ∀ {i j args}
+           → Γ ⊢All args ∷ map emb-stype-oterm (SU.ctrArgsTypeList i j)
+           → Γ ⊢ ctr i j args ∷ Ind i ^ [ ! , ι ⁰ ]
     Emptyrecⱼ : ∀ {A lA rA e}
            → Γ ⊢ A ^ [ rA , ι lA ] → Γ ⊢ e ∷ sEmpty ^ [ % ,  ι ⁰ ] -> Γ ⊢ Emptyrec lA ⁰ A e ∷ A ^ [ rA , ι lA ]
     Idⱼ : ∀ {A l t u}
@@ -129,6 +139,14 @@ mutual
            → Γ ⊢ t ∷ A ^ r
            → Γ ⊢ A ≡ B ^ r
            → Γ ⊢ t ∷ B ^ r
+
+  -- Well-typed lists of terms
+  data _⊢All_∷_ (Γ : Con Term) : List Term → List Term → Set where
+    εⱼ   : Γ ⊢All TL.[] ∷ TL.[]
+    consⱼ  : ∀ {t ts A As}
+         → Γ ⊢ t ∷ A ^ [ ! , ι ⁰ ]
+         → Γ ⊢All ts ∷ As
+         → Γ ⊢All (t TL.∷ ts) ∷ (A TL.∷ As)
 
   -- Type equality
   data _⊢_≡_^_ (Γ : Con Term) : Term → Term → TypeInfo → Set where
@@ -506,3 +524,115 @@ Unitⱼ ⊢Γ = Πⱼ (λ abs → ⊥-elim (!≢% (PE.sym abs))) ▹ (λ _ → P
 Ugenⱼ : ∀ {r Γ l} → ⊢ Γ → Γ ⊢ Univ r l ^ [ ! , next l ]
 Ugenⱼ {l = ⁰} ⊢Γ = univ (univ 0<1 ⊢Γ)
 Ugenⱼ {l = ¹} ⊢Γ = Uⱼ ⊢Γ
+
+
+-- embedding of simple terms into OTerm preserves typing
+
+emb-scon : ST.Con → Con Term
+emb-scon TL.[] = ε
+emb-scon (A TL.∷ Γ) = emb-scon Γ ∙ emb-stype-oterm A ^ [ ! , ι ⁰ ]
+
+emb-stype-oterm-has-type : ∀ (A : SU.Type) {Γ} → ⊢ Γ → Γ ⊢ emb-stype-oterm A ∷ U ⁰ ^ [ ! , next ⁰ ]
+emb-stype-oterm-has-type (SU.Ind n) ⊢Γ = Indⱼ ⊢Γ
+emb-stype-oterm-has-type (SU.Arrow A B) ⊢Γ =
+  Πⱼ (λ _ → ⁰min ⁰ , ⁰min ⁰) ▹ (λ ()) ▹ (emb-stype-oterm-has-type A ⊢Γ)
+     ▹ (emb-stype-oterm-has-type B (⊢Γ ∙ univ (emb-stype-oterm-has-type A ⊢Γ)))
+
+emb-stype-oterm-wf : ∀ (A : SU.Type) {Γ} → ⊢ Γ → Γ ⊢ emb-stype-oterm A ^ [ ! , ι ⁰ ]
+emb-stype-oterm-wf A ⊢Γ = univ (emb-stype-oterm-has-type A ⊢Γ)
+
+emb-scon-wf : ∀ Γ → ⊢ (emb-scon Γ)
+emb-scon-wf TL.[] = ε
+emb-scon-wf (A TL.∷ Γ) = emb-scon-wf Γ ∙ emb-stype-oterm-wf A (emb-scon-wf Γ)
+
+mutual
+  emb-stype-wk-id : ∀ A ρ → wk ρ (emb-stype-oterm A) PE.≡ emb-stype-oterm A
+  emb-stype-wk-id (SU.Ind _) ρ = PE.refl
+  emb-stype-wk-id (SU.Arrow A B) ρ =
+    PE.cong (gen (Pikind ! ⁰ ⁰ ⁰ !)) (emb-stype-wkGen-id A B ρ)
+
+  emb-stype-wkGen-id : ∀ A B ρ
+    → wkGen ρ (⟦ 0 , emb-stype-oterm A ⟧ TL.∷ ⟦ 1 , emb-stype-oterm B ⟧ TL.∷ TL.[])
+    PE.≡ (⟦ 0 , emb-stype-oterm A ⟧ TL.∷ ⟦ 1 , emb-stype-oterm B ⟧ TL.∷ TL.[])
+  emb-stype-wkGen-id A B ρ =
+    PE.cong₂ TL._∷_
+      (PE.cong (λ t → ⟦ 0 , t ⟧) (emb-stype-wk-id A (repeat lift ρ 0)))
+      (PE.cong₂ TL._∷_
+        (PE.cong (λ t → ⟦ 1 , t ⟧) (emb-stype-wk-id B (repeat lift ρ 1)))
+        PE.refl)
+
+emb-stype-wk1n-id : ∀ A n → repeat wk1 (emb-stype-oterm A) n PE.≡ emb-stype-oterm A
+emb-stype-wk1n-id A BuiltinNat.zero = PE.refl
+emb-stype-wk1n-id A (BuiltinNat.suc n) =
+  PE.trans (PE.cong wk1 (emb-stype-wk1n-id A n)) (emb-stype-wk-id A (step id))
+
+emb-st-var-wk-depth : ∀ {x A Γ} → x ST.∷ A ∈ Γ → Nat
+emb-st-var-wk-depth ST.here = 1
+emb-st-var-wk-depth (ST.there h) = BuiltinNat.suc (emb-st-var-wk-depth h)
+
+emb-st-var∈ : ∀ {x A Γ} (h : x ST.∷ A ∈ Γ)
+  → x ∷ repeat wk1 (emb-stype-oterm A) (emb-st-var-wk-depth h) ^ [ ! , ι ⁰ ] ∈ emb-scon Γ
+emb-st-var∈ ST.here = here
+emb-st-var∈ (ST.there h) = there (emb-st-var∈ h)
+
+emb-st-wkTy≡ : ∀ {Γ A} d → ⊢ (emb-scon Γ)
+  → emb-scon Γ ⊢ repeat wk1 (emb-stype-oterm A) d ≡ emb-stype-oterm A ^ [ ! , ι ⁰ ]
+emb-st-wkTy≡ {Γ} {A} d ⊢Γ =
+  PE.subst (λ (embTy : Term) → emb-scon Γ ⊢ repeat wk1 (emb-stype-oterm A) d ≡ embTy ^ [ ! , ι ⁰ ])
+          (emb-stype-wk1n-id A d)
+          (refl (PE.subst (λ (embTy : Term) → emb-scon Γ ⊢ embTy ^ [ ! , ι ⁰ ])
+                         (PE.sym (emb-stype-wk1n-id A d))
+                         (emb-stype-oterm-wf A ⊢Γ)))
+
+mutual
+  emb-stype-subst-id : ∀ A σ → subst σ (emb-stype-oterm A) PE.≡ emb-stype-oterm A
+  emb-stype-subst-id (SU.Ind _) σ = PE.refl
+  emb-stype-subst-id (SU.Arrow A B) σ =
+    PE.cong (gen (Pikind ! ⁰ ⁰ ⁰ !)) (emb-stype-substGen-id A B σ)
+
+  emb-stype-substGen-id : ∀ A B σ
+    → substGen σ (⟦ 0 , emb-stype-oterm A ⟧ TL.∷ ⟦ 1 , emb-stype-oterm B ⟧ TL.∷ TL.[])
+    PE.≡ (⟦ 0 , emb-stype-oterm A ⟧ TL.∷ ⟦ 1 , emb-stype-oterm B ⟧ TL.∷ TL.[])
+  emb-stype-substGen-id A B σ =
+    PE.cong₂ TL._∷_
+      (PE.cong (λ t → ⟦ 0 , t ⟧) (emb-stype-subst-id A (repeat liftSubst σ 0)))
+      (PE.cong₂ TL._∷_
+        (PE.cong (λ t → ⟦ 1 , t ⟧) (emb-stype-subst-id B (repeat liftSubst σ 1)))
+        PE.refl)
+
+emb-stype-[·]-id : ∀ A t → emb-stype-oterm A [ t ] PE.≡ emb-stype-oterm A
+emb-stype-[·]-id A t = emb-stype-subst-id A (sgSubst t)
+
+mutual
+  emb-sterm-oterm-preserves-typing-all : ∀ {Γ args As}
+    → Γ ST.⊢All args ∷ As
+    → emb-scon Γ ⊢All (emb-sterm-oterm-all args) ∷ map emb-stype-oterm As
+  emb-sterm-oterm-preserves-typing-all ST.εⱼ = εⱼ
+  emb-sterm-oterm-preserves-typing-all (ST.consⱼ t∈ ts∈) =
+    consⱼ (emb-sterm-oterm-preserves-typing t∈) (emb-sterm-oterm-preserves-typing-all ts∈)
+
+  emb-sterm-oterm-preserves-typing : ∀ {Γ t A}
+    → Γ ST.⊢ t ∷ A
+    → emb-scon Γ ⊢ emb-sterm-oterm t ∷ emb-stype-oterm A ^ [ ! , ι ⁰ ]
+  emb-sterm-oterm-preserves-typing (ST.varⱼ h) =
+    conv (var (emb-scon-wf _) (emb-st-var∈ h))
+         (emb-st-wkTy≡ (emb-st-var-wk-depth h) (emb-scon-wf _))
+  emb-sterm-oterm-preserves-typing (ST.appⱼ {A = A} {B = B} f∈ a∈) =
+    conv (_▹_▹_▹_∘ⱼ_ {F = emb-stype-oterm A} {G = emb-stype-oterm B}
+            {lG = ⁰} {r = !} {lΠ = ⁰}
+            (λ ())
+            (emb-stype-oterm-has-type A (emb-scon-wf _))
+            (emb-stype-oterm-has-type B (emb-scon-wf _ ∙ emb-stype-oterm-wf A (emb-scon-wf _)))
+            (emb-sterm-oterm-preserves-typing f∈)
+            (emb-sterm-oterm-preserves-typing a∈))
+         (PE.subst (λ (embTy : Term) → emb-scon _ ⊢ emb-stype-oterm B [ emb-sterm-oterm _ ] ≡ embTy ^ [ ! , ι ⁰ ])
+                   (emb-stype-[·]-id B (emb-sterm-oterm _))
+                   (refl (PE.subst (λ (embTy : Term) → emb-scon _ ⊢ embTy ^ [ ! , ι ⁰ ])
+                                  (PE.sym (emb-stype-[·]-id B (emb-sterm-oterm _)))
+                                  (emb-stype-oterm-wf B (emb-scon-wf _)))))
+  emb-sterm-oterm-preserves-typing (ST.lamⱼ {A = A} t∈) =
+    lamⱼ (λ _ → ⁰min ⁰ , ⁰min ⁰) (λ ())
+      (emb-stype-oterm-wf A (emb-scon-wf _))
+      (emb-sterm-oterm-preserves-typing t∈)
+  emb-sterm-oterm-preserves-typing (ST.ctrⱼ args∈) =
+    Ctrⱼ (emb-sterm-oterm-preserves-typing-all args∈)
