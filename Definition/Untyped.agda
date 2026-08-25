@@ -5,9 +5,11 @@ module Definition.Untyped where
 open import Tools.Nat
 open import Tools.Product
 open import Tools.List
+open import Tools.Nullary using (yes; no)
 import Tools.PropositionalEquality as PE
 open import Definition.Sort public
 import Definition.OUntyped as O
+import Definition.SUntyped as SU
 OTerm = O.Term
 OKind = O.Kind
 
@@ -19,6 +21,7 @@ infix 25 _[_]↑
 
 data Kind : Set where
   Ukind : Relevance → Level → Kind
+  Indkind : Nat → Kind
   Pikind : Relevance → Level → Level → Level → Relevance → Kind
   Natkind : Kind
   Lamkind : Level → Kind
@@ -42,6 +45,8 @@ data Kind : Set where
   Zero2kind : Kind -- 2nd zero
   Suc2kind : Kind  -- 2nd successor
   Natrec2kind : Level → Kind -- 2nd natural number recursor
+  Ctrkind : Nat → Nat → Kind -- index of inductive type, index of constructor
+  IndRectkind : Nat → Level → Kind -- inductive eliminator (motive level)
 
 data Term : Set where
   var : (x : Nat) → Term
@@ -156,11 +161,24 @@ suc2 t = gen Suc2kind (⟦ 0 , t ⟧ ∷ [])
 natrec2 : (l : Level) (A t u v : Term) → Term  -- 2nd natural number recursor (A is a binder).
 natrec2 l A t u v = gen (Natrec2kind l) (⟦ 1 , A ⟧ ∷ ⟦ 0 , t ⟧ ∷ ⟦ 0 , u ⟧ ∷ ⟦ 0 , v ⟧ ∷ [])
 
+-- inductive type
+Ind : Nat → Term
+Ind i = gen (Indkind i) []
+
+-- constructor
+ctr : Nat → Nat → List Term → Term
+ctr i j ts = gen (Ctrkind i j) (map (λ t → ⟦ 0 , t ⟧) ts)
+
+-- inductive eliminator (G is a binder: motive in Γ ∙ Ind i)
+IndRect : Nat → Level → Term → Term → List Term → Term
+IndRect i lG G t ms = gen (IndRectkind i lG) (⟦ 1 , G ⟧ ∷ ⟦ 0 , t ⟧ ∷ map (λ m → ⟦ 0 , m ⟧) ms)
+
 ------------------------------------------------------------------------
 -- Embedding of OTerms into Terms
 
 emb_okind_kind : OKind → Kind
 emb_okind_kind (O.Ukind r l) = Ukind r l
+emb_okind_kind (O.Indkind i) = Indkind i
 emb_okind_kind (O.Pikind r lA lB lΠ rΠ) = Pikind r lA lB lΠ rΠ
 emb_okind_kind O.Natkind = Natkind
 emb_okind_kind (O.Lamkind l) = Lamkind l
@@ -183,6 +201,8 @@ emb_okind_kind O.Nat2kind = Nat2kind
 emb_okind_kind O.Zero2kind = Zero2kind
 emb_okind_kind O.Suc2kind = Suc2kind
 emb_okind_kind (O.Natrec2kind l) = Natrec2kind l
+emb_okind_kind (O.Ctrkind i j) = Ctrkind i j
+emb_okind_kind (O.IndRectkind i l) = IndRectkind i l
 
 mutual
   emb_otermGen : List (GenT OTerm) → List (GenT Term)
@@ -247,6 +267,7 @@ data Neutral : Term → Set where
   castΠΠ!%ₙ : ∀ {l A B A' B' r r' e t} → Neutral (cast l (Π A ^ ! ° ⁰ ▹ B ° ⁰ ° l ^ r) (Π A' ^ % ° ⁰ ▹ B' ° ⁰ ° l ^ r') e t)
   Emptyrecₙ : ∀ {l lEmpty A e} -> Neutral (Emptyrec l lEmpty A e)
   natrec2ₙ : ∀ {l C c g k} → Neutral k → Neutral (natrec2 l C c g k)
+  IndRectₙ : ∀ {i lG G t ms} → Neutral t → Neutral (IndRect i lG G t ms)
 
 -- Weak head normal forms (whnfs).
 -- These are the (lazy) values of our language.
@@ -260,6 +281,7 @@ data Whnf : Term → Set where
   ℕₙ    : Whnf ℕ
   ℕ2ₙ    : Whnf ℕ2
   Emptyₙ : ∀ {l} → Whnf (Empty l)
+  Indₙ : ∀ {i} → Whnf (Ind i)
 
   -- Introductions are whnfs.
   lamₙ  : ∀ {A t l} → Whnf (lam A ▹ t ^ l)
@@ -267,6 +289,7 @@ data Whnf : Term → Set where
   sucₙ  : ∀ {t} → Whnf (suc t)
   zero2ₙ : Whnf zero2
   suc2ₙ  : ∀ {t} → Whnf (suc2 t)
+  ctrₙ : ∀ {i j ts} → Whnf (ctr i j ts)
 
   -- Neutrals are whnfs.
   ne   : ∀ {n} → Neutral n → Whnf n
@@ -378,6 +401,15 @@ suc≢zero2 ()
 
 suc≢suc2 : ∀ {n} → suc n PE.≢ suc2 n
 suc≢suc2 ()
+
+Ind≢ne : ∀ {i K} → Neutral K → Ind i PE.≢ K
+Ind≢ne () PE.refl
+
+Ctr≢ne : ∀ {i j ts K} → Neutral K → ctr i j ts PE.≢ K
+Ctr≢ne () PE.refl
+
+Ind≢Ctr : ∀ {i j k ts} → Ind i PE.≢ ctr j k ts
+Ind≢Ctr ()
 
 
 -- Several views on whnfs (note: not recursive).
@@ -504,6 +536,26 @@ wk1 = wk (step id)
 wk1d : Term → Term
 wk1d = wk (lift (step id))
 
+map-map : ∀ {A B C} (f : B → C) (g : A → B) (xs : List A)
+  → map f (map g xs) PE.≡ map (λ x → f (g x)) xs
+map-map f g [] = PE.refl
+map-map f g (x ∷ xs) = PE.cong (f (g x) ∷_) (map-map f g xs)
+
+wkGen-map0 : ∀ ρ ts → wkGen ρ (map (λ t → ⟦ 0 , t ⟧) ts) PE.≡ map (λ t → ⟦ 0 , wk ρ t ⟧) ts
+wkGen-map0 ρ [] = PE.refl
+wkGen-map0 ρ (t ∷ ts) = PE.cong (⟦ 0 , wk ρ t ⟧ ∷_) (wkGen-map0 ρ ts)
+
+map-map0-wkGen : ∀ ρ ts
+  → map (λ t → ⟦ 0 , t ⟧) (map (wk ρ) ts) PE.≡ wkGen ρ (map (λ t → ⟦ 0 , t ⟧) ts)
+map-map0-wkGen ρ ts = PE.trans (map-map (λ t → ⟦ 0 , t ⟧) (wk ρ) ts) (PE.sym (wkGen-map0 ρ ts))
+
+wk-IndRect : ∀ ρ i lG G t ms →
+  wk ρ (IndRect i lG G t ms) PE.≡
+  IndRect i lG (wk (lift ρ) G) (wk ρ t) (map (wk ρ) ms)
+wk-IndRect ρ i lG G t ms =
+  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 1 , wk (lift ρ) G ⟧ ∷ ⟦ 0 , wk ρ t ⟧ ∷ gs))
+    (PE.sym (map-map0-wkGen ρ ms))
+
 -- Weakening of a neutral term.
 
 wkNeutral : ∀ {t} ρ → Neutral t → Neutral (wk ρ t)
@@ -511,6 +563,9 @@ wkNeutral ρ (var n)    = var (wkVar ρ n)
 wkNeutral ρ (∘ₙ n)    = ∘ₙ (wkNeutral ρ n)
 wkNeutral ρ (natrecₙ n) = natrecₙ (wkNeutral ρ n)
 wkNeutral ρ (natrec2ₙ n) = natrec2ₙ (wkNeutral ρ n)
+wkNeutral ρ (IndRectₙ {i} {lG} {G} {t} {ms} n) =
+  PE.subst Neutral (PE.sym (wk-IndRect ρ i lG G t ms))
+    (IndRectₙ {G = wk (lift ρ) G} {ms = map (wk ρ) ms} (wkNeutral ρ n))
 wkNeutral ρ Emptyrecₙ = Emptyrecₙ
 wkNeutral ρ (castₙ A B t) = castₙ (wkNeutral ρ A) (wkNeutral ρ B) (wkNeutral ρ t)
 wkNeutral ρ (castnℕₙ A) = castnℕₙ (wkNeutral ρ A)
@@ -566,6 +621,8 @@ wkWhnf ρ sucₙ    = sucₙ
 wkWhnf ρ zero2ₙ  = zero2ₙ
 wkWhnf ρ suc2ₙ   = suc2ₙ
 wkWhnf ρ (ne x) = ne (wkNeutral ρ x)
+wkWhnf ρ (ctrₙ {i} {j} {ts}) = PE.subst Whnf (PE.cong (gen (Ctrkind i j)) (map-map0-wkGen ρ ts)) (ctrₙ {ts = map (wk ρ) ts})
+wkWhnf ρ Indₙ = Indₙ
 
 -- Non-dependent version of Π.
 
@@ -712,6 +769,46 @@ t [ s ]↑ = subst (consSubst (wk1Subst idSubst) s) t
 
 _[_]↑↑ : (t : Term) (s : Term) → Term
 t [ s ]↑↑ = subst (consSubst (wk1Subst (wk1Subst idSubst)) s) t
+
+------------------------------------------------------------------------
+-- Dependent method types for IndRect (Rocq-style, from constructor signatures)
+
+wk1^ : Nat → Term → Term
+wk1^ 0 t = t
+wk1^ (1+ n) t = wk1 (wk1^ n t)
+
+wk1Subst^ : Nat → Subst → Subst
+wk1Subst^ 0 σ = σ
+wk1Subst^ (1+ n) σ = wk1Subst (wk1Subst^ n σ)
+
+motiveApp : Term → Term → Nat → Term
+motiveApp G s k = subst (consSubst (wk1Subst^ k idSubst) s) G
+
+wk1List : List Term → List Term
+wk1List [] = []
+wk1List (t ∷ ts) = wk1 t ∷ wk1List ts
+
+ctrMethodType : Nat → Nat → Term → Relevance → Level → List Nat → Term
+ctrMethodType i j G rG lG as = go as [] 0
+  where
+  go : List Nat → List Term → Nat → Term
+  go [] args k = motiveApp G (ctr i j args) k
+  go (a ∷ as′) args k with a ≟ i
+  ... | yes _ =
+    Π Ind a ^ ! ° ⁰ ▹
+      (let args′ = wk1List args ∷ʳ var 0
+           k′    = 1+ k
+           ihTy  = motiveApp G (var 0) k′
+           body  = go as′ (wk1List args′) (1+ k′)
+       in  Π ihTy ^ rG ° lG ▹ body ° lG ° lG ^ rG)
+      ° lG ° lG ^ rG
+  ... | no _ =
+    Π Ind a ^ ! ° ⁰ ▹ go as′ (wk1List args ∷ʳ var 0) (1+ k) ° lG ° lG ^ rG
+
+indRectMethodTypeList : Nat → Term → Relevance → Level → List Term
+indRectMethodTypeList i G rG lG =
+  map (λ j → ctrMethodType i j G rG lG (SU.ctrArgsTypeList i j))
+      (range (SU.indCtrCount i))
 
 ------------------------------------------------------------------------
 -- Embedding homomorphism lemmas
@@ -966,6 +1063,48 @@ emb-snd e = PE.refl
 emb-Emptyrec : ∀ lA A e →
   emb_oterm_term (O.Emptyrec lA ⁰ A e) PE.≡ Emptyrec lA ⁰ (emb_oterm_term A) (emb_oterm_term e)
 emb-Emptyrec lA A e = PE.refl
+
+emb-Ind : ∀ i → emb_oterm_term (O.Ind i) PE.≡ Ind i
+emb-Ind i = PE.refl
+
+emb-otermGen-map0 : ∀ ts →
+  emb_otermGen (map (λ t → ⟦ 0 , t ⟧) ts) PE.≡ map (λ t → ⟦ 0 , emb_oterm_term t ⟧) ts
+emb-otermGen-map0 [] = PE.refl
+emb-otermGen-map0 (t ∷ ts) = PE.cong (⟦ 0 , emb_oterm_term t ⟧ ∷_) (emb-otermGen-map0 ts)
+
+emb-oterm-all : List OTerm → List Term
+emb-oterm-all [] = []
+emb-oterm-all (t ∷ ts) = emb_oterm_term t ∷ emb-oterm-all ts
+
+emb-oterm-all-map : ∀ ts → emb-oterm-all ts PE.≡ map emb_oterm_term ts
+emb-oterm-all-map [] = PE.refl
+emb-oterm-all-map (t ∷ ts) = PE.cong (emb_oterm_term t ∷_) (emb-oterm-all-map ts)
+
+emb-ctr : ∀ i j ts →
+  emb_oterm_term (O.ctr i j ts) PE.≡ ctr i j (map emb_oterm_term ts)
+emb-ctr i j ts =
+  PE.cong (gen (Ctrkind i j))
+    (PE.trans (emb-otermGen-map0 ts)
+              (PE.sym (map-map (λ t → ⟦ 0 , t ⟧) emb_oterm_term ts)))
+
+emb-map-Ind : ∀ ns → map emb_oterm_term (map O.Ind ns) PE.≡ map Ind ns
+emb-map-Ind [] = PE.refl
+emb-map-Ind (n ∷ ns) = PE.cong (Ind n ∷_) (emb-map-Ind ns)
+
+emb-IndRect : ∀ i lG G t ms →
+  emb_oterm_term (O.IndRect i lG G t ms) PE.≡
+  IndRect i lG (emb_oterm_term G) (emb_oterm_term t) (emb-oterm-all ms)
+emb-IndRect i lG G t ms =
+  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 1 , emb_oterm_term G ⟧ ∷ ⟦ 0 , emb_oterm_term t ⟧ ∷ gs))
+    (PE.trans (emb-otermGen-map0 ms)
+              (PE.trans (PE.sym (map-map (λ m → ⟦ 0 , m ⟧) emb_oterm_term ms))
+                        (PE.cong (map (λ m → ⟦ 0 , m ⟧)) (PE.sym (emb-oterm-all-map ms)))))
+
+-- Embedding preserves computed IndRect method type lists
+postulate
+  emb-indRectMethodTypeList : ∀ i G rG lG →
+    map emb_oterm_term (O.indRectMethodTypeList i G rG lG)
+    PE.≡ indRectMethodTypeList i (emb_oterm_term G) rG lG
 
 -- Definition of syntaxic sugar
 

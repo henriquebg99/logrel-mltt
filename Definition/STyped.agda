@@ -40,5 +40,9 @@ mutual
           → (A ∙ Γ) ⊢ t ∷ B
           → Γ ⊢ lam A t ∷ Arrow A B
     ctrⱼ  : ∀ {i j args}
-          → Γ ⊢All args ∷ ctrArgsTypeList i j
+          → Γ ⊢All args ∷ map Ind (ctrArgsTypeList i j)
           → Γ ⊢ ctr i j args ∷ Ind i
+    indRectⱼ : ∀ {i P t ms}
+          → Γ ⊢ t ∷ Ind i
+          → Γ ⊢All ms ∷ indRectMethodTypeList i P
+          → Γ ⊢ IndRect i P t ms ∷ P

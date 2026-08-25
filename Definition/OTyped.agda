@@ -109,8 +109,14 @@ mutual
            → Γ       ⊢ natrec2 lG G z s n ∷ G [ n ] ^ [ rG , ι lG ]
     Indⱼ    : ∀ {n} → ⊢ Γ → Γ ⊢ Ind n ∷ U ⁰ ^ [ ! , ι ¹ ]
     Ctrⱼ    : ∀ {i j args}
-           → Γ ⊢All args ∷ map emb-stype-oterm (SU.ctrArgsTypeList i j)
+           → Γ ⊢All args ∷ map Ind (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
            → Γ ⊢ ctr i j args ∷ Ind i ^ [ ! , ι ⁰ ]
+    IndRectⱼ : ∀ {i G rG lG t ms}
+           → (rG PE.≡ % → lG PE.≡ ⁰)
+           → Γ ∙ Ind i ^ [ ! , ι ⁰ ] ⊢ G ^ [ rG , ι lG ]
+           → Γ ⊢ t ∷ Ind i ^ [ ! , ι ⁰ ]
+           → Γ ⊢All ms ∷ indRectMethodTypeList i G rG lG ^ [ rG , ι lG ]
+           → Γ ⊢ IndRect i lG G t ms ∷ G [ t ] ^ [ rG , ι lG ]
     Emptyrecⱼ : ∀ {A lA rA e}
            → Γ ⊢ A ^ [ rA , ι lA ] → Γ ⊢ e ∷ sEmpty ^ [ % ,  ι ⁰ ] -> Γ ⊢ Emptyrec lA ⁰ A e ∷ A ^ [ rA , ι lA ]
     Idⱼ : ∀ {A l t u}
@@ -141,12 +147,12 @@ mutual
            → Γ ⊢ t ∷ B ^ r
 
   -- Well-typed lists of terms
-  data _⊢All_∷_ (Γ : Con Term) : List Term → List Term → Set where
-    εⱼ   : Γ ⊢All TL.[] ∷ TL.[]
-    consⱼ  : ∀ {t ts A As}
-         → Γ ⊢ t ∷ A ^ [ ! , ι ⁰ ]
-         → Γ ⊢All ts ∷ As
-         → Γ ⊢All (t TL.∷ ts) ∷ (A TL.∷ As)
+  data _⊢All_∷_^_ (Γ : Con Term) : List Term → List Term → TypeInfo → Set where
+    εⱼ   : ∀ {r} → Γ ⊢All TL.[] ∷ TL.[] ^ r
+    consⱼ  : ∀ {t ts A As r}
+         → Γ ⊢ t ∷ A ^ r
+         → Γ ⊢All ts ∷ As ^ r
+         → Γ ⊢All (t TL.∷ ts) ∷ (A TL.∷ As) ^ r
 
   -- Type equality
   data _⊢_≡_^_ (Γ : Con Term) : Term → Term → TypeInfo → Set where
@@ -603,10 +609,21 @@ mutual
 emb-stype-[·]-id : ∀ A t → emb-stype-oterm A [ t ] PE.≡ emb-stype-oterm A
 emb-stype-[·]-id A t = emb-stype-subst-id A (sgSubst t)
 
+emb-stype-map-Ind : ∀ ns → map emb-stype-oterm (map SU.Ind ns) PE.≡ map Ind ns
+emb-stype-map-Ind TL.[] = PE.refl
+emb-stype-map-Ind (n TL.∷ ns) = PE.cong (Ind n TL.∷_) (emb-stype-map-Ind ns)
+
+-- Embedding of non-dependent simple method types matches dependent method types
+-- for a constant (variable-free) motive.
+postulate
+  emb-indRectMethodTypeList : ∀ i P →
+    map emb-stype-oterm (SU.indRectMethodTypeList i P)
+    PE.≡ indRectMethodTypeList i (emb-stype-oterm P) ! ⁰
+
 mutual
   emb-sterm-oterm-preserves-typing-all : ∀ {Γ args As}
     → Γ ST.⊢All args ∷ As
-    → emb-scon Γ ⊢All (emb-sterm-oterm-all args) ∷ map emb-stype-oterm As
+    → emb-scon Γ ⊢All (emb-sterm-oterm-all args) ∷ map emb-stype-oterm As ^ [ ! , ι ⁰ ]
   emb-sterm-oterm-preserves-typing-all ST.εⱼ = εⱼ
   emb-sterm-oterm-preserves-typing-all (ST.consⱼ t∈ ts∈) =
     consⱼ (emb-sterm-oterm-preserves-typing t∈) (emb-sterm-oterm-preserves-typing-all ts∈)
@@ -634,5 +651,16 @@ mutual
     lamⱼ (λ _ → ⁰min ⁰ , ⁰min ⁰) (λ ())
       (emb-stype-oterm-wf A (emb-scon-wf _))
       (emb-sterm-oterm-preserves-typing t∈)
-  emb-sterm-oterm-preserves-typing (ST.ctrⱼ args∈) =
-    Ctrⱼ (emb-sterm-oterm-preserves-typing-all args∈)
+  emb-sterm-oterm-preserves-typing (ST.ctrⱼ {i} {j} args∈) =
+    Ctrⱼ (PE.subst (λ As → emb-scon _ ⊢All emb-sterm-oterm-all _ ∷ As ^ [ ! , ι ⁰ ])
+                   (emb-stype-map-Ind (SU.ctrArgsTypeList i j))
+                   (emb-sterm-oterm-preserves-typing-all args∈))
+  emb-sterm-oterm-preserves-typing {Γ} (ST.indRectⱼ {i} {P} {t} {ms} t∈ ms∈) =
+    PE.subst (λ Ty → emb-scon Γ ⊢ emb-sterm-oterm (SU.IndRect i P t ms) ∷ Ty ^ [ ! , ι ⁰ ])
+      (emb-stype-[·]-id P (emb-sterm-oterm t))
+      (IndRectⱼ (λ ())
+        (emb-stype-oterm-wf P (emb-scon-wf Γ ∙ univ (Indⱼ (emb-scon-wf Γ))))
+        (emb-sterm-oterm-preserves-typing t∈)
+        (PE.subst (λ As → emb-scon Γ ⊢All emb-sterm-oterm-all ms ∷ As ^ [ ! , ι ⁰ ])
+                  (emb-indRectMethodTypeList i P)
+                  (emb-sterm-oterm-preserves-typing-all ms∈)))

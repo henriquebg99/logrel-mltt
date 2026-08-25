@@ -4,7 +4,10 @@ open import Definition.Untyped
 open import Tools.Nat using (Nat)
 open import Tools.Product
 open import Tools.Empty
+open import Tools.List using (List; map)
+import Tools.List as TL
 import Tools.PropositionalEquality as PE
+import Definition.SUntyped as SU
 infixl 30 _∙_
 infix 30 Πⱼ_▹_▹_▹_
 
@@ -103,6 +106,16 @@ mutual
            → Γ       ⊢ s ∷ Π ℕ2 ^ ! ° ⁰ ▹ (G ^ rG ° lG ▹▹ G [ suc2 (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ [ rG , ι lG ]
            → Γ       ⊢ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
            → Γ       ⊢ natrec2 lG G z s n ∷ G [ n ] ^ [ rG , ι lG ]
+    Indⱼ    : ∀ {n} → ⊢ Γ → Γ ⊢ Ind n ∷ U ⁰ ^ [ ! , ι ¹ ]
+    Ctrⱼ    : ∀ {i j args}
+           → Γ ⊢All args ∷ map Ind (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
+           → Γ ⊢ ctr i j args ∷ Ind i ^ [ ! , ι ⁰ ]
+    IndRectⱼ : ∀ {i G rG lG t ms}
+           → (rG PE.≡ % → lG PE.≡ ⁰)
+           → Γ ∙ Ind i ^ [ ! , ι ⁰ ] ⊢ G ^ [ rG , ι lG ]
+           → Γ ⊢ t ∷ Ind i ^ [ ! , ι ⁰ ]
+           → Γ ⊢All ms ∷ indRectMethodTypeList i G rG lG ^ [ rG , ι lG ]
+           → Γ ⊢ IndRect i lG G t ms ∷ G [ t ] ^ [ rG , ι lG ]
     Emptyrecⱼ : ∀ {A lA rA e}
            → Γ ⊢ A ^ [ rA , ι lA ] → Γ ⊢ e ∷ sEmpty ^ [ % ,  ι ⁰ ] -> Γ ⊢ Emptyrec lA ⁰ A e ∷ A ^ [ rA , ι lA ]
     Idⱼ : ∀ {A l t u}
@@ -132,6 +145,14 @@ mutual
            → Γ ⊢ A ≡ B ^ r
            → Γ ⊢ t ∷ B ^ r
     equiv-eqⱼ : ⊢ Γ → Γ ⊢ equiv-eq ∷ Id (U ⁰) ℕ ℕ2 ^ [ % , ι ⁰ ]
+
+  -- Well-typed lists of terms
+  data _⊢All_∷_^_ (Γ : Con Term) : List Term → List Term → TypeInfo → Set where
+    εⱼ   : ∀ {r} → Γ ⊢All TL.[] ∷ TL.[] ^ r
+    consⱼ  : ∀ {t ts A As r}
+         → Γ ⊢ t ∷ A ^ r
+         → Γ ⊢All ts ∷ As ^ r
+         → Γ ⊢All (t TL.∷ ts) ∷ (A TL.∷ As) ^ r
 
   -- Type equality
   data _⊢_≡_^_ (Γ : Con Term) : Term → Term → TypeInfo → Set where
@@ -594,6 +615,11 @@ mutual
     PE.subst (λ A → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term s) A ([ rG , ι lG ]))
       (emb-natrec2-s-type G rG lG) (emb-⊢∷ ⊢s)
 
+  emb-⊢All : ∀ {Γ args As r} → OT._⊢All_∷_^_ Γ args As r
+    → emb_con Γ ⊢All emb-oterm-all args ∷ map emb_oterm_term As ^ r
+  emb-⊢All OT.εⱼ = εⱼ
+  emb-⊢All (OT.consⱼ ⊢t ⊢ts) = consⱼ (emb-⊢∷ ⊢t) (emb-⊢All ⊢ts)
+
   emb-⊢ : ∀ {Γ} → OT.⊢ Γ → ⊢ emb_con Γ
   emb-⊢ OT.ε = ε
   emb-⊢ (OT._∙_ ⊢Γ ⊢A) = emb-⊢ ⊢Γ ∙ emb-⊢ty ⊢A
@@ -649,6 +675,24 @@ mutual
       (PE.subst (λ t → _⊢_∷_^_ (emb_con Γ) t (emb_oterm_term G [ emb_oterm_term n ]) ([ rG , ι lG ]))
         (PE.sym (emb-natrec2 lG G z s n))
         (natrec2ⱼ abs (emb-⊢ty cod) (emb-⊢∷-sgType {G = G} {s = OU.zero2} ⊢z) (emb-⊢∷-natrec2-s {G = G} ⊢s) (emb-⊢∷ ⊢n)))
+  emb-⊢∷ (OT.Indⱼ ⊢Γ) = Indⱼ (emb-⊢ ⊢Γ)
+  emb-⊢∷ {Γ = Γ} (OT.Ctrⱼ {i} {j} {args} args∈) =
+    PE.subst (λ t → _⊢_∷_^_ (emb_con Γ) t (Ind i) ([ ! , ι ⁰ ]))
+      (PE.sym (emb-ctr i j args))
+      (Ctrⱼ (PE.subst (λ As → emb_con Γ ⊢All map emb_oterm_term args ∷ As ^ [ ! , ι ⁰ ])
+                     (emb-map-Ind (SU.ctrArgsTypeList i j))
+                     (PE.subst (λ ts → emb_con Γ ⊢All ts ∷ map emb_oterm_term (map OU.Ind (SU.ctrArgsTypeList i j)) ^ [ ! , ι ⁰ ])
+                              (emb-oterm-all-map args)
+                              (emb-⊢All args∈))))
+  emb-⊢∷ {Γ = Γ} (OT.IndRectⱼ {i} {G} {rG} {lG} {t} {ms} abs ⊢G ⊢t ⊢ms) =
+    PE.subst (λ A → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term (OU.IndRect i lG G t ms)) A ([ rG , ι lG ]))
+      (PE.sym (emb-sgSubst G t))
+      (PE.subst (λ tm → _⊢_∷_^_ (emb_con Γ) tm (emb_oterm_term G [ emb_oterm_term t ]) ([ rG , ι lG ]))
+        (PE.sym (emb-IndRect i lG G t ms))
+        (IndRectⱼ abs (emb-⊢ty ⊢G) (emb-⊢∷ ⊢t)
+          (PE.subst (λ As → emb_con Γ ⊢All emb-oterm-all ms ∷ As ^ [ rG , ι lG ])
+                    (emb-indRectMethodTypeList i G rG lG)
+                    (emb-⊢All ⊢ms))))
   emb-⊢∷ (OT.Emptyrecⱼ A e) = Emptyrecⱼ (emb-⊢ty A) (emb-⊢∷ e)
   emb-⊢∷ (OT.Idⱼ A t u) = Idⱼ (emb-⊢∷ A) (emb-⊢∷ t) (emb-⊢∷ u)
   emb-⊢∷ (OT.Idreflⱼ t) = Idreflⱼ (emb-⊢∷ t)
