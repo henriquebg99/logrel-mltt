@@ -31,6 +31,9 @@ redSubst* D (ℕᵣ [[ ⊢B , ⊢ℕ , D′ ]]) =
 redSubst* D (ℕ2ᵣ [[ ⊢B , ⊢ℕ2 , D′ ]]) =
   let ⊢A = redFirst* D
   in  ℕ2ᵣ ([[ ⊢A , ⊢ℕ2 , D ⇨* D′ ]]) , D′
+redSubst* D (Indᵣ [[ ⊢B , ⊢Ind , D′ ]]) =
+  let ⊢A = redFirst* D
+  in  Indᵣ ([[ ⊢A , ⊢Ind , D ⇨* D′ ]]) , D′
 redSubst* D (Emptyᵣ [[ ⊢B , ⊢Empty , D′ ]]) =
   let ⊢A = redFirst* D
   in  Emptyᵣ ([[ ⊢A , ⊢Empty , D ⇨* D′ ]]) , D′
@@ -77,6 +80,13 @@ redSubst*Term⁰ t⇒u (ℕ2ᵣ D) (ℕ2ₜ n [[ ⊢u , ⊢n , d ]] n≡n prop) 
   in  ℕ2ₜ n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] n≡n prop
   ,   ℕ2ₜ₌ n n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] [[ ⊢u , ⊢n , d ]]
           n≡n (reflNatural2-prop prop)
+redSubst*Term⁰ t⇒u (Indᵣ D) (Indₜ n [[ ⊢u , ⊢n , d ]] n≡n prop) =
+  let A≡Ind  = subset* (red D)
+      ⊢t   = conv (redFirst*Term t⇒u) A≡Ind
+      t⇒u′ = conv* t⇒u A≡Ind
+  in  Indₜ n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] n≡n prop
+  ,   Indₜ₌ n n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] [[ ⊢u , ⊢n , d ]]
+          n≡n (reflInductive-prop prop)
 redSubst*Term⁰ t⇒u (ne′ K D neK K≡K) (neₜ k [[ ⊢t , ⊢u , d ]] (neNfₜ neK₁ ⊢k k≡k)) =
   let A≡K  = subset* (red D)
       [d]  = [[ ⊢t , ⊢u , d ]]
@@ -135,6 +145,13 @@ redSubst*Term t⇒u (ℕ2ᵣ D) (ℕ2ₜ n [[ ⊢u , ⊢n , d ]] n≡n prop) =
   in  ℕ2ₜ n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] n≡n prop
   ,   ℕ2ₜ₌ n n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] [[ ⊢u , ⊢n , d ]]
           n≡n (reflNatural2-prop prop)
+redSubst*Term t⇒u (Indᵣ D) (Indₜ n [[ ⊢u , ⊢n , d ]] n≡n prop) =
+  let A≡Ind  = subset* (red D)
+      ⊢t   = conv (redFirst*Term t⇒u) A≡Ind
+      t⇒u′ = conv* t⇒u A≡Ind
+  in  Indₜ n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] n≡n prop
+  ,   Indₜ₌ n n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] [[ ⊢u , ⊢n , d ]]
+          n≡n (reflInductive-prop prop)
 redSubst*Term t⇒u (ne′ K D neK K≡K) (neₜ k [[ ⊢t , ⊢u , d ]] (neNfₜ neK₁ ⊢k k≡k)) =
   let A≡K  = subset* (red D)
       [d]  = [[ ⊢t , ⊢u , d ]]

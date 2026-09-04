@@ -614,6 +614,15 @@ mutual
     in ℕ2-ins x~x' , PE.subst (λ X → 1+ X <= 1+ (1+ (size~↑! (_⊢_~_↓!_^_.k~l x) + 1+ (size~↓! x₁))))
                              (PE.sym (sizeSubst-gen (λ X →  Γ ⊢ t ~ v ↓! X ^ l) size~↓! x~x eqℕ2))
                              (leS (<=-trans size leq))
+  transConv↓Term {1+ n} {t} {u} {v} {A} {B} {Γ} {Δ} {l} Γ≡Δ A≡B el (Ind-ins x) (Ind-ins x₁) (leS e) =
+    let leq = leS (<=-cong-+ (le-refl _) (le-suc (le-refl _)))
+        C , wC , x~x , A≡C , C≡B , size = trans~↓! {n = n}  PE.refl Γ≡Δ x x₁ (<<-trans leq e)
+        eqInd = Ind≡A A≡C wC
+        x~x' = PE.subst (λ X →  Γ ⊢ t ~ v ↓! X ^ l) eqInd x~x
+    in Ind-ins x~x' , PE.subst (λ X → 1+ X <= 1+ (1+ (size~↑! (_⊢_~_↓!_^_.k~l x) + 1+ (size~↓! x₁))))
+                             (PE.sym (sizeSubst-gen (λ X →  Γ ⊢ t ~ v ↓! X ^ l) size~↓! x~x eqInd))
+                             (leS (<=-trans size leq))
+
   transConv↓Term {n = 1+ n} {Δ = Δ} Γ≡Δ A≡B el (ne-ins t u x x₁) (ne-ins {k} {l} {M} {N} t′ u′ x₂ x₃) (leS e) =
     let leq = leS (<=-cong-+ (le-refl _) (le-suc (le-refl _)))
         C , wC , x~x , A≡C , C≡B , size = trans~↓! {n = n} el Γ≡Δ x₁ x₃ (<<-trans leq e)
@@ -849,6 +858,37 @@ mutual
   transConv↓Term Γ≡Δ A≡B el (suc2-cong x) (ne-ins x₁ x₂ x₃ x₄) | _ , () , _
   transConv↓Term Γ≡Δ A≡B el (U-refl x x₁) (ne x₂) with ne~↓! x₂
   transConv↓Term Γ≡Δ A≡B el (U-refl x x₁) (ne x₂) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (ne x) (Ind-ins x₁) = ⊥-elim (WF.U≢Ind! A≡B)
+  transConv↓Term Γ≡Δ A≡B el (Π-cong x x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) (Ind-ins x₉) = ⊥-elim (WF.U≢Ind! A≡B)
+  transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (ne x₁) = ⊥-elim (WF.U≢Ind! (sym A≡B))
+  transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (Π-cong x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉) = ⊥-elim (WF.U≢Ind! (sym A≡B))
+  transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (ℕ-ins x₁) = ⊥-elim (WF.Ind≢ℕ! A≡B)
+  transConv↓Term Γ≡Δ A≡B el (ℕ-ins x) (Ind-ins x₁) = ⊥-elim (WF.ℕ≢Ind! A≡B)
+  transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (ℕ2-ins x₁) = ⊥-elim (WF.Ind≢ℕ2! A≡B)
+  transConv↓Term Γ≡Δ A≡B el (ℕ2-ins x) (Ind-ins x₁) = ⊥-elim (WF.ℕ2≢Ind! A≡B)
+  transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (ne-ins x₁ x₂ x₃ x₄) = ⊥-elim (WF.Ind≢ne! x₃ A≡B)
+  transConv↓Term Γ≡Δ A≡B PE.refl (ne-ins t u x x₁) (Ind-ins x₂) =
+    ⊥-elim (WF.Ind≢ne! x (sym A≡B))
+  transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (zero-refl x₁) with ne~↓! x
+  transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (zero-refl x₁) | _ , _ , ()
+  transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (zero2-refl x₁) with ne~↓! x
+  transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (zero2-refl x₁) | _ , _ , ()
+  transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (suc-cong x₁) with ne~↓! x
+  transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (suc-cong x₁) | _ , _ , ()
+  transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (suc2-cong x₁) with ne~↓! x
+  transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (suc2-cong x₁) | _ , _ , ()
+  transConv↓Term Γ≡Δ A≡B el (zero-refl x) (Ind-ins x₁) with ne~↓! x₁
+  transConv↓Term Γ≡Δ A≡B el (zero-refl x) (Ind-ins x₁) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (zero2-refl x) (Ind-ins x₁) with ne~↓! x₁
+  transConv↓Term Γ≡Δ A≡B el (zero2-refl x) (Ind-ins x₁) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (suc-cong x) (Ind-ins x₁) with ne~↓! x₁
+  transConv↓Term Γ≡Δ A≡B el (suc-cong x) (Ind-ins x₁) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B el (suc2-cong x) (Ind-ins x₁) with ne~↓! x₁
+  transConv↓Term Γ≡Δ A≡B el (suc2-cong x) (Ind-ins x₁) | _ , () , _
+  transConv↓Term Γ≡Δ A≡B PE.refl (Ind-ins x) (η-eq x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) = ⊥-elim (WF.Ind≢Π! A≡B)
+  transConv↓Term {Γ = Γ} Γ≡Δ A≡B el (η-eq {F = F} {rF = rF} {lF = lF} {lG = lG} {l = l} x x₁ x₂ x₃ x₄ x₅ x₆ x₇) (Ind-ins x₈) = ⊥-elim (WF.Π≢Ind! A≡B)
+
+
 
   -- transConv↓Term = {!!}
 

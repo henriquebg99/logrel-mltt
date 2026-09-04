@@ -16,6 +16,7 @@ whNorm′ : ∀ {A rA Γ l} ([A] : Γ ⊩⟨ l ⟩ A ^ rA)
 whNorm′ (Uᵣ′ _ _ r l _ e d) = Univ r l , Uₙ , PE.subst (λ ll → _ ⊢ _ :⇒*: Univ r l ^ [ ! , ll ]) e d
 whNorm′ (ℕᵣ D) = ℕ , ℕₙ , D
 whNorm′ (ℕ2ᵣ D) = ℕ2 , ℕ2ₙ , D
+whNorm′ (Indᵣ {i = i} D) = Ind i , Indₙ , D
 whNorm′ (Emptyᵣ D) = sEmpty , Emptyₙ , D
 whNorm′ (ne′ K D neK K≡K) = K , ne neK , D
 whNorm′ (Πᵣ {l = l} (Πᵣ rF lF lG lF≤ lG≤ F G D ⊢F ⊢G A≡A [F] [G] G-ext)) = Π F ^ rF ° lF ▹ G ° lG ° l ^ ! , Πₙ , D
@@ -44,6 +45,9 @@ whNormTerm′ (ℕᵣ x) (ℕₜ n d n≡n prop) =
 whNormTerm′ (ℕ2ᵣ x) (ℕ2ₜ n d n≡n prop) =
   let natN = natural2 prop
   in  n , natural2Whnf natN , convRed:*: d (sym (subset* (red x)))
+whNormTerm′ (Indᵣ x) (Indₜ k d k≡k prop) =
+  let indN = inductive′ prop
+  in  k , inductiveWhnf indN , convRed:*: d (sym (subset* (red x)))
 whNormTerm′ (ne (ne K D neK K≡K)) (neₜ k d (neNfₜ neK₁ ⊢k k≡k)) =
   k , ne neK₁ , convRed:*: d (sym (subset* (red D)))
 whNormTerm′ (Πᵣ′ rF lF lG lF≤ lG≤  F G D ⊢F ⊢G A≡A [F] [G] G-ext) (Πₜ f d funcF f≡f [f] [f]₁) =

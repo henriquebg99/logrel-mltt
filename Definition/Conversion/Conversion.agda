@@ -11,6 +11,7 @@ open import Definition.Typed.Consequences.Injectivity
 open import Definition.Typed.Consequences.Equality
 open import Definition.Typed.Consequences.Reduction
 open import Tools.Product
+open import Tools.List using (All₂; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
 mutual
 
@@ -44,6 +45,10 @@ mutual
     let eqN = ℕ2≡A A≡B whnfB 
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
                 (ℕ2-ins (stability~↓! Γ≡Δ x))
+  convConv↓Term Γ≡Δ A≡B whnfB (Ind-ins x) =
+    let eqN = Ind≡A A≡B whnfB 
+    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
+                (Ind-ins (stability~↓! Γ≡Δ x))
   convConv↓Term Γ≡Δ A≡B whnfB (ne x) =
     let eqU = U≡A-whnf A≡B whnfB
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU) (ne (stability~↓! Γ≡Δ x))
@@ -99,10 +104,26 @@ mutual
     let eqU = U≡A-whnf A≡B whnfB
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU)
                 (Π-cong lΠ rF lF lG l< l<' (stability Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityConv↑Term (Γ≡Δ ∙ refl x) x₂))
+  convConv↓Term Γ≡Δ A≡B whnfB (Ind-refl x) =
+    let eqU = U≡A-whnf A≡B whnfB
+        _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
+    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU) (Ind-refl ⊢Δ)
+  convConv↓Term Γ≡Δ A≡B whnfB (ctr-cong ⊢Γ len args) =
+    let eqI = Ind≡A A≡B whnfB
+        _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
+    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqI)
+                (ctr-cong ⊢Δ len (All₂-conv Γ≡Δ args))
+
   convConv↓Term Γ≡Δ A≡B whnfB (Id-cong x x₁ x₂) =
     let eqU = U≡A-whnf A≡B whnfB
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU)
                 (Id-cong (stabilityConv↑Term Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityConv↑Term Γ≡Δ x₂))
+
+  All₂-conv : ∀ {args args' i Γ Δ} → ⊢ Γ ≡ Δ →
+    All₂ (λ a a' → Γ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) args args' →
+    All₂ (λ a a' → Δ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) args args'
+  All₂-conv Γ≡Δ []ₐ = []ₐ
+  All₂-conv Γ≡Δ (p ∷ₐ ps) = stabilityConv↑Term Γ≡Δ p ∷ₐ All₂-conv Γ≡Δ ps
 
 -- Conversion of algorithmic equality with the same context.
 convConvTerm : ∀ {t u A B Γ l}

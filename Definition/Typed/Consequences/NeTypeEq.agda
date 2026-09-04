@@ -32,6 +32,14 @@ varTypeEq A B x∷A x∷B with varTypeEq′ x∷A x∷B
 
 -- The same neutral term have equal types.
 -- to use this with different relevances rA rB we need unicity of relevance for types
+
+postulate
+  neTypeEq-IndRect : ∀ {i lG P t ms A B lA lA' Γ} →
+    Neutral t →
+    Γ ⊢ IndRect i lG P t ms ∷ A ^ [ ! , lA ] →
+    Γ ⊢ IndRect i lG P t ms ∷ B ^ [ ! , lA' ] →
+    lA PE.≡ lA' × Γ ⊢ A ≡ B ^ [ ! , lA ]
+
 neTypeEq : ∀ {t A B lA lA' Γ} → Neutral t → Γ ⊢ t ∷ A ^ [ ! , lA ] → Γ ⊢ t ∷ B ^ [ ! , lA' ] →
   lA PE.≡ lA' × Γ ⊢ A ≡ B ^ [ ! , lA ]
 neTypeEq (var x) (var x₁ x₂) (var x₃ x₄) =
@@ -47,6 +55,7 @@ neTypeEq (natrec2ₙ neT) (natrec2ⱼ _ x t∷A t∷A₁ t∷A₂) (natrec2ⱼ _
   PE.refl , refl (substType x₁ t∷B₂)
 neTypeEq Emptyrecₙ (Emptyrecⱼ x t∷A) (Emptyrecⱼ x₁ t∷B) =
   PE.refl , refl x₁
+neTypeEq (IndRectₙ n) d e = neTypeEq-IndRect n d e
 neTypeEq X (castⱼ Y Y₁ Y₂ Y₃)  (castⱼ Z Z₁ Z₂ Z₃) = PE.refl , refl (univ Y₁) 
 neTypeEq x (conv t∷A x₁) t∷B = 
   let e , q = neTypeEq x t∷A t∷B

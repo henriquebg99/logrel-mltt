@@ -3,6 +3,7 @@ module Definition.OUntyped where
 open import Tools.Nat
 open import Tools.Product
 open import Tools.List
+open import Tools.Inequality using (filter)
 open import Tools.Nullary using (yes; no)
 import Tools.PropositionalEquality as PE
 open import Definition.Sort
@@ -156,9 +157,9 @@ Ind i = gen (Indkind i) []
 ctr : Nat -> Nat -> List Term -> Term
 ctr i j ts = gen (Ctrkind i j) (map (λ t → ⟦ 0 , t ⟧) ts)
 
--- inductive eliminator (G is a binder: motive in Γ ∙ Ind i)
+-- inductive eliminator (P is a function motive: Ind i → Univ lG)
 IndRect : Nat → Level → Term → Term → List Term → Term
-IndRect i lG G t ms = gen (IndRectkind i lG) (⟦ 1 , G ⟧ ∷ ⟦ 0 , t ⟧ ∷ map (λ m → ⟦ 0 , m ⟧) ms)
+IndRect i lG P t ms = gen (IndRectkind i lG) (⟦ 0 , P ⟧ ∷ ⟦ 0 , t ⟧ ∷ map (λ m → ⟦ 0 , m ⟧) ms)
 
 -- Injectivity of term constructors w.r.t. propositional equality.
 
@@ -203,7 +204,7 @@ data Neutral : Term → Set where
   castΠΠ!%ₙ : ∀ {l A B A' B' r r' e t} → Neutral (cast l (Π A ^ ! ° ⁰ ▹ B ° ⁰ ° l ^ r) (Π A' ^ % ° ⁰ ▹ B' ° ⁰ ° l ^ r') e t)
   Emptyrecₙ : ∀ {l lEmpty A e} -> Neutral (Emptyrec l lEmpty A e)
   natrec2ₙ : ∀ {l C c g k} → Neutral k → Neutral (natrec2 l C c g k)
-  IndRectₙ : ∀ {i lG G t ms} → Neutral t → Neutral (IndRect i lG G t ms)
+  IndRectₙ : ∀ {i lG P t ms} → Neutral t → Neutral (IndRect i lG P t ms)
 
 -- Weak head normal forms (whnfs).
 -- These are the (lazy) values of our language.
@@ -362,7 +363,13 @@ data Natural2 : Term → Set where
   suc2ₙ  : ∀ {t}             → Natural2 (suc2 t)
   ne2    : ∀ {n} → Neutral n → Natural2 n
 
--- A type in whnf is either Π A B, ℕ, or neutral.
+-- A whnf of type Ind i is a constructor of Ind i, or neutral.
+
+data Inductive (i : Nat) : Term → Set where
+  ctrₙ : ∀ {j ts}           → Inductive i (ctr i j ts)
+  ne   : ∀ {n} → Neutral n → Inductive i n
+
+-- A type in whnf is either Π A B, ℕ, Ind i, or neutral.
 -- Large types could also be U.
 
 data Type : Term → Set where
@@ -372,6 +379,7 @@ data Type : Term → Set where
   Uₙ : ∀ {r l} → Type (Univ r l)
   Emptyₙ : ∀ {l} → Type (Empty l)
   Idₙ : ∀ {A t u} → Type (Id A t u)
+  Indₙ : ∀ {i} → Type (Ind i)
   ne : ∀{n} → Neutral n → Type n
 
 -- A whnf of type Π A B is either lam t or neutral.
@@ -381,7 +389,7 @@ data Function : Term → Set where
   ne : ∀{n} → Neutral n → Function n
 
 -- These views classify only whnfs.
--- Natural, Type, and Function are a subsets of Whnf.
+-- Natural, Natural2, Inductive, Type, and Function are subsets of Whnf.
 
 naturalWhnf : ∀ {n} → Natural n → Whnf n
 naturalWhnf sucₙ = sucₙ
@@ -393,6 +401,10 @@ natural2Whnf suc2ₙ = suc2ₙ
 natural2Whnf zero2ₙ = zero2ₙ
 natural2Whnf (ne2 x) = ne x
 
+inductiveWhnf : ∀ {i t} → Inductive i t → Whnf t
+inductiveWhnf ctrₙ = ctrₙ
+inductiveWhnf (ne x) = ne x
+
 typeWhnf : ∀ {A} → Type A → Whnf A
 typeWhnf Πₙ = Πₙ
 typeWhnf ℕₙ = ℕₙ
@@ -400,6 +412,7 @@ typeWhnf ℕ2ₙ = ℕ2ₙ
 typeWhnf Uₙ  = Uₙ
 typeWhnf Idₙ = Idₙ
 typeWhnf Emptyₙ = Emptyₙ
+typeWhnf Indₙ = Indₙ
 typeWhnf (ne x) = ne x
 
 functionWhnf : ∀ {f} → Function f → Whnf f
@@ -476,6 +489,11 @@ map-map : ∀ {A B C} (f : B → C) (g : A → B) (xs : List A)
 map-map f g [] = PE.refl
 map-map f g (x ∷ xs) = PE.cong (f (g x) ∷_) (map-map f g xs)
 
+map-cong : ∀ {A B} {f g : A → B} (xs : List A)
+  → (∀ x → f x PE.≡ g x) → map f xs PE.≡ map g xs
+map-cong [] eq = PE.refl
+map-cong (x ∷ xs) eq = PE.cong₂ _∷_ (eq x) (map-cong xs eq)
+
 wkGen-map0 : ∀ ρ ts → wkGen ρ (map (λ t → ⟦ 0 , t ⟧) ts) PE.≡ map (λ t → ⟦ 0 , wk ρ t ⟧) ts
 wkGen-map0 ρ [] = PE.refl
 wkGen-map0 ρ (t ∷ ts) = PE.cong (⟦ 0 , wk ρ t ⟧ ∷_) (wkGen-map0 ρ ts)
@@ -484,11 +502,11 @@ map-map0-wkGen : ∀ ρ ts
   → map (λ t → ⟦ 0 , t ⟧) (map (wk ρ) ts) PE.≡ wkGen ρ (map (λ t → ⟦ 0 , t ⟧) ts)
 map-map0-wkGen ρ ts = PE.trans (map-map (λ t → ⟦ 0 , t ⟧) (wk ρ) ts) (PE.sym (wkGen-map0 ρ ts))
 
-wk-IndRect : ∀ ρ i lG G t ms →
-  wk ρ (IndRect i lG G t ms) PE.≡
-  IndRect i lG (wk (lift ρ) G) (wk ρ t) (map (wk ρ) ms)
-wk-IndRect ρ i lG G t ms =
-  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 1 , wk (lift ρ) G ⟧ ∷ ⟦ 0 , wk ρ t ⟧ ∷ gs))
+wk-IndRect : ∀ ρ i lG P t ms →
+  wk ρ (IndRect i lG P t ms) PE.≡
+  IndRect i lG (wk ρ P) (wk ρ t) (map (wk ρ) ms)
+wk-IndRect ρ i lG P t ms =
+  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 0 , wk ρ P ⟧ ∷ ⟦ 0 , wk ρ t ⟧ ∷ gs))
     (PE.sym (map-map0-wkGen ρ ms))
 
 -- Weakening of a neutral term.
@@ -498,9 +516,9 @@ wkNeutral ρ (var n)    = var (wkVar ρ n)
 wkNeutral ρ (∘ₙ n)    = ∘ₙ (wkNeutral ρ n)
 wkNeutral ρ (natrecₙ n) = natrecₙ (wkNeutral ρ n)
 wkNeutral ρ (natrec2ₙ n) = natrec2ₙ (wkNeutral ρ n)
-wkNeutral ρ (IndRectₙ {i} {lG} {G} {t} {ms} n) =
-  PE.subst Neutral (PE.sym (wk-IndRect ρ i lG G t ms))
-    (IndRectₙ {G = wk (lift ρ) G} {ms = map (wk ρ) ms} (wkNeutral ρ n))
+wkNeutral ρ (IndRectₙ {i} {lG} {P} {t} {ms} n) =
+  PE.subst Neutral (PE.sym (wk-IndRect ρ i lG P t ms))
+    (IndRectₙ {P = wk ρ P} {ms = map (wk ρ) ms} (wkNeutral ρ n))
 wkNeutral ρ Emptyrecₙ = Emptyrecₙ
 wkNeutral ρ (castₙ A B t) = castₙ (wkNeutral ρ A) (wkNeutral ρ B) (wkNeutral ρ t)
 wkNeutral ρ (castnℕₙ A) = castnℕₙ (wkNeutral ρ A)
@@ -525,6 +543,12 @@ wkNatural2 ρ suc2ₙ    = suc2ₙ
 wkNatural2 ρ zero2ₙ   = zero2ₙ
 wkNatural2 ρ (ne2 x) = ne2 (wkNeutral ρ x)
 
+wkInductive : ∀ {i t} ρ → Inductive i t → Inductive i (wk ρ t)
+wkInductive ρ (ctrₙ {j} {ts}) =
+  PE.subst (Inductive _) (PE.cong (gen (Ctrkind _ j)) (map-map0-wkGen ρ ts))
+    (ctrₙ {ts = map (wk ρ) ts})
+wkInductive ρ (ne x) = ne (wkNeutral ρ x)
+
 wkType : ∀ {t} ρ → Type t → Type (wk ρ t)
 wkType ρ Πₙ      = Πₙ
 wkType ρ ℕₙ      = ℕₙ
@@ -532,6 +556,7 @@ wkType ρ ℕ2ₙ     = ℕ2ₙ
 wkType ρ Uₙ      = Uₙ
 wkType ρ Idₙ      = Idₙ
 wkType ρ Emptyₙ  = Emptyₙ
+wkType ρ Indₙ    = Indₙ
 wkType ρ (ne x) = ne (wkNeutral ρ x)
 
 wkFunction : ∀ {t} ρ → Function t → Function (wk ρ t)
@@ -714,46 +739,48 @@ natrec2StepType : Term → Relevance → Level → Term
 natrec2StepType G rG lG = Π ℕ2 ^ ! ° ⁰ ▹ natrec2StepInner G rG lG ° lG ° lG ^ rG
 
 ------------------------------------------------------------------------
--- Dependent method types for IndRect (Rocq-style, from constructor signatures)
+-- IndRect helpers
 
 wk1^ : Nat → Term → Term
 wk1^ 0 t = t
 wk1^ (1+ n) t = wk1 (wk1^ n t)
 
-wk1Subst^ : Nat → Subst → Subst
-wk1Subst^ 0 σ = σ
-wk1Subst^ (1+ n) σ = wk1Subst (wk1Subst^ n σ)
+emb-stype-oterm : S.Type → Term
+emb-stype-oterm (S.Ind i) = gen (Indkind i) []
+emb-stype-oterm (S.Arrow A B) = Π (emb-stype-oterm A) ^ ! ° ⁰ ▹ emb-stype-oterm B ° ⁰ ° ⁰ ^ !
 
--- Apply motive G (typed in Γ ∙ Ind i) to target s in a context with k extra binders over Γ
-motiveApp : Term → Term → Nat → Term
-motiveApp G s k = subst (consSubst (wk1Subst^ k idSubst) s) G
+ctrArgsTypeList : Nat → Nat → List (Term × Nat)
+ctrArgsTypeList i n = map (λ T → (emb-stype-oterm T , 0)) (S.ctrArgsTypeList i n)
 
-wk1List : List Term → List Term
-wk1List [] = []
-wk1List (t ∷ ts) = wk1 t ∷ wk1List ts
+ctrRecIndices : Nat → Nat → List Nat
+ctrRecIndices ind index =
+  let as = S.ctrArgsTypeList ind index
+      n  = length as
+  in  map proj₁
+        (filter (λ jT → S.ctrArgIsRecursive ind (proj₂ jT))
+          (zip (range n) as))
 
--- Method type for constructor j of Ind i; G is the dependent motive in Γ ∙ Ind i
-ctrMethodType : Nat → Nat → Term → Relevance → Level → List Nat → Term
-ctrMethodType i j G rG lG as = go as [] 0
-  where
-  go : List Nat → List Term → Nat → Term
-  go [] args k = motiveApp G (ctr i j args) k
-  go (a ∷ as′) args k with a ≟ i
-  ... | yes _ =
-    Π Ind a ^ ! ° ⁰ ▹
-      (let args′ = wk1List args ∷ʳ var 0
-           k′    = 1+ k
-           ihTy  = motiveApp G (var 0) k′
-           body  = go as′ (wk1List args′) (1+ k′)
-       in  Π ihTy ^ rG ° lG ▹ body ° lG ° lG ^ rG)
-      ° lG ° lG ^ rG
-  ... | no _ =
-    Π Ind a ^ ! ° ⁰ ▹ go as′ (wk1List args ∷ʳ var 0) (1+ k) ° lG ° lG ^ rG
+-- CIC method type: Π (x_i : A_i). Π (ih_j : P x_j)_{A_j = I}. P (c x⃗)
+-- Motive applications use ∘ ^ ¹ (Π-level of Ind → Univ lG).
+indRectBranchTy : Nat → Nat → Term → Relevance → Level → Term
+indRectBranchTy ind index P rG lG =
+  let Ts = ctrArgsTypeList ind index
+      n = length Ts
+      recs = ctrRecIndices ind index
+      k = length recs
+      vars = map (λ j → var (((k + n) - 1) - j)) (range n)
+      conclusion = wk1^ (k + n) P ∘ ctr ind index vars ^ ¹
+      ihTys = map (λ pj →
+                wk1^ (n + proj₂ pj) P ∘ var (((n - 1) - proj₁ pj) + proj₂ pj) ^ ¹)
+                (zip recs (range k))
+      argTys = map proj₁ Ts
+  in  foldr (λ A B → Π A ^ ! ° ⁰ ▹ B ° lG ° lG ^ rG)
+        (foldr (λ A B → Π A ^ rG ° lG ▹ B ° lG ° lG ^ rG) conclusion ihTys)
+        argTys
 
-indRectMethodTypeList : Nat → Term → Relevance → Level → List Term
-indRectMethodTypeList i G rG lG =
-  map (λ j → ctrMethodType i j G rG lG (S.ctrArgsTypeList i j))
-      (range (S.indCtrCount i))
+indRectBranchTyList : Nat → Term → Relevance → Level → List Term
+indRectBranchTyList i P rG lG =
+  map (λ j → indRectBranchTy i j P rG lG) (range (S.indCtrCount i))
 
 -- Definition of syntaxic sugar
 
@@ -764,11 +791,6 @@ Idsym : (A x y e : Term) → Term
 Idsym A x y e = transp A (Id (wk1 A) (var 0) (wk1 x)) x (Idrefl A x) y e
 
 
--- embedding of simple terms into OTerm
-emb-stype-oterm : S.Type -> Term
-emb-stype-oterm (S.Ind i) = gen (Indkind i) []
-emb-stype-oterm (S.Arrow A B) = Π (emb-stype-oterm A) ^ ! ° ⁰ ▹ emb-stype-oterm B ° ⁰ ° ⁰ ^ !
-
 mutual
   emb-sterm-oterm : S.Term -> Term
   emb-sterm-oterm (S.var x) = var x
@@ -776,7 +798,8 @@ mutual
   emb-sterm-oterm (S.lam A t) = lam (emb-stype-oterm A) ▹ emb-sterm-oterm t ^ ⁰
   emb-sterm-oterm (S.ctr i j args) = ctr i j (emb-sterm-oterm-all args)
   emb-sterm-oterm (S.IndRect i P t ms) =
-    IndRect i ⁰ (emb-stype-oterm P) (emb-sterm-oterm t) (emb-sterm-oterm-all ms)
+    IndRect i ⁰ (lam (Ind i) ▹ wk1 (emb-stype-oterm P) ^ ¹)
+      (emb-sterm-oterm t) (emb-sterm-oterm-all ms)
 
   emb-sterm-oterm-all : List S.Term → List Term
   emb-sterm-oterm-all [] = []

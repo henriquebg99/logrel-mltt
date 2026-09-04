@@ -252,6 +252,11 @@ mutual
         B≡ℕ2 = ℕ2≡A A≡B whnfB
         a = PE.trans (size-subst B≡ℕ2 u~t) (size-sym~↓! Γ≡Δ t~u)
     in PE.cong (λ X → 1 + X) a
+  size-symConv↓Term Γ≡Δ (Ind-ins t~u) =
+    let B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
+        B≡Ind = Ind≡A A≡B whnfB
+        a = PE.trans (size-subst B≡Ind u~t) (size-sym~↓! Γ≡Δ t~u)
+    in PE.cong (λ X → 1 + X) a
   size-symConv↓Term Γ≡Δ (ne-ins t u x t~u) =
     let B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
     in PE.cong (λ X → 1 + X) (size-sym~↓! Γ≡Δ t~u)

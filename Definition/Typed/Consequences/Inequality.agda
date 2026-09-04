@@ -269,6 +269,162 @@ U≢ℕ2! U≡ℕ2 =
   let ⊢ℕ2 , ⊢K = syntacticEq ℕ2≡K
   in  ℕ2≢ne-red (id ⊢ℕ2) (id ⊢K) neK ℕ2≡K
 
+Ind≢ne′ : ∀ {ll A K Γ l l′ i}
+       ([Ind] : Γ ⊩Ind A ^ i)
+       ([K] : Γ ⊩ne K ^[ ! , ll ])
+     → ShapeView Γ l l′ _ _ _ _ (Indᵣ [Ind]) (ne [K]) → ⊥
+Ind≢ne′ a b ()
+
+Ind≢ne-red : ∀ {A B K Γ i} → Γ ⊢ A ⇒* Ind i ^ [ ! , ι ⁰ ] → Γ ⊢ B ⇒* K ^ [ ! , ι ⁰ ] → Neutral K → Γ ⊢ A ≡ B ^ [ ! , ι ⁰ ] → ⊥
+Ind≢ne-red {i = i} D D′ neK = A≢B (λ Γ l A → Γ ⊩Ind A ^ i)
+                      (λ Γ l B → Γ ⊩ne B ^[ ! , ⁰ ]) Indᵣ ne
+                      (λ x → extractMaybeEmb (Ind-elim′ D x))
+                      (λ x → extractMaybeEmb (ne-elim′ D′ neK x PE.refl))
+                      Ind≢ne′
+
+-- Ind i and neutral K cannot be judgmentally equal.
+Ind≢ne! : ∀ {i K Γ} → Neutral K → Γ ⊢ Ind i ≡ K ^ [ ! , ι ⁰ ] → ⊥
+Ind≢ne! neK Ind≡K =
+  let ⊢Ind , ⊢K = syntacticEq Ind≡K
+  in  Ind≢ne-red (id ⊢Ind) (id ⊢K) neK Ind≡K
+
+U≢Ind′ : ∀ {Γ A ll B i l l′}
+       ([U] : Γ ⊩′⟨ l ⟩U A ^ ll)
+       ([Ind] : Γ ⊩Ind B ^ i)
+     → ShapeView Γ l l′ _ _ [ ! , _ ] [ ! , _ ] (Uᵣ {ll = ll} [U]) (Indᵣ [Ind]) → ⊥
+U≢Ind′ a b ()
+
+U≢Ind-red : ∀ {ll r lU i B Γ} → Γ ⊢ B ⇒* Ind i ^ [ ! , ll ] → Γ ⊢ Univ r lU ≡ B ^ [ ! , ll ] → ⊥
+U≢Ind-red {ll} {i = i} D = A≢B (λ Γ l A → Γ ⊩′⟨ l ⟩U A ^ ll) (λ Γ l B → Γ ⊩Ind B ^ i) Uᵣ Indᵣ
+                 (λ x → extractMaybeEmb (U-elim x))
+                 (λ x → extractMaybeEmb (Ind-elim′ D x))
+                 U≢Ind′
+
+-- U and Ind i cannot be judgmentally equal.
+U≢Ind! : ∀ {r l ll i Γ} → Γ ⊢ Univ r l ≡ Ind i ^ [ ! , ll ] → ⊥
+U≢Ind! U≡Ind =
+  let _ , ⊢Ind = syntacticEq U≡Ind
+  in  U≢Ind-red (id ⊢Ind) U≡Ind
+
+ℕ≢Ind′ : ∀ {A B Γ l l′ i}
+       ([ℕ] : Γ ⊩ℕ A)
+       ([Ind] : Γ ⊩Ind B ^ i)
+     → ShapeView Γ l l′ _ _ _ _ (ℕᵣ [ℕ]) (Indᵣ [Ind]) → ⊥
+ℕ≢Ind′ a b ()
+
+ℕ≢Ind-red : ∀ {A B Γ i} → Γ ⊢ A ⇒* ℕ ^ [ ! , ι ⁰ ] → Γ ⊢ B ⇒* Ind i ^ [ ! , ι ⁰ ] → Γ ⊢ A ≡ B ^ [ ! , ι ⁰ ] → ⊥
+ℕ≢Ind-red {i = i} D D′ = A≢B (λ Γ l A → Γ ⊩ℕ A)
+                  (λ Γ l A → Γ ⊩Ind A ^ i) ℕᵣ Indᵣ
+                  (λ x → extractMaybeEmb (ℕ-elim′ D x))
+                  (λ x → extractMaybeEmb (Ind-elim′ D′ x))
+                  ℕ≢Ind′
+
+-- ℕ and Ind i cannot be judgmentally equal.
+ℕ≢Ind! : ∀ {i Γ} → Γ ⊢ ℕ ≡ Ind i ^ [ ! , ι ⁰ ] → ⊥
+ℕ≢Ind! ℕ≡Ind =
+  let ⊢ℕ , ⊢Ind = syntacticEq ℕ≡Ind
+  in  ℕ≢Ind-red (id ⊢ℕ) (id ⊢Ind) ℕ≡Ind
+
+Ind≢ℕ′ : ∀ {A B Γ l l′ i}
+       ([Ind] : Γ ⊩Ind A ^ i)
+       ([ℕ] : Γ ⊩ℕ B)
+     → ShapeView Γ l l′ _ _ _ _ (Indᵣ [Ind]) (ℕᵣ [ℕ]) → ⊥
+Ind≢ℕ′ a b ()
+
+Ind≢ℕ-red : ∀ {A B Γ i} → Γ ⊢ A ⇒* Ind i ^ [ ! , ι ⁰ ] → Γ ⊢ B ⇒* ℕ ^ [ ! , ι ⁰ ] → Γ ⊢ A ≡ B ^ [ ! , ι ⁰ ] → ⊥
+Ind≢ℕ-red {i = i} D D′ = A≢B (λ Γ l A → Γ ⊩Ind A ^ i)
+                  (λ Γ l A → Γ ⊩ℕ A) Indᵣ ℕᵣ
+                  (λ x → extractMaybeEmb (Ind-elim′ D x))
+                  (λ x → extractMaybeEmb (ℕ-elim′ D′ x))
+                  Ind≢ℕ′
+
+-- Ind i and ℕ cannot be judgmentally equal.
+Ind≢ℕ! : ∀ {i Γ} → Γ ⊢ Ind i ≡ ℕ ^ [ ! , ι ⁰ ] → ⊥
+Ind≢ℕ! Ind≡ℕ =
+  let ⊢Ind , ⊢ℕ = syntacticEq Ind≡ℕ
+  in  Ind≢ℕ-red (id ⊢Ind) (id ⊢ℕ) Ind≡ℕ
+
+ℕ2≢Ind′ : ∀ {A B Γ l l′ i}
+       ([ℕ2] : Γ ⊩ℕ2 A)
+       ([Ind] : Γ ⊩Ind B ^ i)
+     → ShapeView Γ l l′ _ _ _ _ (ℕ2ᵣ [ℕ2]) (Indᵣ [Ind]) → ⊥
+ℕ2≢Ind′ a b ()
+
+ℕ2≢Ind-red : ∀ {A B Γ i} → Γ ⊢ A ⇒* ℕ2 ^ [ ! , ι ⁰ ] → Γ ⊢ B ⇒* Ind i ^ [ ! , ι ⁰ ] → Γ ⊢ A ≡ B ^ [ ! , ι ⁰ ] → ⊥
+ℕ2≢Ind-red {i = i} D D′ = A≢B (λ Γ l A → Γ ⊩ℕ2 A)
+                   (λ Γ l A → Γ ⊩Ind A ^ i) ℕ2ᵣ Indᵣ
+                   (λ x → extractMaybeEmb (ℕ2-elim′ D x))
+                   (λ x → extractMaybeEmb (Ind-elim′ D′ x))
+                   ℕ2≢Ind′
+
+-- ℕ2 and Ind i cannot be judgmentally equal.
+ℕ2≢Ind! : ∀ {i Γ} → Γ ⊢ ℕ2 ≡ Ind i ^ [ ! , ι ⁰ ] → ⊥
+ℕ2≢Ind! ℕ2≡Ind =
+  let ⊢ℕ2 , ⊢Ind = syntacticEq ℕ2≡Ind
+  in  ℕ2≢Ind-red (id ⊢ℕ2) (id ⊢Ind) ℕ2≡Ind
+
+Ind≢ℕ2′ : ∀ {A B Γ l l′ i}
+       ([Ind] : Γ ⊩Ind A ^ i)
+       ([ℕ2] : Γ ⊩ℕ2 B)
+     → ShapeView Γ l l′ _ _ _ _ (Indᵣ [Ind]) (ℕ2ᵣ [ℕ2]) → ⊥
+Ind≢ℕ2′ a b ()
+
+Ind≢ℕ2-red : ∀ {A B Γ i} → Γ ⊢ A ⇒* Ind i ^ [ ! , ι ⁰ ] → Γ ⊢ B ⇒* ℕ2 ^ [ ! , ι ⁰ ] → Γ ⊢ A ≡ B ^ [ ! , ι ⁰ ] → ⊥
+Ind≢ℕ2-red {i = i} D D′ = A≢B (λ Γ l A → Γ ⊩Ind A ^ i)
+                   (λ Γ l A → Γ ⊩ℕ2 A) Indᵣ ℕ2ᵣ
+                   (λ x → extractMaybeEmb (Ind-elim′ D x))
+                   (λ x → extractMaybeEmb (ℕ2-elim′ D′ x))
+                   Ind≢ℕ2′
+
+-- Ind i and ℕ2 cannot be judgmentally equal.
+Ind≢ℕ2! : ∀ {i Γ} → Γ ⊢ Ind i ≡ ℕ2 ^ [ ! , ι ⁰ ] → ⊥
+Ind≢ℕ2! Ind≡ℕ2 =
+  let ⊢Ind , ⊢ℕ2 = syntacticEq Ind≡ℕ2
+  in  Ind≢ℕ2-red (id ⊢Ind) (id ⊢ℕ2) Ind≡ℕ2
+
+Ind≢Π′ : ∀ {A B Γ ll l l′ i}
+       ([Ind] : Γ ⊩Ind A ^ i)
+       ([Π] : Γ ⊩′⟨ l′ ⟩Π B ^[ ll ])
+     → ShapeView Γ l l′ _ _ _ _ (Indᵣ [Ind]) (Πᵣ [Π]) → ⊥
+Ind≢Π′ a b ()
+
+Ind≢Π-red : ∀ {A B F rF lF lG G Γ i} → Γ ⊢ A ⇒* Ind i ^ [ ! , ι ⁰ ] → Γ ⊢ B ⇒* Π F ^ rF ° lF ▹ G ° lG ° ⁰ ^ ! ^ [ ! , ι ⁰ ] → Γ ⊢ A ≡ B ^ [ ! , ι ⁰ ] → ⊥
+Ind≢Π-red {i = i} D D′ = A≢B (λ Γ l A → Γ ⊩Ind A ^ i)
+                   (λ Γ l A → Γ ⊩′⟨ l ⟩Π A ^[ ⁰ ]) Indᵣ Πᵣ
+                   (λ x → extractMaybeEmb (Ind-elim′ D x))
+                   (λ x → extractMaybeEmb (Π-elim′ D′ x))
+                   Ind≢Π′
+
+-- Ind i and Π F ▹ G for any F and G cannot be judgmentally equal.
+Ind≢Π! : ∀ {i F rF G lF lG r Γ} → Γ ⊢ Ind i ≡ Π F ^ rF ° lF ▹ G ° lG ° ⁰ ^ r ^ [ ! , ι ⁰ ]  → ⊥
+Ind≢Π! Ind≡Π =
+  let ⊢Ind , ⊢Π = syntacticEq Ind≡Π
+      rG , _ , _ , _ , _ , U=U , err , _ = inversion-Π (un-univ ⊢Π)
+      r=r , _ = Univ-PE-injectivity (U≡A-whnf U=U Uₙ)
+      eqr = PE.trans (PE.sym err) r=r
+  in  Ind≢Π-red (id ⊢Ind) (id (PE.subst (λ X → _ ⊢ Π _ ^ _ ° _ ▹ _ ° _ ° _ ^ X ^ [ _ , _ ] ) eqr ⊢Π)) (PE.subst (λ X → _ ⊢ _ ≡ Π _ ^ _ ° _ ▹ _ ° _ ° _ ^ X ^ [ _ , _ ] ) eqr Ind≡Π)
+
+Π≢Ind′ : ∀ {A B Γ ll l l′ i}
+       ([Π] : Γ ⊩′⟨ l ⟩Π A ^[ ll ])
+       ([Ind] : Γ ⊩Ind B ^ i)
+     → ShapeView Γ l l′ _ _ _ _ (Πᵣ [Π]) (Indᵣ [Ind]) → ⊥
+Π≢Ind′ a b ()
+
+Π≢Ind-red : ∀ {A B F rF lF lG G lΠ Γ i} → Γ ⊢ A ⇒* Π F ^ rF ° lF ▹ G ° lG ° lΠ ^ ! ^ [ ! , ι lΠ ] → Γ ⊢ B ⇒* Ind i ^ [ ! , ι lΠ ] → Γ ⊢ A ≡ B ^ [ ! , ι lΠ ] → ⊥
+Π≢Ind-red {lΠ = lΠ} {i = i} D D′ = A≢B (λ Γ l A → Γ ⊩′⟨ l ⟩Π A ^[ lΠ ])
+                   (λ Γ l B → Γ ⊩Ind B ^ i) Πᵣ Indᵣ
+                   (λ x → extractMaybeEmb (Π-elim′ D x))
+                   (λ x → extractMaybeEmb (Ind-elim′ D′ x))
+                   Π≢Ind′
+
+-- Π F ▹ G and Ind i for any F and G cannot be judgmentally equal.
+Π≢Ind! : ∀ {F rF lF lG G l Γ i} → Γ ⊢ Π F ^ rF ° lF ▹ G ° lG ° l ^ ! ≡ Ind i ^ [ ! , ι l ] → ⊥
+Π≢Ind! Π≡Ind =
+  let ⊢Π , ⊢Ind = syntacticEq Π≡Ind
+  in  Π≢Ind-red (id ⊢Π) (id ⊢Ind) Π≡Ind
+
+
+
 -- Empty and neutral
 Empty≢ne′ : ∀ {A K Γ l l′}
        ([Empty] : Γ ⊩Empty A )

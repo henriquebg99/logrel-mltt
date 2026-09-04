@@ -420,6 +420,9 @@ abstract
   castℕ2Inv : ∀ {l e t} → Neutral (cast l ℕ2 ℕ2 e t) → Neutral t 
   castℕ2Inv (castℕ2ℕ2ₙ net) = net
 
+  castIndInv : ∀ {l i e t} → Neutral (cast l (Ind i) (Ind i) e t) → Neutral t
+  castIndInv (castIndIndₙ net) = net
+
   cast-t-≡ : ∀ {Γ A B B' t t' e X lX} 
                 → Γ ⊢ t' ∷ B' ^ [ ! , ι ⁰ ]
                 → Γ ⊢ cast ⁰ A B e t ~ t' ↑! X ^ lX

@@ -92,6 +92,7 @@ mutual
                        → Γ ⊩⟨ l ⟩ A ≡ B ^ r / p → Γ ⊩⟨ l′ ⟩ A ≡ B ^ r / q
   irrelevanceEqT (ℕᵥ D D′) A≡B = A≡B
   irrelevanceEqT (ℕ2ᵥ D D′) A≡B = A≡B
+  irrelevanceEqT (Indᵥ D D′) A≡B = A≡B
   irrelevanceEqT (Emptyᵥ D D′) A≡B = A≡B
   irrelevanceEqT (ne (ne K D neK _) (ne K₁ D₁ neK₁ K≡K₁)) (ne₌ M D′ neM K≡M)
                  rewrite whrDet* (red D , ne neK) (red D₁ , ne neK₁) =
@@ -140,6 +141,7 @@ mutual
                     → Γ ⊩⟨ l' ⟩ A ^ r
   irrelevance-level l< (ℕᵣ x) = ℕᵣ x
   irrelevance-level l< (ℕ2ᵣ x) = ℕ2ᵣ x
+  irrelevance-level l< (Indᵣ x) = Indᵣ x
   irrelevance-level l< (Emptyᵣ x) = Emptyᵣ x
   irrelevance-level l< (ne x) = ne x
   irrelevance-level l< (Πᵣ′ rF lF lG lF≤ lG≤ F G D ⊢F ⊢G A≡A [F] [G] G-ext) = Πᵣ′ rF lF lG lF≤ lG≤ F G D ⊢F ⊢G A≡A (λ x ⊢Δ → irrelevance-level l< ([F] x ⊢Δ ))
@@ -195,6 +197,7 @@ mutual
                          → Γ ⊩⟨ l ⟩ t ∷ A ^ r / p → Γ ⊩⟨ l′ ⟩ t ∷ A ^ r / q
   irrelevanceTermT (ℕᵥ D D′) t = t
   irrelevanceTermT (ℕ2ᵥ D D′) t = t
+  irrelevanceTermT (Indᵥ D D′) t = t
   irrelevanceTermT (Emptyᵥ D D′) t = t
   irrelevanceTermT { r = [ ! , ll ]  } (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (neₜ k d nf)
                    with whrDet* (red D₁ , ne neK₁) (red D , ne neK)
@@ -277,6 +280,7 @@ mutual
                            → Γ ⊩⟨ l ⟩ t ≡ u ∷ A ^ r / p → Γ ⊩⟨ l′ ⟩ t ≡ u ∷ A ^ r / q
   irrelevanceEqTermT (ℕᵥ D D′) t≡u = t≡u
   irrelevanceEqTermT (ℕ2ᵥ D D′) t≡u = t≡u
+  irrelevanceEqTermT (Indᵥ D D′) t≡u = t≡u
   irrelevanceEqTermT (Emptyᵥ D D′) t≡u = t≡u
   irrelevanceEqTermT { r = [ ! , ll ] } (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (neₜ₌ k m d d′ nf)
                      with whrDet* (red D₁ , ne neK₁) (red D , ne neK)

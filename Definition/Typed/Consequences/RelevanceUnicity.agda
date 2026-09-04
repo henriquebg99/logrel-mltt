@@ -59,6 +59,10 @@ mutual
     let e₁′ , el₁′ , _ = Uinjectivity e₁
         e₂′ , el₂′ , _ = Uinjectivity (trans (sym e₂) (proj₁ (inversion-ℕ2 y)) ) 
     in PE.sym (PE.trans e₂′ e₁′) , PE.cong next (PE.sym el₂′)
+  Univ-uniq′ e₁ e₂ el₁ PE.refl w (Indⱼ x) y =
+    let e₁′ , el₁′ , _ = Uinjectivity e₁
+        e₂′ , el₂′ , _ = Uinjectivity (trans (sym e₂) (proj₁ (inversion-Ind y)) )
+    in PE.sym (PE.trans e₂′ e₁′) , PE.cong next (PE.sym el₂′)
   Univ-uniq′ e₁ e₂ el₁ el₂ w (Emptyⱼ x) y =
     let e₁′ , el₁′ , _ = Uinjectivity e₁
         e₂′ , el₂′ , _ = Uinjectivity (trans (sym e₂) (proj₁ (inversion-Empty y)) ) 
@@ -90,9 +94,14 @@ mutual
   Univ-uniq′ e₁ e₂ el₁ el₂ (ne ()) (sucⱼ X) y 
   Univ-uniq′ e₁ e₂ el₁ el₂ (ne ()) (zero2ⱼ x) y 
   Univ-uniq′ e₁ e₂ el₁ el₂ (ne ()) (suc2ⱼ X) y 
+  Univ-uniq′ e₁ e₂ el₁ el₂ (ne ()) (Ctrⱼ _ _) y
   Univ-uniq′ e₁ e₂ el₁ el₂ w (natrecⱼ _ x x₁ x₂ x₃) (natrecⱼ _ x₄ y y₁ y₂) = proj₁ (Uinjectivity (trans (sym e₁) e₂)) , PE.refl
   Univ-uniq′ e₁ e₂ el₁ el₂ w (natrec2ⱼ _ x x₁ x₂ x₃) (natrec2ⱼ _ x₄ y y₁ y₂) = proj₁ (Uinjectivity (trans (sym e₁) e₂)) , PE.refl
   Univ-uniq′ e₁ e₂ el₁ el₂ w (Emptyrecⱼ x x₁) (Emptyrecⱼ y y₁) = proj₁ (Uinjectivity (trans (sym e₁) e₂)) , PE.refl
+  -- IndRect gen-spine uses map: avoid IndRectₙ / IndRectⱼ–IndRectⱼ matching.
+  Univ-uniq′ e₁ e₂ el₁ el₂ (ne n) ⊢i@(IndRectⱼ _ _ _ _) y =
+    let el , Teq = neTypeEq n ⊢i y
+    in proj₁ (Uinjectivity (trans (sym e₁) (trans Teq (PE.subst (λ lx → _ ⊢ _ ≡ _ ^ [ ! , lx ]) (PE.sym el) e₂)))) , el
   Univ-uniq′ e₁ e₂ el₁ el₂ w (castⱼ X X₁ X₂ X₃) (castⱼ y y₁ y₂ y₃) = proj₁ (Uinjectivity (trans (sym e₁) e₂)) , PE.refl
   Univ-uniq′ e₁ e₂ el₁ el₂ w (conv x x₁) y = Univ-uniq′ (trans x₁ e₁) e₂ el₁ el₂ w x y 
   Univ-uniq′ e₁ e₂ el₁ el₂ w x (conv y y₁) = Univ-uniq′ e₁ (trans y₁ e₂) el₁ el₂ w x y 
@@ -172,6 +181,10 @@ U≢Empty U≡Empty =
       e₂ , _ = relevance-unicity ⊢Empty (univ (Emptyⱼ (wfEq ℕ≡Empty)))
   in !≢% (PE.trans (PE.sym e₁) e₂)
 
+-- ctr / IndRect gen-spines use map (same issue as neTypeEq-IndRect).
+postulate
+  relevance-uniq-map-spine : ∀ {Γ t T₁ T₂ r₁ r₂ l₁ l₂} →
+    Γ ⊢ t ∷ T₁ ^ [ r₁ , l₁ ] → Γ ⊢ t ∷ T₂ ^ [ r₂ , l₂ ] → r₁ PE.≡ r₂
 
 relevance-uniq : ∀ {Γ t T₁ T₂ r₁ r₂ l₁ l₂} → Γ ⊢ t ∷ T₁ ^ [ r₁ , l₁ ] → Γ ⊢ t ∷ T₂ ^ [ r₂ , l₂ ] →
                  r₁ PE.≡ r₂
@@ -182,6 +195,7 @@ relevance-uniq (Emptyⱼ x) (Emptyⱼ x₁) = PE.refl
 relevance-uniq (Πⱼ x ▹ x₁ ▹ X ▹ X₁) (Πⱼ x₂ ▹ x₃ ▹ Y ▹ Y₁) =
           PE.refl 
 relevance-uniq (Idⱼ X X₁ _) (Idⱼ Y Y₁ _) = PE.refl
+relevance-uniq (Indⱼ x) (Indⱼ y) = PE.refl
 relevance-uniq (var xx x) (var _ y) =
     let T≡T , e = varTypeEq′ x y
         er , el = typelevel-injectivity e
@@ -197,9 +211,11 @@ relevance-uniq (zeroⱼ x) (zeroⱼ x₁) = PE.refl
 relevance-uniq (sucⱼ X) (sucⱼ Y) = PE.refl 
 relevance-uniq (zero2ⱼ x) (zero2ⱼ x₁) = PE.refl 
 relevance-uniq (suc2ⱼ X) (suc2ⱼ Y) = PE.refl 
+relevance-uniq ⊢t@(Ctrⱼ _ _) ⊢u = relevance-uniq-map-spine ⊢t ⊢u
 relevance-uniq (natrecⱼ _ x X X₁ X₂) (natrecⱼ _ y Y Y₁ Y₂) = relevance-uniq X₁ Y₁
 relevance-uniq (natrec2ⱼ _ x X X₁ X₂) (natrec2ⱼ _ y Y Y₁ Y₂) = relevance-uniq X₁ Y₁
 relevance-uniq (Emptyrecⱼ x X) (Emptyrecⱼ y Y) = let er , el = relevance-unicity x y in er
+relevance-uniq ⊢t@(IndRectⱼ _ _ _ _) ⊢u = relevance-uniq-map-spine ⊢t ⊢u
 relevance-uniq (equiv-eqⱼ x) (equiv-eqⱼ x₁) = PE.refl
 relevance-uniq (Idreflⱼ X) (Idreflⱼ Y) =
     PE.refl 

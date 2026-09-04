@@ -29,6 +29,7 @@ data ΠNorm : Term → Set where
   Idₙ : ∀ {A t u} → ΠNorm (Id A t u)
   ℕₙ : ΠNorm ℕ
   ℕ2ₙ : ΠNorm ℕ2
+  Indₙ : ∀ {i} → ΠNorm (Ind i)
   Emptyₙ : ΠNorm sEmpty
   ne   : ∀ {n} → Neutral n → ΠNorm n
 
@@ -112,6 +113,7 @@ doΠNorm′ : ∀ {A rA Γ l} ([A] : Γ ⊩⟨ l ⟩ A ^ rA)
 doΠNorm′ (Uᵣ (Uᵣ r l′ l< PE.refl [[ A , U , d ]])) = Univ r l′ , Uₙ , Ugenⱼ (wf A) , regular* d
 doΠNorm′ (ℕᵣ [[ ⊢A , ⊢B , D ]]) = ℕ , ℕₙ , ⊢B , regular* D
 doΠNorm′ (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) = ℕ2 , ℕ2ₙ , ⊢B , regular* D
+doΠNorm′ (Indᵣ {i = i} [[ ⊢A , ⊢B , D ]]) = Ind i , Indₙ , ⊢B , regular* D
 doΠNorm′ (Emptyᵣ [[ ⊢A , ⊢B , D ]]) = sEmpty , Emptyₙ , ⊢B , regular* D
 doΠNorm′ (ne′ K [[ ⊢A , ⊢B , D ]] neK K≡K) = K , ne neK , ⊢B , regular* D
 doΠNorm′ (Πᵣ′ rF lF lG lF≤ lG≤ F G [[ ⊢A , ⊢B , D ]] ⊢F ⊢G A≡A [F] [G] G-ext) =
@@ -138,6 +140,7 @@ doΠNorm ⊢A = doΠNorm′ (reducible ⊢A)
 ΠNorm-whnf Idₙ = Idₙ
 ΠNorm-whnf ℕₙ = ℕₙ
 ΠNorm-whnf ℕ2ₙ = ℕ2ₙ
+ΠNorm-whnf Indₙ = Indₙ
 ΠNorm-whnf Emptyₙ = Emptyₙ
 ΠNorm-whnf (ne x) = ne x
 

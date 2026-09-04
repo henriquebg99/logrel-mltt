@@ -6,11 +6,12 @@ module Tools.Nat where
 
 open import Tools.PropositionalEquality
 open import Tools.Nullary
+open import Tools.Empty
 
 -- We reexport Agda's built-in type of natural numbers.
 
 open import Agda.Builtin.Nat using (zero; suc)
-open import Agda.Builtin.Nat using (Nat) public
+open import Agda.Builtin.Nat using (Nat; _-_) public
 
 pattern 1+ n = suc n
 
@@ -34,6 +35,12 @@ suc m ≟ suc n  | no prf   = no (λ x → prf (subst (λ y → m ≡ pred y) x 
 zero  ≟ suc n  = no λ()
 suc m ≟ zero   = no λ()
 
+≟-refl : (n : Nat) → (n ≟ n) ≡ yes refl
+≟-refl zero = refl
+≟-refl (suc n) with n ≟ n | ≟-refl n
+... | yes refl | refl = refl
+... | no p | _ = ⊥-elim (p refl)
+
 _+_ : (m n : Nat) → Nat
 0 + n = n
 suc m + n = suc (m + n)
@@ -56,6 +63,14 @@ le-refl (1+ n) = leS (le-refl n)
 
 _<<_ :  Nat → Nat → Set
 n << m = 1+ n <= m
+
+-- Decide whether m << n
+_≪?_ : (m n : Nat) → Dec (m << n)
+m ≪? zero = no λ()
+zero ≪? suc n = yes (leS le0)
+suc m ≪? suc n with m ≪? n
+... | yes p = yes (leS p)
+... | no ¬p = no (λ {(leS p) → ¬p p})
 
 <<inv-suc :  ∀ {n m : Nat} → 1+ n << 1+ m → n << m
 <<inv-suc (leS e) = e
@@ -114,6 +129,11 @@ le-plus : ∀ {m n l k} → m <= n → l <= k → (m + l) <= (n + k)
 le-plus {Nat.zero} {Nat.zero} H₁ H₂ = H₂
 le-plus {Nat.zero} {1+ n} le0 H₂ = le-plus-left (1+ n) H₂
 le-plus {1+ m} {1+ n} (leS H₁) H₂ = leS (le-plus H₁ H₂)
+
+minus-suc : ∀ m j → (m - 1+ j) ≡ ((m - 1) - j)
+minus-suc m 0 = refl
+minus-suc 0 (1+ j) = refl
+minus-suc (1+ m) (1+ j) = refl
 
 le-times-left : ∀ {m n} l → m <= n → (l ⋅ m) <= (l ⋅ n)
 le-times-left Nat.zero H = le0

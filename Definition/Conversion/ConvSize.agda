@@ -35,6 +35,17 @@ mutual
   size~↑! (cast-ℕ2Π x x₁ x₂ x₃) = 1 + sizeConv↑Term x + sizeConv↑Term x₁
   size~↑! (cast-ΠΠ%! x x₁ x₂ x₃ x₄) = 1 + sizeConv↑Term x + sizeConv↑Term x₁ + sizeConv↑Term x₂
   size~↑! (cast-ΠΠ!% x x₁ x₂ x₃ x₄) = 1 + sizeConv↑Term x + sizeConv↑Term x₁ + sizeConv↑Term x₂
+  size~↑! (IndRect-cong x x₁ x₂) = 1 + sizeConv↑Term x + size~↓! x₁
+  size~↑! (cast-neInd x x₁ x₂ x₃) = 1 + size~↓! x + sizeConv↑Term x₁
+  size~↑! (cast-Ind x x₁ x₂ x₃) = 1 + size~↓! x + sizeConv↑Term x₁
+  size~↑! (castInd-refl x x₁) = 1 + size~↓! x
+  size~↑! (cast-IndΠ x x₁ x₂ x₃) = 1 + sizeConv↑Term x + sizeConv↑Term x₁
+  size~↑! (cast-ΠInd x x₁ x₂ x₃) = 1 + sizeConv↑Term x + sizeConv↑Term x₁
+  size~↑! (cast-Indℕ x x₁ x₂) = 1 + sizeConv↑Term x
+  size~↑! (cast-Indℕ2 x x₁ x₂) = 1 + sizeConv↑Term x
+  size~↑! (cast-ℕInd x x₁ x₂ x₃) = 1 + sizeConv↑Term x + sizeConv↑Term x₁
+  size~↑! (cast-ℕ2Ind x x₁ x₂ x₃) = 1 + sizeConv↑Term x + sizeConv↑Term x₁
+  size~↑! (cast-IndInd x x₁ x₂ x₃) = 1 + sizeConv↑Term x₁
   
   size~↑ : ∀ {t u A Γ l} → Γ ⊢ t ~ u ↑ A ^ l → Nat
   size~↑ (~↑! x) = size~↑! x
@@ -63,12 +74,15 @@ mutual
   sizeConv↓Term (Id-cong x x₁ x₂) = 1 + sizeConv↑Term x + sizeConv↑Term x₁ + sizeConv↑Term x₂
   sizeConv↓Term (ℕ-ins x) = 1 + size~↓! x
   sizeConv↓Term (ℕ2-ins x) = 1 + size~↓! x
+  sizeConv↓Term (Ind-ins x) = 1 + size~↓! x
   sizeConv↓Term (ne-ins x x₁ x₂ x₃) = 1 + size~↓! x₃ 
   sizeConv↓Term (zero-refl x) = 1
   sizeConv↓Term (zero2-refl x) = 1
   sizeConv↓Term (suc-cong x) = 1 + sizeConv↑Term x
   sizeConv↓Term (suc2-cong x) = 1 + sizeConv↑Term x
   sizeConv↓Term (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) = 1 + sizeConv↑Term x₇
+  sizeConv↓Term (Ind-refl x) = 1
+  sizeConv↓Term (ctr-cong x x₁ x₂) = 1
 
   sizeConv↓ : ∀ {A B Γ l} → Γ ⊢ A [conv↓] B ^ l → Nat
   sizeConv↓ (U-refl x x₁) = 1

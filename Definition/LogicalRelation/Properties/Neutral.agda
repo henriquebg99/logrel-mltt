@@ -64,6 +64,11 @@ mutual
         n~n′ = ~-conv n~n A≡ℕ2
         n≡n  = ~-to-≅ₜ n~n′
     in  ℕ2ₜ _ (idRedTerm:*: (conv n A≡ℕ2)) n≡n (ne (neNfₜ neN (conv n A≡ℕ2) n~n′))
+  neuTerm⁰ (Indᵣ [[ ⊢A , ⊢B , D ]]) neN n n~n =
+    let A≡Ind  = subset* D
+        n~n′ = ~-conv n~n A≡Ind
+        n≡n  = ~-to-≅ₜ n~n′
+    in  Indₜ _ (idRedTerm:*: (conv n A≡Ind)) n≡n (ne (neNfₜ neN (conv n A≡Ind) n~n′))
   neuTerm⁰ {r = [ ! , ll ]} (ne′ K [[ ⊢A , ⊢B , D ]] neK K≡K) neN n n~n =
     let A≡K = subset* D
     in  neₜ _ (idRedTerm:*: (conv n A≡K)) (neNfₜ neN (conv n A≡K)
@@ -125,6 +130,12 @@ mutual
         n~n′₁ = ~-conv n~n′ A≡ℕ2
         n≡n′ = ~-to-≅ₜ n~n′₁
     in  ℕ2ₜ₌ _ _ (idRedTerm:*: (conv n A≡ℕ2)) (idRedTerm:*: (conv n′ A≡ℕ2))
+            n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
+  neuEqTerm⁰ (Indᵣ [[ ⊢A , ⊢B , D ]]) neN neN′ n n′ n~n′ =
+    let A≡Ind = subset* D
+        n~n′₁ = ~-conv n~n′ A≡Ind
+        n≡n′ = ~-to-≅ₜ n~n′₁
+    in  Indₜ₌ _ _ (idRedTerm:*: (conv n A≡Ind)) (idRedTerm:*: (conv n′ A≡Ind))
             n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
   neuEqTerm⁰ (Emptyᵣ [[ ⊢A , ⊢B , D ]]) neN neN′ n n′ n~n′ =
     let A≡Empty = subset* D
@@ -205,6 +216,11 @@ mutual
         n~n′ = ~-conv n~n A≡ℕ2
         n≡n  = ~-to-≅ₜ n~n′
     in  ℕ2ₜ _ (idRedTerm:*: (conv n A≡ℕ2)) n≡n (ne (neNfₜ neN (conv n A≡ℕ2) n~n′))
+  neuTerm (Indᵣ [[ ⊢A , ⊢B , D ]]) neN n n~n =
+    let A≡Ind  = subset* D
+        n~n′ = ~-conv n~n A≡Ind
+        n≡n  = ~-to-≅ₜ n~n′
+    in  Indₜ _ (idRedTerm:*: (conv n A≡Ind)) n≡n (ne (neNfₜ neN (conv n A≡Ind) n~n′))
   neuTerm {r = [ ! , ll ]} (ne′ K [[ ⊢A , ⊢B , D ]] neK K≡K) neN n n~n =
     let A≡K = subset* D
     in  neₜ _ (idRedTerm:*: (conv n A≡K)) (neNfₜ neN (conv n A≡K)
@@ -292,6 +308,12 @@ mutual
         n~n′₁ = ~-conv n~n′ A≡ℕ2
         n≡n′ = ~-to-≅ₜ n~n′₁
     in  ℕ2ₜ₌ _ _ (idRedTerm:*: (conv n A≡ℕ2)) (idRedTerm:*: (conv n′ A≡ℕ2))
+            n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
+  neuEqTerm (Indᵣ [[ ⊢A , ⊢B , D ]]) neN neN′ n n′ n~n′ =
+    let A≡Ind = subset* D
+        n~n′₁ = ~-conv n~n′ A≡Ind
+        n≡n′ = ~-to-≅ₜ n~n′₁
+    in  Indₜ₌ _ _ (idRedTerm:*: (conv n A≡Ind)) (idRedTerm:*: (conv n′ A≡Ind))
             n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
   neuEqTerm (Emptyᵣ [[ ⊢A , ⊢B , D ]]) neN neN′ n n′ n~n′ =
     let A≡Empty = subset* D
@@ -399,6 +421,11 @@ mutual
         n~n′ = ~-conv n~n A≡ℕ2
         n≡n  = ~-to-≅ₜ n~n′
     in  ℕ2ₜ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡ℕ2) n≡n (ne (neNfₜ neN (conv n A≡ℕ2) n~n′))
+  neuTerm:⇒*:⁰ (Indᵣ [[ ⊢A , ⊢B , D ]]) neN [[ ⊢t , n , D' ]] n~n =
+    let A≡Ind  = subset* D
+        n~n′ = ~-conv n~n A≡Ind
+        n≡n  = ~-to-≅ₜ n~n′
+    in  Indₜ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡Ind) n≡n (ne (neNfₜ neN (conv n A≡Ind) n~n′))
   neuTerm:⇒*:⁰ (ne′ K [[ ⊢A , ⊢B , D ]] neK K≡K) neN [[ ⊢t , n , D' ]] n~n =
     let A≡K = subset* D
     in  neₜ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡K) (neNfₜ neN (conv n A≡K)
@@ -450,6 +477,12 @@ mutual
         n~n′₁ = ~-conv n~n′ A≡ℕ2
         n≡n′ = ~-to-≅ₜ n~n′₁
     in  ℕ2ₜ₌ _ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡ℕ2) (conv:⇒*: [[ ⊢u , n′ , D′ ]] A≡ℕ2)
+            n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
+  neuEqTerm:⇒*:⁰ (Indᵣ [[ ⊢A , ⊢B , D ]]) neN neN′ [[ ⊢t , n , D' ]] [[ ⊢u , n′ , D′ ]] n~n′ =
+    let A≡Ind = subset* D
+        n~n′₁ = ~-conv n~n′ A≡Ind
+        n≡n′ = ~-to-≅ₜ n~n′₁
+    in  Indₜ₌ _ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡Ind) (conv:⇒*: [[ ⊢u , n′ , D′ ]] A≡Ind)
             n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
   neuEqTerm:⇒*:⁰ (ne (ne K [[ ⊢A , ⊢B , D ]] neK K≡K)) neN neN′ [[ ⊢t , n , D' ]] [[ ⊢u , n′ , D′ ]] n~n′ =
     let A≡K = subset* D
@@ -514,6 +547,11 @@ mutual
         n~n′ = ~-conv n~n A≡ℕ2
         n≡n  = ~-to-≅ₜ n~n′
     in  ℕ2ₜ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡ℕ2) n≡n (ne (neNfₜ neN (conv n A≡ℕ2) n~n′))
+  neuTerm:⇒*: (Indᵣ [[ ⊢A , ⊢B , D ]]) neN [[ ⊢t , n , D' ]] n~n =
+    let A≡Ind  = subset* D
+        n~n′ = ~-conv n~n A≡Ind
+        n≡n  = ~-to-≅ₜ n~n′
+    in  Indₜ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡Ind) n≡n (ne (neNfₜ neN (conv n A≡Ind) n~n′))
   neuTerm:⇒*: (ne′ K [[ ⊢A , ⊢B , D ]] neK K≡K) neN [[ ⊢t , n , D' ]] n~n =
     let A≡K = subset* D
     in  neₜ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡K) (neNfₜ neN (conv n A≡K)
@@ -603,6 +641,12 @@ mutual
         n~n′₁ = ~-conv n~n′ A≡ℕ2
         n≡n′ = ~-to-≅ₜ n~n′₁
     in  ℕ2ₜ₌ _ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡ℕ2) (conv:⇒*: [[ ⊢u , n′ , D′ ]] A≡ℕ2)
+            n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
+  neuEqTerm:⇒*: (Indᵣ [[ ⊢A , ⊢B , D ]]) neN neN′ [[ ⊢t , n , D' ]] [[ ⊢u , n′ , D′ ]] n~n′ =
+    let A≡Ind = subset* D
+        n~n′₁ = ~-conv n~n′ A≡Ind
+        n≡n′ = ~-to-≅ₜ n~n′₁
+    in  Indₜ₌ _ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡Ind) (conv:⇒*: [[ ⊢u , n′ , D′ ]] A≡Ind)
             n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
   neuEqTerm:⇒*: (ne (ne K [[ ⊢A , ⊢B , D ]] neK K≡K)) neN neN′ [[ ⊢t , n , D' ]] [[ ⊢u , n′ , D′ ]] n~n′ =
     let A≡K = subset* D

@@ -5,6 +5,7 @@ open import Definition.Untyped.Properties
 open import Definition.Typed
 open import Definition.Typed.Weakening
 open import Definition.Conversion
+open import Tools.List using (List; All₂; []ₐ; _∷ₐ_; map; length; length-map)
 import Tools.PropositionalEquality as PE
 mutual
   -- Weakening of algorithmic equality of neutrals.
@@ -65,6 +66,35 @@ mutual
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-neℕ x x₁ x₂ x₃) = cast-neℕ (wk~↓! [ρ] ⊢Δ x)  (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-neℕ2 x x₁ x₂ x₃) = cast-neℕ2 (wk~↓! [ρ] ⊢Δ x)  (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-neΠ X x x₁ x₂ x₃) = cast-neΠ (wkConv↑Term [ρ] ⊢Δ X) (wk~↓! [ρ] ⊢Δ x)  (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
+  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (IndRect-cong {i} {P} {P'} {lG} {t} {t'} {ms} {ms'} x x₁ x₂) =
+    PE.subst₂ (λ a b → Δ ⊢ a ~ b ↑! U.wk ρ (P ∘ t ^ ¹) ^ ι lG)
+      (PE.sym (wk-IndRect ρ i lG P t ms))
+      (PE.sym (wk-IndRect ρ i lG P' t' ms'))
+      (IndRect-cong (wkConv↑Term [ρ] ⊢Δ x)
+                    (wk~↓! [ρ] ⊢Δ x₁)
+                    (PE.subst (λ As → Δ ⊢All map (U.wk ρ) ms ≡ map (U.wk ρ) ms' ∷ As ^ [ ! , ι lG ])
+                              (wk-indRectBranchTyList ρ i P ! lG)
+                              (wkAllEq [ρ] ⊢Δ x₂)))
+  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-neInd x x₁ x₂ x₃) =
+    cast-neInd (wk~↓! [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
+  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-Ind x x₁ x₂ x₃) =
+    cast-Ind (wk~↓! [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
+  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (castInd-refl x x₁) =
+    castInd-refl (wk~↓! [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁)
+  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-IndΠ x x₁ x₂ x₃) =
+    cast-IndΠ (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
+  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-ΠInd x x₁ x₂ x₃) =
+    cast-ΠInd (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
+  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-Indℕ x x₁ x₂) =
+    cast-Indℕ (wkConv↑Term [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂)
+  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-Indℕ2 x x₁ x₂) =
+    cast-Indℕ2 (wkConv↑Term [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂)
+  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-ℕInd x x₁ x₂ x₃) =
+    cast-ℕInd (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
+  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-ℕ2Ind x x₁ x₂ x₃) =
+    cast-ℕ2Ind (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
+  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-IndInd x x₁ x₂ x₃) =
+    cast-IndInd x (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
 
   wk~↑% : ∀ {ρ t u A Γ Δ l } ([ρ] : ρ ∷ Δ ⊆ Γ) → ⊢ Δ
         → Γ ⊢ t ~ u ↑% A ^ l
@@ -120,6 +150,8 @@ mutual
     ℕ-ins (wk~↓! ρ ⊢Δ x)
   wkConv↓Term ρ ⊢Δ (ℕ2-ins x) =
     ℕ2-ins (wk~↓! ρ ⊢Δ x)
+  wkConv↓Term ρ ⊢Δ (Ind-ins x) =
+    Ind-ins (wk~↓! ρ ⊢Δ x)
   -- wkConv↓Term ρ ⊢Δ (Empty-ins x) =
   --   Empty-ins (wk~↓% ρ ⊢Δ x)
   wkConv↓Term {ρ} [ρ] ⊢Δ (ne-ins t u x x₁) =
@@ -139,8 +171,23 @@ mutual
                         (wkConv↑Term (lift [ρ]) (⊢Δ ∙ ⊢ρF) t<>u))
   wkConv↓Term ρ ⊢Δ (ℕ-refl x) = ℕ-refl ⊢Δ
   wkConv↓Term ρ ⊢Δ (ℕ2-refl x) = ℕ2-refl ⊢Δ
+  wkConv↓Term ρ ⊢Δ (Ind-refl x) = Ind-refl ⊢Δ
   wkConv↓Term ρ ⊢Δ (Empty-refl _) = Empty-refl ⊢Δ
   wkConv↓Term ρ ⊢Δ (Π-cong eql eqr eqlF eqlG l< l<'   x A<>B A<>B₁) =
     let ⊢ρF = wk ρ ⊢Δ x
     in  Π-cong eql eqr eqlF eqlG l< l<' ⊢ρF (wkConv↑Term ρ ⊢Δ A<>B) (wkConv↑Term (lift ρ) (⊢Δ ∙ ⊢ρF) A<>B₁)
   wkConv↓Term {ρ} {Δ = Δ} [ρ] ⊢Δ (Id-cong X x x₁) = Id-cong (wkConv↑Term [ρ] ⊢Δ X) (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁)
+  wkConv↓Term {ρ} {Δ = Δ} [ρ] ⊢Δ (ctr-cong {i} {j} {args} {args'} ⊢Γ len eqs) =
+    PE.subst₂ (λ t u → Δ ⊢ t [conv↓] u ∷ Ind i ^ ι ⁰)
+      (PE.sym (wk-ctr ρ i j args))
+      (PE.sym (wk-ctr ρ i j args'))
+      (ctr-cong ⊢Δ
+        (PE.trans (length-map (U.wk ρ) args) len)
+        (wkAll₂Conv [ρ] ⊢Δ eqs))
+
+  wkAll₂Conv : ∀ {ρ args args' i Γ Δ} ([ρ] : ρ ∷ Δ ⊆ Γ) → ⊢ Δ →
+    All₂ (λ a a' → Γ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) args args' →
+    All₂ (λ a a' → Δ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) (map (U.wk ρ) args) (map (U.wk ρ) args')
+  wkAll₂Conv [ρ] ⊢Δ []ₐ = []ₐ
+  wkAll₂Conv [ρ] ⊢Δ (p ∷ₐ ps) = wkConv↑Term [ρ] ⊢Δ p ∷ₐ wkAll₂Conv [ρ] ⊢Δ ps
+

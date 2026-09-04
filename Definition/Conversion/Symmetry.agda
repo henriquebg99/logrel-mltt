@@ -280,6 +280,10 @@ mutual
     let B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
         B≡ℕ2 = ℕ2≡A A≡B whnfB
     in  ℕ2-ins (PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) B≡ℕ2 u~t)
+  symConv↓Term Γ≡Δ (Ind-ins t~u) =
+    let B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
+        B≡Ind = Ind≡A A≡B whnfB
+    in  Ind-ins (PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) B≡Ind u~t)
   symConv↓Term Γ≡Δ (ne-ins t u x t~u) =
     let B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
     in  ne-ins (stabilityTerm Γ≡Δ u) (stabilityTerm Γ≡Δ t) x u~t

@@ -36,6 +36,8 @@ inversion-ne' neA (ℕᵣ d) [t] whnft with whnfRed* (red d) (ne neA)
 inversion-ne' () (ℕᵣ d) [t] whnft | PE.refl
 inversion-ne' neA (ℕ2ᵣ d) [t] whnft with whnfRed* (red d) (ne neA) 
 inversion-ne' () (ℕ2ᵣ d) [t] whnft | PE.refl
+inversion-ne' neA (Indᵣ D) [t] whnft with whnfRed* (red D) (ne neA) 
+inversion-ne' () (Indᵣ D) [t] whnft | PE.refl
 inversion-ne' neA (ne′ K D neK K≡K) (neₜ k d (neNfₜ neK₁ ⊢k k≡k)) whnft =
   let eq = whnfRed*Term (redₜ d) whnft
   in PE.subst Neutral (PE.sym eq) neK₁  
@@ -58,6 +60,12 @@ inversion-ℕ (conv x x₁) with inversion-ℕ x
 inversion-ℕ2 : ∀ {Γ C r} → Γ ⊢ ℕ2 ∷ C ^ r → Γ ⊢ C ≡ U ⁰ ^ r × r PE.≡ [ ! , next ⁰ ]
 inversion-ℕ2 (ℕ2ⱼ x) = refl (Ugenⱼ x) , PE.refl
 inversion-ℕ2 (conv x x₁) with inversion-ℕ2 x
+... | [C≡U] , PE.refl = trans (sym x₁) [C≡U] , PE.refl
+
+-- Inversion of inductive type formers.
+inversion-Ind : ∀ {Γ n C r} → Γ ⊢ Ind n ∷ C ^ r → Γ ⊢ C ≡ U ⁰ ^ r × r PE.≡ [ ! , next ⁰ ]
+inversion-Ind (Indⱼ x) = refl (Ugenⱼ x) , PE.refl
+inversion-Ind (conv x x₁) with inversion-Ind x
 ... | [C≡U] , PE.refl = trans (sym x₁) [C≡U] , PE.refl
 
 -- Inversion of Π-types.

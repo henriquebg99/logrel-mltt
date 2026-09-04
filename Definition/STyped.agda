@@ -1,8 +1,9 @@
 module Definition.STyped where
 
 open import Definition.SUntyped
-open import Tools.Nat using (Nat)
+open import Tools.Nat using (Nat; _<<_)
 open import Tools.List
+open import Tools.PropositionalEquality using (_≡_)
 
 infixr 30 _∙_
 infix  30 _∷_∈_
@@ -40,9 +41,11 @@ mutual
           → (A ∙ Γ) ⊢ t ∷ B
           → Γ ⊢ lam A t ∷ Arrow A B
     ctrⱼ  : ∀ {i j args}
-          → Γ ⊢All args ∷ map Ind (ctrArgsTypeList i j)
+          → j << indCtrCount i
+          → length args ≡ length (ctrArgsTypeList i j)
+          → Γ ⊢All args ∷ ctrArgsTypeList i j
           → Γ ⊢ ctr i j args ∷ Ind i
     indRectⱼ : ∀ {i P t ms}
           → Γ ⊢ t ∷ Ind i
-          → Γ ⊢All ms ∷ indRectMethodTypeList i P
+          → Γ ⊢All ms ∷ indRectBranchTypeList i P
           → Γ ⊢ IndRect i P t ms ∷ P

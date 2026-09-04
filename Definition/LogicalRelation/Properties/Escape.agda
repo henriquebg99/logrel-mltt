@@ -15,6 +15,7 @@ escape : ∀ {l Γ A r} → Γ ⊩⟨ l ⟩ A ^ r → Γ ⊢ A ^ r
 escape (Uᵣ′ _ _ _ _ _ PE.refl [[ ⊢A , ⊢B , D ]]) = ⊢A
 escape (ℕᵣ [[ ⊢A , ⊢B , D ]]) = ⊢A
 escape (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) = ⊢A
+escape (Indᵣ [[ ⊢A , ⊢B , D ]]) = ⊢A
 escape (Emptyᵣ [[ ⊢A , ⊢B , D ]]) = ⊢A
 escape (ne′ K [[ ⊢A , ⊢B , D ]] neK K≡K) = ⊢A
 escape (Πᵣ′ rF lF lG _ _ F G [[ ⊢A , ⊢B , D ]] ⊢F ⊢G A≡A [F] [G] G-ext) = ⊢A
@@ -31,6 +32,7 @@ escapeEq (Uᵣ′ _ _ _ ⁰ _ PE.refl [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D�
 escapeEq (Uᵣ′ _ _ _ ¹ _ PE.refl [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ Uₙ Uₙ (≅-U¹refl (wf ⊢A))
 escapeEq (ℕᵣ [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ ℕₙ ℕₙ (≅-univ (≅ₜ-ℕrefl (wf ⊢A)))
 escapeEq (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ ℕ2ₙ ℕ2ₙ (≅-univ (≅ₜ-ℕ2refl (wf ⊢A)))
+escapeEq (Indᵣ [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ Indₙ Indₙ (≅-univ (≅ₜ-Indrefl (wf ⊢A)))
 escapeEq (Emptyᵣ [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ Emptyₙ Emptyₙ (≅-univ ((≅ₜ-Emptyrefl (wf ⊢A))))
 escapeEq (ne′ K D neK K≡K) (ne₌ M D′ neM K≡M) =
   ≅-red (red D) (red D′) (ne neK) (ne neM) (~-to-≅ K≡M)
@@ -50,6 +52,8 @@ escapeTerm (Uᵣ′ _ _ _ _ l< PE.refl D) (Uₜ A [[ ⊢t , ⊢u , d ]] typeA A�
 escapeTerm (ℕᵣ D) (ℕₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
   conv ⊢t (sym (subset* (red D)))
 escapeTerm (ℕ2ᵣ D) (ℕ2ₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
+  conv ⊢t (sym (subset* (red D)))
+escapeTerm (Indᵣ D) (Indₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
   conv ⊢t (sym (subset* (red D)))
 escapeTerm (Emptyᵣ D) (Emptyₜ (ne ⊢t)) =
   conv ⊢t (sym (subset* (red D)))
@@ -77,6 +81,10 @@ escapeTermEq (ℕ2ᵣ D) (ℕ2ₜ₌ k k′ d d′ k≡k′ prop) =
   let natK , natK′ = split2 prop
   in  ≅ₜ-red (red D) (redₜ d) (redₜ d′) ℕ2ₙ
              (natural2Whnf natK) (natural2Whnf natK′) k≡k′
+escapeTermEq (Indᵣ D) (Indₜ₌ k k′ d d′ k≡k′ prop) =
+  let indK , indK′ = splitInd prop
+  in  ≅ₜ-red (red D) (redₜ d) (redₜ d′) Indₙ
+             (inductiveWhnf indK) (inductiveWhnf indK′) k≡k′
 escapeTermEq (Emptyᵣ D) (Emptyₜ₌ (ne ⊢t ⊢u)) =
   ~-to-≅ₜ (~-irrelevance ((conv ⊢t (sym (subset* (red D)))))  ((conv ⊢u (sym (subset* (red D))))))
 escapeTermEq {r = [ ! , l ]} (ne′ K D neK K≡K)

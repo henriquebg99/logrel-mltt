@@ -14,6 +14,7 @@ open import Definition.LogicalRelation.Irrelevance
 open import Definition.LogicalRelation.Properties.Conversion
 open import Tools.Product
 open import Tools.Empty
+open import Tools.List using (All₂; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
 mutual
   -- Helper function for transitivity of type equality using shape views.
@@ -32,6 +33,7 @@ mutual
     PE.subst₂ (λ X Y → _ ⊢ _ ⇒* Univ X Y ^ [ ! , _ ]) (PE.sym r≡r) (PE.sym l≡l) B≡C
   transEqT (ℕᵥ D D′ D″) A≡B B≡C = B≡C
   transEqT (ℕ2ᵥ D D′ D″) A≡B B≡C = B≡C
+  transEqT (Indᵥ D D′ D″) A≡B B≡C = B≡C
   transEqT (Emptyᵥ D D′ D″) A≡B B≡C = B≡C
   transEqT (ne (ne K [[ ⊢A , ⊢B , D ]] neK K≡K) (ne K₁ D₁ neK₁ _)
                (ne K₂ D₂ neK₂ _))
@@ -197,6 +199,46 @@ mutual
   transNatural2-prop (ne [k≡k′]) (ne [k′≡k″]) =
     ne (transEqTermNe [k≡k′] [k′≡k″])
 
+  transEqTermInd : ∀ {Γ i n n′ n″}
+               → Γ ⊩Ind n  ≡ n′  ∷Ind i
+               → Γ ⊩Ind n′ ≡ n″ ∷Ind i
+               → Γ ⊩Ind n  ≡ n″ ∷Ind i
+  transEqTermInd (Indₜ₌ k k′ d d′ t≡u prop)
+               (Indₜ₌ k₁ k″ d₁ d″ t≡u₁ prop₁) =
+    let k₁Whnf = inductiveWhnf (proj₁ (splitInd prop₁))
+        k′Whnf = inductiveWhnf (proj₂ (splitInd prop))
+        k₁≡k′ = whrDet*Term (redₜ d₁ , k₁Whnf) (redₜ d′ , k′Whnf)
+        prop′ = PE.subst (λ x → [Inductive]-prop _ _ x _) k₁≡k′ prop₁
+    in  Indₜ₌ k k″ d d″ (≅ₜ-trans t≡u (PE.subst (λ x → _ ⊢ x ≅ _ ∷ _ ^ _) k₁≡k′ t≡u₁))
+            (transInductive-prop prop prop′)
+
+  -- ctr uses a map-spine: dual ctrᵣ matching does not unify (cf. IndRect).
+  transInductive-prop : ∀ {Γ i k k′ k″}
+                      → [Inductive]-prop Γ i k k′
+                      → [Inductive]-prop Γ i k′ k″
+                      → [Inductive]-prop Γ i k k″
+  transInductive-prop (ne [k≡k′]) (ne [k′≡k″]) =
+    ne (transEqTermNe [k≡k′] [k′≡k″])
+  transInductive-prop (ne (neNfₜ₌ _ neM _)) (ctrᵣ _) =
+    ⊥-elim (Ctr≢ne neM PE.refl)
+  transInductive-prop {Γ} {i} (ctrᵣ {j = j} {args = args} {args' = mids} ps) q =
+    go q PE.refl
+    where
+    go : ∀ {n n′} → [Inductive]-prop Γ i n n′
+       → n PE.≡ ctr i j mids
+       → [Inductive]-prop Γ i (ctr i j args) n′
+    go (ne (neNfₜ₌ neK _ _)) eq = ⊥-elim (Ctr≢ne neK (PE.sym eq))
+    go (ctrᵣ qs) eq with ctr-PE-injectivity eq
+    ... | PE.refl , PE.refl , PE.refl = ctrᵣ (transAll₂Ind ps qs)
+
+  transAll₂Ind : ∀ {Γ i args args' args″}
+               → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args args'
+               → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args' args″
+               → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args args″
+  transAll₂Ind []ₐ []ₐ = []ₐ
+  transAll₂Ind (p ∷ₐ ps) (q ∷ₐ qs) =
+    transEqTermInd p q ∷ₐ transAll₂Ind ps qs
+
 -- Empty
 transEmpty-prop : ∀ {Γ k k′ k″}
   → [Empty]-prop Γ k k′
@@ -219,6 +261,7 @@ transEqTerm⁰ : ∀ {Γ A t u v r}
              → Γ ⊩⟨ ι ⁰ ⟩ t ≡ v ∷ A ^ r / [A]
 transEqTerm⁰ (ℕᵣ D) [t≡u] [u≡v] = transEqTermℕ [t≡u] [u≡v]
 transEqTerm⁰ (ℕ2ᵣ D) [t≡u] [u≡v] = transEqTermℕ2 [t≡u] [u≡v]
+transEqTerm⁰ (Indᵣ D) [t≡u] [u≡v] = transEqTermInd [t≡u] [u≡v]
 transEqTerm⁰ (Emptyᵣ D) [t≡u] [u≡v] = transEqTermEmpty [t≡u] [u≡v]
 transEqTerm⁰ {r = [ ! , l ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ (neNfₜ₌ neK₁ neM k≡m))
                               (neₜ₌ k₁ m₁ d₁ d″ (neNfₜ₌ neK₂ neM₁ k≡m₁)) =
@@ -264,6 +307,7 @@ transEqTerm¹ {Γ} {A} {t} {u} {v} {r} (Uᵣ (Uᵣ rU ⁰ l< eq d)) (Uₜ₌ [t]
   Uₜ₌ [t] [v] A≡C [t≡v]
 transEqTerm¹ (ℕᵣ D) [t≡u] [u≡v] = transEqTermℕ [t≡u] [u≡v]
 transEqTerm¹ (ℕ2ᵣ D) [t≡u] [u≡v] = transEqTermℕ2 [t≡u] [u≡v]
+transEqTerm¹ (Indᵣ D) [t≡u] [u≡v] = transEqTermInd [t≡u] [u≡v]
 transEqTerm¹ (Emptyᵣ D) [t≡u] [u≡v] = transEqTermEmpty [t≡u] [u≡v]
 transEqTerm¹ {r = [ ! , l ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ (neNfₜ₌ neK₁ neM k≡m))
                               (neₜ₌ k₁ m₁ d₁ d″ (neNfₜ₌ neK₂ neM₁ k≡m₁)) =
@@ -323,6 +367,7 @@ transEqTerm∞ {Γ} {A} {t} {u} {v} {r} (Uᵣ (Uᵣ rU ¹ l< eq d)) (Uₜ₌ [t]
   Uₜ₌ [t] [v] A≡C [t≡v]
 transEqTerm∞ (ℕᵣ D) [t≡u] [u≡v] = transEqTermℕ [t≡u] [u≡v]
 transEqTerm∞ (ℕ2ᵣ D) [t≡u] [u≡v] = transEqTermℕ2 [t≡u] [u≡v]
+transEqTerm∞ (Indᵣ D) [t≡u] [u≡v] = transEqTermInd [t≡u] [u≡v]
 transEqTerm∞ (Emptyᵣ D) [t≡u] [u≡v] = transEqTermEmpty [t≡u] [u≡v]
 transEqTerm∞ {r = [ ! , l ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ (neNfₜ₌ neK₁ neM k≡m))
                               (neₜ₌ k₁ m₁ d₁ d″ (neNfₜ₌ neK₂ neM₁ k≡m₁)) =

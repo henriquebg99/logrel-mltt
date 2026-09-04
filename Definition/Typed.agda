@@ -4,10 +4,11 @@ open import Definition.Untyped
 open import Tools.Nat using (Nat)
 open import Tools.Product
 open import Tools.Empty
-open import Tools.List using (List; map)
+open import Tools.List using (List; map; All; All₂; All₃; lookupDefault; _++_; length)
 import Tools.List as TL
 import Tools.PropositionalEquality as PE
 import Definition.SUntyped as SU
+import Definition.OUntyped as OU
 infixl 30 _∙_
 infix 30 Πⱼ_▹_▹_▹_
 
@@ -108,14 +109,15 @@ mutual
            → Γ       ⊢ natrec2 lG G z s n ∷ G [ n ] ^ [ rG , ι lG ]
     Indⱼ    : ∀ {n} → ⊢ Γ → Γ ⊢ Ind n ∷ U ⁰ ^ [ ! , ι ¹ ]
     Ctrⱼ    : ∀ {i j args}
-           → Γ ⊢All args ∷ map Ind (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
+           → ⊢ Γ
+           → Γ ⊢All args ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
            → Γ ⊢ ctr i j args ∷ Ind i ^ [ ! , ι ⁰ ]
-    IndRectⱼ : ∀ {i G rG lG t ms}
+    IndRectⱼ : ∀ {i P rG lG t ms}
            → (rG PE.≡ % → lG PE.≡ ⁰)
-           → Γ ∙ Ind i ^ [ ! , ι ⁰ ] ⊢ G ^ [ rG , ι lG ]
+           → Γ ⊢ P ∷ Π Ind i ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
            → Γ ⊢ t ∷ Ind i ^ [ ! , ι ⁰ ]
-           → Γ ⊢All ms ∷ indRectMethodTypeList i G rG lG ^ [ rG , ι lG ]
-           → Γ ⊢ IndRect i lG G t ms ∷ G [ t ] ^ [ rG , ι lG ]
+           → Γ ⊢All ms ∷ indRectBranchTyList i P rG lG ^ [ rG , ι lG ]
+           → Γ ⊢ IndRect i lG P t ms ∷ (P ∘ t ^ ¹) ^ [ rG , ι lG ]
     Emptyrecⱼ : ∀ {A lA rA e}
            → Γ ⊢ A ^ [ rA , ι lA ] → Γ ⊢ e ∷ sEmpty ^ [ % ,  ι ⁰ ] -> Γ ⊢ Emptyrec lA ⁰ A e ∷ A ^ [ rA , ι lA ]
     Idⱼ : ∀ {A l t u}
@@ -153,6 +155,14 @@ mutual
          → Γ ⊢ t ∷ A ^ r
          → Γ ⊢All ts ∷ As ^ r
          → Γ ⊢All (t TL.∷ ts) ∷ (A TL.∷ As) ^ r
+
+  -- Pointwise conversion of lists of terms
+  data _⊢All_≡_∷_^_ (Γ : Con Term) : List Term → List Term → List Term → TypeInfo → Set where
+    εⱼ   : ∀ {r} → Γ ⊢All TL.[] ≡ TL.[] ∷ TL.[] ^ r
+    consⱼ  : ∀ {t t′ ts ts′ A As r}
+         → Γ ⊢ t ≡ t′ ∷ A ^ r
+         → Γ ⊢All ts ≡ ts′ ∷ As ^ r
+         → Γ ⊢All (t TL.∷ ts) ≡ (t′ TL.∷ ts′) ∷ (A TL.∷ As) ^ r
 
   -- Type equality
   data _⊢_≡_^_ (Γ : Con Term) : Term → Term → TypeInfo → Set where
@@ -219,6 +229,11 @@ mutual
     suc2-cong   : ∀ {m n}
                 → Γ ⊢ m ≡ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
                 → Γ ⊢ suc2 m ≡ suc2 n ∷ ℕ2 ^ [ ! , ι ⁰ ]
+    ctr-cong    : ∀ {i j args args'}
+                → ⊢ Γ
+                → length args PE.≡ length (SU.ctrArgsTypeList i j)
+                → All₂ (λ a a' → Γ ⊢ a ≡ a' ∷ Ind i ^ [ ! , ι ⁰ ]) args args'
+                → Γ ⊢ ctr i j args ≡ ctr i j args' ∷ Ind i ^ [ ! , ι ⁰ ]
     natrec-cong : ∀ {z z′ s s′ n n′ F F′ l}
                 → Γ ∙ ℕ ^ [ ! ,  ι ⁰ ] ⊢ F ≡ F′ ^ [ ! , ι l ]
                 → Γ     ⊢ z ≡ z′ ∷ F [ zero ] ^ [ ! , ι l ]
@@ -255,6 +270,19 @@ mutual
                 → Γ     ⊢ s ∷ Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc2 (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
                 → Γ     ⊢ natrec2 l F z s (suc2 n) ≡ (s ∘ n ^ l) ∘ (natrec2 l F z s n) ^ l
                         ∷ F [ suc2 n ] ^ [ ! , ι l ]
+    IndRect-cong : ∀ {i P P' lG t t' ms ms'}
+                → Γ ⊢ P ≡ P' ∷ Π Ind i ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
+                → Γ ⊢ t ≡ t' ∷ Ind i ^ [ ! , ι ⁰ ]
+                → Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList i P ! lG ^ [ ! , ι lG ]
+                → Γ ⊢ IndRect i lG P t ms ≡ IndRect i lG P' t' ms' ∷ (P ∘ t ^ ¹) ^ [ ! , ι lG ]
+    IndRect-ctr≡ : ∀ {i j P lG args ms}
+                → Γ ⊢ P ∷ Π Ind i ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
+                → Γ ⊢All args ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
+                → Γ ⊢All ms ∷ indRectBranchTyList i P ! lG ^ [ ! , ι lG ]
+                → Γ ⊢ IndRect i lG P (ctr i j args) ms
+                    ≡ apps lG (lookupDefault (ctr i j args) ms j)
+                             (args ++ map (λ a → IndRect i lG P a ms) args)
+                    ∷ (P ∘ ctr i j args ^ ¹) ^ [ ! , ι lG ]
     Emptyrec-cong : ∀ {A A' l e e'}
                 → Γ ⊢ A ≡ A' ^ [ ! , ι l ]
                 → Γ ⊢ e ∷ sEmpty ^ [ % , ι ⁰ ]
@@ -316,6 +344,12 @@ mutual
                → Γ ⊢ cast ⁰ ℕ2 ℕ2 e (suc2 n)
                    ≡ suc2 (cast ⁰ ℕ2 ℕ2 e n)
                    ∷ ℕ2 ^ [ ! , ι ⁰ ]
+    cast-Ind-ctr : ∀ {i j e args}
+               → Γ ⊢ e ∷ Id (U ⁰) (Ind i) (Ind i) ^ [ % , ι ⁰ ]
+               → Γ ⊢All args ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
+               → Γ ⊢ cast ⁰ (Ind i) (Ind i) e (ctr i j args)
+                   ≡ ctr i j (map (λ a → cast ⁰ (Ind i) (Ind i) e a) args)
+                   ∷ Ind i ^ [ ! , ι ⁰ ]
     cast-equiv-fwd : ∀ {e n}
                      → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ2 ^ [ % , ι ⁰ ]
                      → Γ ⊢ n ∷ ℕ ^ [ ! , ι ⁰ ]
@@ -384,6 +418,20 @@ mutual
                  → Γ     ⊢ s ∷ Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc2 (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
                  → Γ     ⊢ natrec2 l F z s (suc2 n) ⇒ (s ∘ n ^ l) ∘ (natrec2 l F z s n) ^ l
                          ∷ F [ suc2 n ] ^ ι l
+    IndRect-subst : ∀ {i P lG t t' ms}
+                 → Γ ⊢ P ∷ Π Ind i ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
+                 → Γ ⊢ t ⇒ t' ∷ Ind i ^ ι ⁰
+                 → Γ ⊢All ms ∷ indRectBranchTyList i P ! lG ^ [ ! , ι lG ]
+                 → Γ ⊢ IndRect i lG P t ms ⇒ IndRect i lG P t' ms ∷ (P ∘ t ^ ¹) ^ ι lG
+    -- β: positivity ⇒ all ctor args are recursive Ind i
+    IndRect-ctr : ∀ {i j P lG args ms}
+                 → Γ ⊢ P ∷ Π Ind i ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
+                 → Γ ⊢All args ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
+                 → Γ ⊢All ms ∷ indRectBranchTyList i P ! lG ^ [ ! , ι lG ]
+                 → Γ ⊢ IndRect i lG P (ctr i j args) ms
+                     ⇒ apps lG (lookupDefault (ctr i j args) ms j)
+                              (args ++ map (λ a → IndRect i lG P a ms) args)
+                     ∷ (P ∘ ctr i j args ^ ¹) ^ ι lG
     cast-subst : ∀ {A A' B e t} → let l = ⁰ in
                     Γ ⊢ A ⇒ A' ∷ U l ^ next l
                   → Γ ⊢ B ∷ U l ^ [ ! , next l ]
@@ -407,6 +455,11 @@ mutual
                   → Γ ⊢ e ∷ Id (U ⁰) ℕ2 B ^ [ % , ι ⁰ ]
                   → Γ ⊢ t ∷ ℕ2 ^ [ ! , ι ⁰ ]
                   → Γ ⊢ cast ⁰ ℕ2 B e t ⇒ cast ⁰ ℕ2 B' e t ∷ B ^ ι ⁰
+    cast-Ind-subst : ∀ {i B B' e t}
+                  → Γ ⊢ B ⇒ B' ∷ U ⁰ ^ next ⁰
+                  → Γ ⊢ e ∷ Id (U ⁰) (Ind i) B ^ [ % , ι ⁰ ]
+                  → Γ ⊢ t ∷ Ind i ^ [ ! , ι ⁰ ]
+                  → Γ ⊢ cast ⁰ (Ind i) B e t ⇒ cast ⁰ (Ind i) B' e t ∷ B ^ ι ⁰
     cast-Π-subst : ∀ {A rA P B B' e t} → let l = ⁰ in let lA = ⁰ in let lP = ⁰ in
                     Γ ⊢ A ∷ (Univ rA lA) ^ [ ! , next lA ]
                   → Γ ∙ A ^ [ rA , ι lA ] ⊢ P ∷ U lP ^ [ ! , next lA ]
@@ -464,6 +517,20 @@ mutual
                → Γ ⊢ cast ⁰ ℕ2 ℕ2 e t
                    ⇒ cast ⁰ ℕ2 ℕ2 e u
                    ∷ ℕ2 ^ ι ⁰
+
+    cast-Ind-ctr : ∀ {i j e args}
+               → Γ ⊢ e ∷ Id (U ⁰) (Ind i) (Ind i) ^ [ % , ι ⁰ ]
+               → Γ ⊢All args ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
+               → Γ ⊢ cast ⁰ (Ind i) (Ind i) e (ctr i j args)
+                   ⇒ ctr i j (map (λ a → cast ⁰ (Ind i) (Ind i) e a) args)
+                   ∷ Ind i ^ ι ⁰
+
+    cast-Ind-cong : ∀ {i e t u}
+               → Γ ⊢ e ∷ Id (U ⁰) (Ind i) (Ind i) ^ [ % , ι ⁰ ]
+               → Γ ⊢ t ⇒ u ∷ Ind i ^ ι ⁰
+               → Γ ⊢ cast ⁰ (Ind i) (Ind i) e t
+                   ⇒ cast ⁰ (Ind i) (Ind i) e u
+                   ∷ Ind i ^ ι ⁰
 
     cast-ne-cong : ∀ {K L e t u} → 
                  Γ ⊢ K ∷ U ⁰ ^ [ ! , next ⁰ ]
@@ -582,7 +649,6 @@ Ugenⱼ {l = ¹} ⊢Γ = Uⱼ ⊢Γ
 
 
 import Definition.OTyped as OT
-import Definition.OUntyped as OU
 emb-∈ : ∀ {x A r Γ} (h : OT._∷_^_∈_ x A r Γ) →
   x ∷ emb_oterm_term A ^ r ∈ emb_con Γ
 emb-∈ (OT.here {Γ = Γ} {A = A} {r = r}) =
@@ -676,23 +742,22 @@ mutual
         (PE.sym (emb-natrec2 lG G z s n))
         (natrec2ⱼ abs (emb-⊢ty cod) (emb-⊢∷-sgType {G = G} {s = OU.zero2} ⊢z) (emb-⊢∷-natrec2-s {G = G} ⊢s) (emb-⊢∷ ⊢n)))
   emb-⊢∷ (OT.Indⱼ ⊢Γ) = Indⱼ (emb-⊢ ⊢Γ)
-  emb-⊢∷ {Γ = Γ} (OT.Ctrⱼ {i} {j} {args} args∈) =
+  emb-⊢∷ {Γ = Γ} (OT.Ctrⱼ {i} {j} {args} ⊢Γ args∈) =
     PE.subst (λ t → _⊢_∷_^_ (emb_con Γ) t (Ind i) ([ ! , ι ⁰ ]))
       (PE.sym (emb-ctr i j args))
-      (Ctrⱼ (PE.subst (λ As → emb_con Γ ⊢All map emb_oterm_term args ∷ As ^ [ ! , ι ⁰ ])
-                     (emb-map-Ind (SU.ctrArgsTypeList i j))
-                     (PE.subst (λ ts → emb_con Γ ⊢All ts ∷ map emb_oterm_term (map OU.Ind (SU.ctrArgsTypeList i j)) ^ [ ! , ι ⁰ ])
+      (Ctrⱼ (emb-⊢ ⊢Γ) (PE.subst (λ As → emb_con Γ ⊢All map emb_oterm_term args ∷ As ^ [ ! , ι ⁰ ])
+                     (PE.trans (map-map emb_oterm_term OU.emb-stype-oterm (SU.ctrArgsTypeList i j))
+                       (map-cong (SU.ctrArgsTypeList i j) emb-stype-hom))
+                     (PE.subst (λ ts → emb_con Γ ⊢All ts ∷ map emb_oterm_term (map OU.emb-stype-oterm (SU.ctrArgsTypeList i j)) ^ [ ! , ι ⁰ ])
                               (emb-oterm-all-map args)
                               (emb-⊢All args∈))))
-  emb-⊢∷ {Γ = Γ} (OT.IndRectⱼ {i} {G} {rG} {lG} {t} {ms} abs ⊢G ⊢t ⊢ms) =
-    PE.subst (λ A → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term (OU.IndRect i lG G t ms)) A ([ rG , ι lG ]))
-      (PE.sym (emb-sgSubst G t))
-      (PE.subst (λ tm → _⊢_∷_^_ (emb_con Γ) tm (emb_oterm_term G [ emb_oterm_term t ]) ([ rG , ι lG ]))
-        (PE.sym (emb-IndRect i lG G t ms))
-        (IndRectⱼ abs (emb-⊢ty ⊢G) (emb-⊢∷ ⊢t)
-          (PE.subst (λ As → emb_con Γ ⊢All emb-oterm-all ms ∷ As ^ [ rG , ι lG ])
-                    (emb-indRectMethodTypeList i G rG lG)
-                    (emb-⊢All ⊢ms))))
+  emb-⊢∷ {Γ = Γ} (OT.IndRectⱼ {i} {P} {rG} {lG} {t} {ms} abs ⊢P ⊢t ⊢ms) =
+    PE.subst (λ tm → _⊢_∷_^_ (emb_con Γ) tm (emb_oterm_term P ∘ emb_oterm_term t ^ ¹) ([ rG , ι lG ]))
+      (PE.sym (emb-IndRect i lG P t ms))
+      (IndRectⱼ abs (emb-⊢∷ ⊢P) (emb-⊢∷ ⊢t)
+        (PE.subst (λ As → emb_con Γ ⊢All emb-oterm-all ms ∷ As ^ [ rG , ι lG ])
+                  (emb-indRectBranchTyList i P rG lG)
+                  (emb-⊢All ⊢ms)))
   emb-⊢∷ (OT.Emptyrecⱼ A e) = Emptyrecⱼ (emb-⊢ty A) (emb-⊢∷ e)
   emb-⊢∷ (OT.Idⱼ A t u) = Idⱼ (emb-⊢∷ A) (emb-⊢∷ t) (emb-⊢∷ u)
   emb-⊢∷ (OT.Idreflⱼ t) = Idreflⱼ (emb-⊢∷ t)
@@ -915,3 +980,100 @@ mutual
   emb-⊢≡∷ (OT.cast-ℕ-S e n) = cast-ℕ-S (emb-⊢∷ e) (emb-⊢∷ n)
   emb-⊢≡∷ (OT.cast-ℕ2-0 e) = cast-ℕ2-0 (emb-⊢∷ e)
   emb-⊢≡∷ (OT.cast-ℕ2-S e n) = cast-ℕ2-S (emb-⊢∷ e) (emb-⊢∷ n)
+  emb-⊢≡∷ {Γ = Γ} (OT.cast-Ind-ctr {i} {j} {e} {args} ⊢e ⊢args) =
+    let ⊢args′ = PE.subst (λ As → emb_con Γ ⊢All map emb_oterm_term args ∷ As ^ [ ! , ι ⁰ ])
+                   (PE.trans (map-map emb_oterm_term OU.emb-stype-oterm (SU.ctrArgsTypeList i j))
+                             (map-cong (SU.ctrArgsTypeList i j) emb-stype-hom))
+                   (PE.subst (λ ts → emb_con Γ ⊢All ts ∷ map emb_oterm_term (map OU.emb-stype-oterm (SU.ctrArgsTypeList i j)) ^ [ ! , ι ⁰ ])
+                             (emb-oterm-all-map args)
+                             (emb-⊢All ⊢args))
+        pf = cast-Ind-ctr (emb-⊢∷ ⊢e) ⊢args′
+    in PE.subst₂ (λ t u → emb_con Γ ⊢ t ≡ u ∷ Ind i ^ [ ! , ι ⁰ ])
+         (PE.sym (PE.trans (emb-cast ⁰ (OU.Ind i) (OU.Ind i) e (OU.ctr i j args))
+                           (PE.cong (cast ⁰ (Ind i) (Ind i) (emb_oterm_term e))
+                                    (emb-ctr i j args))))
+         emb-rhs
+         pf
+    where
+      emb-rhs :
+        ctr i j (map (λ a → cast ⁰ (Ind i) (Ind i) (emb_oterm_term e) a) (map emb_oterm_term args))
+        PE.≡ emb_oterm_term (OU.ctr i j (map (λ a → OU.cast ⁰ (OU.Ind i) (OU.Ind i) e a) args))
+      emb-rhs =
+        let f = λ a → OU.cast ⁰ (OU.Ind i) (OU.Ind i) e a
+            g = λ a → cast ⁰ (Ind i) (Ind i) (emb_oterm_term e) a
+        in PE.trans (PE.cong (ctr i j) (map-map g emb_oterm_term args))
+             (PE.trans (PE.cong (ctr i j) (PE.sym (map-map emb_oterm_term f args)))
+               (PE.sym (emb-ctr i j (map f args))))
+
+-- Nat as a generic inductive, matching Uniquevalence.uty NatExample.
+-- Motive P is a function Γ ⊢ P ∷ Π (Ind nat_ind) (Univ rG lG).
+module NatExample
+  (nat_ind : Nat)
+  (nat_two_ctrs : SU.indCtrCount nat_ind PE.≡ 2)
+  (Zero_args : SU.ctrArgsTypeList nat_ind 0 PE.≡ TL.[])
+  (Succ_args : SU.ctrArgsTypeList nat_ind 1 PE.≡ (SU.Ind nat_ind TL.∷ TL.[]))
+  where
+
+  open import Tools.Nat using (_≟_; 1+; _+_; _-_)
+  open import Tools.Nullary using (yes; no)
+  open TL using (range)
+
+  Zero : Term
+  Zero = ctr nat_ind 0 TL.[]
+
+  -- Method type for O: just P ∘ Zero.
+  nat-method-ty-Zero : ∀ P rG lG →
+    indRectBranchTy nat_ind 0 P rG lG PE.≡ P ∘ Zero ^ ¹
+  nat-method-ty-Zero P rG lG rewrite Zero_args = PE.refl
+
+  ≟-refl : (n : Nat) → (n ≟ n) PE.≡ yes PE.refl
+  ≟-refl 0 = PE.refl
+  ≟-refl (1+ n) with n ≟ n | ≟-refl n
+  ... | yes PE.refl | PE.refl = PE.refl
+  ... | no p | _ = ⊥-elim (p PE.refl)
+
+  -- Method type for S: Π (n : Ind). Π (ih : wk1 P ∘ n). wk1² P ∘ (S n).
+  nat-method-ty-Succ : ∀ P rG lG →
+    indRectBranchTy nat_ind 1 P rG lG PE.≡
+    Π Ind nat_ind ^ ! ° ⁰ ▹
+      (Π (wk1 P ∘ var 0 ^ ¹) ^ rG ° lG ▹
+         wk1^ 2 P ∘ ctr nat_ind 1 (var 1 TL.∷ TL.[]) ^ ¹
+       ° lG ° lG ^ rG)
+    ° lG ° lG ^ rG
+  nat-method-ty-Succ P rG lG rewrite Succ_args | ≟-refl nat_ind = PE.refl
+
+  indRectBranchTyList-nat : ∀ P rG lG →
+    indRectBranchTyList nat_ind P rG lG PE.≡
+    (P ∘ Zero ^ ¹) TL.∷
+    (Π Ind nat_ind ^ ! ° ⁰ ▹
+      (Π (wk1 P ∘ var 0 ^ ¹) ^ rG ° lG ▹
+         wk1^ 2 P ∘ ctr nat_ind 1 (var 1 TL.∷ TL.[]) ^ ¹
+       ° lG ° lG ^ rG)
+     ° lG ° lG ^ rG) TL.∷
+    TL.[]
+  indRectBranchTyList-nat P rG lG =
+    PE.trans
+      (PE.cong
+        (λ n → map (λ j → indRectBranchTy nat_ind j P rG lG) (range n))
+        nat_two_ctrs)
+      (PE.cong₂ TL._∷_ (nat-method-ty-Zero P rG lG)
+        (PE.cong (λ A → A TL.∷ TL.[] ) (nat-method-ty-Succ P rG lG)))
+
+  ⊢-nat-IndRect : ∀ {Γ P rG lG t z s} →
+    (rG PE.≡ % → lG PE.≡ ⁰) →
+    Γ ⊢ P ∷ Π Ind nat_ind ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] →
+    Γ ⊢ t ∷ Ind nat_ind ^ [ ! , ι ⁰ ] →
+    Γ ⊢ z ∷ (P ∘ Zero ^ ¹) ^ [ rG , ι lG ] →
+    Γ ⊢ s ∷
+      Π Ind nat_ind ^ ! ° ⁰ ▹
+        (Π (wk1 P ∘ var 0 ^ ¹) ^ rG ° lG ▹
+           wk1^ 2 P ∘ ctr nat_ind 1 (var 1 TL.∷ TL.[]) ^ ¹
+         ° lG ° lG ^ rG)
+      ° lG ° lG ^ rG
+      ^ [ rG , ι lG ] →
+    Γ ⊢ IndRect nat_ind lG P t (z TL.∷ s TL.∷ TL.[]) ∷ (P ∘ t ^ ¹) ^ [ rG , ι lG ]
+  ⊢-nat-IndRect {Γ} {P} {rG} {lG} {t} {z} {s} abs ⊢P ⊢t ⊢z ⊢s =
+    IndRectⱼ abs ⊢P ⊢t
+      (PE.subst (λ As → Γ ⊢All (z TL.∷ s TL.∷ TL.[]) ∷ As ^ [ rG , ι lG ])
+        (PE.sym (indRectBranchTyList-nat P rG lG))
+        (consⱼ ⊢z (consⱼ ⊢s εⱼ)))

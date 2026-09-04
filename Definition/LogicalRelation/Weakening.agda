@@ -9,6 +9,7 @@ open import Definition.Typed.Weakening as T hiding (wk; wkEq; wkTerm; wkEqTerm)
 open import Definition.LogicalRelation
 open import Definition.LogicalRelation.Irrelevance
 open import Tools.Product
+open import Tools.List using (All; All₂; []ₐ; _∷ₐ_; map)
 import Tools.PropositionalEquality as PE
 -- Weakening of neutrals in WHNF
 wkTermNe : ∀ {ρ Γ Δ k A rA} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
@@ -70,6 +71,51 @@ mutual
   wk[Natural2]-prop ρ ⊢Δ (ne x) = ne (wkEqTermNe ρ ⊢Δ x)
 
 mutual
+  wkTermInd : ∀ {ρ Γ Δ n i} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
+          → Γ ⊩Ind n ∷Ind i → Δ ⊩Ind U.wk ρ n ∷Ind i
+  wkTermInd {ρ} [ρ] ⊢Δ (Indₜ n d n≡n prop) =
+    Indₜ (U.wk ρ n) (wkRed:*:Term [ρ] ⊢Δ d)
+       (≅ₜ-wk [ρ] ⊢Δ n≡n)
+       (wkInductive-prop [ρ] ⊢Δ prop)
+
+  wkInductive-prop : ∀ {ρ Γ Δ n i} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
+                 → Inductive-prop Γ i n
+                 → Inductive-prop Δ i (U.wk ρ n)
+  wkInductive-prop {ρ} [ρ] ⊢Δ (ctrᵣ {j = j} {args = args} ps) =
+    PE.subst (Inductive-prop _ _) (PE.sym (wk-ctr ρ _ j args))
+      (ctrᵣ (wkAllInd [ρ] ⊢Δ ps))
+  wkInductive-prop ρ ⊢Δ (ne nf) = ne (wkTermNe ρ ⊢Δ nf)
+
+  wkAllInd : ∀ {ρ Γ Δ i args} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
+           → All (λ a → Γ ⊩Ind a ∷Ind i) args
+           → All (λ a → Δ ⊩Ind a ∷Ind i) (map (U.wk ρ) args)
+  wkAllInd [ρ] ⊢Δ []ₐ = []ₐ
+  wkAllInd [ρ] ⊢Δ (p ∷ₐ ps) = wkTermInd [ρ] ⊢Δ p ∷ₐ wkAllInd [ρ] ⊢Δ ps
+
+mutual
+  wkEqTermInd : ∀ {ρ Γ Δ t u i} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
+            → Γ ⊩Ind t ≡ u ∷Ind i
+            → Δ ⊩Ind U.wk ρ t ≡ U.wk ρ u ∷Ind i
+  wkEqTermInd {ρ} [ρ] ⊢Δ (Indₜ₌ k k′ d d′ t≡u prop) =
+    Indₜ₌ (U.wk ρ k) (U.wk ρ k′) (wkRed:*:Term [ρ] ⊢Δ d)
+        (wkRed:*:Term [ρ] ⊢Δ d′) (≅ₜ-wk [ρ] ⊢Δ t≡u)
+        (wk[Inductive]-prop [ρ] ⊢Δ prop)
+
+  wk[Inductive]-prop : ∀ {ρ Γ Δ n n′ i} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
+                   → [Inductive]-prop Γ i n n′
+                   → [Inductive]-prop Δ i (U.wk ρ n) (U.wk ρ n′)
+  wk[Inductive]-prop {ρ} [ρ] ⊢Δ (ctrᵣ {j = j} {args = args} {args' = args'} ps) =
+    PE.subst₂ ([Inductive]-prop _ _) (PE.sym (wk-ctr ρ _ j args)) (PE.sym (wk-ctr ρ _ j args'))
+      (ctrᵣ (wkAll₂Ind [ρ] ⊢Δ ps))
+  wk[Inductive]-prop ρ ⊢Δ (ne x) = ne (wkEqTermNe ρ ⊢Δ x)
+
+  wkAll₂Ind : ∀ {ρ Γ Δ i args args'} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
+            → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args args'
+            → All₂ (λ a a' → Δ ⊩Ind a ≡ a' ∷Ind i) (map (U.wk ρ) args) (map (U.wk ρ) args')
+  wkAll₂Ind [ρ] ⊢Δ []ₐ = []ₐ
+  wkAll₂Ind [ρ] ⊢Δ (p ∷ₐ ps) = wkEqTermInd [ρ] ⊢Δ p ∷ₐ wkAll₂Ind [ρ] ⊢Δ ps
+
+mutual
   wkEqTermℕ : ∀ {ρ Γ Δ t u} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
             → Γ ⊩ℕ t ≡ u ∷ℕ
             → Δ ⊩ℕ U.wk ρ t ≡ U.wk ρ u ∷ℕ
@@ -107,6 +153,7 @@ wk : ∀ {ρ Γ Δ A rA l} → ρ ∷ Δ ⊆ Γ → ⊢ Δ → Γ ⊩⟨ l ⟩ A
 wk ρ ⊢Δ (Uᵣ (Uᵣ r l′ l< eq d)) = Uᵣ (Uᵣ r l′ l< eq (wkRed:*: ρ ⊢Δ d))
 wk ρ ⊢Δ (ℕᵣ D) = ℕᵣ (wkRed:*: ρ ⊢Δ D)
 wk ρ ⊢Δ (ℕ2ᵣ D) = ℕ2ᵣ (wkRed:*: ρ ⊢Δ D)
+wk ρ ⊢Δ (Indᵣ D) = Indᵣ (wkRed:*: ρ ⊢Δ D)
 wk ρ ⊢Δ (Emptyᵣ D) = Emptyᵣ (wkRed:*: ρ ⊢Δ D)
 wk {ρ} [ρ] ⊢Δ (ne′ K D neK K≡K) =
   ne′ (U.wk ρ K) (wkRed:*: [ρ] ⊢Δ D) (wkNeutral ρ neK) (~-wk [ρ] ⊢Δ K≡K)
@@ -173,6 +220,7 @@ wkEq : ∀ {ρ Γ Δ A B r l} → ([ρ] : ρ ∷ Δ ⊆ Γ) (⊢Δ : ⊢ Δ)
 wkEq ρ ⊢Δ (Uᵣ (Uᵣ r l′ l< eq d)) D = wkRed* ρ ⊢Δ D
 wkEq ρ ⊢Δ (ℕᵣ D) A≡B = wkRed* ρ ⊢Δ A≡B
 wkEq ρ ⊢Δ (ℕ2ᵣ D) A≡B = wkRed* ρ ⊢Δ A≡B
+wkEq ρ ⊢Δ (Indᵣ D) A≡B = wkRed* ρ ⊢Δ A≡B
 wkEq ρ ⊢Δ (Emptyᵣ D) A≡B = wkRed* ρ ⊢Δ A≡B
 wkEq {ρ} [ρ] ⊢Δ (ne′ _ _ _ _) (ne₌ M D′ neM K≡M) =
   ne₌ (U.wk ρ M) (wkRed:*: [ρ] ⊢Δ D′)
@@ -245,6 +293,7 @@ wkTerm {ρ} {Δ = Δ} {t = t} {l = ∞} [ρ] ⊢Δ (Uᵣ (Uᵣ r ¹ l< eq d)) (U
   Uₜ (U.wk ρ K) (wkRed:*:Term [ρ] ⊢Δ d₁) (wkType ρ typeK) (≅ₜ-wk [ρ] ⊢Δ K≡K) [t]′
 wkTerm ρ ⊢Δ (ℕᵣ D) [t] = wkTermℕ ρ ⊢Δ [t]
 wkTerm ρ ⊢Δ (ℕ2ᵣ D) [t] = wkTermℕ2 ρ ⊢Δ [t]
+wkTerm ρ ⊢Δ (Indᵣ D) [t] = wkTermInd ρ ⊢Δ [t]
 wkTerm ρ ⊢Δ (Emptyᵣ D) [t] = wkTermEmpty ρ ⊢Δ [t]
 wkTerm {ρ} {r = [ ! , l′ ]} [ρ] ⊢Δ (ne′ K D neK K≡K) (neₜ k d nf) =
   neₜ (U.wk ρ k) (wkRed:*:Term [ρ] ⊢Δ d) (wkTermNe [ρ] ⊢Δ nf)
@@ -321,6 +370,7 @@ wkEqTerm {ρ} {Γ} {Δ} {A} {t} {u} {r} {l = ∞} [ρ] ⊢Δ (Uᵣ (Uᵣ ti ¹ l
     (≅ₜ-wk [ρ] ⊢Δ A≡B) [t≡u]′
 wkEqTerm ρ ⊢Δ (ℕᵣ D) [t≡u] = wkEqTermℕ ρ ⊢Δ [t≡u]
 wkEqTerm ρ ⊢Δ (ℕ2ᵣ D) [t≡u] = wkEqTermℕ2 ρ ⊢Δ [t≡u]
+wkEqTerm ρ ⊢Δ (Indᵣ D) [t≡u] = wkEqTermInd ρ ⊢Δ [t≡u]
 wkEqTerm ρ ⊢Δ (Emptyᵣ D) [t≡u] = wkEqTermEmpty ρ ⊢Δ [t≡u]
 wkEqTerm {ρ} {r = [ ! , l′ ]} [ρ] ⊢Δ (ne′ K D neK K≡K) (neₜ₌ k m d d′ nf) =
   neₜ₌ (U.wk ρ k) (U.wk ρ m)

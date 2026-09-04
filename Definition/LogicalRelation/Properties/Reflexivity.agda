@@ -6,12 +6,14 @@ open import Definition.Typed
 open import Definition.LogicalRelation
 open import Tools.Product
 open import Tools.Empty
+open import Tools.List using (All; All₂; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
 -- Reflexivity of reducible types.
 reflEq : ∀ {l Γ A r} ([A] : Γ ⊩⟨ l ⟩ A ^ r) → Γ ⊩⟨ l ⟩ A ≡ A ^ r / [A]
 reflEq (Uᵣ′ _ _ _ _ l< PE.refl D) = red D
 reflEq (ℕᵣ D) = red D
 reflEq (ℕ2ᵣ D) = red D
+reflEq (Indᵣ D) = red D
 reflEq (Emptyᵣ D) = red D
 reflEq (ne′ K [[ ⊢A , ⊢B , D ]] neK K≡K) =
   ne₌ _ [[ ⊢A , ⊢B , D ]] neK K≡K
@@ -44,6 +46,20 @@ reflNatural2-prop (suc2ᵣ (ℕ2ₜ n d t≡t prop)) =
 reflNatural2-prop zero2ᵣ = zero2ᵣ
 reflNatural2-prop (ne (neNfₜ neK ⊢k k≡k)) = ne (neNfₜ₌ neK neK k≡k)
 
+mutual
+  reflInductive-prop : ∀ {Γ i n}
+                   → Inductive-prop Γ i n
+                   → [Inductive]-prop Γ i n n
+  reflInductive-prop (ctrᵣ ps) = ctrᵣ (reflAllInd ps)
+  reflInductive-prop (ne (neNfₜ neK ⊢k k≡k)) = ne (neNfₜ₌ neK neK k≡k)
+
+  reflAllInd : ∀ {Γ i args}
+             → All (λ a → Γ ⊩Ind a ∷Ind i) args
+             → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args args
+  reflAllInd []ₐ = []ₐ
+  reflAllInd (Indₜ n d t≡t prop ∷ₐ ps) =
+    Indₜ₌ n n d d t≡t (reflInductive-prop prop) ∷ₐ reflAllInd ps
+
 reflEmpty-prop : ∀ {Γ n}
                  → Empty-prop Γ n
                  → [Empty]-prop Γ n n
@@ -62,6 +78,9 @@ reflEqTerm⁰ (ℕᵣ D) (ℕₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
 reflEqTerm⁰ (ℕ2ᵣ D) (ℕ2ₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
   ℕ2ₜ₌ n n [[ ⊢t , ⊢u , d ]] [[ ⊢t , ⊢u , d ]] t≡t
       (reflNatural2-prop prop)
+reflEqTerm⁰ (Indᵣ D) (Indₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
+  Indₜ₌ n n [[ ⊢t , ⊢u , d ]] [[ ⊢t , ⊢u , d ]] t≡t
+      (reflInductive-prop prop)
 reflEqTerm⁰ (Emptyᵣ D) (Emptyₜ (ne x)) = Emptyₜ₌ (ne x x)
 reflEqTerm⁰ {r = [ ! , l ]} (ne′ K D neK K≡K) (neₜ k d (neNfₜ neK₁ ⊢k k≡k)) =
   neₜ₌ k k d d (neNfₜ₌ neK₁ neK₁ k≡k)
@@ -87,6 +106,9 @@ reflEqTerm¹ (ℕᵣ D) (ℕₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
 reflEqTerm¹ (ℕ2ᵣ D) (ℕ2ₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
   ℕ2ₜ₌ n n [[ ⊢t , ⊢u , d ]] [[ ⊢t , ⊢u , d ]] t≡t
       (reflNatural2-prop prop)
+reflEqTerm¹ (Indᵣ D) (Indₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
+  Indₜ₌ n n [[ ⊢t , ⊢u , d ]] [[ ⊢t , ⊢u , d ]] t≡t
+      (reflInductive-prop prop)
 reflEqTerm¹ (Emptyᵣ D) (Emptyₜ (ne x)) = Emptyₜ₌ (ne x x)
 reflEqTerm¹ {r = [ ! , l ]} (ne′ K D neK K≡K) (neₜ k d (neNfₜ neK₁ ⊢k k≡k)) =
   neₜ₌ k k d d (neNfₜ₌ neK₁ neK₁ k≡k)
@@ -113,6 +135,9 @@ reflEqTerm∞ (ℕᵣ D) (ℕₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
 reflEqTerm∞ (ℕ2ᵣ D) (ℕ2ₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
   ℕ2ₜ₌ n n [[ ⊢t , ⊢u , d ]] [[ ⊢t , ⊢u , d ]] t≡t
       (reflNatural2-prop prop)
+reflEqTerm∞ (Indᵣ D) (Indₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
+  Indₜ₌ n n [[ ⊢t , ⊢u , d ]] [[ ⊢t , ⊢u , d ]] t≡t
+      (reflInductive-prop prop)
 reflEqTerm∞ (Emptyᵣ D) (Emptyₜ (ne x)) = Emptyₜ₌ (ne x x)
 reflEqTerm∞ {r = [ ! , l ]} (ne′ K D neK K≡K) (neₜ k d (neNfₜ neK₁ ⊢k k≡k)) =
   neₜ₌ k k d d (neNfₜ₌ neK₁ neK₁ k≡k)

@@ -121,6 +121,26 @@ U≡A-whnf {A} X whnfA = whnfRed* (U≡A X) whnfA
       [ℕ2≡A] = proj₂ (proj₂ X)
   in ℕ2≡A′ (ℕ2-elim [ℕ2]) (irrelevanceEq [ℕ2] (ℕ2-intr (ℕ2-elim [ℕ2])) [ℕ2≡A]) whnfA
 
+Ind≡A′ : ∀ {A Γ l i} ([Ind] : Γ ⊩⟨ l ⟩Ind (Ind i) ^ i)
+    → Γ ⊩⟨ l ⟩ Ind i ≡ A ^ [ ! , ι ⁰ ] / (Ind-intr [Ind])
+    → Whnf A
+    → A PE.≡ Ind i
+Ind≡A′ (noemb x) [Ind≡A] whnfA = whnfRed* [Ind≡A] whnfA
+Ind≡A′ (emb emb< [Ind]) [Ind≡A] whnfA = Ind≡A′ [Ind] [Ind≡A] whnfA
+Ind≡A′ (emb ∞< [Ind]) [Ind≡A] whnfA = Ind≡A′ [Ind] [Ind≡A] whnfA
+
+-- If A in WHNF is judgmentally equal to Ind i, then A is propsitionally equal to Ind i.
+Ind≡A : ∀ {A Γ i}
+    → Γ ⊢ Ind i ≡ A ^ [ ! , ι ⁰ ]
+    → Whnf A
+    → A PE.≡ Ind i
+Ind≡A {A} Ind≡A whnfA =
+  let X = reducibleEq Ind≡A
+      [Ind] = proj₁ X
+      [A] = proj₁ (proj₂ X)
+      [Ind≡A] = proj₂ (proj₂ X)
+  in Ind≡A′ (Ind-elim [Ind]) (irrelevanceEq [Ind] (Ind-intr (Ind-elim [Ind])) [Ind≡A]) whnfA
+
 -- If A in WHNF is judgmentally equal to Empty, then A is propositionally equal to Empty.
 Empty≡A′ : ∀ {A Γ l} ([Empty] : Γ ⊩⟨ l ⟩Empty sEmpty)
     → Γ ⊩⟨ l ⟩ sEmpty ≡ A ^ [ % , ι ⁰ ] / (Empty-intr [Empty])

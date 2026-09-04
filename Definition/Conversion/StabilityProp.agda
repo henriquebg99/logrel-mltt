@@ -121,6 +121,7 @@ mutual
              (stabilitySizeConv↑Term Γ≡Δ x₂)
   stabilitySizeConv↓Term Γ≡Δ (ℕ-ins x) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
   stabilitySizeConv↓Term Γ≡Δ (ℕ2-ins x) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
+  stabilitySizeConv↓Term Γ≡Δ (Ind-ins x) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
   stabilitySizeConv↓Term Γ≡Δ (ne-ins x x₁ x₂ x₃) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x₃)
   stabilitySizeConv↓Term Γ≡Δ (zero-refl x) = PE.refl
   stabilitySizeConv↓Term Γ≡Δ (zero2-refl x) = PE.refl

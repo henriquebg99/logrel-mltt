@@ -60,6 +60,8 @@ mutual
     PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
   convConv↓TermSize Γ≡Δ A≡B whnfB (ℕ2-ins x) rewrite ℕ2≡A A≡B whnfB =
     PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
+  convConv↓TermSize Γ≡Δ A≡B whnfB (Ind-ins x) rewrite Ind≡A A≡B whnfB =
+    PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
   convConv↓TermSize Γ≡Δ A≡B whnfB (ne-ins t u x x₁) with ne≡A x A≡B whnfB
   convConv↓TermSize Γ≡Δ A≡B whnfB (ne-ins t u x x₁) | B , neB , PE.refl =
     PE.cong 1+ (stabilitySize~↓! Γ≡Δ x₁)

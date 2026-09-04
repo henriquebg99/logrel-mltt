@@ -59,6 +59,9 @@ mutual
   lift~toConv↓!′ (ℕ2ᵣ D) D₁ ([~] A D₂ whnfB k~l)
                 rewrite PE.sym (whrDet* (red D , ℕ2ₙ) (D₁ , whnfB)) =
     ℕ2-ins ([~] A D₂ ℕ2ₙ k~l)
+  lift~toConv↓!′ (Indᵣ D) D₁ ([~] A D₂ whnfB k~l)
+                rewrite PE.sym (whrDet* (red D , Indₙ) (D₁ , whnfB)) =
+    Ind-ins ([~] A D₂ Indₙ k~l)
   lift~toConv↓!′ (ne′ K D neK K≡K) D₁ ([~] A D₂ whnfB k~l)
                 rewrite PE.sym (whrDet* (red D , ne neK) (D₁ , whnfB)) =
     let _ , ⊢t , ⊢u = syntacticEqTerm (soundness~↑! k~l)

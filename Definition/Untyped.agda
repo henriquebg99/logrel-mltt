@@ -5,6 +5,7 @@ module Definition.Untyped where
 open import Tools.Nat
 open import Tools.Product
 open import Tools.List
+open import Tools.Inequality using (filter)
 open import Tools.Nullary using (yes; no)
 import Tools.PropositionalEquality as PE
 open import Definition.Sort public
@@ -169,9 +170,9 @@ Ind i = gen (Indkind i) []
 ctr : Nat → Nat → List Term → Term
 ctr i j ts = gen (Ctrkind i j) (map (λ t → ⟦ 0 , t ⟧) ts)
 
--- inductive eliminator (G is a binder: motive in Γ ∙ Ind i)
+-- inductive eliminator (P is a function motive: Ind i → Univ lG)
 IndRect : Nat → Level → Term → Term → List Term → Term
-IndRect i lG G t ms = gen (IndRectkind i lG) (⟦ 1 , G ⟧ ∷ ⟦ 0 , t ⟧ ∷ map (λ m → ⟦ 0 , m ⟧) ms)
+IndRect i lG P t ms = gen (IndRectkind i lG) (⟦ 0 , P ⟧ ∷ ⟦ 0 , t ⟧ ∷ map (λ m → ⟦ 0 , m ⟧) ms)
 
 ------------------------------------------------------------------------
 -- Embedding of OTerms into Terms
@@ -237,6 +238,37 @@ suc-PE-injectivity PE.refl = PE.refl
 suc2-PE-injectivity : ∀ {n m} → suc2 n PE.≡ suc2 m → n PE.≡ m
 suc2-PE-injectivity PE.refl = PE.refl
 
+gen-PE-injectivity : ∀ {k k' ts ts'} → gen k ts PE.≡ gen k' ts' → k PE.≡ k' × ts PE.≡ ts'
+gen-PE-injectivity PE.refl = PE.refl , PE.refl
+
+GenT-PE-injectivity : ∀ {A : Set} {n n'} {t t' : A} → ⟦ n , t ⟧ PE.≡ ⟦ n' , t' ⟧ → n PE.≡ n' × t PE.≡ t'
+GenT-PE-injectivity PE.refl = PE.refl , PE.refl
+
+ctr-PE-injectivity : ∀ {i i' j j' ts ts'} →
+  ctr i j ts PE.≡ ctr i' j' ts' →
+  i PE.≡ i' × j PE.≡ j' × ts PE.≡ ts'
+ctr-PE-injectivity {i} {i'} {j} {j'} eq =
+  let k≡ , ts≡ = gen-PE-injectivity eq
+      i≡ , j≡ = Ctrkind-inj k≡
+  in  i≡ , j≡ , map-injective (λ e → proj₂ (GenT-PE-injectivity e)) ts≡
+  where
+  Ctrkind-inj : Ctrkind i j PE.≡ Ctrkind i' j' → i PE.≡ i' × j PE.≡ j'
+  Ctrkind-inj PE.refl = PE.refl , PE.refl
+
+IndRect-PE-injectivity : ∀ {i i' lG lG' P P' t t' ms ms'} →
+  IndRect i lG P t ms PE.≡ IndRect i' lG' P' t' ms' →
+  i PE.≡ i' × lG PE.≡ lG' × P PE.≡ P' × t PE.≡ t' × ms PE.≡ ms'
+IndRect-PE-injectivity {i} {i'} {lG} {lG'} eq =
+  let k≡ , ts≡ = gen-PE-injectivity eq
+      i≡ , lG≡ = IndRectkind-inj k≡
+      P≡ = proj₂ (GenT-PE-injectivity (∷-inj₁ ts≡))
+      t≡ = proj₂ (GenT-PE-injectivity (∷-inj₁ (∷-inj₂ ts≡)))
+      ms≡ = map-injective (λ e → proj₂ (GenT-PE-injectivity e)) (∷-inj₂ (∷-inj₂ ts≡))
+  in  i≡ , lG≡ , P≡ , t≡ , ms≡
+  where
+  IndRectkind-inj : IndRectkind i lG PE.≡ IndRectkind i' lG' → i PE.≡ i' × lG PE.≡ lG'
+  IndRectkind-inj PE.refl = PE.refl , PE.refl
+
 Univ-PE-injectivity : ∀ {r r' l l'} → Univ r l PE.≡ Univ r' l' → r PE.≡ r' × l PE.≡ l'
 Univ-PE-injectivity PE.refl = PE.refl , PE.refl
 
@@ -263,11 +295,21 @@ data Neutral : Term → Set where
   castΠℕₙ : ∀ {l A rA r B e t} → Neutral (cast l (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) ℕ e t)
   castℕ2Πₙ : ∀ {l A rA r B e t} → Neutral (cast l ℕ2 (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) e t)
   castΠℕ2ₙ : ∀ {l A rA r B e t} → Neutral (cast l (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) ℕ2 e t)
+  castnIndₙ : ∀ {l i B e t} → Neutral B → Neutral (cast l B (Ind i) e t)
+  castIndₙ : ∀ {l i B e t} → Neutral B → Neutral (cast l (Ind i) B e t)
+  castIndIndₙ : ∀ {l i e t} → Neutral t → Neutral (cast l (Ind i) (Ind i) e t)
+  castIndInd≢ₙ : ∀ {l i j e t} → i PE.≢ j → Neutral (cast l (Ind i) (Ind j) e t)
+  castIndΠₙ : ∀ {l i A rA r B e t} → Neutral (cast l (Ind i) (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) e t)
+  castΠIndₙ : ∀ {l i A rA r B e t} → Neutral (cast l (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) (Ind i) e t)
+  castIndℕₙ : ∀ {l i e t} → Neutral (cast l (Ind i) ℕ e t)
+  castℕIndₙ : ∀ {l i e t} → Neutral (cast l ℕ (Ind i) e t)
+  castIndℕ2ₙ : ∀ {l i e t} → Neutral (cast l (Ind i) ℕ2 e t)
+  castℕ2Indₙ : ∀ {l i e t} → Neutral (cast l ℕ2 (Ind i) e t)
   castΠΠ%!ₙ : ∀ {l A B A' B' r r' e t} → Neutral (cast l (Π A ^ % ° ⁰ ▹ B ° ⁰ ° l ^ r) (Π A' ^ ! ° ⁰ ▹ B' ° ⁰ ° l ^ r') e t)
   castΠΠ!%ₙ : ∀ {l A B A' B' r r' e t} → Neutral (cast l (Π A ^ ! ° ⁰ ▹ B ° ⁰ ° l ^ r) (Π A' ^ % ° ⁰ ▹ B' ° ⁰ ° l ^ r') e t)
   Emptyrecₙ : ∀ {l lEmpty A e} -> Neutral (Emptyrec l lEmpty A e)
   natrec2ₙ : ∀ {l C c g k} → Neutral k → Neutral (natrec2 l C c g k)
-  IndRectₙ : ∀ {i lG G t ms} → Neutral t → Neutral (IndRect i lG G t ms)
+  IndRectₙ : ∀ {i lG P t ms} → Neutral t → Neutral (IndRect i lG P t ms)
 
 -- Weak head normal forms (whnfs).
 -- These are the (lazy) values of our language.
@@ -306,6 +348,9 @@ U≢ℕ ()
 U≢ℕ2 : ∀ {r l} → Univ r l PE.≢ ℕ2
 U≢ℕ2 ()
 
+U≢Ind : ∀ {r l i} → Univ r l PE.≢ Ind i
+U≢Ind ()
+
 U≢Empty : ∀ {r l l'} → Univ r l PE.≢ Empty l'
 U≢Empty ()
 
@@ -333,8 +378,14 @@ Empty≢ℕ ()
 ℕ≢ℕ2 : ℕ PE.≢ ℕ2
 ℕ≢ℕ2 ()
 
+ℕ≢Ind : ∀ {i} → ℕ PE.≢ Ind i
+ℕ≢Ind ()
+
 Empty≢ℕ2 : ∀ {l} → Empty l PE.≢ ℕ2
 Empty≢ℕ2 ()
+
+Empty≢Ind : ∀ {l i} → Empty l PE.≢ Ind i
+Empty≢Ind ()
 
 ℕ2≢Π : ∀ {F r lF G lG l r'} → ℕ2 PE.≢ Π F ^ r ° lF ▹ G ° lG ° l ^ r'
 ℕ2≢Π ()
@@ -347,6 +398,33 @@ Empty≢ℕ2 ()
 
 ℕ2≢ℕ : ℕ2 PE.≢ ℕ
 ℕ2≢ℕ ()
+
+ℕ2≢Ind : ∀ {i} → ℕ2 PE.≢ Ind i
+ℕ2≢Ind ()
+
+Ind≢ℕ : ∀ {i} → Ind i PE.≢ ℕ
+Ind≢ℕ ()
+
+Ind≢ℕ2 : ∀ {i} → Ind i PE.≢ ℕ2
+Ind≢ℕ2 ()
+
+Ind≢Empty : ∀ {i l} → Ind i PE.≢ Empty l
+Ind≢Empty ()
+
+Ind≢Id : ∀ {i F t u} → Ind i PE.≢ Id F t u
+Ind≢Id ()
+
+Id≢Ind : ∀ {F t u i} → Id F t u PE.≢ Ind i
+Id≢Ind ()
+
+Ind≢Π : ∀ {i F r lF G lG l r'} → Ind i PE.≢ Π F ^ r ° lF ▹ G ° lG ° l ^ r'
+Ind≢Π ()
+
+Π≢Ind : ∀ {F r lF G lG l r' i} → Π F ^ r ° lF ▹ G ° lG ° l ^ r' PE.≢ Ind i
+Π≢Ind ()
+
+Ind-inj : ∀ {i j} → Ind i PE.≡ Ind j → i PE.≡ j
+Ind-inj PE.refl = PE.refl
 
 ℕ≢ne : ∀ {K} → Neutral K → ℕ PE.≢ K
 ℕ≢ne () PE.refl
@@ -426,8 +504,13 @@ data Natural2 : Term → Set where
   suc2ₙ  : ∀ {t}             → Natural2 (suc2 t)
   ne2    : ∀ {n} → Neutral n → Natural2 n
 
+-- A whnf of type Ind i is a constructor of Ind i, or neutral.
 
--- A type in whnf is either Π A B, ℕ, or neutral.
+data Inductive (i : Nat) : Term → Set where
+  ctrₙ : ∀ {j ts}           → Inductive i (ctr i j ts)
+  ne   : ∀ {n} → Neutral n → Inductive i n
+
+-- A type in whnf is either Π A B, ℕ, Ind i, or neutral.
 -- Large types could also be U.
 
 data Type : Term → Set where
@@ -437,6 +520,7 @@ data Type : Term → Set where
   Uₙ : ∀ {r l} → Type (Univ r l)
   Emptyₙ : ∀ {l} → Type (Empty l)
   Idₙ : ∀ {A t u} → Type (Id A t u)
+  Indₙ : ∀ {i} → Type (Ind i)
   ne : ∀{n} → Neutral n → Type n
 
 -- A whnf of type Π A B is either lam t or neutral.
@@ -446,7 +530,7 @@ data Function : Term → Set where
   ne : ∀{n} → Neutral n → Function n
 
 -- These views classify only whnfs.
--- Natural, Type, and Function are a subsets of Whnf.
+-- Natural, Natural2, Inductive, Type, and Function are subsets of Whnf.
 
 naturalWhnf : ∀ {n} → Natural n → Whnf n
 naturalWhnf sucₙ = sucₙ
@@ -458,6 +542,10 @@ natural2Whnf suc2ₙ = suc2ₙ
 natural2Whnf zero2ₙ = zero2ₙ
 natural2Whnf (ne2 x) = ne x
 
+inductiveWhnf : ∀ {i t} → Inductive i t → Whnf t
+inductiveWhnf ctrₙ = ctrₙ
+inductiveWhnf (ne x) = ne x
+
 typeWhnf : ∀ {A} → Type A → Whnf A
 typeWhnf Πₙ = Πₙ
 typeWhnf ℕₙ = ℕₙ
@@ -465,6 +553,7 @@ typeWhnf Uₙ  = Uₙ
 typeWhnf ℕ2ₙ = ℕ2ₙ
 typeWhnf Idₙ = Idₙ
 typeWhnf Emptyₙ = Emptyₙ
+typeWhnf Indₙ = Indₙ
 typeWhnf (ne x) = ne x
 
 functionWhnf : ∀ {f} → Function f → Whnf f
@@ -541,6 +630,11 @@ map-map : ∀ {A B C} (f : B → C) (g : A → B) (xs : List A)
 map-map f g [] = PE.refl
 map-map f g (x ∷ xs) = PE.cong (f (g x) ∷_) (map-map f g xs)
 
+map-cong : ∀ {A B} {f g : A → B} (xs : List A)
+  → (∀ x → f x PE.≡ g x) → map f xs PE.≡ map g xs
+map-cong [] eq = PE.refl
+map-cong (x ∷ xs) eq = PE.cong₂ _∷_ (eq x) (map-cong xs eq)
+
 wkGen-map0 : ∀ ρ ts → wkGen ρ (map (λ t → ⟦ 0 , t ⟧) ts) PE.≡ map (λ t → ⟦ 0 , wk ρ t ⟧) ts
 wkGen-map0 ρ [] = PE.refl
 wkGen-map0 ρ (t ∷ ts) = PE.cong (⟦ 0 , wk ρ t ⟧ ∷_) (wkGen-map0 ρ ts)
@@ -549,12 +643,17 @@ map-map0-wkGen : ∀ ρ ts
   → map (λ t → ⟦ 0 , t ⟧) (map (wk ρ) ts) PE.≡ wkGen ρ (map (λ t → ⟦ 0 , t ⟧) ts)
 map-map0-wkGen ρ ts = PE.trans (map-map (λ t → ⟦ 0 , t ⟧) (wk ρ) ts) (PE.sym (wkGen-map0 ρ ts))
 
-wk-IndRect : ∀ ρ i lG G t ms →
-  wk ρ (IndRect i lG G t ms) PE.≡
-  IndRect i lG (wk (lift ρ) G) (wk ρ t) (map (wk ρ) ms)
-wk-IndRect ρ i lG G t ms =
-  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 1 , wk (lift ρ) G ⟧ ∷ ⟦ 0 , wk ρ t ⟧ ∷ gs))
+wk-IndRect : ∀ ρ i lG P t ms →
+  wk ρ (IndRect i lG P t ms) PE.≡
+  IndRect i lG (wk ρ P) (wk ρ t) (map (wk ρ) ms)
+wk-IndRect ρ i lG P t ms =
+  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 0 , wk ρ P ⟧ ∷ ⟦ 0 , wk ρ t ⟧ ∷ gs))
     (PE.sym (map-map0-wkGen ρ ms))
+
+wk-ctr : ∀ ρ i j ts →
+  wk ρ (ctr i j ts) PE.≡ ctr i j (map (wk ρ) ts)
+wk-ctr ρ i j ts =
+  PE.cong (gen (Ctrkind i j)) (PE.sym (map-map0-wkGen ρ ts))
 
 -- Weakening of a neutral term.
 
@@ -563,9 +662,9 @@ wkNeutral ρ (var n)    = var (wkVar ρ n)
 wkNeutral ρ (∘ₙ n)    = ∘ₙ (wkNeutral ρ n)
 wkNeutral ρ (natrecₙ n) = natrecₙ (wkNeutral ρ n)
 wkNeutral ρ (natrec2ₙ n) = natrec2ₙ (wkNeutral ρ n)
-wkNeutral ρ (IndRectₙ {i} {lG} {G} {t} {ms} n) =
-  PE.subst Neutral (PE.sym (wk-IndRect ρ i lG G t ms))
-    (IndRectₙ {G = wk (lift ρ) G} {ms = map (wk ρ) ms} (wkNeutral ρ n))
+wkNeutral ρ (IndRectₙ {i} {lG} {P} {t} {ms} n) =
+  PE.subst Neutral (PE.sym (wk-IndRect ρ i lG P t ms))
+    (IndRectₙ {P = wk ρ P} {ms = map (wk ρ) ms} (wkNeutral ρ n))
 wkNeutral ρ Emptyrecₙ = Emptyrecₙ
 wkNeutral ρ (castₙ A B t) = castₙ (wkNeutral ρ A) (wkNeutral ρ B) (wkNeutral ρ t)
 wkNeutral ρ (castnℕₙ A) = castnℕₙ (wkNeutral ρ A)
@@ -576,10 +675,20 @@ wkNeutral ρ (castℕℕₙ t) = castℕℕₙ (wkNeutral ρ t)
 wkNeutral ρ (castnℕ2ₙ A) = castnℕ2ₙ (wkNeutral ρ A)
 wkNeutral ρ (castℕ2ₙ A) = castℕ2ₙ (wkNeutral ρ A)
 wkNeutral ρ (castℕ2ℕ2ₙ t) = castℕ2ℕ2ₙ (wkNeutral ρ t)
+wkNeutral ρ (castnIndₙ A) = castnIndₙ (wkNeutral ρ A)
+wkNeutral ρ (castIndₙ A) = castIndₙ (wkNeutral ρ A)
+wkNeutral ρ (castIndIndₙ t) = castIndIndₙ (wkNeutral ρ t)
+wkNeutral ρ (castIndInd≢ₙ p) = castIndInd≢ₙ p
 wkNeutral ρ castℕΠₙ = castℕΠₙ
 wkNeutral ρ castΠℕₙ = castΠℕₙ
 wkNeutral ρ castℕ2Πₙ = castℕ2Πₙ
 wkNeutral ρ castΠℕ2ₙ = castΠℕ2ₙ
+wkNeutral ρ castIndΠₙ = castIndΠₙ
+wkNeutral ρ castΠIndₙ = castΠIndₙ
+wkNeutral ρ castIndℕₙ = castIndℕₙ
+wkNeutral ρ castℕIndₙ = castℕIndₙ
+wkNeutral ρ castIndℕ2ₙ = castIndℕ2ₙ
+wkNeutral ρ castℕ2Indₙ = castℕ2Indₙ
 wkNeutral ρ castΠΠ%!ₙ = castΠΠ%!ₙ
 wkNeutral ρ castΠΠ!%ₙ = castΠΠ!%ₙ
 
@@ -595,6 +704,12 @@ wkNatural2 ρ suc2ₙ    = suc2ₙ
 wkNatural2 ρ zero2ₙ   = zero2ₙ
 wkNatural2 ρ (ne2 x) = ne2 (wkNeutral ρ x)
 
+wkInductive : ∀ {i t} ρ → Inductive i t → Inductive i (wk ρ t)
+wkInductive ρ (ctrₙ {j} {ts}) =
+  PE.subst (Inductive _) (PE.cong (gen (Ctrkind _ j)) (map-map0-wkGen ρ ts))
+    (ctrₙ {ts = map (wk ρ) ts})
+wkInductive ρ (ne x) = ne (wkNeutral ρ x)
+
 wkType : ∀ {t} ρ → Type t → Type (wk ρ t)
 wkType ρ Πₙ      = Πₙ
 wkType ρ ℕₙ      = ℕₙ
@@ -602,6 +717,7 @@ wkType ρ ℕ2ₙ     = ℕ2ₙ
 wkType ρ Uₙ      = Uₙ
 wkType ρ Idₙ      = Idₙ
 wkType ρ Emptyₙ  = Emptyₙ
+wkType ρ Indₙ    = Indₙ
 wkType ρ (ne x) = ne (wkNeutral ρ x)
 
 wkFunction : ∀ {t} ρ → Function t → Function (wk ρ t)
@@ -771,44 +887,144 @@ _[_]↑↑ : (t : Term) (s : Term) → Term
 t [ s ]↑↑ = subst (consSubst (wk1Subst (wk1Subst idSubst)) s) t
 
 ------------------------------------------------------------------------
--- Dependent method types for IndRect (Rocq-style, from constructor signatures)
+-- IndRect helpers
 
 wk1^ : Nat → Term → Term
 wk1^ 0 t = t
 wk1^ (1+ n) t = wk1 (wk1^ n t)
 
-wk1Subst^ : Nat → Subst → Subst
-wk1Subst^ 0 σ = σ
-wk1Subst^ (1+ n) σ = wk1Subst (wk1Subst^ n σ)
+-- Left-nested applications [t ∘ u0 ∘ … ∘ uk] at level l.
+apps : Level → Term → List Term → Term
+apps l t us = foldl (λ f u → f ∘ u ^ l) t us
 
-motiveApp : Term → Term → Nat → Term
-motiveApp G s k = subst (consSubst (wk1Subst^ k idSubst) s) G
+apps-∷≢Univ : ∀ l t u us {r} → apps l t (u ∷ us) PE.≢ Univ r ¹
+apps-∷≢Univ l t u [] ()
+apps-∷≢Univ l t u (u′ ∷ us) eq = apps-∷≢Univ l (t ∘ u ^ l) u′ us eq
 
-wk1List : List Term → List Term
-wk1List [] = []
-wk1List (t ∷ ts) = wk1 t ∷ wk1List ts
 
-ctrMethodType : Nat → Nat → Term → Relevance → Level → List Nat → Term
-ctrMethodType i j G rG lG as = go as [] 0
+-- wk of IndRect β redex RHS
+wk-IndRect-ctr-rhs : ∀ ρ i j lG P args ms →
+  let d = ctr i j args
+      rhs = apps lG (lookupDefault d ms j)
+                   (args ++ map (λ a → IndRect i lG P a ms) args)
+  in wk ρ rhs PE.≡
+     apps lG (lookupDefault (wk ρ d) (map (wk ρ) ms) j)
+              (map (wk ρ) args ++
+                map (λ a → IndRect i lG (wk ρ P) a (map (wk ρ) ms))
+                    (map (wk ρ) args))
+wk-IndRect-ctr-rhs ρ i j lG P args ms =
+  let d = ctr i j args
+  in PE.trans (wk-apps ρ lG (lookupDefault d ms j)
+                 (args ++ map (λ a → IndRect i lG P a ms) args))
+       (PE.cong₂ (apps lG)
+         (wk-lookupDefault-term ρ d ms j)
+         (PE.trans (map-++ (wk ρ) args (map (λ a → IndRect i lG P a ms) args))
+           (PE.cong₂ _++_ PE.refl
+             (PE.trans (map-map (wk ρ) (λ a → IndRect i lG P a ms) args)
+               (PE.trans (map-cong args (λ a → wk-IndRect ρ i lG P a ms))
+                 (PE.sym (map-map (λ a → IndRect i lG (wk ρ P) a (map (wk ρ) ms))
+                                  (wk ρ) args)))))))
   where
-  go : List Nat → List Term → Nat → Term
-  go [] args k = motiveApp G (ctr i j args) k
-  go (a ∷ as′) args k with a ≟ i
-  ... | yes _ =
-    Π Ind a ^ ! ° ⁰ ▹
-      (let args′ = wk1List args ∷ʳ var 0
-           k′    = 1+ k
-           ihTy  = motiveApp G (var 0) k′
-           body  = go as′ (wk1List args′) (1+ k′)
-       in  Π ihTy ^ rG ° lG ▹ body ° lG ° lG ^ rG)
-      ° lG ° lG ^ rG
-  ... | no _ =
-    Π Ind a ^ ! ° ⁰ ▹ go as′ (wk1List args ∷ʳ var 0) (1+ k) ° lG ° lG ^ rG
+    wk-apps : ∀ ρ l t us →
+      wk ρ (apps l t us) PE.≡ apps l (wk ρ t) (map (wk ρ) us)
+    wk-apps ρ l t [] = PE.refl
+    wk-apps ρ l t (u ∷ us) = wk-apps ρ l (t ∘ u ^ l) us
 
-indRectMethodTypeList : Nat → Term → Relevance → Level → List Term
-indRectMethodTypeList i G rG lG =
-  map (λ j → ctrMethodType i j G rG lG (SU.ctrArgsTypeList i j))
-      (range (SU.indCtrCount i))
+    wk-lookupDefault-term : ∀ ρ d xs n →
+      wk ρ (lookupDefault d xs n) PE.≡ lookupDefault (wk ρ d) (map (wk ρ) xs) n
+    wk-lookupDefault-term ρ d [] n = PE.refl
+    wk-lookupDefault-term ρ d (x ∷ xs) 0 = PE.refl
+    wk-lookupDefault-term ρ d (x ∷ xs) (1+ n) = wk-lookupDefault-term ρ d xs n
+
+substGen-map0 : ∀ σ ts →
+  substGen σ (map (λ t → ⟦ 0 , t ⟧) ts) PE.≡ map (λ t → ⟦ 0 , subst σ t ⟧) ts
+substGen-map0 σ [] = PE.refl
+substGen-map0 σ (t ∷ ts) = PE.cong (⟦ 0 , subst σ t ⟧ ∷_) (substGen-map0 σ ts)
+
+subst-IndRect : ∀ σ i lG P t ms →
+  subst σ (IndRect i lG P t ms) PE.≡
+  IndRect i lG (subst σ P) (subst σ t) (map (subst σ) ms)
+subst-IndRect σ i lG P t ms =
+  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 0 , subst σ P ⟧ ∷ ⟦ 0 , subst σ t ⟧ ∷ gs))
+    (PE.trans (substGen-map0 σ ms)
+              (PE.sym (map-map (λ m → ⟦ 0 , m ⟧) (subst σ) ms)))
+
+subst-ctr : ∀ σ i j ts →
+  subst σ (ctr i j ts) PE.≡ ctr i j (map (subst σ) ts)
+subst-ctr σ i j ts =
+  PE.cong (gen (Ctrkind i j))
+    (PE.trans (substGen-map0 σ ts)
+              (PE.sym (map-map (λ t → ⟦ 0 , t ⟧) (subst σ) ts)))
+
+subst-IndRect-ctr-rhs : ∀ σ i j lG P args ms →
+  let d = ctr i j args
+      rhs = apps lG (lookupDefault d ms j)
+                   (args ++ map (λ a → IndRect i lG P a ms) args)
+  in subst σ rhs PE.≡
+     apps lG (lookupDefault (subst σ d) (map (subst σ) ms) j)
+              (map (subst σ) args ++
+                map (λ a → IndRect i lG (subst σ P) a (map (subst σ) ms))
+                    (map (subst σ) args))
+subst-IndRect-ctr-rhs σ i j lG P args ms =
+  let d = ctr i j args
+  in PE.trans (subst-apps σ lG (lookupDefault d ms j)
+                 (args ++ map (λ a → IndRect i lG P a ms) args))
+       (PE.cong₂ (apps lG)
+         (subst-lookupDefault-term σ d ms j)
+         (PE.trans (map-++ (subst σ) args (map (λ a → IndRect i lG P a ms) args))
+           (PE.cong₂ _++_ PE.refl
+             (PE.trans (map-map (subst σ) (λ a → IndRect i lG P a ms) args)
+               (PE.trans (map-cong args (λ a → subst-IndRect σ i lG P a ms))
+                 (PE.sym (map-map (λ a → IndRect i lG (subst σ P) a (map (subst σ) ms))
+                                  (subst σ) args)))))))
+  where
+    subst-apps : ∀ σ l t us →
+      subst σ (apps l t us) PE.≡ apps l (subst σ t) (map (subst σ) us)
+    subst-apps σ l t [] = PE.refl
+    subst-apps σ l t (u ∷ us) = subst-apps σ l (t ∘ u ^ l) us
+
+    subst-lookupDefault-term : ∀ σ d xs n →
+      subst σ (lookupDefault d xs n) PE.≡ lookupDefault (subst σ d) (map (subst σ) xs) n
+    subst-lookupDefault-term σ d [] n = PE.refl
+    subst-lookupDefault-term σ d (x ∷ xs) 0 = PE.refl
+    subst-lookupDefault-term σ d (x ∷ xs) (1+ n) = subst-lookupDefault-term σ d xs n
+
+-- Constructor argument types as (type, level), embedding of simple signatures.
+ctrArgsTypeList : Nat → Nat → List (Term × Nat)
+ctrArgsTypeList i n =
+  map (λ p → (emb_oterm_term (proj₁ p) , proj₂ p)) (O.ctrArgsTypeList i n)
+
+-- Indices of recursive arguments in a constructor (left-to-right).
+ctrRecIndices : Nat → Nat → List Nat
+ctrRecIndices ind index =
+  let as = SU.ctrArgsTypeList ind index
+      n  = length as
+  in  map proj₁
+        (filter (λ jT → SU.ctrArgIsRecursive ind (proj₂ jT))
+          (zip (range n) as))
+
+-- CIC method type for constructor [index] of [ind] at motive [P]:
+--   Π (x_i : A_i). Π (ih_j : P x_j)_{A_j = I}. P (c x⃗)
+-- Motive applications use ∘ ^ ¹ (Π-level of Ind → Univ lG).
+indRectBranchTy : Nat → Nat → Term → Relevance → Level → Term
+indRectBranchTy ind index P rG lG =
+  let Ts = ctrArgsTypeList ind index
+      n = length Ts
+      recs = ctrRecIndices ind index
+      k = length recs
+      vars = map (λ j → var (((k + n) - 1) - j)) (range n)
+      conclusion = wk1^ (k + n) P ∘ ctr ind index vars ^ ¹
+      ihTys = map (λ pj →
+                wk1^ (n + proj₂ pj) P ∘ var (((n - 1) - proj₁ pj) + proj₂ pj) ^ ¹)
+                (zip recs (range k))
+      argTys = map proj₁ Ts
+  in  foldr (λ A B → Π A ^ ! ° ⁰ ▹ B ° lG ° lG ^ rG)
+        (foldr (λ A B → Π A ^ rG ° lG ▹ B ° lG ° lG ^ rG) conclusion ihTys)
+        argTys
+
+indRectBranchTyList : Nat → Term → Relevance → Level → List Term
+indRectBranchTyList i P rG lG =
+  map (λ j → indRectBranchTy i j P rG lG) (range (SU.indCtrCount i))
 
 ------------------------------------------------------------------------
 -- Embedding homomorphism lemmas
@@ -1080,6 +1296,40 @@ emb-oterm-all-map : ∀ ts → emb-oterm-all ts PE.≡ map emb_oterm_term ts
 emb-oterm-all-map [] = PE.refl
 emb-oterm-all-map (t ∷ ts) = PE.cong (emb_oterm_term t ∷_) (emb-oterm-all-map ts)
 
+emb-stype : SU.Type → Term
+emb-stype (SU.Ind i) = Ind i
+emb-stype (SU.Arrow A B) = Π (emb-stype A) ^ ! ° ⁰ ▹ emb-stype B ° ⁰ ° ⁰ ^ !
+
+emb-stype-hom : ∀ T → emb_oterm_term (O.emb-stype-oterm T) PE.≡ emb-stype T
+emb-stype-hom (SU.Ind i) = PE.refl
+emb-stype-hom (SU.Arrow A B) =
+  PE.cong₂ (λ A′ B′ → Π A′ ^ ! ° ⁰ ▹ B′ ° ⁰ ° ⁰ ^ !)
+    (emb-stype-hom A) (emb-stype-hom B)
+
+wk-emb-stype : ∀ ρ A → wk ρ (emb-stype A) PE.≡ emb-stype A
+wk-emb-stype ρ (SU.Ind i) = PE.refl
+wk-emb-stype ρ (SU.Arrow A B) =
+  PE.cong₂ (λ A′ B′ → Π A′ ^ ! ° ⁰ ▹ B′ ° ⁰ ° ⁰ ^ !)
+    (wk-emb-stype ρ A) (wk-emb-stype (lift ρ) B)
+
+map-wk-emb-stype : ∀ ρ As →
+  map (wk ρ) (map emb-stype As) PE.≡ map emb-stype As
+map-wk-emb-stype ρ [] = PE.refl
+map-wk-emb-stype ρ (A ∷ As) =
+  PE.cong₂ _∷_ (wk-emb-stype ρ A) (map-wk-emb-stype ρ As)
+
+subst-emb-stype : ∀ σ A → subst σ (emb-stype A) PE.≡ emb-stype A
+subst-emb-stype σ (SU.Ind i) = PE.refl
+subst-emb-stype σ (SU.Arrow A B) =
+  PE.cong₂ (λ A′ B′ → Π A′ ^ ! ° ⁰ ▹ B′ ° ⁰ ° ⁰ ^ !)
+    (subst-emb-stype σ A) (subst-emb-stype (liftSubst σ) B)
+
+map-subst-emb-stype : ∀ σ As →
+  map (subst σ) (map emb-stype As) PE.≡ map emb-stype As
+map-subst-emb-stype σ [] = PE.refl
+map-subst-emb-stype σ (A ∷ As) =
+  PE.cong₂ _∷_ (subst-emb-stype σ A) (map-subst-emb-stype σ As)
+
 emb-ctr : ∀ i j ts →
   emb_oterm_term (O.ctr i j ts) PE.≡ ctr i j (map emb_oterm_term ts)
 emb-ctr i j ts =
@@ -1091,20 +1341,105 @@ emb-map-Ind : ∀ ns → map emb_oterm_term (map O.Ind ns) PE.≡ map Ind ns
 emb-map-Ind [] = PE.refl
 emb-map-Ind (n ∷ ns) = PE.cong (Ind n ∷_) (emb-map-Ind ns)
 
-emb-IndRect : ∀ i lG G t ms →
-  emb_oterm_term (O.IndRect i lG G t ms) PE.≡
-  IndRect i lG (emb_oterm_term G) (emb_oterm_term t) (emb-oterm-all ms)
-emb-IndRect i lG G t ms =
-  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 1 , emb_oterm_term G ⟧ ∷ ⟦ 0 , emb_oterm_term t ⟧ ∷ gs))
+emb-IndRect : ∀ i lG P t ms →
+  emb_oterm_term (O.IndRect i lG P t ms) PE.≡
+  IndRect i lG (emb_oterm_term P) (emb_oterm_term t) (emb-oterm-all ms)
+emb-IndRect i lG P t ms =
+  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 0 , emb_oterm_term P ⟧ ∷ ⟦ 0 , emb_oterm_term t ⟧ ∷ gs))
     (PE.trans (emb-otermGen-map0 ms)
               (PE.trans (PE.sym (map-map (λ m → ⟦ 0 , m ⟧) emb_oterm_term ms))
                         (PE.cong (map (λ m → ⟦ 0 , m ⟧)) (PE.sym (emb-oterm-all-map ms)))))
 
--- Embedding preserves computed IndRect method type lists
-postulate
-  emb-indRectMethodTypeList : ∀ i G rG lG →
-    map emb_oterm_term (O.indRectMethodTypeList i G rG lG)
-    PE.≡ indRectMethodTypeList i (emb_oterm_term G) rG lG
+emb-indRectBranchTy : ∀ ind index P rG lG →
+  emb_oterm_term (O.indRectBranchTy ind index P rG lG) PE.≡
+  indRectBranchTy ind index (emb_oterm_term P) rG lG
+emb-indRectBranchTy ind index P rG lG =
+  PE.trans
+    (emb-foldr-Π ! ⁰ lG rG (map proj₁ (O.ctrArgsTypeList ind index))
+      (foldr (λ A B → O.Π A ^ rG ° lG ▹ B ° lG ° lG ^ rG) concO ihTysO))
+    (PE.trans
+      (PE.cong₂ (foldr (λ A B → Π A ^ ! ° ⁰ ▹ B ° lG ° lG ^ rG))
+        (PE.trans (emb-foldr-Π rG lG lG rG ihTysO concO)
+          (PE.cong₂ (foldr (λ A B → Π A ^ rG ° lG ▹ B ° lG ° lG ^ rG))
+            (PE.trans (emb-∘ (O.wk1^ (k + n) P)
+                          (O.ctr ind index (map (λ j → O.var (((k + n) - 1) - j)) (range n)))
+                          ¹)
+              (PE.cong₂ (λ Q t → Q ∘ t ^ ¹) (emb-wk1^ (k + n) P)
+                (PE.trans (emb-ctr ind index (map (λ j → O.var (((k + n) - 1) - j)) (range n)))
+                  (PE.cong (ctr ind index)
+                    (PE.trans
+                      (PE.cong (map emb_oterm_term)
+                        (PE.sym (map-map O.var (λ j → ((k + n) - 1) - j) (range n))))
+                      (PE.trans (emb-map-var (map (λ j → ((k + n) - 1) - j) (range n)))
+                        (map-map var (λ j → ((k + n) - 1) - j) (range n))))))))
+            (PE.trans (map-map emb_oterm_term
+                          (λ pj → O.wk1^ (n + proj₂ pj) P
+                            O.∘ O.var (((n - 1) - proj₁ pj) + proj₂ pj) ^ ¹)
+                          (zip recs (range (length recs))))
+              (map-cong (zip recs (range (length recs)))
+                (λ pj → PE.trans (emb-∘ (O.wk1^ (n + proj₂ pj) P)
+                                    (O.var (((n - 1) - proj₁ pj) + proj₂ pj))
+                                    ¹)
+                  (PE.cong (λ Q → Q ∘ var (((n - 1) - proj₁ pj) + proj₂ pj) ^ ¹)
+                    (emb-wk1^ (n + proj₂ pj) P)))))))
+        (PE.trans (map-map emb_oterm_term proj₁ (O.ctrArgsTypeList ind index))
+          (PE.trans (PE.sym (map-map proj₁ (λ p → (emb_oterm_term (proj₁ p) , proj₂ p))
+                               (O.ctrArgsTypeList ind index)))
+            PE.refl)))
+      (PE.cong₂ (λ n′ recs′ →
+          foldr (λ A B → Π A ^ ! ° ⁰ ▹ B ° lG ° lG ^ rG)
+            (foldr (λ A B → Π A ^ rG ° lG ▹ B ° lG ° lG ^ rG)
+              (wk1^ (length recs′ + n′) (emb_oterm_term P)
+                ∘ ctr ind index (map (λ j → var (((length recs′ + n′) - 1) - j))
+                                    (range n′))
+                ^ ¹)
+              (map (λ pj → wk1^ (n′ + proj₂ pj) (emb_oterm_term P)
+                              ∘ var (((n′ - 1) - proj₁ pj) + proj₂ pj) ^ ¹)
+                   (zip recs′ (range (length recs′)))))
+            (map proj₁ (ctrArgsTypeList ind index)))
+        (PE.sym (length-map (λ p → (emb_oterm_term (proj₁ p) , proj₂ p))
+                   (O.ctrArgsTypeList ind index)))
+        emb-ctrRecIndices))
+  where
+  n = length (O.ctrArgsTypeList ind index)
+  recs = O.ctrRecIndices ind index
+  k = length recs
+  ihTysO = map (λ pj → O.wk1^ (n + proj₂ pj) P
+                     O.∘ O.var (((n - 1) - proj₁ pj) + proj₂ pj) ^ ¹)
+               (zip recs (range k))
+  concO = O.wk1^ (k + n) P
+            O.∘ O.ctr ind index (map (λ j → O.var (((k + n) - 1) - j)) (range n))
+            ^ ¹
+
+  emb-wk1^ : ∀ n t → emb_oterm_term (O.wk1^ n t) PE.≡ wk1^ n (emb_oterm_term t)
+  emb-wk1^ 0 t = PE.refl
+  emb-wk1^ (1+ n) t =
+    PE.trans (emb-wk1 (O.wk1^ n t)) (PE.cong wk1 (emb-wk1^ n t))
+
+  emb-foldr-Π : ∀ rA lA l r As B →
+    emb_oterm_term (foldr (λ A B → O.Π A ^ rA ° lA ▹ B ° l ° l ^ r) B As) PE.≡
+    foldr (λ A B → Π A ^ rA ° lA ▹ B ° l ° l ^ r) (emb_oterm_term B) (map emb_oterm_term As)
+  emb-foldr-Π rA lA l r [] B = PE.refl
+  emb-foldr-Π rA lA l r (A ∷ As) B =
+    PE.cong (λ B′ → Π emb_oterm_term A ^ rA ° lA ▹ B′ ° l ° l ^ r)
+      (emb-foldr-Π rA lA l r As B)
+
+  emb-map-var : ∀ ns → map emb_oterm_term (map O.var ns) PE.≡ map var ns
+  emb-map-var [] = PE.refl
+  emb-map-var (n ∷ ns) = PE.cong (var n ∷_) (emb-map-var ns)
+
+  emb-ctrRecIndices : O.ctrRecIndices ind index PE.≡ ctrRecIndices ind index
+  emb-ctrRecIndices = PE.refl
+
+emb-indRectBranchTyList : ∀ i P rG lG →
+  map emb_oterm_term (O.indRectBranchTyList i P rG lG)
+  PE.≡ indRectBranchTyList i (emb_oterm_term P) rG lG
+emb-indRectBranchTyList i P rG lG =
+  PE.trans (map-map emb_oterm_term
+              (λ j → O.indRectBranchTy i j P rG lG)
+              (range (SU.indCtrCount i)))
+    (map-cong (range (SU.indCtrCount i))
+      (λ j → emb-indRectBranchTy i j P rG lG))
 
 -- Definition of syntaxic sugar
 

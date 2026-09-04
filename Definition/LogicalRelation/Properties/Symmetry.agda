@@ -14,6 +14,7 @@ open import Definition.LogicalRelation.Properties.Escape
 open import Definition.LogicalRelation.Properties.Conversion
 open import Tools.Product
 open import Tools.Empty
+open import Tools.List using (All₂; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
 mutual
   -- Helper function for symmetry of type equality using shape views.
@@ -23,6 +24,7 @@ mutual
          → Γ ⊩⟨ l′ ⟩ B ≡ A ^ r / [B]
   symEqT (ℕᵥ D D′) A≡B = red D
   symEqT (ℕ2ᵥ D D′) A≡B = red D
+  symEqT (Indᵥ D D′) A≡B = red D
   symEqT (Emptyᵥ D D′) A≡B = red D
   symEqT (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (ne₌ M D′ neM K≡M)
          rewrite whrDet* (red D′ , ne neM) (red D₁ , ne neK₁) =
@@ -108,6 +110,25 @@ symNatural2-prop (suc2ᵣ (ℕ2ₜ₌ k k′ d d′ t≡u prop)) =
 symNatural2-prop zero2ᵣ = zero2ᵣ
 symNatural2-prop (ne prop) = ne (symNeutralTerm prop)
 
+mutual
+  symEqTermInd : ∀ {Γ i t u}
+               → Γ ⊩Ind t ≡ u ∷Ind i
+               → Γ ⊩Ind u ≡ t ∷Ind i
+  symEqTermInd (Indₜ₌ k k′ d d′ t≡u prop) =
+    Indₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symInductive-prop prop)
+
+  symInductive-prop : ∀ {Γ i k k′}
+                → [Inductive]-prop Γ i k k′
+                → [Inductive]-prop Γ i k′ k
+  symInductive-prop (ctrᵣ ps) = ctrᵣ (symAll₂Ind ps)
+  symInductive-prop (ne prop) = ne (symNeutralTerm prop)
+
+  symAll₂Ind : ∀ {Γ i args args'}
+             → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args args'
+             → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args' args
+  symAll₂Ind []ₐ = []ₐ
+  symAll₂Ind (p ∷ₐ ps) = symEqTermInd p ∷ₐ symAll₂Ind ps
+
 symEmpty-prop : ∀ {Γ k k′}
                 → [Empty]-prop Γ k k′
                 → [Empty]-prop Γ k′ k
@@ -121,6 +142,7 @@ symEqTerm⁰ (ℕᵣ D) (ℕₜ₌ k k′ d d′ t≡u prop) =
   ℕₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural-prop prop)
 symEqTerm⁰ (ℕ2ᵣ D) (ℕ2ₜ₌ k k′ d d′ t≡u prop) =
   ℕ2ₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural2-prop prop)
+symEqTerm⁰ (Indᵣ D) [t≡u] = symEqTermInd [t≡u]
 symEqTerm⁰ (Emptyᵣ D) (Emptyₜ₌ prop) = Emptyₜ₌ (symEmpty-prop prop)
 symEqTerm⁰ {r = [ ! , ll ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ nf) =
   neₜ₌ m k d′ d (symNeutralTerm nf)
@@ -152,6 +174,7 @@ symEqTerm¹ (ℕᵣ D) (ℕₜ₌ k k′ d d′ t≡u prop) =
   ℕₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural-prop prop)
 symEqTerm¹ (ℕ2ᵣ D) (ℕ2ₜ₌ k k′ d d′ t≡u prop) =
   ℕ2ₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural2-prop prop)
+symEqTerm¹ (Indᵣ D) [t≡u] = symEqTermInd [t≡u]
 symEqTerm¹ (Emptyᵣ D) (Emptyₜ₌ prop) = Emptyₜ₌ (symEmpty-prop prop)
 symEqTerm¹ {r = [ ! , ll ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ nf) =
   neₜ₌ m k d′ d (symNeutralTerm nf)
@@ -186,6 +209,7 @@ symEqTerm∞ (ℕᵣ D) (ℕₜ₌ k k′ d d′ t≡u prop) =
   ℕₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural-prop prop)
 symEqTerm∞ (ℕ2ᵣ D) (ℕ2ₜ₌ k k′ d d′ t≡u prop) =
   ℕ2ₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural2-prop prop)
+symEqTerm∞ (Indᵣ D) [t≡u] = symEqTermInd [t≡u]
 symEqTerm∞ (Emptyᵣ D) (Emptyₜ₌ prop) = Emptyₜ₌ (symEmpty-prop prop)
 symEqTerm∞ {r = [ ! , ll ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ nf) =
   neₜ₌ m k d′ d (symNeutralTerm nf)

@@ -28,10 +28,14 @@ open import Definition.LogicalRelation.Substitution.Introductions.Universe
 open import Definition.LogicalRelation.Substitution.MaybeEmbed
 open import Definition.LogicalRelation.Substitution.Introductions.Castlemmas
 open import Definition.LogicalRelation.Substitution.Introductions.Cast
+open import Definition.LogicalRelation.Substitution.Introductions.Ind using (≅AllInd)
 open import Tools.Product
 open import Tools.Empty using (⊥; ⊥-elim)
+open import Tools.List using (All; All₂; []ₐ; _∷ₐ_; map; length; length-map)
+open import Tools.Nat
 import Tools.Unit as TU
 import Tools.PropositionalEquality as PE
+import Definition.SUntyped as SU
 [castrefl]ℕ : ∀ {A B t e Γ}
              (⊢Γ : ⊢ Γ)
              ([A] : Γ ⊩ℕ A)
@@ -109,6 +113,53 @@ import Tools.PropositionalEquality as PE
                                                                   (refl (un-univ ⊢B))))) (conv ⊢t (subset* DA)) [[ ⊢B , ⊢ℕ2B , DB ]])
                                                                   (conv:⇒*: (CastRed*Termℕ2ℕ2 ⊢eℕℕ d) (sym (subset* DB)))))
                    (conv:⇒*: d (sym (subset* DB))) (~-conv (~-castℕ2-refl k≡k ⊢k ⊢eℕℕ ) (sym (subset* DB)))
+
+[castrefl]Ind : ∀ {A B t e i Γ}
+             (⊢Γ : ⊢ Γ)
+             ([A] : Γ ⊩Ind A ^ i)
+             ([B] : Γ ⊩Ind B ^ i)
+             ([A≡B] : Γ ⊩⟨ ι ⁰ ⟩ A ≡ B ^ [ ! , ι ⁰ ] / Indᵣ [A])
+             (⊢t : Γ ⊢ t ∷ A ^ [ ! , ι ⁰ ])
+             ([t] : Γ ⊩⟨ ι ⁰ ⟩ t ∷ A ^ [ ! , ι ⁰ ] / Indᵣ [A])
+             (⊢e : Γ ⊢ e ∷ Id (U ⁰) A B ^ [ % , ι ⁰ ])
+             → Γ ⊩⟨ ι ⁰ ⟩ cast ⁰ A B e t ≡ t ∷ B ^ [ ! , ι ⁰ ] / Indᵣ [B]
+[castrefl]Ind {e = e} {i = i} {Γ = Γ} ⊢Γ [[ ⊢A , ⊢IndA , DA ]] [[ ⊢B , ⊢IndB , DB ]] [A≡B] ⊢t
+  (Indₜ .(ctr i j args) d n≡n (ctrᵣ {j} {args} ps)) ⊢e =
+  let ⊢eII = conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B))) (un-univ≡ (subset* DA)) (un-univ≡ (subset* DB))))
+      ⊢args = inversion-Ctr (_⊢_:⇒*:_∷_^_.⊢u d)
+      castEq = castAllEq ps
+      lens = PE.trans (length-map (λ a → cast ⁰ (Ind i) (Ind i) e a) args)
+               (PE.trans (⊢All-length ⊢args) (length-map emb-stype (SU.ctrArgsTypeList i j)))
+  in Indₜ₌ (ctr i j (map (λ a → cast ⁰ (Ind i) (Ind i) e a) args)) (ctr i j args)
+           (conv:⇒*: (transTerm:⇒:* (CastRed*Term ⊢B ⊢e ⊢t (un-univ:⇒*: [[ ⊢A , ⊢IndA , DA ]]))
+                              (transTerm:⇒:* (CastRed*TermInd (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B))) (un-univ≡ (subset* DA))
+                                                             (refl (un-univ ⊢B))))) (conv ⊢t (subset* DA)) [[ ⊢B , ⊢IndB , DB ]])
+                                             (conv:⇒*: (transTerm:⇒:* (CastRed*TermIndInd ⊢eII d)
+                                             (CastRed*TermIndctr ⊢eII ⊢args)) (sym (subset* DB))))) (subset* DB))
+           d (≅-ctr-cong ⊢Γ lens (≅AllInd ⊢Γ castEq)) (ctrᵣ castEq)
+  where
+    castAllEq : ∀ {ts} → All (λ a → Γ ⊩Ind a ∷Ind i) ts
+              → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i)
+                     (map (λ a → cast ⁰ (Ind i) (Ind i) e a) ts) ts
+    castAllEq []ₐ = []ₐ
+    castAllEq (p ∷ₐ rest) =
+      ([castrefl]Ind ⊢Γ (idRed:*: ⊢IndA) (idRed:*: ⊢IndA) (reflEq {l = ι ⁰} (Indᵣ (idRed:*: ⊢IndA)))
+                     (escapeTerm {l = ι ⁰} (Indᵣ (idRed:*: ⊢IndA)) p) p
+                     (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B))) (un-univ≡ (subset* DA)) (un-univ≡ (subset* DB))))))
+      ∷ₐ castAllEq rest
+
+    ⊢All-length : ∀ {Γ ts As r} → Γ ⊢All ts ∷ As ^ r → length ts PE.≡ length As
+    ⊢All-length εⱼ = PE.refl
+    ⊢All-length (consⱼ _ rest) = PE.cong 1+ (⊢All-length rest)
+[castrefl]Ind {i = i} ⊢Γ [[ ⊢A , ⊢IndA , DA ]] [[ ⊢B , ⊢IndB , DB ]] [A≡B] ⊢t
+  (Indₜ n d n≡n (ne (neNfₜ neK ⊢k k≡k))) ⊢e =
+  let ⊢eII = conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B))) (un-univ≡ (subset* DA)) (un-univ≡ (subset* DB))))
+  in neuEqTerm:⇒*: {l = ι ⁰} (Indᵣ [[ ⊢B , ⊢IndB , DB ]]) (castIndIndₙ neK) neK
+                   (transTerm:⇒:* (CastRed*Term ⊢B ⊢e ⊢t (un-univ:⇒*: [[ ⊢A , ⊢IndA , DA ]]))
+                              (transTerm:⇒:* (CastRed*TermInd (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B))) (un-univ≡ (subset* DA))
+                                                             (refl (un-univ ⊢B))))) (conv ⊢t (subset* DA)) [[ ⊢B , ⊢IndB , DB ]])
+                                             (conv:⇒*: (CastRed*TermIndInd ⊢eII d) (sym (subset* DB)))))
+                   (conv:⇒*: d (sym (subset* DB))) (~-conv (~-castInd-refl k≡k ⊢k ⊢eII ) (sym (subset* DB)))
 
 
 [castrefl]Ne : ∀ {A B Γ}
@@ -300,6 +351,9 @@ import Tools.PropositionalEquality as PE
   let Π≡Π = whrDet* (D′ , Whnf.Πₙ) (red D₁ , Whnf.Πₙ)
       _ , rF≡rF′ , _  = Π-PE-injectivity Π≡Π
   in ⊥-elim (!≢% rF≡rF′)
+[castreflShape] ⊢Γ .(Indᵣ IndA) .(Indᵣ IndB) [A≡B] (Indᵥ IndA IndB) [t] ⊢e =
+  [castrefl]Ind ⊢Γ IndA IndB [A≡B] (escapeTerm {l = ι ⁰} (Indᵣ IndA) [t]) [t] ⊢e
+
 [castreflShape] {r = %} ⊢Γ [A] [B] [A≡B] _ [t] ⊢e =
   let ⊢A = escape {l = ι ⁰} [A]
       ⊢B = escape {l = ι ⁰} [B]

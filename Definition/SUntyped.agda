@@ -2,8 +2,10 @@ module Definition.SUntyped where
 
 open import Tools.Nat
 open import Tools.List
-open import Tools.Nullary using (yes; no)
-
+open import Tools.Inequality using (Bool; true; false; eqb; if_then_else_)
+open import Tools.Product
+open import Tools.Empty
+open import Tools.PropositionalEquality
 
 data Type : Set where
   Ind : Nat → Type  -- index for the inductive type
@@ -18,20 +20,53 @@ data Term : Set where
   IndRect : Nat → Type → Term → List Term → Term
   -- IndRect i P t ms  — non-dependent elimination of t : Ind i into P
 
--- all ind levels are 0
--- TODO remove from the deepembedding 0 in sty
-postulate indCtrCount : Nat -> Nat
-postulate ctrArgsTypeList : Nat → Nat → List Nat -- the type must be an inductive so we only have the index
+-- The definition of the inductive types is parametrized
+postulate indCtrCount : Nat → Nat
+postulate indLevel : Nat → Nat
+postulate ctrArgsTypeList : Nat → Nat → List Type
 
--- Method type for constructor j of Ind i into non-dependent motive P
--- (Rocq-style: bind each arg; for recursive args also bind an IH : P)
-ctrMethodType : Nat → Type → List Nat → Type
-ctrMethodType i P [] = P
-ctrMethodType i P (a ∷ as) with a ≟ i
-... | yes _ = Arrow (Ind a) (Arrow P (ctrMethodType i P as))
-... | no  _ = Arrow (Ind a) (ctrMethodType i P as)
+-- A property for types that do not contain [Ind i]
+indNotInType : Nat → Type → Set
+indNotInType i (Ind j)     = i ≢ j
+indNotInType i (Arrow A B) = indNotInType i A × indNotInType i B
+
+isPositive : Nat → Type → Set
+isPositive ind (Ind ind′)  = ind ≡ ind′
+isPositive ind (Arrow _ _) = ⊥
+
+postulate
+  ctrArgsTypesPositive : ∀ ind n T → T ∈ₗ ctrArgsTypeList ind n → isPositive ind T
+
+-- [n] non-dependent [Arrow A] around [B]
+arrowRepeat : Nat → Type → Type → Type
+arrowRepeat 0       A B = B
+arrowRepeat (1+ n) A B = Arrow A (arrowRepeat n A B)
+
+ctrArgIsRecursive : Nat → Type → Bool
+ctrArgIsRecursive ind (Ind j)     = eqb j ind
+ctrArgIsRecursive _   (Arrow _ _) = false
+
+arrows : List Type → Type → Type
+arrows []       B = B
+arrows (A ∷ As) B = Arrow A (arrows As B)
+
+recCountList : Nat → List Type → Nat
+recCountList i [] = 0
+recCountList i (T ∷ Ts) = if ctrArgIsRecursive i T then 1+ (recCountList i Ts) else recCountList i Ts
+
+-- number of recursive arguments in a specific constructor
+ctrRecCount : Nat → Nat → Nat
+ctrRecCount ind index = recCountList ind (ctrArgsTypeList ind index)
+
+-- Simply-typed method type for constructor [index] of [ind] at motive [T]:
+-- [A0 → … → A_{n-1} → T → … → T → T] with one [T] per recursive argument
+indRectBranchTy : Nat → Nat → Type → Type
+indRectBranchTy ind index T =
+  let Ts = ctrArgsTypeList ind index
+      k  = ctrRecCount ind index
+  in  arrows Ts (arrowRepeat k T T)
 
 -- One method type per constructor of Ind i
-indRectMethodTypeList : Nat → Type → List Type
-indRectMethodTypeList i P =
-  map (λ j → ctrMethodType i P (ctrArgsTypeList i j)) (range (indCtrCount i))
+indRectBranchTypeList : Nat → Type → List Type
+indRectBranchTypeList i T =
+  map (λ j → indRectBranchTy i j T) (range (indCtrCount i))

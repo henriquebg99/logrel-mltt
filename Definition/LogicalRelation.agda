@@ -6,7 +6,9 @@ open import Definition.Untyped as U
 open import Definition.Typed
 open import Definition.Typed.Weakening
 open import Definition.Typed.Reduction
+open import Tools.Nat
 open import Tools.Product
+open import Tools.List using (List; All; All₂)
 import Tools.PropositionalEquality as PE
 -- The different cases of the logical relation are spread out through out
 -- this file. This is due to them having different dependencies.
@@ -180,6 +182,56 @@ split2 : ∀ {Γ a b} → [Natural2]-prop Γ a b → Natural2 a × Natural2 b
 split2 (suc2ᵣ x) = suc2ₙ , suc2ₙ
 split2 zero2ᵣ = zero2ₙ , zero2ₙ
 split2 (ne (neNfₜ₌ neK neM k≡m)) = ne2 neK , ne2 neM
+
+-- Reducibility of inductive types Ind i:
+
+-- Inductive type
+_⊩Ind_^_ : (Γ : Con Term) (A : Term) (i : Nat) → Set
+Γ ⊩Ind A ^ i = Γ ⊢ A :⇒*: Ind i ^ [ ! , ι ⁰ ]
+
+-- Inductive type equality
+_⊩Ind_≡_^_ : (Γ : Con Term) (A B : Term) (i : Nat) → Set
+Γ ⊩Ind A ≡ B ^ i = Γ ⊢ B ⇒* Ind i ^ [ ! , ι ⁰ ]
+
+mutual
+  -- Term of inductive type
+  data _⊩Ind_∷Ind_ (Γ : Con Term) (t : Term) (i : Nat) : Set where
+    Indₜ : (k : Term) (d : Γ ⊢ t :⇒*: k ∷ Ind i ^ ι ⁰)
+           (k≡k : Γ ⊢ k ≅ k ∷ Ind i ^ [ ! , ι ⁰ ])
+           (prop : Inductive-prop Γ i k)
+         → Γ ⊩Ind t ∷Ind i
+
+  -- WHNF property of inductive terms
+  data Inductive-prop (Γ : Con Term) (i : Nat) : (n : Term) → Set where
+    ctrᵣ : ∀ {j args} → All (λ a → Γ ⊩Ind a ∷Ind i) args
+         → Inductive-prop Γ i (ctr i j args)
+    ne   : ∀ {n} → Γ ⊩neNf n ∷ Ind i ^ [ ! , ι ⁰ ] → Inductive-prop Γ i n
+
+mutual
+  -- Term equality of inductive type
+  data _⊩Ind_≡_∷Ind_ (Γ : Con Term) (t u : Term) (i : Nat) : Set where
+    Indₜ₌ : (k k′ : Term) (d : Γ ⊢ t :⇒*: k ∷ Ind i ^ ι ⁰)
+            (d′ : Γ ⊢ u :⇒*: k′ ∷ Ind i ^ ι ⁰)
+            (k≡k′ : Γ ⊢ k ≅ k′ ∷ Ind i ^ [ ! , ι ⁰ ])
+            (prop : [Inductive]-prop Γ i k k′)
+          → Γ ⊩Ind t ≡ u ∷Ind i
+
+  -- WHNF property of inductive term equality
+  data [Inductive]-prop (Γ : Con Term) (i : Nat) : (n n′ : Term) → Set where
+    ctrᵣ : ∀ {j args args'} → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args args'
+         → [Inductive]-prop Γ i (ctr i j args) (ctr i j args')
+    ne   : ∀ {n n′} → Γ ⊩neNf n ≡ n′ ∷ Ind i ^ [ ! , ι ⁰ ]
+         → [Inductive]-prop Γ i n n′
+
+-- Inductive extraction from term equality WHNF property
+splitInd : ∀ {Γ i a b} → [Inductive]-prop Γ i a b → Inductive i a × Inductive i b
+splitInd (ctrᵣ {j} {args} {args'} _) = ctrₙ {j = j} {ts = args} , ctrₙ {j = j} {ts = args'}
+splitInd (ne (neNfₜ₌ neK neM k≡m)) = ne neK , ne neM
+
+-- Inductive extraction from term WHNF property
+inductive′ : ∀ {Γ i n} → Inductive-prop Γ i n → Inductive i n
+inductive′ (ctrᵣ {j} {args} _) = ctrₙ {j = j} {ts = args}
+inductive′ (ne (neNfₜ neK ⊢k k≡k)) = ne neK
 
 -- Reducibility of Empty
 
@@ -435,6 +487,7 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
       Uᵣ  : ∀ {A ll} → (UA : Γ ⊩¹U A ^ ll) → Γ ⊩¹ A ^ [ ! , ll ]
       ℕᵣ  : ∀ {A} → Γ ⊩ℕ A → Γ ⊩¹ A ^ [ ! , ι ⁰ ]
       ℕ2ᵣ : ∀ {A} → Γ ⊩ℕ2 A → Γ ⊩¹ A ^ [ ! , ι ⁰ ]
+      Indᵣ : ∀ {A i} → Γ ⊩Ind A ^ i → Γ ⊩¹ A ^ [ ! , ι ⁰ ]
       Emptyᵣ : ∀ {A} → Γ ⊩Empty A → Γ ⊩¹ A ^ [ % , ι ⁰ ]
       ne  : ∀ {A r l} → Γ ⊩ne A ^[ r , l ] → Γ ⊩¹ A ^ [ r , ι l ]
       Πᵣ  : ∀ {A l} → Γ ⊩¹Π A ^[ l ] → Γ ⊩¹ A ^ [ ! , ι l ]
@@ -447,6 +500,7 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     Γ ⊩¹ A ≡ B ^ [ .! , l ] / Uᵣ UA = Γ ⊩¹U A ≡ B ^ l / UA
     Γ ⊩¹ A ≡ B ^ [ .! , .ι ⁰ ] / ℕᵣ D = Γ ⊩ℕ A ≡ B
     Γ ⊩¹ A ≡ B ^ [ .! , .ι ⁰ ] / ℕ2ᵣ D = Γ ⊩ℕ2 A ≡ B
+    Γ ⊩¹ A ≡ B ^ [ .! , .ι ⁰ ] / Indᵣ {i = i} D = Γ ⊩Ind A ≡ B ^ i
     Γ ⊩¹ A ≡ B ^ [ .% , .ι ⁰ ] / Emptyᵣ D = Γ ⊩Empty A ≡ B
     Γ ⊩¹ A ≡ B ^ [ r , ι l ] / ne neA = Γ ⊩ne A ≡ B ^[ r , l ]/ neA
     Γ ⊩¹ A ≡ B ^ [ .! , ι l ] / Πᵣ ΠA =  Γ ⊩¹Π A ≡ B ^[ l ]/ ΠA
@@ -459,6 +513,7 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     Γ ⊩¹ t ∷ A ^ [ .! , ll ] / Uᵣ UA = Γ ⊩¹U t ∷ A ^ ll / UA
     Γ ⊩¹ t ∷ A ^ .([ ! , ι ⁰ ]) / ℕᵣ x = Γ ⊩ℕ t ∷ℕ
     Γ ⊩¹ t ∷ A ^ .([ ! , ι ⁰ ]) / ℕ2ᵣ x = Γ ⊩ℕ2 t ∷ℕ2
+    Γ ⊩¹ t ∷ A ^ .([ ! , ι ⁰ ]) / Indᵣ {i = i} x = Γ ⊩Ind t ∷Ind i
     Γ ⊩¹ t ∷ A ^ [ .% , ι ⁰ ] / Emptyᵣ x =  Γ ⊩Empty t ∷Empty
     Γ ⊩¹ t ∷ A ^ .([ ! , ι l ]) / ne {r = !} {l} neA = Γ ⊩ne t ∷ A ^ l / neA
     Γ ⊩¹ t ∷ A ^ .([ % , ι l ]) / ne {r = %} {l} neA = Γ ⊩neIrr t ∷ A ^ l / neA
@@ -472,6 +527,7 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     Γ ⊩¹ t ≡ u ∷ A ^ [ .! , ll ] / Uᵣ UA = Γ ⊩¹U t ≡ u ∷ A ^ ll / UA
     Γ ⊩¹ t ≡ u ∷ A ^ .([ ! , ι ⁰ ]) / ℕᵣ D = Γ ⊩ℕ t ≡ u ∷ℕ
     Γ ⊩¹ t ≡ u ∷ A ^ .([ ! , ι ⁰ ]) / ℕ2ᵣ D = Γ ⊩ℕ2 t ≡ u ∷ℕ2
+    Γ ⊩¹ t ≡ u ∷ A ^ .([ ! , ι ⁰ ]) / Indᵣ {i = i} D = Γ ⊩Ind t ≡ u ∷Ind i
     Γ ⊩¹ t ≡ u ∷ A ^ [ .% , ι ⁰ ] / Emptyᵣ D = Γ ⊩Empty t ≡ u ∷Empty
     Γ ⊩¹ t ≡ u ∷ A ^ .([ ! , ι l ]) / ne {r = !} {l} neA = Γ ⊩ne t ≡ u ∷ A ^  l / neA
     Γ ⊩¹ t ≡ u ∷ A ^ .([ % , ι l ]) / ne {r = %} {l} neA = Γ ⊩neIrr t ≡ u ∷ A ^ l / neA
@@ -484,7 +540,7 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     kit : LogRelKit
     kit = Kit _⊩¹U_^_ _⊩¹Π_^[_] _⊩¹_^_ _⊩¹_≡_^_/_ _⊩¹_∷_^_/_ _⊩¹_≡_∷_^_/_
 
-open LogRel public using (Uᵣ; ℕᵣ; ℕ2ᵣ; Emptyᵣ; ne; Πᵣ ; Πirrᵣ ; Idᵣ ; emb; Uₜ; Uₜ₌; Π₌)
+open LogRel public using (Uᵣ; ℕᵣ; ℕ2ᵣ; Indᵣ; Emptyᵣ; ne; Πᵣ ; Πirrᵣ ; Idᵣ ; emb; Uₜ; Uₜ₌; Π₌)
 
 -- Patterns for the non-records of Π
 pattern Πₜ a b c d e f = a , b , c , d , e , f

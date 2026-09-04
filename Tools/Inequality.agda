@@ -3,6 +3,9 @@
 open import Tools.Nat
 open import Tools.List
 open import Tools.PropositionalEquality
+open import Tools.Nullary using (yes; no)
+open import Tools.Empty
+open import Tools.Product
 
 module Tools.Inequality where
 
@@ -134,3 +137,55 @@ test : ∀ n m l → (n + (m + l)) <= ((m + l) + (n + l))
 test n m l = inequality (vars (n ∷ m ∷ l ∷ []))
   [ var 0 + [ var 1 + var 2 ] ]
   [ [ var 1 + var 2 ] + [ var 0 + var 2 ] ] refl
+
+-- List helpers that depend on Bool (kept here to avoid a List↔Inequality cycle)
+
+if_then_else_ : {A : Set} → Bool → A → A → A
+if true  then x else _ = x
+if false then _ else y = y
+
+eqb : Nat → Nat → Bool
+eqb m n with m ≟ n
+... | yes _ = true
+... | no  _ = false
+
+eqb-refl : ∀ n → eqb n n ≡ true
+eqb-refl n rewrite ≟-refl n = refl
+
+eqb-yes : ∀ m n → m ≡ n → eqb m n ≡ true
+eqb-yes m n eq with m ≟ n
+... | yes _ = refl
+... | no ¬eq = ⊥-elim (¬eq eq)
+
+eqb-no : ∀ m n → m ≢ n → eqb m n ≡ false
+eqb-no m n ¬eq with m ≟ n
+... | yes e = ⊥-elim (¬eq e)
+... | no _ = refl
+
+filter : {A : Set} → (A → Bool) → List A → List A
+filter p [] = []
+filter p (x ∷ xs) = if p x then x ∷ filter p xs else filter p xs
+
+filter-map : ∀ {A B} (p : B → Bool) (g : A → B) xs →
+  filter p (map g xs) ≡ map g (filter (λ x → p (g x)) xs)
+filter-map p g [] = refl
+filter-map p g (x ∷ xs) with p (g x)
+... | true  = cong (g x ∷_) (filter-map p g xs)
+... | false = filter-map p g xs
+
+filter-cong : ∀ {A} {p q : A → Bool} xs →
+  (∀ x → p x ≡ q x) → filter p xs ≡ filter q xs
+filter-cong [] eq = refl
+filter-cong {p = p} {q} (x ∷ xs) eq with p x | q x | eq x
+... | true  | true  | refl = cong (x ∷_) (filter-cong xs eq)
+... | false | false | refl = filter-cong xs eq
+... | true  | false | ()
+... | false | true  | ()
+
+filter-∈ₗ : ∀ {A} (p : A → Bool) xs x →
+  x ∈ₗ filter p xs → x ∈ₗ xs
+filter-∈ₗ p [] x ()
+filter-∈ₗ p (y ∷ xs) x h with p y
+filter-∈ₗ p (y ∷ xs) .y hereₗ | true = hereₗ
+filter-∈ₗ p (y ∷ xs) x (thereₗ h) | true = thereₗ (filter-∈ₗ p xs x h)
+filter-∈ₗ p (y ∷ xs) x h | false = thereₗ (filter-∈ₗ p xs x h)

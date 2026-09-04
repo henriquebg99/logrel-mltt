@@ -3,8 +3,11 @@ module Definition.Typed.Weakening where
 open import Definition.Untyped as U hiding (wk)
 open import Definition.Untyped.Properties
 open import Definition.Typed
+open import Tools.List using (map; List; All; All₂; All₃; []ₐ; _∷ₐ_; mapAll; mapAll₂; _++_; lookupDefault; length-map)
 import Definition.OUntyped as O
+import Definition.SUntyped as SU
 import Tools.PropositionalEquality as PE
+open import Definition.Sort
 
 -- Weakening type
 otwk : Wk → O.Wk
@@ -77,6 +80,7 @@ wkIndex (lift ρ) ⊢Δ here =
                (wk1-wk≡lift-wk1 _ _)
                here
 
+{-# TERMINATING #-}
 mutual
   wk : ∀ {Γ Δ A r ρ} → ρ ∷ Δ ⊆ Γ →
      let ρA = U.wk ρ A
@@ -187,7 +191,39 @@ wkTerm {ρ = ρ} [ρ] ⊢Δ (Id-Π {rA = rA} {t = t} {u = u} <l <l' Aⱼ Bⱼ t�
   wkTerm ρ ⊢Δ (castⱼ A B e t) =
     castⱼ (wkTerm ρ ⊢Δ A) (wkTerm ρ ⊢Δ B) (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
   wkTerm ρ ⊢Δ (conv t A≡B) = conv (wkTerm ρ ⊢Δ t) (wkEq ρ ⊢Δ A≡B)
+  wkTerm ρ ⊢Δ (Indⱼ ⊢Γ) = Indⱼ ⊢Δ
+  wkTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (Ctrⱼ {i} {j} {args} ⊢Γ args∈) =
+    PE.subst (λ t → Δ ⊢ t ∷ Ind i ^ [ ! , ι ⁰ ])
+      (PE.sym (wk-ctr ρ i j args))
+      (Ctrⱼ ⊢Δ (PE.subst
+        (λ As → Δ ⊢All map (U.wk ρ) args ∷ As ^ [ ! , ι ⁰ ])
+        (map-wk-emb-stype ρ (SU.ctrArgsTypeList i j))
+        (wkAll [ρ] ⊢Δ args∈)))
+  wkTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (IndRectⱼ {i} {P} {rG} {lG} {t} {ms} abs ⊢P ⊢t ⊢ms) =
+    PE.subst (λ tm → Δ ⊢ tm ∷ U.wk ρ (P ∘ t ^ ¹) ^ [ rG , ι lG ])
+      (PE.sym (wk-IndRect ρ i lG P t ms))
+      (IndRectⱼ abs (wkTerm [ρ] ⊢Δ ⊢P) (wkTerm [ρ] ⊢Δ ⊢t)
+        (PE.subst
+          (λ As → Δ ⊢All map (U.wk ρ) ms ∷ As ^ [ rG , ι lG ])
+          (wk-indRectBranchTyList ρ i P rG lG)
+          (wkAll [ρ] ⊢Δ ⊢ms)))
 
+  wkAll : ∀ {Γ Δ As ts r ρ} → ρ ∷ Δ ⊆ Γ →
+        ⊢ Δ → Γ ⊢All ts ∷ As ^ r → Δ ⊢All map (U.wk ρ) ts ∷ map (U.wk ρ) As ^ r
+  wkAll ρ ⊢Δ εⱼ = εⱼ
+  wkAll ρ ⊢Δ (consⱼ ⊢t ⊢ts) = consⱼ (wkTerm ρ ⊢Δ ⊢t) (wkAll ρ ⊢Δ ⊢ts)
+
+  wkAllEq : ∀ {Γ Δ As ts ts' r ρ} → ρ ∷ Δ ⊆ Γ →
+          ⊢ Δ → Γ ⊢All ts ≡ ts' ∷ As ^ r
+          → Δ ⊢All map (U.wk ρ) ts ≡ map (U.wk ρ) ts' ∷ map (U.wk ρ) As ^ r
+  wkAllEq ρ ⊢Δ εⱼ = εⱼ
+  wkAllEq ρ ⊢Δ (consⱼ t≡t' ⊢ts) = consⱼ (wkEqTerm ρ ⊢Δ t≡t') (wkAllEq ρ ⊢Δ ⊢ts)
+
+  wkAll₃Eq : ∀ {Γ Δ As ts ts' r ρ} → ρ ∷ Δ ⊆ Γ →
+           ⊢ Δ → All₃ (λ m m' A → Γ ⊢ m ≡ m' ∷ A ^ r) ts ts' As
+           → All₃ (λ m m' A → Δ ⊢ m ≡ m' ∷ A ^ r) (map (U.wk ρ) ts) (map (U.wk ρ) ts') (map (U.wk ρ) As)
+  wkAll₃Eq ρ ⊢Δ []ₐ = []ₐ
+  wkAll₃Eq ρ ⊢Δ (m≡m' ∷ₐ rest) = (wkEqTerm ρ ⊢Δ m≡m') ∷ₐ (wkAll₃Eq ρ ⊢Δ rest)
 
   wkEq : ∀ {Γ Δ A B r ρ} → ρ ∷ Δ ⊆ Γ →
        let ρA = U.wk ρ A
@@ -234,6 +270,13 @@ wkTerm {ρ = ρ} [ρ] ⊢Δ (Id-Π {rA = rA} {t = t} {u = u} <l <l' Aⱼ Bⱼ t�
                                     (wkEqTerm (lift ρ) (⊢Δ ∙ ρF) f0≡g0)))
   wkEqTerm ρ ⊢Δ (suc-cong m≡n) = suc-cong (wkEqTerm ρ ⊢Δ m≡n)
   wkEqTerm ρ ⊢Δ (suc2-cong m≡n) = suc2-cong (wkEqTerm ρ ⊢Δ m≡n)
+  wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (ctr-cong {i} {j} {args} {args'} ⊢Γ lens eqs) =
+    PE.subst₂ (λ t u → Δ ⊢ t ≡ u ∷ Ind i ^ [ ! , ι ⁰ ])
+      (PE.sym (wk-ctr ρ i j args))
+      (PE.sym (wk-ctr ρ i j args'))
+      (ctr-cong ⊢Δ
+        (PE.trans (length-map (U.wk ρ) args) lens)
+        (mapAll₂ (U.wk ρ) (wkEqTerm [ρ] ⊢Δ) eqs))
   wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (natrec-cong {s = s} {s′ = s′} {F = F} {l = l}
                                      F≡F′ z≡z′ s≡s′ n≡n′) =
     PE.subst (λ x → Δ ⊢ natrec _ _ _ _ _ ≡ _ ∷ x ^ _) (PE.sym (wk-β F))
@@ -300,6 +343,51 @@ wkTerm {ρ = ρ} [ρ] ⊢Δ (Id-Π {rA = rA} {t = t} {u = u} <l <l' Aⱼ Bⱼ t�
                          (PE.subst (λ x → Δ ⊢ U.wk ρ s ∷ x ^ [ ! , ι l ])
                                    (wk-β-natrec2 _ F ! l)
                                    (wkTerm [ρ] ⊢Δ ⊢s)))
+  wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (IndRect-cong {i} {P} {P'} {lG} {t} {t'} {ms} {ms'} P≡P' t≡t' ⊢ms) =
+    let eq = IndRect-cong (wkEqTerm [ρ] ⊢Δ P≡P') (wkEqTerm [ρ] ⊢Δ t≡t')
+               (PE.subst (λ As → Δ ⊢All map (U.wk ρ) ms ≡ map (U.wk ρ) ms' ∷ As ^ [ ! , ι lG ])
+                 (wk-indRectBranchTyList ρ i P ! lG)
+                 (wkAllEq [ρ] ⊢Δ ⊢ms))
+        eq₁ = PE.subst (λ A → Δ ⊢ IndRect i lG (U.wk ρ P) (U.wk ρ t) (map (U.wk ρ) ms)
+                              ≡ IndRect i lG (U.wk ρ P') (U.wk ρ t') (map (U.wk ρ) ms')
+                              ∷ A ^ [ ! , ι lG ])
+                (PE.sym (wk-app ρ P t ¹)) eq
+    in PE.subst (λ lhs → Δ ⊢ lhs ≡ U.wk ρ (IndRect i lG P' t' ms')
+                           ∷ U.wk ρ (P ∘ t ^ ¹) ^ [ ! , ι lG ])
+         (PE.sym (wk-IndRect ρ i lG P t ms))
+         (PE.subst (λ rhs → Δ ⊢ IndRect i lG (U.wk ρ P) (U.wk ρ t) (map (U.wk ρ) ms) ≡ rhs
+                              ∷ U.wk ρ (P ∘ t ^ ¹) ^ [ ! , ι lG ])
+           (PE.sym (wk-IndRect ρ i lG P' t' ms'))
+           eq₁)
+  wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (IndRect-ctr≡ {i} {j} {P} {lG} {args} {ms} ⊢P ⊢args ⊢ms) =
+    let d = ctr i j args
+        inner = IndRect-ctr≡ (wkTerm [ρ] ⊢Δ ⊢P)
+             (PE.subst (λ As → Δ ⊢All map (U.wk ρ) args ∷ As ^ [ ! , ι ⁰ ])
+               (map-wk-emb-stype ρ (SU.ctrArgsTypeList i j))
+               (wkAll [ρ] ⊢Δ ⊢args))
+             (PE.subst (λ As → Δ ⊢All map (U.wk ρ) ms ∷ As ^ [ ! , ι lG ])
+               (wk-indRectBranchTyList ρ i P ! lG)
+               (wkAll [ρ] ⊢Δ ⊢ms))
+        inner′ = PE.subst
+          (λ d' → Δ ⊢ IndRect i lG (U.wk ρ P) d' (map (U.wk ρ) ms)
+                     ≡ apps lG (lookupDefault d' (map (U.wk ρ) ms) j)
+                              (map (U.wk ρ) args ++
+                                map (λ a → IndRect i lG (U.wk ρ P) a (map (U.wk ρ) ms))
+                                    (map (U.wk ρ) args))
+                     ∷ U.wk ρ P ∘ d' ^ ¹ ^ [ ! , ι lG ])
+          (PE.sym (wk-ctr ρ i j args))
+          inner
+    in PE.subst₂ (λ lhs r → Δ ⊢ lhs ≡ r ∷ U.wk ρ (P ∘ d ^ ¹) ^ [ ! , ι lG ])
+         (PE.sym (wk-IndRect ρ i lG P d ms))
+         (PE.sym (wk-IndRect-ctr-rhs ρ i j lG P args ms))
+         (PE.subst (λ A → Δ ⊢ IndRect i lG (U.wk ρ P) (U.wk ρ d) (map (U.wk ρ) ms)
+                            ≡ apps lG (lookupDefault (U.wk ρ d) (map (U.wk ρ) ms) j)
+                                     (map (U.wk ρ) args ++
+                                       map (λ a → IndRect i lG (U.wk ρ P) a (map (U.wk ρ) ms))
+                                           (map (U.wk ρ) args))
+                            ∷ A ^ [ ! , ι lG ])
+           (PE.sym (wk-app ρ P d ¹))
+           inner′)
   wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (Emptyrec-cong {A = A} {A' = A'} {e = e} {e' = e'} A≡A' ⊢e ⊢e') =
     Emptyrec-cong (wkEq [ρ] ⊢Δ A≡A') (wkTerm [ρ] ⊢Δ ⊢e) (wkTerm [ρ] ⊢Δ ⊢e')
   wkEqTerm [ρ] ⊢Δ (proof-irrelevance t u) = proof-irrelevance (wkTerm [ρ] ⊢Δ t) (wkTerm [ρ] ⊢Δ u)
@@ -327,6 +415,25 @@ wkTerm {ρ = ρ} [ρ] ⊢Δ (Id-Π {rA = rA} {t = t} {u = u} <l <l' Aⱼ Bⱼ t�
   wkEqTerm ρ ⊢Δ (cast-ℕ-S e n) = cast-ℕ-S (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ n)
   wkEqTerm ρ ⊢Δ (cast-ℕ2-0 e) = cast-ℕ2-0 (wkTerm ρ ⊢Δ e)
   wkEqTerm ρ ⊢Δ (cast-ℕ2-S e n) = cast-ℕ2-S (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ n)
+  wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (cast-Ind-ctr {i} {j} {e} {args} ⊢e ⊢args) =
+    let ⊢e′ = wkTerm [ρ] ⊢Δ ⊢e
+        ⊢args′ = PE.subst
+          (λ As → Δ ⊢All map (U.wk ρ) args ∷ As ^ [ ! , ι ⁰ ])
+          (map-wk-emb-stype ρ (SU.ctrArgsTypeList i j))
+          (wkAll [ρ] ⊢Δ ⊢args)
+        pf = cast-Ind-ctr ⊢e′ ⊢args′
+        castArgs = map (λ a → cast ⁰ (Ind i) (Ind i) e a) args
+        lhs≡ = PE.trans (wk-cast ρ ⁰ (Ind i) (Ind i) e (ctr i j args))
+                        (PE.cong (cast ⁰ (Ind i) (Ind i) (U.wk ρ e))
+                                 (wk-ctr ρ i j args))
+        rhs≡ = PE.trans (wk-ctr ρ i j castArgs)
+                 (PE.cong (ctr i j)
+                   (PE.trans (map-map (U.wk ρ) (λ a → cast ⁰ (Ind i) (Ind i) e a) args)
+                     (PE.trans (map-cong args (λ a → wk-cast ρ ⁰ (Ind i) (Ind i) e a))
+                       (PE.sym (map-map (λ a → cast ⁰ (Ind i) (Ind i) (U.wk ρ e) a)
+                                        (U.wk ρ) args)))))
+    in PE.subst₂ (λ t u → Δ ⊢ t ≡ u ∷ Ind i ^ [ ! , ι ⁰ ])
+         (PE.sym lhs≡) (PE.sym rhs≡) pf
   wkEqTerm {Δ = Δ} {ρ = wkρ} sub (⊢Δ) (cast-equiv-fwd {e = e} {n = n} ⊢e ⊢n) =
     let emb = emb_oterm_term (E.Equiv.fwd equiv)
         wkn = U.wk wkρ n
@@ -436,10 +543,52 @@ mutual
                          (PE.subst (λ x → Δ ⊢ U.wk ρ s ∷ x ^ [ ! , ι l ])
                                    (wk-β-natrec2 ρ F ! l)
                                    (wkTerm [ρ] ⊢Δ ⊢s)))
+  wkRedTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (IndRect-subst {i = i} {P = P} {lG = lG} {t = t} {t' = t'} {ms = ms} ⊢P t⇒t' ⊢ms) =
+    PE.subst₂ (λ lhs rhs → Δ ⊢ lhs ⇒ rhs ∷ U.wk ρ (P ∘ t ^ ¹) ^ ι lG)
+      (PE.sym (wk-IndRect ρ i lG P t ms))
+      (PE.sym (wk-IndRect ρ i lG P t' ms))
+      (PE.subst (λ A → Δ ⊢ IndRect i lG (U.wk ρ P) (U.wk ρ t) (map (U.wk ρ) ms)
+                         ⇒ IndRect i lG (U.wk ρ P) (U.wk ρ t') (map (U.wk ρ) ms)
+                         ∷ A ^ ι lG)
+        (PE.sym (wk-app ρ P t ¹))
+        (IndRect-subst (wkTerm [ρ] ⊢Δ ⊢P) (wkRedTerm [ρ] ⊢Δ t⇒t')
+          (PE.subst (λ As → Δ ⊢All map (U.wk ρ) ms ∷ As ^ [ ! , ι lG ])
+            (wk-indRectBranchTyList ρ i P ! lG)
+            (wkAll [ρ] ⊢Δ ⊢ms))))
+  wkRedTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (IndRect-ctr {i = i} {j = j} {P = P} {lG = lG} {args = args} {ms = ms} ⊢P ⊢args ⊢ms) =
+    let d = ctr i j args
+        inner = IndRect-ctr (wkTerm [ρ] ⊢Δ ⊢P)
+             (PE.subst (λ As → Δ ⊢All map (U.wk ρ) args ∷ As ^ [ ! , ι ⁰ ])
+               (map-wk-emb-stype ρ (SU.ctrArgsTypeList i j))
+               (wkAll [ρ] ⊢Δ ⊢args))
+             (PE.subst (λ As → Δ ⊢All map (U.wk ρ) ms ∷ As ^ [ ! , ι lG ])
+               (wk-indRectBranchTyList ρ i P ! lG)
+               (wkAll [ρ] ⊢Δ ⊢ms))
+        inner′ = PE.subst
+          (λ d' → Δ ⊢ IndRect i lG (U.wk ρ P) d' (map (U.wk ρ) ms)
+                     ⇒ apps lG (lookupDefault d' (map (U.wk ρ) ms) j)
+                              (map (U.wk ρ) args ++
+                                map (λ a → IndRect i lG (U.wk ρ P) a (map (U.wk ρ) ms))
+                                    (map (U.wk ρ) args))
+                     ∷ U.wk ρ P ∘ d' ^ ¹ ^ ι lG)
+          (PE.sym (wk-ctr ρ i j args))
+          inner
+    in PE.subst₂ (λ lhs r → Δ ⊢ lhs ⇒ r ∷ U.wk ρ (P ∘ d ^ ¹) ^ ι lG)
+         (PE.sym (wk-IndRect ρ i lG P d ms))
+         (PE.sym (wk-IndRect-ctr-rhs ρ i j lG P args ms))
+         (PE.subst (λ A → Δ ⊢ IndRect i lG (U.wk ρ P) (U.wk ρ d) (map (U.wk ρ) ms)
+                            ⇒ apps lG (lookupDefault (U.wk ρ d) (map (U.wk ρ) ms) j)
+                                     (map (U.wk ρ) args ++
+                                       map (λ a → IndRect i lG (U.wk ρ P) a (map (U.wk ρ) ms))
+                                           (map (U.wk ρ) args))
+                            ∷ A ^ ι lG)
+           (PE.sym (wk-app ρ P d ¹))
+           inner′)
   wkRedTerm ρ ⊢Δ  (cast-subst A B e t) = cast-subst (wkRedTerm ρ ⊢Δ A) (wkTerm ρ ⊢Δ  B) (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
   wkRedTerm {Γ} {Δ} {A} {l} {t'} {u} {ρ₁} ρ ⊢Δ  (cast-ne-subst K neK B e t) = cast-ne-subst (wkTerm ρ ⊢Δ K) (wkNeutral ρ₁ neK) (wkRedTerm ρ ⊢Δ  B) (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
   wkRedTerm ρ ⊢Δ  (cast-ℕ-subst B e t) = cast-ℕ-subst (wkRedTerm ρ ⊢Δ B) (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
   wkRedTerm ρ ⊢Δ  (cast-ℕ2-subst B e t) = cast-ℕ2-subst (wkRedTerm ρ ⊢Δ B) (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
+  wkRedTerm ρ ⊢Δ  (cast-Ind-subst B e t) = cast-Ind-subst (wkRedTerm ρ ⊢Δ B) (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
   wkRedTerm ρ ⊢Δ  (cast-Π-subst A P B e t) = let ρA = wkTerm ρ ⊢Δ A in cast-Π-subst ρA (wkTerm (lift ρ) (⊢Δ ∙ (univ ρA)) P) (wkRedTerm ρ ⊢Δ B) (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
   wkRedTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (cast-Π {A = A} {A' = A'} {rA = rA} {B = B} {B' = B'} {e = e} {f = f} Aⱼ Bⱼ A'ⱼ B'ⱼ eⱼ fⱼ) = let l = ⁰ in let lA = ⁰ in let lB = ⁰ in
     let ρA = wkTerm [ρ] ⊢Δ Aⱼ in
@@ -464,6 +613,26 @@ mutual
   wkRedTerm ρ ⊢Δ (cast-ℕ2-0 e) = cast-ℕ2-0 (wkTerm ρ ⊢Δ e)
   wkRedTerm ρ ⊢Δ (cast-ℕ2-S e n) = cast-ℕ2-S (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ n)
   wkRedTerm ρ ⊢Δ (cast-ℕ2-cong e n) = cast-ℕ2-cong (wkTerm ρ ⊢Δ e) (wkRedTerm ρ ⊢Δ n)
+  wkRedTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (cast-Ind-ctr {i} {j} {e} {args} ⊢e ⊢args) =
+    let ⊢e′ = wkTerm [ρ] ⊢Δ ⊢e
+        ⊢args′ = PE.subst
+          (λ As → Δ ⊢All map (U.wk ρ) args ∷ As ^ [ ! , ι ⁰ ])
+          (map-wk-emb-stype ρ (SU.ctrArgsTypeList i j))
+          (wkAll [ρ] ⊢Δ ⊢args)
+        pf = cast-Ind-ctr ⊢e′ ⊢args′
+        castArgs = map (λ a → cast ⁰ (Ind i) (Ind i) e a) args
+        lhs≡ = PE.trans (wk-cast ρ ⁰ (Ind i) (Ind i) e (ctr i j args))
+                        (PE.cong (cast ⁰ (Ind i) (Ind i) (U.wk ρ e))
+                                 (wk-ctr ρ i j args))
+        rhs≡ = PE.trans (wk-ctr ρ i j castArgs)
+                 (PE.cong (ctr i j)
+                   (PE.trans (map-map (U.wk ρ) (λ a → cast ⁰ (Ind i) (Ind i) e a) args)
+                     (PE.trans (map-cong args (λ a → wk-cast ρ ⁰ (Ind i) (Ind i) e a))
+                       (PE.sym (map-map (λ a → cast ⁰ (Ind i) (Ind i) (U.wk ρ e) a)
+                                        (U.wk ρ) args)))))
+    in PE.subst₂ (λ t u → Δ ⊢ t ⇒ u ∷ Ind i ^ ι ⁰)
+         (PE.sym lhs≡) (PE.sym rhs≡) pf
+  wkRedTerm ρ ⊢Δ (cast-Ind-cong e n) = cast-Ind-cong (wkTerm ρ ⊢Δ e) (wkRedTerm ρ ⊢Δ n)
   wkRedTerm {ρ = ρ₁} ρ ⊢Δ (cast-ne-cong K neK L neL e n) = cast-ne-cong (wkTerm ρ ⊢Δ K) (wkNeutral ρ₁ neK) (wkTerm ρ ⊢Δ L) (wkNeutral ρ₁ neL) (wkTerm ρ ⊢Δ e) (wkRedTerm ρ ⊢Δ n)
   wkRedTerm {Δ = Δ} {ρ = wkρ} sub (⊢Δ) (cast-equiv-fwd {e = e} {n = n} ⊢e ⊢n) =
     let emb = emb_oterm_term (E.Equiv.fwd equiv)
