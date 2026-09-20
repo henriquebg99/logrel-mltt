@@ -1,19 +1,18 @@
-open import Definition.LogicalRelation.Properties.Escape
-open import Definition.LogicalRelation.Properties.Transitivity
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.Consequences.Substitution where
-open import Definition.Untyped
-open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.EqRelInstance
-open import Definition.Typed.Weakening
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Substitution
-open import Definition.LogicalRelation.Substitution.Irrelevance
-open import Definition.LogicalRelation.Fundamental
+module Definition.Typed.Consequences.Substitution (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Typed.Weakening senv equivs
+open import Definition.Typed.Consequences.Syntactic senv swf equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Properties senv equivs
+open import Definition.LogicalRelation.Substitution senv equivs
+open import Definition.LogicalRelation.Substitution.Irrelevance senv equivs
+open import Definition.LogicalRelation.Fundamental senv swf equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 -- Well-formed substitution of types.

@@ -1,18 +1,21 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Properties.Reduction {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Properties.Reduction (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.RedSteps
-open import Definition.Typed.Weakening
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Properties.Reflexivity
-open import Definition.LogicalRelation.Properties.Transitivity
-open import Definition.LogicalRelation.Properties.Symmetry
-open import Definition.LogicalRelation.Properties.Escape
-open import Definition.LogicalRelation.Properties.Conversion
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.RedSteps senv equivs
+open import Definition.Typed.Weakening senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Properties.Reflexivity senv equivs
+open import Definition.LogicalRelation.Properties.Transitivity senv equivs
+open import Definition.LogicalRelation.Properties.Symmetry senv equivs
+open import Definition.LogicalRelation.Properties.Escape senv equivs
+open import Definition.LogicalRelation.Properties.Conversion senv equivs
 open import Tools.Product
 open import Tools.Empty
 import Tools.PropositionalEquality as PE
@@ -28,9 +31,6 @@ redSubst* {A = A} D (Uᵣ′ B .(next l′) rU l′ l< PE.refl [[ ⊢A , ⊢B , 
 redSubst* D (ℕᵣ [[ ⊢B , ⊢ℕ , D′ ]]) =
   let ⊢A = redFirst* D
   in  ℕᵣ ([[ ⊢A , ⊢ℕ , D ⇨* D′ ]]) , D′
-redSubst* D (ℕ2ᵣ [[ ⊢B , ⊢ℕ2 , D′ ]]) =
-  let ⊢A = redFirst* D
-  in  ℕ2ᵣ ([[ ⊢A , ⊢ℕ2 , D ⇨* D′ ]]) , D′
 redSubst* D (Indᵣ [[ ⊢B , ⊢Ind , D′ ]]) =
   let ⊢A = redFirst* D
   in  Indᵣ ([[ ⊢A , ⊢Ind , D ⇨* D′ ]]) , D′
@@ -59,7 +59,6 @@ redSubst* {l = ι ¹} D (emb l< X) | y , y₁ = emb l< y , y₁
 redSubst* {l = ∞} D (emb l< X) with redSubst* D X
 redSubst* {l = ∞} D (emb ∞< X) | y , y₁ = emb {l′ = ι ¹} ∞< y , y₁
 
-
 redSubst*Term⁰ : ∀ {A t u ll Γ} → let l = ι ⁰ in
                 Γ ⊢ t ⇒* u ∷ A ^ ll
               → ([A] : Γ ⊩⟨ l ⟩ A ^ [ ! , ll ])
@@ -73,13 +72,6 @@ redSubst*Term⁰ t⇒u (ℕᵣ D) (ℕₜ n [[ ⊢u , ⊢n , d ]] n≡n prop) =
   in  ℕₜ n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] n≡n prop
   ,   ℕₜ₌ n n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] [[ ⊢u , ⊢n , d ]]
           n≡n (reflNatural-prop prop)
-redSubst*Term⁰ t⇒u (ℕ2ᵣ D) (ℕ2ₜ n [[ ⊢u , ⊢n , d ]] n≡n prop) =
-  let A≡ℕ2  = subset* (red D)
-      ⊢t   = conv (redFirst*Term t⇒u) A≡ℕ2
-      t⇒u′ = conv* t⇒u A≡ℕ2
-  in  ℕ2ₜ n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] n≡n prop
-  ,   ℕ2ₜ₌ n n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] [[ ⊢u , ⊢n , d ]]
-          n≡n (reflNatural2-prop prop)
 redSubst*Term⁰ t⇒u (Indᵣ D) (Indₜ n [[ ⊢u , ⊢n , d ]] n≡n prop) =
   let A≡Ind  = subset* (red D)
       ⊢t   = conv (redFirst*Term t⇒u) A≡Ind
@@ -138,13 +130,6 @@ redSubst*Term t⇒u (ℕᵣ D) (ℕₜ n [[ ⊢u , ⊢n , d ]] n≡n prop) =
   in  ℕₜ n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] n≡n prop
   ,   ℕₜ₌ n n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] [[ ⊢u , ⊢n , d ]]
           n≡n (reflNatural-prop prop)
-redSubst*Term t⇒u (ℕ2ᵣ D) (ℕ2ₜ n [[ ⊢u , ⊢n , d ]] n≡n prop) =
-  let A≡ℕ2  = subset* (red D)
-      ⊢t   = conv (redFirst*Term t⇒u) A≡ℕ2
-      t⇒u′ = conv* t⇒u A≡ℕ2
-  in  ℕ2ₜ n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] n≡n prop
-  ,   ℕ2ₜ₌ n n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] [[ ⊢u , ⊢n , d ]]
-          n≡n (reflNatural2-prop prop)
 redSubst*Term t⇒u (Indᵣ D) (Indₜ n [[ ⊢u , ⊢n , d ]] n≡n prop) =
   let A≡Ind  = subset* (red D)
       ⊢t   = conv (redFirst*Term t⇒u) A≡Ind

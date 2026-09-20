@@ -1,28 +1,25 @@
-open import Definition.LogicalRelation.Properties.Neutral
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Conversion.Lift where
-open import Definition.Untyped
-open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Weakening
-open import Definition.Typed.Properties
-open import Definition.Typed.EqRelInstance
-open import Definition.Conversion
-open import Definition.Conversion.Whnf
-open import Definition.Conversion.Soundness
-open import Definition.Conversion.Reduction
-open import Definition.Conversion.Weakening
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Fundamental.Reducibility
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.Reduction
-open import Definition.Typed.Consequences.Equality
+module Definition.Conversion.Lift (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Weakening senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Conversion senv equivs
+open import Definition.Conversion.Whnf senv swf equivs
+open import Definition.Conversion.Soundness senv swf equivs
+open import Definition.Conversion.Reduction senv equivs
+open import Definition.Conversion.Weakening senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Properties senv equivs
+open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
+open import Definition.Typed.Consequences.Syntactic senv swf equivs
+open import Definition.Typed.Consequences.Reduction senv swf equivs
+open import Definition.Typed.Consequences.Equality senv swf equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-
-
-
 
 -- Lifting of algorithmic equality of types from WHNF to generic types.
 liftConv : ∀ {A B rA Γ}
@@ -42,7 +39,6 @@ liftConvTerm t<>u =
       whnfA , whnfT , whnfU = whnfConv↓Term t<>u
   in  [↑]ₜ _ _ _ (id ⊢A) (id ⊢t) (id ⊢u) whnfA whnfT whnfU t<>u
 
-
 mutual
   -- Helper function for lifting from neutrals to generic terms in WHNF.
   lift~toConv↓!′ : ∀ {t u A A′ Γ l lA }
@@ -56,9 +52,6 @@ mutual
   lift~toConv↓!′ (ℕᵣ D) D₁ ([~] A D₂ whnfB k~l)
                 rewrite PE.sym (whrDet* (red D , ℕₙ) (D₁ , whnfB)) =
     ℕ-ins ([~] A D₂ ℕₙ k~l)
-  lift~toConv↓!′ (ℕ2ᵣ D) D₁ ([~] A D₂ whnfB k~l)
-                rewrite PE.sym (whrDet* (red D , ℕ2ₙ) (D₁ , whnfB)) =
-    ℕ2-ins ([~] A D₂ ℕ2ₙ k~l)
   lift~toConv↓!′ (Indᵣ D) D₁ ([~] A D₂ whnfB k~l)
                 rewrite PE.sym (whrDet* (red D , Indₙ) (D₁ , whnfB)) =
     Ind-ins ([~] A D₂ Indₙ k~l)
@@ -95,7 +88,6 @@ mutual
                        k∘0≡l∘0)
   lift~toConv↓!′ (emb emb< [A]) D t~u = lift~toConv↓!′ [A] D t~u
   lift~toConv↓!′ (emb ∞< [A]) D t~u = lift~toConv↓!′ [A] D t~u
-
 
   -- Helper function for lifting from neutrals to generic terms.
   lift~toConv↑!′ : ∀ {t u A Γ l lA}

@@ -1,9 +1,10 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Conversion.WhnfGen where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.ConversionGen
-open import Definition.Typed.Consequences.Inversion
+module Definition.Conversion.WhnfGen (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.ConversionGen senv equivs
+open import Definition.Typed.Consequences.Inversion senv swf equivs
 open import Tools.Product
 mutual
   -- Extraction of neutrality from algorithmic equality of neutrals.

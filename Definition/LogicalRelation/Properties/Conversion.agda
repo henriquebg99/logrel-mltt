@@ -1,22 +1,24 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Properties.Conversion {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Properties.Conversion (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.RedSteps
-open import Definition.Typed.Reduction
-import Definition.Typed.Weakening as W
-open import Definition.Typed.Properties
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Irrelevance
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.RedSteps senv equivs
+open import Definition.Typed.Reduction senv equivs
+import Definition.Typed.Weakening senv equivs as W
+open import Definition.Typed.Properties senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.LogicalRelation.Irrelevance senv equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 -- Conversion of syntactic reduction closures.
 convRed:*: : ∀ {t u A B Γ l} → Γ ⊢ t :⇒*: u ∷ A ^ l → Γ ⊢ A ≡ B ^ [ ! , l ] → Γ ⊢ t :⇒*: u ∷ B ^ l
 convRed:*: [[ ⊢t , ⊢u , d ]] A≡B = [[ conv ⊢t  A≡B , conv ⊢u  A≡B , conv* d  A≡B ]]
-
 
 -- helper functions for the universe
 convTermTUniv :  ∀ {Γ A B t l l' r ll l< d r' ll' l<' el' d'}
@@ -35,7 +37,6 @@ convEqTermTUniv {l = ι ¹} {r = r} {⁰} (Uₜ₌ [t] [u] A≡B [t≡u]) =
 convEqTermTUniv {l = ∞} {r = r} {¹} (Uₜ₌ [t] [u] A≡B [t≡u]) =
                    Uₜ₌ (convTermTUniv PE.refl PE.refl [t]) (convTermTUniv PE.refl PE.refl [u]) A≡B [t≡u]
 
-
 mutual
   -- Helper function for conversion of terms converting from left to right.
 
@@ -46,10 +47,8 @@ mutual
             → Γ ⊩⟨ l′ ⟩ t ∷ B ^ r / [B]
 
   convTermT₁ (ℕᵥ D D′) A≡B t = t
-  convTermT₁ (ℕ2ᵥ D D′) A≡B t = t
   convTermT₁ (Indᵥ D D′) A≡B t = t
   convTermT₁ (Emptyᵥ D D′) A≡B t = t
-
 
   convTermT₁ {r = [ ! , ll ]} (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (ne₌ M D′ neM K≡M) (neₜ k d (neNfₜ neK₂ ⊢k k≡k)) =
     let K≡K₁ = PE.subst (λ x → _ ⊢ _ ≡ x ^ _)
@@ -124,7 +123,6 @@ mutual
            → Γ ⊩⟨ l′ ⟩ t ∷ B ^ r / [B]
            → Γ ⊩⟨ l ⟩  t ∷ A ^ r / [A]
   convTermT₂ (ℕᵥ D D′) A≡B t = t
-  convTermT₂ (ℕ2ᵥ D D′) A≡B t = t
   convTermT₂ (Indᵥ D D′) A≡B t = t
   convTermT₂ (Emptyᵥ D D′) A≡B t = t
   convTermT₂ {r = [ ! , ll ]} (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (ne₌ M D′ neM K≡M)
@@ -195,7 +193,6 @@ mutual
   convTermT₂ (emb¹∞ X) A≡B t = convTermT₂ X A≡B t
   convTermT₂ (emb∞¹ X) A≡B t = convTermT₂ X A≡B t
 
-
   -- Conversion of terms converting from left to right.
   convTerm₁ : ∀ {Γ A B r ll t l l′} ([A] : Γ ⊩⟨ l ⟩ A ^ [ r , ll ]) ([B] : Γ ⊩⟨ l′ ⟩ B ^ [ r , ll ])
             → Γ ⊩⟨ l ⟩  A ≡ B ^ [ r , ll ] / [A]
@@ -227,7 +224,6 @@ mutual
           → Γ ⊩⟨ l ⟩  t ∷ A ^ [ r , ll ] / [A]
   convTerm₂′ PE.refl PE.refl PE.refl [A] [B] A≡B t = convTerm₂ [A] [B] A≡B t
 
-
   -- Helper function for conversion of term equality converting from left to right.
   convEqTermT₁ : ∀ {l l′ Γ A B r t u} {[A] : Γ ⊩⟨ l ⟩ A ^ r} {[B] : Γ ⊩⟨ l′ ⟩ B ^ r}
                → ShapeView Γ l l′ A B r r [A] [B]
@@ -235,7 +231,6 @@ mutual
                → Γ ⊩⟨ l ⟩  t ≡ u ∷ A ^ r / [A]
                → Γ ⊩⟨ l′ ⟩ t ≡ u ∷ B ^ r / [B]
   convEqTermT₁ (ℕᵥ D D′) A≡B t≡u = t≡u
-  convEqTermT₁ (ℕ2ᵥ D D′) A≡B t≡u = t≡u
   convEqTermT₁ (Indᵥ D D′) A≡B t≡u = t≡u
   convEqTermT₁ (Emptyᵥ D D′) A≡B t≡u = t≡u
   convEqTermT₁ {r = [ ! , ll ]} (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (ne₌ M D′ neM K≡M)
@@ -308,7 +303,6 @@ mutual
              → Γ ⊩⟨ l′ ⟩ t ≡ u ∷ B ^ r / [B]
              → Γ ⊩⟨ l ⟩  t ≡ u ∷ A ^ r / [A]
   convEqTermT₂ (ℕᵥ D D′) A≡B t≡u = t≡u
-  convEqTermT₂ (ℕ2ᵥ D D′) A≡B t≡u = t≡u
   convEqTermT₂ (Indᵥ D D′) A≡B t≡u = t≡u
   convEqTermT₂ (Emptyᵥ D D′) A≡B t≡u = t≡u
   convEqTermT₂ {r = [ ! , ll ]} (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (ne₌ M D′ neM K≡M)

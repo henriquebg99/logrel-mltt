@@ -1,20 +1,19 @@
-open import Definition.LogicalRelation.Properties.Escape
-open import Definition.LogicalRelation.Properties.Neutral
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.Consequences.Injectivity where
-open import Definition.Untyped hiding (wk)
-import Definition.Untyped as U
-open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Weakening
-open import Definition.Typed.Properties
-open import Definition.Typed.EqRelInstance
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Fundamental.Reducibility
-open import Definition.LogicalRelation.Fundamental
+module Definition.Typed.Consequences.Injectivity (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv hiding (wk)
+import Definition.Untyped senv as U
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Weakening senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.LogicalRelation.Properties senv equivs
+open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
+open import Definition.LogicalRelation.Fundamental senv swf equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 -- Helper function of injectivity for specific reducible Π-types

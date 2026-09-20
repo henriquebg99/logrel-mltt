@@ -1,13 +1,13 @@
-open import Definition.LogicalRelation.Properties.Conversion
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.Consequences.Reduction where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.EqRelInstance
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Fundamental.Reducibility
+module Definition.Typed.Consequences.Reduction (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Properties senv equivs
+open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
 import Tools.PropositionalEquality as PE
 open import Tools.Product
 -- Helper function where all reducible types can be reduced to WHNF.
@@ -15,7 +15,6 @@ whNorm′ : ∀ {A rA Γ l} ([A] : Γ ⊩⟨ l ⟩ A ^ rA)
                 → ∃ λ B → Whnf B × Γ ⊢ A :⇒*: B ^ rA
 whNorm′ (Uᵣ′ _ _ r l _ e d) = Univ r l , Uₙ , PE.subst (λ ll → _ ⊢ _ :⇒*: Univ r l ^ [ ! , ll ]) e d
 whNorm′ (ℕᵣ D) = ℕ , ℕₙ , D
-whNorm′ (ℕ2ᵣ D) = ℕ2 , ℕ2ₙ , D
 whNorm′ (Indᵣ {i = i} D) = Ind i , Indₙ , D
 whNorm′ (Emptyᵣ D) = sEmpty , Emptyₙ , D
 whNorm′ (ne′ K D neK K≡K) = K , ne neK , D
@@ -32,7 +31,6 @@ whNorm A = whNorm′ (reducible A)
 -- whNorm-conv : ∀ {A rA Γ} → Γ ⊢ A ≡ B ^ rA → ∃ λ B → Whnf B × Γ ⊢ A :⇒*: B ^ rA
 -- whNorm-conv A = whNorm′ (reducible A)
 
-
 -- Helper function where reducible all terms can be reduced to WHNF.
 whNormTerm′ : ∀ {a A Γ l lA} ([A] : Γ ⊩⟨ l ⟩ A ^ [ ! , lA ]) → Γ ⊩⟨ l ⟩ a ∷ A ^ [ ! , lA ] / [A]
                 → ∃ λ b → Whnf b × Γ ⊢ a :⇒*: b ∷ A ^ lA
@@ -42,9 +40,6 @@ whNormTerm′ (Uᵣ′ _ _ r l _ e dU) (Uₜ A d typeA A≡A [t]) = A , typeWhnf
 whNormTerm′ (ℕᵣ x) (ℕₜ n d n≡n prop) =
   let natN = natural prop
   in  n , naturalWhnf natN , convRed:*: d (sym (subset* (red x)))
-whNormTerm′ (ℕ2ᵣ x) (ℕ2ₜ n d n≡n prop) =
-  let natN = natural2 prop
-  in  n , natural2Whnf natN , convRed:*: d (sym (subset* (red x)))
 whNormTerm′ (Indᵣ x) (Indₜ k d k≡k prop) =
   let indN = inductive′ prop
   in  k , inductiveWhnf indN , convRed:*: d (sym (subset* (red x)))
@@ -54,7 +49,6 @@ whNormTerm′ (Πᵣ′ rF lF lG lF≤ lG≤  F G D ⊢F ⊢G A≡A [F] [G] G-ex
   f , functionWhnf funcF , convRed:*: d (sym (subset* (red D)))
 whNormTerm′ (emb emb< [A]) [a] = whNormTerm′ [A] [a]
 whNormTerm′ (emb ∞< [A]) [a] = whNormTerm′ [A] [a]
-
 
 -- Well-formed terms can all be reduced to WHNF.
 whNormTerm : ∀ {a A Γ lA} → Γ ⊢ a ∷ A ^ [ ! , lA ] → ∃ λ b → Whnf b × Γ ⊢ a :⇒*: b ∷ A ^ lA

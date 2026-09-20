@@ -1,10 +1,13 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution.Conversion {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Substitution.Conversion (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Substitution
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.Properties senv equivs
+open import Definition.LogicalRelation.Substitution senv equivs
 open import Tools.Product
 -- Conversion from left to right of valid terms.
 convᵛ : ∀ {t A B r Γ l}

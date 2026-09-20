@@ -1,18 +1,21 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Properties.Neutral {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Properties.Neutral (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped as U
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.Weakening as TW
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.Properties.Reflexivity
-open import Definition.LogicalRelation.Properties.Escape
-open import Definition.LogicalRelation.Properties.Symmetry
-import Definition.LogicalRelation.Weakening as W
+open import Definition.Untyped senv as U
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Weakening senv equivs as TW
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.Properties.Reflexivity senv equivs
+open import Definition.LogicalRelation.Properties.Escape senv equivs
+open import Definition.LogicalRelation.Properties.Symmetry senv equivs
+import Definition.LogicalRelation.Weakening senv equivs as W
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 open import Tools.Empty using (⊥; ⊥-elim)
@@ -59,11 +62,6 @@ mutual
         n~n′ = ~-conv n~n A≡ℕ
         n≡n  = ~-to-≅ₜ n~n′
     in  ℕₜ _ (idRedTerm:*: (conv n A≡ℕ)) n≡n (ne (neNfₜ neN (conv n A≡ℕ) n~n′))
-  neuTerm⁰ (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) neN n n~n =
-    let A≡ℕ2  = subset* D
-        n~n′ = ~-conv n~n A≡ℕ2
-        n≡n  = ~-to-≅ₜ n~n′
-    in  ℕ2ₜ _ (idRedTerm:*: (conv n A≡ℕ2)) n≡n (ne (neNfₜ neN (conv n A≡ℕ2) n~n′))
   neuTerm⁰ (Indᵣ [[ ⊢A , ⊢B , D ]]) neN n n~n =
     let A≡Ind  = subset* D
         n~n′ = ~-conv n~n A≡Ind
@@ -125,12 +123,6 @@ mutual
         n≡n′ = ~-to-≅ₜ n~n′₁
     in  ℕₜ₌ _ _ (idRedTerm:*: (conv n A≡ℕ)) (idRedTerm:*: (conv n′ A≡ℕ))
             n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
-  neuEqTerm⁰ (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) neN neN′ n n′ n~n′ =
-    let A≡ℕ2 = subset* D
-        n~n′₁ = ~-conv n~n′ A≡ℕ2
-        n≡n′ = ~-to-≅ₜ n~n′₁
-    in  ℕ2ₜ₌ _ _ (idRedTerm:*: (conv n A≡ℕ2)) (idRedTerm:*: (conv n′ A≡ℕ2))
-            n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
   neuEqTerm⁰ (Indᵣ [[ ⊢A , ⊢B , D ]]) neN neN′ n n′ n~n′ =
     let A≡Ind = subset* D
         n~n′₁ = ~-conv n~n′ A≡Ind
@@ -179,9 +171,6 @@ mutual
     let A≡ΠFG = subset* D
     in conv n A≡ΠFG , conv n′ A≡ΠFG
 
-
-
-
 mutual
   -- Neutral reflexive terms are reducible.
   neuTerm : ∀ {l Γ A r n} ([A] : Γ ⊩⟨ l ⟩ A ^ r) (neN : Neutral n)
@@ -211,11 +200,6 @@ mutual
         n~n′ = ~-conv n~n A≡ℕ
         n≡n  = ~-to-≅ₜ n~n′
     in  ℕₜ _ (idRedTerm:*: (conv n A≡ℕ)) n≡n (ne (neNfₜ neN (conv n A≡ℕ) n~n′))
-  neuTerm (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) neN n n~n =
-    let A≡ℕ2  = subset* D
-        n~n′ = ~-conv n~n A≡ℕ2
-        n≡n  = ~-to-≅ₜ n~n′
-    in  ℕ2ₜ _ (idRedTerm:*: (conv n A≡ℕ2)) n≡n (ne (neNfₜ neN (conv n A≡ℕ2) n~n′))
   neuTerm (Indᵣ [[ ⊢A , ⊢B , D ]]) neN n n~n =
     let A≡Ind  = subset* D
         n~n′ = ~-conv n~n A≡Ind
@@ -303,12 +287,6 @@ mutual
         n≡n′ = ~-to-≅ₜ n~n′₁
     in  ℕₜ₌ _ _ (idRedTerm:*: (conv n A≡ℕ)) (idRedTerm:*: (conv n′ A≡ℕ))
             n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
-  neuEqTerm (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) neN neN′ n n′ n~n′ =
-    let A≡ℕ2 = subset* D
-        n~n′₁ = ~-conv n~n′ A≡ℕ2
-        n≡n′ = ~-to-≅ₜ n~n′₁
-    in  ℕ2ₜ₌ _ _ (idRedTerm:*: (conv n A≡ℕ2)) (idRedTerm:*: (conv n′ A≡ℕ2))
-            n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
   neuEqTerm (Indᵣ [[ ⊢A , ⊢B , D ]]) neN neN′ n n′ n~n′ =
     let A≡Ind = subset* D
         n~n′₁ = ~-conv n~n′ A≡Ind
@@ -359,7 +337,6 @@ mutual
   neuEqTerm {ι ¹} (emb l< X) neN n neN′ n:≡:n′ = neuEqTerm X neN n neN′ n:≡:n′
   neuEqTerm {∞} (emb l< X) neN n neN′ n:≡:n′ = neuEqTerm X neN n neN′ n:≡:n′
 
-
 -- Neutral reflexive types are reducible.
 neu:⇒*: : ∀ {l Γ A K r ll} (neK : Neutral K)
     → Γ ⊢ A :⇒*: K ^ [ r , ι ll ]
@@ -380,7 +357,6 @@ neuEq:⇒*:′ (noemb (ne A' [[ ⊢A , ⊢B , D ]] neA A≡A)) neK neL [[ ⊢A' 
   in ne₌ _ [B] neL (PE.subst (λ x → _ ⊢ x ~ _ ∷ _ ^ _) (PE.sym A≡K) A~B)
 neuEq:⇒*:′ {ι ¹} (emb emb< X) = neuEq:⇒*:′ X
 neuEq:⇒*:′ {∞} (emb ∞< X) = neuEq:⇒*:′ X
-
 
 -- Neutrally equal types are of reducible equality.
 neuEq:⇒*: : ∀ {l Γ A B K L r ll} ([A] : Γ ⊩⟨ l ⟩ A ^ [ r , ι ll ])
@@ -404,7 +380,6 @@ app:⇒*: : ∀ {Γ a t u A B rA lA lB l}
         → Γ ⊢ t ∘ a ^ l :⇒*: u ∘ a ^ l ∷ B [ a ] ^ ι lB
 app:⇒*: ⊢A ⊢B ⊢a [[ ⊢t , ⊢u , D ]] = [[ (λ abs → ⊥-elim (!≢% abs)) ▹ ⊢A ▹ ⊢B ▹ ⊢t ∘ⱼ ⊢a , (λ abs → ⊥-elim (!≢% abs)) ▹ ⊢A ▹ ⊢B ▹ ⊢u ∘ⱼ ⊢a , appRed* ⊢A ⊢B ⊢a D ]]
 
-
 mutual
   neuTerm:⇒*:⁰ : ∀ {Γ A ll t n} ([A] : Γ ⊩⟨ ι ⁰ ⟩ A ^ [ ! , ll ]) (neN : Neutral n)
           → Γ ⊢ t :⇒*: n ∷ A ^ ll
@@ -416,11 +391,6 @@ mutual
         n~n′ = ~-conv n~n A≡ℕ
         n≡n  = ~-to-≅ₜ n~n′
     in  ℕₜ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡ℕ) n≡n (ne (neNfₜ neN (conv n A≡ℕ) n~n′))
-  neuTerm:⇒*:⁰ (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) neN [[ ⊢t , n , D' ]] n~n =
-    let A≡ℕ2  = subset* D
-        n~n′ = ~-conv n~n A≡ℕ2
-        n≡n  = ~-to-≅ₜ n~n′
-    in  ℕ2ₜ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡ℕ2) n≡n (ne (neNfₜ neN (conv n A≡ℕ2) n~n′))
   neuTerm:⇒*:⁰ (Indᵣ [[ ⊢A , ⊢B , D ]]) neN [[ ⊢t , n , D' ]] n~n =
     let A≡Ind  = subset* D
         n~n′ = ~-conv n~n A≡Ind
@@ -471,12 +441,6 @@ mutual
         n~n′₁ = ~-conv n~n′ A≡ℕ
         n≡n′ = ~-to-≅ₜ n~n′₁
     in  ℕₜ₌ _ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡ℕ) (conv:⇒*: [[ ⊢u , n′ , D′ ]] A≡ℕ)
-            n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
-  neuEqTerm:⇒*:⁰ (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) neN neN′ [[ ⊢t , n , D' ]] [[ ⊢u , n′ , D′ ]] n~n′ =
-    let A≡ℕ2 = subset* D
-        n~n′₁ = ~-conv n~n′ A≡ℕ2
-        n≡n′ = ~-to-≅ₜ n~n′₁
-    in  ℕ2ₜ₌ _ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡ℕ2) (conv:⇒*: [[ ⊢u , n′ , D′ ]] A≡ℕ2)
             n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
   neuEqTerm:⇒*:⁰ (Indᵣ [[ ⊢A , ⊢B , D ]]) neN neN′ [[ ⊢t , n , D' ]] [[ ⊢u , n′ , D′ ]] n~n′ =
     let A≡Ind = subset* D
@@ -542,11 +506,6 @@ mutual
         n~n′ = ~-conv n~n A≡ℕ
         n≡n  = ~-to-≅ₜ n~n′
     in  ℕₜ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡ℕ) n≡n (ne (neNfₜ neN (conv n A≡ℕ) n~n′))
-  neuTerm:⇒*: (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) neN [[ ⊢t , n , D' ]] n~n =
-    let A≡ℕ2  = subset* D
-        n~n′ = ~-conv n~n A≡ℕ2
-        n≡n  = ~-to-≅ₜ n~n′
-    in  ℕ2ₜ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡ℕ2) n≡n (ne (neNfₜ neN (conv n A≡ℕ2) n~n′))
   neuTerm:⇒*: (Indᵣ [[ ⊢A , ⊢B , D ]]) neN [[ ⊢t , n , D' ]] n~n =
     let A≡Ind  = subset* D
         n~n′ = ~-conv n~n A≡Ind
@@ -635,12 +594,6 @@ mutual
         n~n′₁ = ~-conv n~n′ A≡ℕ
         n≡n′ = ~-to-≅ₜ n~n′₁
     in  ℕₜ₌ _ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡ℕ) (conv:⇒*: [[ ⊢u , n′ , D′ ]] A≡ℕ)
-            n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
-  neuEqTerm:⇒*: (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) neN neN′ [[ ⊢t , n , D' ]] [[ ⊢u , n′ , D′ ]] n~n′ =
-    let A≡ℕ2 = subset* D
-        n~n′₁ = ~-conv n~n′ A≡ℕ2
-        n≡n′ = ~-to-≅ₜ n~n′₁
-    in  ℕ2ₜ₌ _ _ (conv:⇒*: [[ ⊢t , n , D' ]] A≡ℕ2) (conv:⇒*: [[ ⊢u , n′ , D′ ]] A≡ℕ2)
             n≡n′ (ne (neNfₜ₌ neN neN′ n~n′₁))
   neuEqTerm:⇒*: (Indᵣ [[ ⊢A , ⊢B , D ]]) neN neN′ [[ ⊢t , n , D' ]] [[ ⊢u , n′ , D′ ]] n~n′ =
     let A≡Ind = subset* D

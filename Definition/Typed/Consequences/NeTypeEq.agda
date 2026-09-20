@@ -1,13 +1,14 @@
-open import Definition.Typed.EqRelInstance
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.Consequences.NeTypeEq where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.Weakening
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.Injectivity
-open import Definition.Typed.Consequences.Substitution
+module Definition.Typed.Consequences.NeTypeEq (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Weakening senv equivs
+open import Definition.Typed.Consequences.Syntactic senv swf equivs
+open import Definition.Typed.Consequences.Injectivity senv swf equivs
+open import Definition.Typed.Consequences.Substitution senv swf equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 -- to be moved in Untyped
@@ -27,8 +28,6 @@ varTypeEq : ∀ {x A B rA rB Γ} → Γ ⊢ A ^ rA → Γ ⊢ B ^ rB
           → Γ ⊢ A ≡ B ^ rA × rA PE.≡ rB
 varTypeEq A B x∷A x∷B with varTypeEq′ x∷A x∷B
 ... | PE.refl , PE.refl = refl A , PE.refl
-
-
 
 -- The same neutral term have equal types.
 -- to use this with different relevances rA rB we need unicity of relevance for types
@@ -51,8 +50,6 @@ neTypeEq (∘ₙ neT) (_ ▹ _ ▹ _ ▹ t∷A ∘ⱼ t∷A₁) (_ ▹ _ ▹ _ �
               in PE.cong _ elG , substTypeEq w (genRefl t∷A₁)
 neTypeEq (natrecₙ neT) (natrecⱼ _ x t∷A t∷A₁ t∷A₂) (natrecⱼ _ x₁ t∷B t∷B₁ t∷B₂) =
   PE.refl , refl (substType x₁ t∷B₂)
-neTypeEq (natrec2ₙ neT) (natrec2ⱼ _ x t∷A t∷A₁ t∷A₂) (natrec2ⱼ _ x₁ t∷B t∷B₁ t∷B₂) =
-  PE.refl , refl (substType x₁ t∷B₂)
 neTypeEq Emptyrecₙ (Emptyrecⱼ x t∷A) (Emptyrecⱼ x₁ t∷B) =
   PE.refl , refl x₁
 neTypeEq (IndRectₙ n) d e = neTypeEq-IndRect n d e
@@ -64,7 +61,6 @@ neTypeEq x t∷A (conv t∷B x₃) =
   let e , q = neTypeEq x t∷A t∷B
   in e , trans q (PE.subst (λ l → _ ⊢ _ ≡ _ ^ [ _ , l ]) (PE.sym e) x₃) 
 
-
 natTypeEq : ∀ {A rA lA Γ} → Γ ⊢ ℕ ∷ A ^ [ rA , lA ] → rA PE.≡ ! × lA PE.≡ ι ¹ × Γ ⊢ A ≡ U ⁰ ^ [ ! , ι ¹ ]
 natTypeEq (ℕⱼ x) = PE.refl , PE.refl , refl (univ (univ 0<1 x))
 natTypeEq (conv X x) = let eqrA , eqlA , eqAU = natTypeEq X in eqrA , eqlA ,
@@ -75,4 +71,3 @@ emptyTypeEq : ∀ {A rA lA Γ} → Γ ⊢ sEmpty ∷ A ^ [ rA , lA ] →
 emptyTypeEq (Emptyⱼ x) = PE.refl , PE.refl , refl (Ugenⱼ x) 
 emptyTypeEq (conv X x) = let eqrA , eqlA , eqAU = emptyTypeEq X in eqrA , eqlA , 
  trans (sym (PE.subst (λ l → _ ⊢ _ ≡ _ ^ [ _ , l ] ) eqlA (PE.subst (λ r → _ ⊢ _ ≡ _ ^ [ r , _ ]) eqrA x))) eqAU 
-

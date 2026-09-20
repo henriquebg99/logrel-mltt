@@ -1,14 +1,15 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.Consequences.Syntactic where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.EqRelInstance
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Substitution
-open import Definition.LogicalRelation.Substitution.Escape
-open import Definition.LogicalRelation.Fundamental
-open import Definition.Typed.Consequences.Injectivity
+module Definition.Typed.Consequences.Syntactic (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Substitution senv equivs
+open import Definition.LogicalRelation.Substitution.Escape senv equivs
+open import Definition.LogicalRelation.Fundamental senv swf equivs
+open import Definition.Typed.Consequences.Injectivity senv swf equivs
 open import Tools.Product
 -- the `with` syntax does not work 
 -- Syntactic validity of type equality.

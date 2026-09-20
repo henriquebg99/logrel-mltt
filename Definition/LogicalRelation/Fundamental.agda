@@ -1,58 +1,61 @@
-open import Definition.Typed.EqualityRelation
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Substitution.Introductions.EquivEq
-open import Definition.LogicalRelation.Substitution.Introductions.Nat2
-open import Definition.LogicalRelation.Substitution.Introductions.Natrec2
-open import Definition.LogicalRelation.Substitution.Introductions.Ind
-open import Definition.LogicalRelation.Substitution.Introductions.IndRect
-open import Definition.Typed.Weakening using (subst-emb-fwd; subst-emb-bwd)
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Fundamental {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Fundamental (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
+open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.EquivEq senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Ind senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.IndRect senv swf equivs
+open import Definition.Typed.Weakening senv equivs using (subst-emb-fwd; subst-emb-bwd)
 open EqRelSet {{...}}
-open import Definition.Untyped
-open import Definition.Untyped.Properties
-open import Definition.Typed 
-open import Definition.Typed.Properties
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Substitution
-open import Definition.LogicalRelation.Substitution.Properties
-open import Definition.LogicalRelation.Substitution.Conversion
-open import Definition.LogicalRelation.Substitution.Reduction
-open import Definition.LogicalRelation.Substitution.Reflexivity
-open import Definition.LogicalRelation.Substitution.ProofIrrelevance
-open import Definition.LogicalRelation.Substitution.MaybeEmbed
-open import Definition.LogicalRelation.Substitution.Introductions.Nat
-open import Definition.LogicalRelation.Substitution.Introductions.Natrec
-open import Definition.LogicalRelation.Substitution.Introductions.Empty
-open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec
-open import Definition.LogicalRelation.Substitution.Introductions.Universe
-open import Definition.LogicalRelation.Substitution.Introductions.Pi
-open import Definition.LogicalRelation.Substitution.Introductions.Id
-open import Definition.LogicalRelation.Substitution.Introductions.Cast
-open import Definition.LogicalRelation.Substitution.Introductions.CastRefl
-open import Definition.LogicalRelation.Substitution.Introductions.CastPi
-open import Definition.LogicalRelation.Substitution.Introductions.Lambda
-open import Definition.LogicalRelation.Substitution.Introductions.Application
-open import Definition.LogicalRelation.Substitution.Introductions.Fst
-open import Definition.LogicalRelation.Substitution.Introductions.Snd
-open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst
-open import Definition.LogicalRelation.Substitution.Introductions.Transp
-open import Definition.LogicalRelation.Substitution.Introductions.IdRefl
-open import Definition.LogicalRelation.Fundamental.Variable
-import Definition.LogicalRelation.Substitution.ProofIrrelevance as PI
-import Definition.LogicalRelation.Substitution.Irrelevance as S
-open import Definition.LogicalRelation.Substitution.Weakening
-open import Definition.LogicalRelation.Substitution.Escape
+open import Definition.Untyped senv
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs 
+open import Definition.Typed.Properties senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.Properties senv equivs
+open import Definition.LogicalRelation.Substitution senv equivs
+open import Definition.LogicalRelation.Substitution.Properties senv equivs
+open import Definition.LogicalRelation.Substitution.Conversion senv equivs
+open import Definition.LogicalRelation.Substitution.Reduction senv equivs
+open import Definition.LogicalRelation.Substitution.Reflexivity senv equivs
+open import Definition.LogicalRelation.Substitution.ProofIrrelevance senv equivs
+open import Definition.LogicalRelation.Substitution.MaybeEmbed senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Nat senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Natrec senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Empty senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Universe senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Pi senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Id senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Cast senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.CastRefl senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.CastPi senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Lambda senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Application senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Fst senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Snd senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Transp senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.IdRefl senv equivs
+open import Definition.LogicalRelation.Fundamental.Variable senv equivs
+import Definition.LogicalRelation.Substitution.ProofIrrelevance senv equivs as PI
+import Definition.LogicalRelation.Substitution.Irrelevance senv equivs as S
+open import Definition.LogicalRelation.Substitution.Weakening senv equivs
+open import Definition.LogicalRelation.Substitution.Escape senv equivs
 open import Tools.Product
 open import Tools.Unit
 open import Tools.Nat
-open import Tools.List using (All; All₂; []ₐ; _∷ₐ_; []; List; length; map; _++_; lookupDefault; all∈; All₂-length) renaming (_∷_ to _List∷_)
+open import Tools.List using (All; All₂; []ₐ; _∷ₐ_; []; List; length; map; _++_; nth-map; all∈; All₂-length) renaming (_∷_ to _List∷_)
+open import Tools.Maybe using (just)
 import Tools.PropositionalEquality as PE
 open import Tools.Empty using (⊥; ⊥-elim)
 import Definition.SUntyped as SU
-open import Definition.LogicalRelation.EquivRed
+open import Definition.LogicalRelation.EquivRed senv equivs
+open import Definition.Typed.IndRectCong senv equivs using (indRectBranchTyListCong)
   -- Fundamental theorem for contexts.
 valid : ∀ {Γ} → ⊢ Γ → ⊩ᵛ Γ
 fundamental : ∀ {Γ A rA} (⊢A : Γ ⊢ A ^ rA) → Σ (⊩ᵛ Γ) (λ [Γ] → Γ ⊩ᵛ⟨ ∞ ⟩ A ^ rA / [Γ])
@@ -67,17 +70,18 @@ fundamentalTerm : ∀{Γ A rA t} → Γ ⊢ t ∷ A ^ rA
 fundamentalTermEq : ∀{Γ A t t′ rA} → Γ ⊢ t ≡ t′ ∷ A ^ rA
                     → ∃ λ ([Γ] : ⊩ᵛ Γ)
                     → [ Γ ⊩ᵛ⟨ ∞ ⟩ t ≡ t′ ∷ A ^ rA / [Γ] ]
-fundamentalAllInd : ∀ {Γ i j args}
+fundamentalAllInd : ∀ {Γ ind j Ts args}
     → ([Γ] : ⊩ᵛ Γ)
-    → ([Ind] : Γ ⊩ᵛ⟨ ∞ ⟩ Ind i ^ [ ! , ι ⁰ ] / [Γ])
-    → Γ ⊢All args ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
-    → All (λ a → Γ ⊩ᵛ⟨ ∞ ⟩ a ∷ Ind i ^ [ ! , ι ⁰ ] / [Γ] / [Ind]) args
-fundamentalAllMethods : ∀ {Γ i P rG lG ms}
+    → ([Ind] : Γ ⊩ᵛ⟨ ∞ ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ])
+    → SU.ctrArgsTypeList ind j PE.≡ just Ts
+    → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+    → All (λ a → Γ ⊩ᵛ⟨ ∞ ⟩ a ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind]) args
+fundamentalAllMethods : ∀ {Γ ind P rG lG ms}
     → ([Γ] : ⊩ᵛ Γ)
-    → Γ ⊢All ms ∷ indRectBranchTyList i P rG lG ^ [ rG , ι lG ]
+    → Γ ⊢All ms ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ]
     → All₂ (λ m A → ∃ λ ([A] : Γ ⊩ᵛ⟨ ∞ ⟩ A ^ [ rG , ι lG ] / [Γ])
                     → Γ ⊩ᵛ⟨ ∞ ⟩ m ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
-           ms (indRectBranchTyList i P rG lG)
+           ms (indRectBranchTyList ind P rG lG)
 
 -- Substituted terms are well-formed (clone of substitutionTerm, which lives in
 -- a module that imports this one).
@@ -90,192 +94,21 @@ subTerm : ∀ {Γ Δ σ t A rA}
         → Δ ⊢ subst σ t ∷ subst σ A ^ rA
 
 -- Substitution of well-typed constructor argument lists.
-substAll-ctrArgs : ∀ {Γ Δ σ i j args}
+substAll-ctrArgs : ∀ {Γ Δ σ Ts args}
                  → ([Γ] : ⊩ᵛ Γ)
                  → (⊢Δ : ⊢ Δ)
                  → ([σ] : Δ ⊩ˢ σ ∷ Γ / [Γ] / ⊢Δ)
-                 → Γ ⊢All args ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
-                 → Δ ⊢All map (subst σ) args ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
+                 → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+                 → Δ ⊢All map (subst σ) args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
 
 -- Substitution of well-typed IndRect method lists.
-substAll-indRectBranch : ∀ {Γ Δ σ i P rG lG ms}
+substAll-indRectBranch : ∀ {Γ Δ σ ind P rG lG ms}
                        → ([Γ] : ⊩ᵛ Γ)
                        → (⊢Δ : ⊢ Δ)
                        → ([σ] : Δ ⊩ˢ σ ∷ Γ / [Γ] / ⊢Δ)
-                       → Γ ⊢All ms ∷ indRectBranchTyList i P rG lG ^ [ rG , ι lG ]
-                       → Δ ⊢All map (subst σ) ms ∷ indRectBranchTyList i (subst σ P) rG lG ^ [ rG , ι lG ]
+                       → Γ ⊢All ms ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ]
+                       → Δ ⊢All map (subst σ) ms ∷ indRectBranchTyList ind (subst σ P) rG lG ^ [ rG , ι lG ]
 
-Πℕℕ2ᵛ : ∀ {Γ} ([Γ] : ⊩ᵛ Γ)
-      → Γ ⊩ᵛ⟨ ∞ ⟩ Π ℕ ^ ! ° ⁰ ▹ ℕ2 ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / [Γ]
-Πℕℕ2ᵛ {Γ} [Γ] =
-  ▹▹ᵛ {F = ℕ} {G = ℕ2} {rF = !} {lF = ⁰} {lG = ⁰} {lΠ = ⁰} {l = ∞}
-        (≡is≤ PE.refl) (≡is≤ PE.refl) [Γ] (ℕᵛ {l = ∞} [Γ]) (ℕ2ᵛ {l = ∞} [Γ])
-
-Πℕ2ℕᵛ : ∀ {Γ} ([Γ] : ⊩ᵛ Γ)
-      → Γ ⊩ᵛ⟨ ∞ ⟩ Π ℕ2 ^ ! ° ⁰ ▹ ℕ ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / [Γ]
-Πℕ2ℕᵛ {Γ} [Γ] =
-  ▹▹ᵛ {F = ℕ2} {G = ℕ} {rF = !} {lF = ⁰} {lG = ⁰} {lΠ = ⁰} {l = ∞}
-        (≡is≤ PE.refl) (≡is≤ PE.refl) [Γ] (ℕ2ᵛ {l = ∞} [Γ]) (ℕᵛ {l = ∞} [Γ])
-
-subst-Πℕℕ2 : ∀ σ →
-  subst σ (Π ℕ ^ ! ° ⁰ ▹ (wk1 ℕ2) ° ⁰ ° ⁰ ^ !) PE.≡ Π ℕ ^ ! ° ⁰ ▹ (wk1 ℕ2) ° ⁰ ° ⁰ ^ !
-subst-Πℕℕ2 σ = PE.refl
-
-subst-Πℕ2ℕ : ∀ σ →
-  subst σ (Π ℕ2 ^ ! ° ⁰ ▹ (wk1 ℕ) ° ⁰ ° ⁰ ^ !) PE.≡ Π ℕ2 ^ ! ° ⁰ ▹ (wk1 ℕ) ° ⁰ ° ⁰ ^ !
-subst-Πℕ2ℕ σ = PE.refl
-
-subst-emb-fwd-closed : ∀ σ →
-  subst σ (emb_oterm_term (E.Equiv.fwd equiv)) PE.≡ emb_oterm_term (E.Equiv.fwd equiv)
-subst-emb-fwd-closed σ = subst-emb-fwd σ
-
-subst-emb-bwd-closed : ∀ σ →
-  subst σ (emb_oterm_term (E.Equiv.bwd equiv)) PE.≡ emb_oterm_term (E.Equiv.bwd equiv)
-subst-emb-bwd-closed σ = subst-emb-bwd σ
-
-embFwdᵛ : ∀ {Γ} ([Γ] : ⊩ᵛ Γ)
-        → let [Π] = Πℕℕ2ᵛ [Γ]
-          in Γ ⊩ᵛ⟨ ∞ ⟩ emb_oterm_term (E.Equiv.fwd equiv)
-               ∷ Π ℕ ^ ! ° ⁰ ▹ ℕ2 ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / [Γ] / [Π]
-embFwdᵛ [Γ] {σ = σ₀} ⊢Δ [σ₀] =
-  let [Π] = Πℕℕ2ᵛ [Γ]
-      [Πσ] = proj₁ ([Π] ⊢Δ [σ₀])
-      [ΠΔ] = Πℕℕ2 ⊢Δ
-      fwdAt = λ {σ′} [σ′] →
-        let [Πσ′] = proj₁ ([Π] ⊢Δ [σ′])
-        in irrelevanceTerm″ (PE.sym (subst-Πℕℕ2 σ′)) PE.refl PE.refl (PE.sym (subst-emb-fwd-closed σ′))
-                             (maybeEmb {l = ι ⁰} [ΠΔ]) [Πσ′]
-                             (maybeEmbTerm {l = ι ⁰} [ΠΔ] (EquivRed.[fwd] equivRed ⊢Δ))
-      [fwdσ] = fwdAt {σ′ = σ₀} [σ₀]
-  in [fwdσ]
-  , λ {σ′} [σ′] [σ≡σ′] →
-      let [Πσ′] = proj₁ ([Π] ⊢Δ [σ′])
-          [Πσ≡Πσ′] = proj₂ ([Π] ⊢Δ [σ₀]) [σ′] [σ≡σ′]
-          [fwdσ′] = fwdAt {σ′ = σ′} [σ′]
-          [emb≡substσemb] =
-            irrelevanceEqTerm″ PE.refl PE.refl PE.refl (subst-emb-fwd-closed σ₀) PE.refl
-              [Πσ] [Πσ] (reflEqTerm [Πσ] [fwdσ])
-          [emb≡substσ′emb]₀ =
-            irrelevanceEqTerm″ PE.refl PE.refl PE.refl (subst-emb-fwd-closed σ′) PE.refl
-              [Πσ′] [Πσ′] (reflEqTerm [Πσ′] [fwdσ′])
-          [emb≡substσ′emb] =
-            convEqTerm₂ [Πσ] [Πσ′] [Πσ≡Πσ′] [emb≡substσ′emb]₀
-      in transEqTerm [Πσ]
-           [emb≡substσemb]
-           (symEqTerm [Πσ] [emb≡substσ′emb])
-
-embBwdᵛ : ∀ {Γ} ([Γ] : ⊩ᵛ Γ)
-        → let [Π] = Πℕ2ℕᵛ [Γ]
-          in Γ ⊩ᵛ⟨ ∞ ⟩ emb_oterm_term (E.Equiv.bwd equiv)
-               ∷ Π ℕ2 ^ ! ° ⁰ ▹ ℕ ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / [Γ] / [Π]
-embBwdᵛ [Γ] {σ = σ₀} ⊢Δ [σ₀] =
-  let [Π] = Πℕ2ℕᵛ [Γ]
-      [Πσ] = proj₁ ([Π] ⊢Δ [σ₀])
-      [ΠΔ] = Πℕ2ℕ ⊢Δ
-      bwdAt = λ {σ′} [σ′] →
-        let [Πσ′] = proj₁ ([Π] ⊢Δ [σ′])
-        in irrelevanceTerm″ (PE.sym (subst-Πℕ2ℕ σ′)) PE.refl PE.refl (PE.sym (subst-emb-bwd-closed σ′))
-                             (maybeEmb {l = ι ⁰} [ΠΔ]) [Πσ′]
-                             (maybeEmbTerm {l = ι ⁰} [ΠΔ] (EquivRed.[bwd] equivRed ⊢Δ))
-      [bwdσ] = bwdAt {σ′ = σ₀} [σ₀]
-  in [bwdσ]
-  , λ {σ′} [σ′] [σ≡σ′] →
-      let [Πσ′] = proj₁ ([Π] ⊢Δ [σ′])
-          [Πσ≡Πσ′] = proj₂ ([Π] ⊢Δ [σ₀]) [σ′] [σ≡σ′]
-          [bwdσ′] = bwdAt {σ′ = σ′} [σ′]
-          [emb≡substσemb] =
-            irrelevanceEqTerm″ PE.refl PE.refl PE.refl (subst-emb-bwd-closed σ₀) PE.refl
-              [Πσ] [Πσ] (reflEqTerm [Πσ] [bwdσ])
-          [emb≡substσ′emb]₀ =
-            irrelevanceEqTerm″ PE.refl PE.refl PE.refl (subst-emb-bwd-closed σ′) PE.refl
-              [Πσ′] [Πσ′] (reflEqTerm [Πσ′] [bwdσ′])
-          [emb≡substσ′emb] =
-            convEqTerm₂ [Πσ] [Πσ′] [Πσ≡Πσ′] [emb≡substσ′emb]₀
-      in transEqTerm [Πσ]
-           [emb≡substσemb]
-           (symEqTerm [Πσ] [emb≡substσ′emb])
-
-cast-subst-cast-fwd : ∀ σ e n →
-  subst σ (cast ⁰ ℕ ℕ2 e n) PE.≡
-  cast ⁰ ℕ ℕ2 (subst (repeat liftSubst σ 0) e) (subst (repeat liftSubst σ 0) n)
-cast-subst-cast-fwd σ e n = PE.refl
-
-cast-subst-cast-bwd : ∀ σ e n →
-  subst σ (cast ⁰ ℕ2 ℕ e n) PE.≡
-  cast ⁰ ℕ2 ℕ (subst (repeat liftSubst σ 0) e) (subst (repeat liftSubst σ 0) n)
-cast-subst-cast-bwd σ e n = PE.refl
-
-subst-app0 : ∀ σ f a →
-  subst σ (f ∘ a ^ ⁰) PE.≡ subst σ f ∘ subst σ a ^ ⁰
-subst-app0 σ f a = PE.refl
-
-subst-ℕ : ∀ σ → subst σ ℕ PE.≡ ℕ
-subst-ℕ σ = PE.refl
-
-subst-ℕ2 : ∀ σ → subst σ ℕ2 PE.≡ ℕ2
-subst-ℕ2 σ = PE.refl
-
-cast-subst-app-fwd : ∀ σ n →
-  let emb = emb_oterm_term (E.Equiv.fwd equiv)
-  in emb ∘ subst (repeat liftSubst σ 0) n ^ ⁰
-     PE.≡ subst σ (emb ∘ n ^ ⁰)
-cast-subst-app-fwd σ n =
-  let emb = emb_oterm_term (E.Equiv.fwd equiv)
-  in PE.trans
-       (PE.sym (PE.cong (λ f → f ∘ subst (repeat liftSubst σ 0) n ^ ⁰)
-                        (subst-emb-fwd σ)))
-       (PE.sym (subst-app0 σ emb n))
-
-cast-subst-app-bwd : ∀ σ n →
-  let emb = emb_oterm_term (E.Equiv.bwd equiv)
-  in emb ∘ subst (repeat liftSubst σ 0) n ^ ⁰
-     PE.≡ subst σ (emb ∘ n ^ ⁰)
-cast-subst-app-bwd σ n =
-  let emb = emb_oterm_term (E.Equiv.bwd equiv)
-  in PE.trans
-       (PE.sym (PE.cong (λ f → f ∘ subst (repeat liftSubst σ 0) n ^ ⁰)
-                        (subst-emb-bwd σ)))
-       (PE.sym (subst-app0 σ emb n))
-
-cast-equiv-fwd-subst : ∀ {Δ σ e n} (⊢Δ : ⊢ Δ)
-  (⊢e : Δ ⊢ subst (repeat liftSubst σ 0) e ∷ Id (U ⁰) ℕ ℕ2 ^ [ % , ι ⁰ ])
-  (⊢n : Δ ⊢ subst (repeat liftSubst σ 0) n ∷ ℕ ^ [ ! , ι ⁰ ])
-  → Δ ⊢ subst σ (cast ⁰ ℕ ℕ2 e n)
-    ⇒ subst σ (emb_oterm_term (E.Equiv.fwd equiv) ∘ n ^ ⁰)
-    ∷ subst σ ℕ2 ^ ι ⁰
-cast-equiv-fwd-subst {Δ = Δ} {σ = σ} {e = e} {n = n} ⊢Δ ⊢e ⊢n =
-  let emb = emb_oterm_term (E.Equiv.fwd equiv)
-  in PE.subst (λ B → Δ ⊢ subst σ (cast ⁰ ℕ ℕ2 e n)
-                    ⇒ subst σ (emb ∘ n ^ ⁰) ∷ B ^ ι ⁰)
-             (PE.sym (subst-ℕ2 σ))
-             (PE.subst (λ t → Δ ⊢ t ⇒ subst σ (emb ∘ n ^ ⁰) ∷ ℕ2 ^ ι ⁰)
-                       (PE.sym (cast-subst-cast-fwd σ e n))
-                       (PE.subst (λ u → Δ ⊢ cast ⁰ ℕ ℕ2
-                                             (subst (repeat liftSubst σ 0) e)
-                                             (subst (repeat liftSubst σ 0) n)
-                                       ⇒ u ∷ ℕ2 ^ ι ⁰)
-                                 (cast-subst-app-fwd σ n)
-                                 (cast-equiv-fwd ⊢e ⊢n)))
-
-cast-equiv-bwd-subst : ∀ {Δ σ e n} (⊢Δ : ⊢ Δ)
-  (⊢e : Δ ⊢ subst (repeat liftSubst σ 0) e ∷ Id (U ⁰) ℕ2 ℕ ^ [ % , ι ⁰ ])
-  (⊢n : Δ ⊢ subst (repeat liftSubst σ 0) n ∷ ℕ2 ^ [ ! , ι ⁰ ])
-  → Δ ⊢ subst σ (cast ⁰ ℕ2 ℕ e n)
-    ⇒ subst σ (emb_oterm_term (E.Equiv.bwd equiv) ∘ n ^ ⁰)
-    ∷ subst σ ℕ ^ ι ⁰
-cast-equiv-bwd-subst {Δ = Δ} {σ = σ} {e = e} {n = n} ⊢Δ ⊢e ⊢n =
-  let emb = emb_oterm_term (E.Equiv.bwd equiv)
-  in PE.subst (λ B → Δ ⊢ subst σ (cast ⁰ ℕ2 ℕ e n)
-                    ⇒ subst σ (emb ∘ n ^ ⁰) ∷ B ^ ι ⁰)
-             (PE.sym (subst-ℕ σ))
-             (PE.subst (λ t → Δ ⊢ t ⇒ subst σ (emb ∘ n ^ ⁰) ∷ ℕ ^ ι ⁰)
-                       (PE.sym (cast-subst-cast-bwd σ e n))
-                       (PE.subst (λ u → Δ ⊢ cast ⁰ ℕ2 ℕ
-                                             (subst (repeat liftSubst σ 0) e)
-                                             (subst (repeat liftSubst σ 0) n)
-                                       ⇒ u ∷ ℕ ^ ι ⁰)
-                                 (cast-subst-app-bwd σ n)
-                                 (cast-equiv-bwd ⊢e ⊢n)))
 
 abstract
   valid ε = ε
@@ -321,7 +154,6 @@ abstract
 
 -- Fundamental theorem for terms.
   fundamentalTerm (ℕⱼ x) = valid x , maybeEmbᵛ {A = Univ _ _} (valid x) (Uᵛ emb< (valid x)) ,  maybeEmbTermᵛ {A = Univ _ _} {t = ℕ} (valid x) (Uᵛ emb< (valid x)) (ℕᵗᵛ (valid x))
-  fundamentalTerm (ℕ2ⱼ x) = valid x , maybeEmbᵛ {A = Univ _ _} (valid x) (Uᵛ emb< (valid x)) ,  maybeEmbTermᵛ {A = Univ _ _} {t = ℕ2} (valid x) (Uᵛ emb< (valid x)) (ℕ2ᵗᵛ (valid x))
   fundamentalTerm (Emptyⱼ ⊢Γ) = let [Γ] = valid ⊢Γ
                                     [U] = Uᵛ (proj₂ (levelBounded _)) [Γ]
                                  in [Γ] , maybeEmbᵛ {A = Univ _ _} [Γ] [U] , maybeEmbTermᵛ {A = Univ _ _} {t = sEmpty} [Γ] [U] (Emptyᵗᵛ [Γ] (proj₂ (levelBounded _)))
@@ -407,13 +239,9 @@ abstract
   fundamentalTerm (_▹_▹_▹_∘ⱼ_ {g} {a} {F} {rF} {lF} {G} {lG = ¹} {r = %} {lΠ} l% [F] DG Dt Du) = let e , _ = l% PE.refl in ⊥-elim (⁰≢¹ (PE.sym e))
   fundamentalTerm (_▹_▹_▹_∘ⱼ_ {g} {a} {F} {rF} {lF} {G} {lG} {r = %} {lΠ = ¹} l% [F] DG Dt Du) = let _ , e = l% PE.refl in ⊥-elim (⁰≢¹ (PE.sym e))
   fundamentalTerm (zeroⱼ x) = valid x , ℕᵛ (valid x) , zeroᵛ {l = ∞} (valid x)
-  fundamentalTerm (zero2ⱼ x) = valid x , ℕ2ᵛ (valid x) , zero2ᵛ {l = ∞} (valid x)
   fundamentalTerm (sucⱼ {n} t) with fundamentalTerm t
   fundamentalTerm (sucⱼ {n} t) | [Γ] , [ℕ] , [n] =
     [Γ] , [ℕ] , sucᵛ {n = n} [Γ] [ℕ] [n]
-  fundamentalTerm (suc2ⱼ {n} t) with fundamentalTerm t
-  fundamentalTerm (suc2ⱼ {n} t) | [Γ] , [ℕ2] , [n] =
-    [Γ] , [ℕ2] , suc2ᵛ {n = n} [Γ] [ℕ2] [n]
   fundamentalTerm (natrecⱼ {G} {rG} {lG} {s} {z} {n} rGlG ⊢G ⊢z ⊢s ⊢n)
     with fundamental ⊢G | fundamentalTerm ⊢z | fundamentalTerm ⊢s
        | fundamentalTerm ⊢n
@@ -429,21 +257,6 @@ abstract
         [s]′ = S.irrelevanceTerm {A = sType} {t = s} [Γ]₂ [Γ]′ [G₊] [G₊]′ [s]
     in  [Γ]′ , [Gₙ]′
     ,   natrecᵛ {G} {rG} {lG} {z} {s} {n} rGlG [Γ]′ [ℕ] [G]′ [G₀]′ [G₊]′ [Gₙ]′ [z]′ [s]′ [n]
-  fundamentalTerm (natrec2ⱼ {G} {rG} {lG} {s} {z} {n} rGlG ⊢G ⊢z ⊢s ⊢n)
-    with fundamental ⊢G | fundamentalTerm ⊢z | fundamentalTerm ⊢s
-       | fundamentalTerm ⊢n
-  ... | [Γ] , [G] | [Γ]₁ , [G₀] , [z] | [Γ]₂ , [G₊] , [s] | [Γ]₃ , [ℕ2] , [n] =
-    let sType = Π ℕ2 ^ ! ° ⁰ ▹ (G ^ rG ° _  ▹▹ G [ suc2 (var 0) ]↑ ° _  ° lG ^ rG) ° _ ° lG ^ rG
-        [Γ]′ = [Γ]₃
-        [G]′ = S.irrelevance {A = G} [Γ] ([Γ]′ ∙ [ℕ2]) [G]
-        [G₀]′ = S.irrelevance {A = G [ zero2 ]} [Γ]₁ [Γ]′ [G₀]
-        [G₊]′ = S.irrelevance {A = sType} [Γ]₂ [Γ]′ [G₊]
-        [Gₙ]′ = substS {F = ℕ2} {G = G} {t = n} [Γ]′ [ℕ2] [G]′ [n]
-        [z]′ = S.irrelevanceTerm {A = G [ zero2 ]} {t = z} [Γ]₁ [Γ]′
-                                 [G₀] [G₀]′ [z]
-        [s]′ = S.irrelevanceTerm {A = sType} {t = s} [Γ]₂ [Γ]′ [G₊] [G₊]′ [s]
-    in  [Γ]′ , [Gₙ]′
-    ,   natrec2ᵛ {G} {rG} {lG} {z} {s} {n} rGlG [Γ]′ [ℕ2] [G]′ [G₀]′ [G₊]′ [Gₙ]′ [z]′ [s]′ [n]
 
   fundamentalTerm (fstⱼ {A} {A'} {rA} {B} {B'} {e} ⊢A ⊢B ⊢A' ⊢B' ⊢e)
     with fundamentalTerm ⊢A | fundamentalTerm ⊢B | fundamentalTerm ⊢A' | fundamentalTerm ⊢B' | fundamentalTerm ⊢e
@@ -502,8 +315,7 @@ abstract
     let [Γ] = valid ⊢Γ
         [U0] = maybeEmbᵛ {A = U ⁰} [Γ] (Uᵛ emb< [Γ])
         [ℕ]  = maybeEmbTermᵛ {A = U ⁰} {t = ℕ} [Γ] [U0] (ℕᵗᵛ [Γ])
-        [ℕ2] = maybeEmbTermᵛ {A = U ⁰} {t = ℕ2} [Γ] [U0] (ℕ2ᵗᵛ [Γ])
-        [Id] = Idᵛ {A = U ⁰} {t = ℕ} {u = ℕ2} [Γ] [U0] [ℕ] [ℕ2]
+        [Id] = Idᵛ {A = U ⁰} {t = ℕ} {u = ℕ} [Γ] [U0] [ℕ] [ℕ]
     in [Γ] , [Id] , equivEqᵛ [Γ]
 
   fundamentalTerm (transpⱼ {A} {l} {P} {t} {s} {u} {e} ⊢A ⊢P ⊢t ⊢s ⊢u ⊢e)
@@ -532,26 +344,28 @@ abstract
   ... | [Γ] , [A] | [Γ]′ , [Empty] , [n] =
     let [A]′ = S.irrelevance {A = A} [Γ] [Γ]′ [A]
     in [Γ]′ , [A]′ , Emptyrecᵛ {A} {rA} {lA} {n} [Γ]′ [Empty] [A]′ [n]
-  -- Inductive types (ℕ2 clones).
   fundamentalTerm (Indⱼ x) = valid x , maybeEmbᵛ {A = Univ _ _} (valid x) (Uᵛ emb< (valid x)) , maybeEmbTermᵛ {A = Univ _ _} {t = Ind _} (valid x) (Uᵛ emb< (valid x)) (Indᵗᵛ (valid x))
-  fundamentalTerm (Ctrⱼ {i} {j} {args} ⊢Γ args∈) =
-    let [Γ] = valid ⊢Γ
+  fundamentalTerm (Ctrⱼ {ind} {j} {args} {Ts} ⊢Γ ind∈ eq args∈) =
+    let i = (SU.SInd.name ind)
+        [Γ] = valid ⊢Γ
         [Ind] = Indᵛ {i = i} {l = ∞} [Γ]
-        [args] = fundamentalAllInd {i = i} {j = j} {args = args} [Γ] [Ind] args∈
-    in  [Γ] , [Ind] , ctrᵛ {i = i} {j = j} {args = args} {l = ∞} [Γ] [Ind] args∈ [args]
-  fundamentalTerm (IndRectⱼ {i} {P} {rG} {lG} {t} {ms} abs ⊢P ⊢t ⊢ms)
+        [args] = fundamentalAllInd {ind = ind} {j = j} {Ts = Ts} {args = args} [Γ] [Ind] eq args∈
+    in  [Γ] , [Ind]
+    ,   ctrᵛ {ind = ind} {j = j} {args = args} {Ts = Ts} {l = ∞} [Γ] [Ind] ind∈ eq args∈ [args]
+  fundamentalTerm (IndRectⱼ {ind} {P} {rG} {lG} {t} {ms} abs ind∈ ⊢P ⊢t ⊢ms)
     with fundamentalTerm ⊢P | fundamentalTerm ⊢t
   ... | [ΓP] , [ΠP] , [P] | [Γt] , [Indt] , [t] =
-    let [Γ] = [Γt]
+    let i = (SU.SInd.name ind)
+        [Γ] = [Γt]
         [Ind] = Indᵛ {i = i} {l = ∞} [Γ]
         [ΠP]′ = S.irrelevance {A = Π Ind i ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ !} [ΓP] [Γ] [ΠP]
         [P]′ = S.irrelevanceTerm {A = Π Ind i ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ !} {t = P} [ΓP] [Γ] [ΠP] [ΠP]′ [P]
         [t]′ = S.irrelevanceTerm {A = Ind i} {t = t} [Γ] [Γ] [Indt] [Ind] [t]
         [P∘t] = P∘tᵛ {i = i} {P = P} {rG = rG} {lG = lG} {t = t} {l = ∞} [Γ] [Ind] [ΠP]′ [P]′ [t]′
-        [ms] = fundamentalAllMethods {i = i} {P = P} {rG = rG} {lG = lG} {ms = ms} [Γ] ⊢ms
+        [ms] = fundamentalAllMethods {ind = ind} {P = P} {rG = rG} {lG = lG} {ms = ms} [Γ] ⊢ms
     in  [Γ] , [P∘t]
-    ,   IndRectᵛ {i = i} {P = P} {rG = rG} {lG = lG} {t = t} {ms = ms} {l = ∞}
-                 abs [Γ] [Ind] [ΠP]′ [P]′ [t]′ [P∘t] ⊢ms [ms]
+    ,   IndRectᵛ {ind = ind} {P = P} {rG = rG} {lG = lG} {t = t} {ms = ms} {l = ∞}
+                 abs [Γ] ind∈ [Ind] [ΠP]′ [P]′ [t]′ [P∘t] ⊢ms [ms]
   fundamentalTerm (conv {t} {A} {B} ⊢t A′≡A)
     with fundamentalTerm ⊢t | fundamentalEq A′≡A
   fundamentalTerm (conv {t} {A} {B} ⊢t A′≡A) | [Γ] , [A′] , [t]
@@ -750,80 +564,74 @@ abstract
       in  [Γ] , modelsTermEq [A] [suct] [sucu]
                              (λ ⊢Δ [σ] →
                                 sucEqTerm (proj₁ ([A] ⊢Δ [σ])) ([t≡u] ⊢Δ [σ]))
-  fundamentalTermEq (suc2-cong x) with fundamentalTermEq x
-  fundamentalTermEq (suc2-cong {t} {u} x)
-    | [Γ] , modelsTermEq [A] [t] [u] [t≡u] =
-      let [suct] = suc2ᵛ {n = t} [Γ] [A] [t]
-          [sucu] = suc2ᵛ {n = u} [Γ] [A] [u]
-      in  [Γ] , modelsTermEq [A] [suct] [sucu]
-                             (λ ⊢Δ [σ] →
-                                suc2EqTerm (proj₁ ([A] ⊢Δ [σ])) ([t≡u] ⊢Δ [σ]))
-  fundamentalTermEq {Γ} (ctr-cong {i} {j} {args} {args'} ⊢Γ lens eqs) =
+  fundamentalTermEq {Γ} (ctr-cong {ind} {j} {args} {args'} {Ts} ⊢Γ ind∈ eq lens eqs) =
     let [Γ] , [args]ᵥ , [args']ᵥ , [eqs]ᵥ = go eqs
-        [Ind] = Indᵛ {i = i} {l = ∞} [Γ]
-        posAll = all∈ (SU.ctrArgsTypesPositive i j)
+        [Ind] = Indᵛ {i = (SU.SInd.name ind)} {l = ∞} [Γ]
+        posAll = all∈ (SU.ctrArgsTypesPositive ind j Ts eq)
         ⊢args = to⊢All [Γ] posAll [args]ᵥ lens
         ⊢args' = to⊢All [Γ] posAll [args']ᵥ (PE.trans (PE.sym (All₂-length eqs)) lens)
-        [ctrₜ] = ctrᵛ {i = i} {j = j} {l = ∞} [Γ] [Ind] ⊢args [args]ᵥ
-        [ctrᵤ] = ctrᵛ {i = i} {j = j} {l = ∞} [Γ] [Ind] ⊢args' [args']ᵥ
+        [ctrₜ] = ctrᵛ {ind = ind} {j = j} {Ts = Ts} {l = ∞} [Γ] [Ind] ind∈ eq ⊢args [args]ᵥ
+        [ctrᵤ] = ctrᵛ {ind = ind} {j = j} {Ts = Ts} {l = ∞} [Γ] [Ind] ind∈ eq ⊢args' [args']ᵥ
     in  [Γ]
     ,   modelsTermEq [Ind] [ctrₜ] [ctrᵤ]
                      (λ {Δ} {σ} ⊢Δ [σ] →
                         let [Indσ] = proj₁ ([Ind] ⊢Δ [σ])
                             [eqs]σ = applyAll₂ᵛ [Γ] [Ind] ⊢Δ [σ] [eqs]ᵥ
-                        in  PE.subst₂ (λ t u → _ ⊩⟨ _ ⟩ t ≡ u ∷ Ind i ^ [ ! , ι ⁰ ] / [Indσ])
-                                      (PE.sym (subst-ctr σ i j args))
-                                      (PE.sym (subst-ctr σ i j args'))
-                                      (ctrEqTerm [Indσ]
+                        in  PE.subst₂ (λ t u → _ ⊩⟨ _ ⟩ t ≡ u ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Indσ])
+                                      (PE.sym (subst-ctr σ (SU.SInd.name ind) j args))
+                                      (PE.sym (subst-ctr σ (SU.SInd.name ind) j args'))
+                                      (ctrEqTerm [Indσ] ind∈ eq
                                                  (substAll-ctrArgs {σ = σ} [Γ] ⊢Δ [σ] ⊢args)
                                                  (substAll-ctrArgs {σ = σ} [Γ] ⊢Δ [σ] ⊢args')
                                                  [eqs]σ))
     where
-      emb-stype-pos : ∀ (T : SU.Type) → SU.isPositive i T → emb-stype T PE.≡ Ind i
+
+      emb-stype-pos : ∀ (T : SU.Type) → SU.isPositive (SU.SInd.name ind) T → emb-stype T PE.≡ Ind (SU.SInd.name ind)
       emb-stype-pos (SU.Ind j′) i≡i = PE.cong Ind (PE.sym i≡i)
       emb-stype-pos (SU.Arrow _ _) ()
 
       to⊢All : ∀ {Δ} {args Ts} ([Δ] : ⊩ᵛ Δ)
-             → All (SU.isPositive i) Ts
-             → All (λ a → Δ ⊩ᵛ⟨ ∞ ⟩ a ∷ Ind i ^ [ ! , ι ⁰ ] / [Δ] / Indᵛ {i = i} {l = ∞} [Δ]) args
+             → All (SU.isPositive (SU.SInd.name ind)) Ts
+             → All (λ a → Δ ⊩ᵛ⟨ ∞ ⟩ a ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Δ] / Indᵛ {i = (SU.SInd.name ind)} {l = ∞} [Δ]) args
              → length args PE.≡ length Ts
              → Δ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
       to⊢All [Δ] []ₐ []ₐ _ = εⱼ
       to⊢All {Δ} {args = a List∷ as} {Ts = T List∷ Ts} [Δ] (pos ∷ₐ poss) ([a]ᵥ ∷ₐ ps) eq =
-        let [Ind] = Indᵛ {i = i} {l = ∞} [Δ]
+        let [Ind] = Indᵛ {i = (SU.SInd.name ind)} {l = ∞} [Δ]
             emb≡Ind = emb-stype-pos T pos
             ⊢Δ = soundContext [Δ]
             ⊢a = escapeTermᵛ [Δ] [Ind] [a]ᵥ
-            ⊢Ind≡emb = PE.subst (λ T′ → Δ ⊢ Ind i ≡ T′ ^ [ ! , ι ⁰ ]) (PE.sym emb≡Ind)
+            ⊢Ind≡emb = PE.subst (λ T′ → Δ ⊢ Ind (SU.SInd.name ind) ≡ T′ ^ [ ! , ι ⁰ ]) (PE.sym emb≡Ind)
                                 (refl (univ (Indⱼ ⊢Δ)))
         in  consⱼ (conv ⊢a ⊢Ind≡emb) (to⊢All [Δ] poss ps (PE.cong pred eq))
       to⊢All {args = []} {Ts = _ List∷ _} [Δ] _ []ₐ ()
       to⊢All {args = _ List∷ _} {Ts = []} [Δ] []ₐ _ ()
 
       go : ∀ {args args'}
-         → All₂ (λ a a' → Γ ⊢ a ≡ a' ∷ Ind i ^ [ ! , ι ⁰ ]) args args'
+         → All₂ (λ a a' → Γ ⊢ a ≡ a' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]) args args'
          → Σ (⊩ᵛ Γ) (λ [Γ] →
-              All (λ a → Γ ⊩ᵛ⟨ ∞ ⟩ a ∷ Ind i ^ [ ! , ι ⁰ ] / [Γ] / Indᵛ {i = i} {l = ∞} [Γ]) args
-              × All (λ a' → Γ ⊩ᵛ⟨ ∞ ⟩ a' ∷ Ind i ^ [ ! , ι ⁰ ] / [Γ] / Indᵛ {i = i} {l = ∞} [Γ]) args'
-              × All₂ (λ a a' → Γ ⊩ᵛ⟨ ∞ ⟩ a ≡ a' ∷ Ind i ^ [ ! , ι ⁰ ] / [Γ] / Indᵛ {i = i} {l = ∞} [Γ]) args args')
+              All (λ a → Γ ⊩ᵛ⟨ ∞ ⟩ a ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / Indᵛ {i = (SU.SInd.name ind)} {l = ∞} [Γ]) args
+              × All (λ a' → Γ ⊩ᵛ⟨ ∞ ⟩ a' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / Indᵛ {i = (SU.SInd.name ind)} {l = ∞} [Γ]) args'
+              × All₂ (λ a a' → Γ ⊩ᵛ⟨ ∞ ⟩ a ≡ a' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / Indᵛ {i = (SU.SInd.name ind)} {l = ∞} [Γ]) args args')
       go []ₐ = valid ⊢Γ , []ₐ , []ₐ , []ₐ
       go {args = a List∷ as} {args' = a' List∷ as'} (eq ∷ₐ eqs)
         with fundamentalTermEq eq | go eqs
       ... | [Γ₁] , modelsTermEq [Ind₁] [a]ₜ [a']ₜ [a≡a']
           | [Γ₂] , [as]ᵥ , [as']ᵥ , [as≡]ᵥ =
         let [Γ]′ = [Γ₂]
-            [Ind]′ = Indᵛ {i = i} {l = ∞} [Γ]′
-            [a]″ = S.irrelevanceTerm {A = Ind i} {t = a} [Γ₁] [Γ]′ [Ind₁] [Ind]′ [a]ₜ
-            [a']″ = S.irrelevanceTerm {A = Ind i} {t = a'} [Γ₁] [Γ]′ [Ind₁] [Ind]′ [a']ₜ
-            [a≡a']″ = S.irrelevanceEqTerm {A = Ind i} {t = a} {u = a'}
+            [Ind]′ = Indᵛ {i = (SU.SInd.name ind)} {l = ∞} [Γ]′
+            [a]″ = S.irrelevanceTerm {A = Ind (SU.SInd.name ind)} {t = a} [Γ₁] [Γ]′ [Ind₁] [Ind]′ [a]ₜ
+            [a']″ = S.irrelevanceTerm {A = Ind (SU.SInd.name ind)} {t = a'} [Γ₁] [Γ]′ [Ind₁] [Ind]′ [a']ₜ
+            [a≡a']″ = S.irrelevanceEqTerm {A = Ind (SU.SInd.name ind)} {t = a} {u = a'}
                                          [Γ₁] [Γ]′ [Ind₁] [Ind]′ [a≡a']
         in  [Γ]′ , [a]″ ∷ₐ [as]ᵥ , [a']″ ∷ₐ [as']ᵥ , [a≡a']″ ∷ₐ [as≡]ᵥ
 
-  fundamentalTermEq {Γ} (IndRect-cong {i} {P} {P'} {lG} {t} {t'} {ms} {ms'} P≡P' t≡t' ⊢ms≡)
+  fundamentalTermEq {Γ} (IndRect-cong {ind} {P} {P'} {lG} {t} {t'} {ms} {ms'} ind∈ P≡P' t≡t' ⊢ms≡)
     with fundamentalTermEq P≡P' | fundamentalTermEq t≡t'
   ... | [ΓP] , modelsTermEq [ΠP] [P] [P'] [P≡P']
       | [Γt] , modelsTermEq [Indt] [t] [t'] [t≡t'] =
-    let [Γ]′ = [Γt]
+    let i = (SU.SInd.name ind)
+        [Γ]′ = [Γt]
         [Ind] = Indᵛ {i = i} {l = ∞} [Γ]′
         [ΠP]′ = S.irrelevance {A = Π Ind i ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ !} [ΓP] [Γ]′ [ΠP]
         [P]′ = S.irrelevanceTerm {A = Π Ind i ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ !} {t = P}
@@ -837,23 +645,23 @@ abstract
         [t≡t']′ = S.irrelevanceEqTerm {A = Ind i} {t = t} {u = t'} [Γt] [Γ]′ [Indt] [Ind] [t≡t']
         [P∘t] = P∘tᵛ {i = i} {P = P} {rG = !} {lG = lG} {t = t} {l = ∞} [Γ]′ [Ind] [ΠP]′ [P]′ [t]′
         [P∘t'] = P∘tᵛ {i = i} {P = P'} {rG = !} {lG = lG} {t = t'} {l = ∞} [Γ]′ [Ind] [ΠP]′ [P']′ [t']′
-        [P∘t≡P∘t'] = P∘t-congᵛ {i = i} {P = P} {P' = P'} {rG = !} {lG = lG} {t = t} {t' = t'} {l = ∞}
+        [P∘t≡P∘t'] = P∘t-congᵛ {ind = ind} {P = P} {P' = P'} {rG = !} {lG = lG} {t = t} {t' = t'} {l = ∞}
                                [Γ]′ [Ind] [ΠP]′ [ΠP]′ [P]′ [P']′ [P≡P']′ [t]′ [t']′ [t≡t']′ [P∘t]
         ⊢ms = msLeft ⊢ms≡
         ⊢ms' = msRight ⊢ms≡
-        [ms] = fundamentalAllMethods {i = i} {P = P} {rG = !} {lG = lG} {ms = ms} [Γ]′ ⊢ms
-        -- ⊢ms' is under P (Typed IndRect-cong), matching IndRectᵛ As for the RHS conv.
-        [ms'] = fundamentalAllMethods {i = i} {P = P} {rG = !} {lG = lG} {ms = ms'} [Γ]′ ⊢ms'
+        [ms] = fundamentalAllMethods {ind = ind} {P = P} {rG = !} {lG = lG} {ms = ms} [Γ]′ ⊢ms
+        -- ⊢ms' is under P (Typed IndRect-cong); transport it to P' for the RHS.
+        ⊢ms'P' = msRight (indRectBranchTyListCong {ind = ind} P≡P' ⊢ms≡)
+        [ms'] = fundamentalAllMethods {ind = ind} {P = P'} {rG = !} {lG = lG} {ms = ms'} [Γ]′ ⊢ms'P'
     in  [Γ]′
     ,   modelsTermEq [P∘t]
-                     (IndRectᵛ {i = i} {P = P} {rG = !} {lG = lG} {t = t} {ms = ms} {l = ∞}
-                               (λ abs → ⊥-elim (!≢% abs)) [Γ]′ [Ind] [ΠP]′ [P]′ [t]′ [P∘t] ⊢ms [ms])
+                     (IndRectᵛ {ind = ind} {P = P} {rG = !} {lG = lG} {t = t} {ms = ms} {l = ∞}
+                               (λ abs → ⊥-elim (!≢% abs)) [Γ]′ ind∈ [Ind] [ΠP]′ [P]′ [t]′ [P∘t] ⊢ms [ms])
                      (conv₂ᵛ {IndRect i lG P' t' ms'} {P ∘ t ^ ¹} {P' ∘ t' ^ ¹}
                              [Γ]′ [P∘t] [P∘t'] [P∘t≡P∘t']
-                             (IndRectᵛ {i = i} {P = P'} {rG = !} {lG = lG} {t = t'} {ms = ms'}
-                                       {As = indRectBranchTyList i P ! lG} {l = ∞}
-                                       (λ abs → ⊥-elim (!≢% abs)) [Γ]′ [Ind] [ΠP]′ [P']′ [t']′ [P∘t'] ⊢ms' [ms']))
-                     (IndRect-congᵛ {i = i} {P = P} {P' = P'} {lG = lG} {t = t} {t' = t'} {ms = ms} {ms' = ms'}
+                             (IndRectᵛ {ind = ind} {P = P'} {rG = !} {lG = lG} {t = t'} {ms = ms'} {l = ∞}
+                                       (λ abs → ⊥-elim (!≢% abs)) [Γ]′ ind∈ [Ind] [ΠP]′ [P']′ [t']′ [P∘t'] ⊢ms'P' [ms']))
+                     (IndRect-congᵛ {ind = ind} {P = P} {P' = P'} {lG = lG} {t = t} {t' = t'} {ms = ms} {ms' = ms'}
                                     (λ abs → ⊥-elim (!≢% abs)) [Γ]′ [Ind] [ΠP]′ [ΠP]′ [P]′ [P']′ [P≡P']′
                                     [t]′ [t']′ [t≡t']′ [P∘t] ⊢ms ⊢ms' ⊢ms≡ PE.refl)
     where
@@ -869,20 +677,21 @@ abstract
       ... | [Γe] , modelsTermEq [A] [_t] [u] _ =
         consⱼ (escapeTermᵛ [Γe] [A] [u]) (msRight rest)
 
-  fundamentalTermEq {Γ} (IndRect-ctr≡ {i} {j} {P} {lG} {args} {ms} ⊢P ⊢args ⊢ms)
+  fundamentalTermEq {Γ} (IndRect-ctr≡ {ind} {j} {P} {lG} {args} {ms} {m} {Ts} ind∈ eq ⊢P ⊢args ⊢ms nth≡)
     with fundamentalTerm ⊢P
   ... | [Γ] , [ΠP] , [P] =
-    let [Ind] = Indᵛ {i = i} {l = ∞} [Γ]
-        [args]ᵥ = fundamentalAllInd {i = i} {j = j} {args = args} [Γ] [Ind] ⊢args
-        [d] = ctrᵛ {i = i} {j = j} {args = args} {l = ∞} [Γ] [Ind] ⊢args [args]ᵥ
+    let i = (SU.SInd.name ind)
+        [Ind] = Indᵛ {i = i} {l = ∞} [Γ]
+        [args]ᵥ = fundamentalAllInd {ind = ind} {j = j} {Ts = Ts} {args = args} [Γ] [Ind] eq ⊢args
+        [d] = ctrᵛ {ind = ind} {j = j} {args = args} {Ts = Ts} {l = ∞} [Γ] [Ind] ind∈ eq ⊢args [args]ᵥ
         [P∘d] = P∘tᵛ {i = i} {P = P} {rG = !} {lG = lG} {t = ctr i j args} {l = ∞}
                       [Γ] [Ind] [ΠP] [P] [d]
-        rhs = apps lG (lookupDefault (ctr i j args) ms j)
+        rhs = apps lG m
                      (args ++ map (λ a → IndRect i lG P a ms) args)
-        [rhs] = IndRect-ctr-rhsᵛ {i = i} {j = j} {P = P} {rG = !} {lG = lG}
-                                 {args = args} {ms = ms} {l = ∞}
+        [rhs] = IndRect-ctr-rhsᵛ {ind = ind} {j = j} {P = P} {rG = !} {lG = lG}
+                                 {args = args} {ms = ms} {Ts = Ts} {l = ∞}
                                  (λ abs → ⊥-elim (!≢% abs))
-                                 [Γ] [Ind] [d] [P∘d] ⊢args ⊢ms
+                                 [Γ] [Ind] [d] [P∘d] eq ⊢args ⊢ms nth≡
         [lhs] , [redEq] =
           redSubstTermᵛ {A = P ∘ ctr i j args ^ ¹}
                         {t = IndRect i lG P (ctr i j args) ms}
@@ -890,17 +699,12 @@ abstract
             (λ {Δ} {σ} ⊢Δ [σ] →
                let ⊢Pσ = escapeTerm (proj₁ ([ΠP] ⊢Δ [σ])) (proj₁ ([P] ⊢Δ [σ]))
                    ⊢argsσ = substAll-ctrArgs {σ = σ} [Γ] ⊢Δ [σ] ⊢args
-                   ⊢msσ = substAll-indRectBranch [Γ] ⊢Δ [σ] ⊢ms
-                   step = IndRect-ctr ⊢Pσ ⊢argsσ ⊢msσ
+                   ⊢msσ = substAll-indRectBranch {σ = σ} {ind = ind} {P = P} [Γ] ⊢Δ [σ] ⊢ms
+                   step = IndRect-ctr ind∈ eq ⊢Pσ ⊢argsσ ⊢msσ (nth-map (subst σ) ms j nth≡)
                    lhs≡ = PE.trans (subst-IndRect σ i lG P (ctr i j args) ms)
                                    (PE.cong (λ t′ → IndRect i lG (subst σ P) t′ (map (subst σ) ms))
                                             (subst-ctr σ i j args))
-                   rhs≡ = PE.trans (subst-IndRect-ctr-rhs σ i j lG P args ms)
-                                   (PE.cong (λ d′ → apps lG (lookupDefault d′ (map (subst σ) ms) j)
-                                                            (map (subst σ) args ++
-                                                              map (λ a → IndRect i lG (subst σ P) a (map (subst σ) ms))
-                                                                  (map (subst σ) args)))
-                                            (subst-ctr σ i j args))
+                   rhs≡ = subst-IndRect-ctr-rhs σ i lG P m args ms
                    ty≡  = PE.cong (λ t′ → subst σ P ∘ t′ ^ ¹) (subst-ctr σ i j args)
                in  PE.subst₃ (λ t′ u′ A′ → Δ ⊢ t′ ⇒ u′ ∷ A′ ^ ι lG)
                              (PE.sym lhs≡) (PE.sym rhs≡) (PE.sym ty≡) step)
@@ -976,173 +780,6 @@ abstract
                                      [F₊]′ [F′₊]′ [F₊≡F′₊]′ [Fₙ]′
                                      [z]′ [z′]′ [z≡z′]′
                                      [s]′ [s′]′ [s≡s′]′ [n] [n′] [n≡n′]) 
-  fundamentalTermEq (natrec2-cong {z} {z′} {s} {s′} {n} {n′} {F} {F′}
-                                  F≡F′ z≡z′ s≡s′ n≡n′)
-    with fundamentalEq F≡F′ |
-         fundamentalTermEq z≡z′      |
-         fundamentalTermEq s≡s′      |
-         fundamentalTermEq n≡n′
-  fundamentalTermEq (natrec2-cong {z} {z′} {s} {s′} {n} {n′} {F} {F′} {l}
-                                  F≡F′ z≡z′ s≡s′ n≡n′) |
-    [Γ]  , [F] , [F′] , [F≡F′] |
-    [Γ]₁ , modelsTermEq [F₀] [z] [z′] [z≡z′] |
-    [Γ]₂ , modelsTermEq [F₊] [s] [s′] [s≡s′] |
-    [Γ]₃ , modelsTermEq [ℕ2] [n] [n′] [n≡n′] =
-      let sType = Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc2 (var 0) ]↑ ° l ° l ^ !) ° l ° l ^ !
-          s′Type = Π ℕ2 ^ ! ° ⁰ ▹ (F′ ^ ! ° l ▹▹ F′ [ suc2 (var 0) ]↑ ° l ° l ^ !) ° l ° l ^ !
-          [0] = S.irrelevanceTerm {l = ∞} {A = ℕ2} {t = zero2}
-                                  [Γ]₃ [Γ]₃ (ℕ2ᵛ [Γ]₃) [ℕ2] (zero2ᵛ {l = ∞} [Γ]₃)
-          [F]′ = S.irrelevance {A = F} [Γ] ([Γ]₃ ∙ [ℕ2]) [F]
-          [F₀]′ = S.irrelevance {A = F [ zero2 ]} [Γ]₁ [Γ]₃ [F₀]
-          [F₊]′ = S.irrelevance {A = sType} [Γ]₂ [Γ]₃ [F₊]
-          [Fₙ]′ = substS {ℕ2} {F} {n} [Γ]₃ [ℕ2] [F]′ [n]
-          [F′]′ = S.irrelevance {A = F′} [Γ] ([Γ]₃ ∙ [ℕ2]) [F′]
-          [F₀]″ = substS {ℕ2} {F} {zero2} [Γ]₃ [ℕ2] [F]′ [0]
-          [F′₀]′ = substS {ℕ2} {F′} {zero2} [Γ]₃ [ℕ2] [F′]′ [0]
-          [F′₊]′ = suc2Case {F′} (λ abs → ⊥-elim (!≢% abs)) [Γ]₃ [ℕ2] [F′]′
-          [F′ₙ′]′ = substS {ℕ2} {F′} {n′} [Γ]₃ [ℕ2] [F′]′ [n′]
-          [ℕ2≡ℕ2] = reflᵛ {ℕ2} [Γ]₃ [ℕ2]
-          [0≡0] = reflᵗᵛ {ℕ2} {zero2} [Γ]₃ [ℕ2] [0]
-          [F≡F′]′ = S.irrelevanceEq {A = F} {B = F′}
-                                    [Γ] ([Γ]₃ ∙ [ℕ2]) [F] [F]′ [F≡F′]
-          [F₀≡F′₀] = substSEq {ℕ2} {ℕ2} {F} {F′} {zero2} {zero2}
-                              [Γ]₃ [ℕ2] [ℕ2] [ℕ2≡ℕ2]
-                              [F]′ [F′]′ [F≡F′]′ [0] [0] [0≡0]
-          [F₀≡F′₀]′ = S.irrelevanceEq {A = F [ zero2 ]} {B = F′ [ zero2 ]}
-                                      [Γ]₃ [Γ]₃ [F₀]″ [F₀]′ [F₀≡F′₀]
-          [F₊≡F′₊] = suc2CaseCong {F} {F′} (λ abs → ⊥-elim (!≢% abs)) [Γ]₃ [ℕ2] [F]′ [F′]′ [F≡F′]′
-          [F₊≡F′₊]′ = S.irrelevanceEq {A = sType} {B = s′Type}
-                                      [Γ]₃ [Γ]₃ (suc2Case {F} (λ abs → ⊥-elim (!≢% abs)) [Γ]₃ [ℕ2] [F]′)
-                                      [F₊]′ [F₊≡F′₊]
-          [Fₙ≡F′ₙ′]′ = substSEq {ℕ2} {ℕ2} {F} {F′} {n} {n′}
-                                [Γ]₃ [ℕ2] [ℕ2] [ℕ2≡ℕ2] [F]′ [F′]′ [F≡F′]′
-                                [n] [n′] [n≡n′]
-          [z]′ = S.irrelevanceTerm {A = F [ zero2 ]} {t = z}
-                                   [Γ]₁ [Γ]₃ [F₀] [F₀]′ [z]
-          [z′]′ = convᵛ {z′} {F [ zero2 ]} {F′ [ zero2 ]}
-                        [Γ]₃ [F₀]′ [F′₀]′ [F₀≡F′₀]′
-                        (S.irrelevanceTerm {A = F [ zero2 ]} {t = z′}
-                                           [Γ]₁ [Γ]₃ [F₀] [F₀]′ [z′])
-          [z≡z′]′ = S.irrelevanceEqTerm {A = F [ zero2 ]} {t = z} {u = z′}
-                                        [Γ]₁ [Γ]₃ [F₀] [F₀]′ [z≡z′]
-          [s]′ = S.irrelevanceTerm {A = sType} {t = s} [Γ]₂ [Γ]₃ [F₊] [F₊]′ [s]
-          [s′]′ = convᵛ {s′} {sType} {s′Type} [Γ]₃ [F₊]′ [F′₊]′ [F₊≡F′₊]′
-                        (S.irrelevanceTerm {A = sType} {t = s′}
-                                           [Γ]₂ [Γ]₃ [F₊] [F₊]′ [s′])
-          [s≡s′]′ = S.irrelevanceEqTerm {A = sType} {t = s} {u = s′}
-                                        [Γ]₂ [Γ]₃ [F₊] [F₊]′ [s≡s′]
-      in  [Γ]₃
-      ,   modelsTermEq [Fₙ]′
-                       (natrec2ᵛ {F} { ! } {l} {z} {s} {n} (λ abs → ⊥-elim (!≢% abs))
-                                [Γ]₃ [ℕ2] [F]′ [F₀]′ [F₊]′ [Fₙ]′ [z]′ [s]′ [n])
-                       (conv₂ᵛ {natrec2 l F′ z′ s′ n′} {F [ n ]} {F′ [ n′ ]}
-                               [Γ]₃ [Fₙ]′ [F′ₙ′]′ [Fₙ≡F′ₙ′]′
-                               (natrec2ᵛ {F′} { ! } {l} {z′} {s′} {n′} (λ abs → ⊥-elim (!≢% abs))
-                                        [Γ]₃ [ℕ2] [F′]′ [F′₀]′ [F′₊]′ [F′ₙ′]′
-                                        [z′]′ [s′]′ [n′]))
-                       (natrec2-congᵛ {F} {F′} { ! } {l} {z} {z′} {s} {s′} {n} {n′} (λ abs → ⊥-elim (!≢% abs))
-                                     [Γ]₃ [ℕ2] [F]′ [F′]′ [F≡F′]′
-                                     [F₀]′ [F′₀]′ [F₀≡F′₀]′
-                                     [F₊]′ [F′₊]′ [F₊≡F′₊]′ [Fₙ]′
-                                     [z]′ [z′]′ [z≡z′]′
-                                     [s]′ [s′]′ [s≡s′]′ [n] [n′] [n≡n′])
-  fundamentalTermEq (natrec2-zero {z} {s} {F} ⊢F ⊢z ⊢s)
-    with fundamental ⊢F | fundamentalTerm ⊢z | fundamentalTerm ⊢s
-  fundamentalTermEq (natrec2-zero {z} {s} {F} {l} ⊢F ⊢z ⊢s) | [Γ] , [F]
-    | [Γ]₁ , [F₀] , [z] | [Γ]₂ , [F₊] , [s] =
-    let sType = Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc2 (var 0) ]↑ ° l ° l ^ !) ° l ° l ^ !
-        [Γ]′ = [Γ]₁
-        [ℕ2]′ = ℕ2ᵛ {l = ∞} [Γ]′
-        [F₊]′ = S.irrelevance {A = sType} [Γ]₂ [Γ]′ [F₊]
-        [s]′ = S.irrelevanceTerm {A = sType} {t = s} [Γ]₂ [Γ]′ [F₊] [F₊]′ [s]
-        [F]′ = S.irrelevance {A = F} [Γ] ([Γ]′ ∙ [ℕ2]′) [F]
-        d , r =
-          redSubstTermᵛ {F [ zero2 ]} {natrec2 l F z s zero2} {z} [Γ]′
-            (λ {Δ} {σ} ⊢Δ [σ] →
-               let ⊢ℕ2 = escape (proj₁ ([ℕ2]′ ⊢Δ [σ]))
-                   ⊢F = escape (proj₁ ([F]′ (⊢Δ ∙ ⊢ℕ2)
-                                               (liftSubstS {F = ℕ2}
-                                                           [Γ]′ ⊢Δ [ℕ2]′ [σ])))
-                   ⊢z = PE.subst (λ x → Δ ⊢ subst σ z ∷ x ^ _)
-                                 (singleSubstLift F zero2)
-                                 (escapeTerm (proj₁ ([F₀] ⊢Δ [σ]))
-                                                (proj₁ ([z] ⊢Δ [σ])))
-                   ⊢s = PE.subst (λ x → Δ ⊢ subst σ s ∷ x ^ [ ! , ι l ] )
-                                 (natrec2SucCase σ F ! l)
-                                 (escapeTerm (proj₁ ([F₊]′ ⊢Δ [σ]))
-                                                (proj₁ ([s]′ ⊢Δ [σ])))
-               in PE.subst (λ x → Δ ⊢ subst σ (natrec2 l F z s zero2)
-                                    ⇒ subst σ z ∷ x ^ _)
-                           (PE.sym (singleSubstLift F zero2))
-                           (natrec2-zero ⊢F ⊢z ⊢s))
-                        [F₀] [z]
-    in  [Γ]′ , modelsTermEq [F₀] d [z] r
-  fundamentalTermEq (natrec2-suc {n} {z} {s} {F} {lF} ⊢n ⊢F ⊢z ⊢s)
-    with fundamentalTerm ⊢n | fundamental ⊢F
-       | fundamentalTerm ⊢z | fundamentalTerm ⊢s
-  ... | [Γ] , [ℕ2] , [n] | [Γ]₁ , [F] | [Γ]₂ , [F₀] , [z] | [Γ]₃ , [F₊] , [s] =
-    let [ℕ2]′ = S.irrelevance {A = ℕ2} [Γ] [Γ]₃ [ℕ2]
-        [n]′ = S.irrelevanceTerm {A = ℕ2} {t = n} [Γ] [Γ]₃ [ℕ2] [ℕ2]′ [n]
-        [sucn] = suc2ᵛ {n = n} [Γ]₃ [ℕ2]′ [n]′
-        [F₀]′ = S.irrelevance {A = F [ zero2 ]} [Γ]₂ [Γ]₃ [F₀]
-        [z]′ = S.irrelevanceTerm {A = F [ zero2 ]} {t = z}
-                                 [Γ]₂ [Γ]₃ [F₀] [F₀]′ [z]
-        [F]′ = S.irrelevance {A = F} [Γ]₁ ([Γ]₃ ∙ [ℕ2]′) [F]
-        [F[sucn]] = substS {ℕ2} {F} {suc2 n} [Γ]₃ [ℕ2]′ [F]′ [sucn]
-        [Fₙ]′ = substS {ℕ2} {F} {n} [Γ]₃ [ℕ2]′ [F]′ [n]′
-        [F+n] = substSΠ {ℕ2} {F ^ ! ° lF ▹▹ F [ suc2 (var 0) ]↑ ° lF ° lF ^ !} {n} [Γ]₃ [ℕ2]′ [F₊] [n]′
-        [natrec₂ₙ] = natrec2ᵛ {F} { ! } {lF} {z} {s} {n} (λ abs → ⊥-elim (!≢% abs))
-                            [Γ]₃ [ℕ2]′ [F]′ [F₀]′ [F₊] [Fₙ]′ [z]′ [s] [n]′
-        t = (s ∘ n ^ lF) ∘ (natrec2 lF F z s n) ^ lF
-        q = subst (liftSubst (sgSubst n))
-                  (wk1 (F [ suc2 (var 0) ]↑))
-        y = S.irrelevanceTerm′
-              {A = q [ natrec2 lF F z s n ]} {A′ = F [ suc2 n ]} {t = t}
-              (natrec2IrrelevantSubst′ F z s n) PE.refl [Γ]₃ [Γ]₃
-              (substSΠ {F [ n ]} {q} {natrec2 lF F z s n} [Γ]₃
-                [Fₙ]′
-                [F+n]
-                [natrec₂ₙ])
-              [F[sucn]]
-              (appᵛ {F [ n ]} {q} { ! } {lF} {lF} {lF} {s ∘ n ^ lF} {natrec2 lF F z s n} [Γ]₃ [Fₙ]′ (decompΠᵛ {F = F [ n ]} {G = q} [Γ]₃ [Fₙ]′ [F+n])
-                (substSΠ {ℕ2} {F ^ ! ° lF ▹▹ F [ suc2 (var 0) ]↑ ° lF ° lF ^ !} {n}
-                         [Γ]₃ [ℕ2]′ [F₊] [n]′)
-                (appᵛ {ℕ2} {F ^ ! ° lF ▹▹ F [ suc2 (var 0) ]↑ ° lF ° lF ^ !} { ! } {⁰} {lF} {lF} {s} {n}
-                      [Γ]₃ [ℕ2]′ (decompΠᵛ {F = ℕ2} {G = F ^ ! ° lF ▹▹ F [ suc2 (var 0) ]↑ ° lF ° lF ^ !} [Γ]₃ [ℕ2]′ [F₊]) [F₊] [s] [n]′)
-                [natrec₂ₙ])
-        d , r =
-          redSubstTermᵛ {F [ suc2 n ]} {natrec2 lF F z s (suc2 n)} {t } {∞} {_} [Γ]₃
-            (λ {Δ} {σ} ⊢Δ [σ] →
-               let ⊢n = escapeTerm (proj₁ ([ℕ2]′ ⊢Δ [σ]))
-                                      (proj₁ ([n]′ ⊢Δ [σ]))
-                   ⊢ℕ2 = escape (proj₁ ([ℕ2]′ ⊢Δ [σ]))
-                   ⊢F = escape (proj₁ ([F]′ (⊢Δ ∙ ⊢ℕ2)
-                                               (liftSubstS {F = ℕ2}
-                                                           [Γ]₃ ⊢Δ [ℕ2]′ [σ])))
-                   ⊢z = PE.subst (λ x → Δ ⊢ subst σ z ∷ x ^ _)
-                                 (singleSubstLift F zero2)
-                                 (escapeTerm (proj₁ ([F₀]′ ⊢Δ [σ]))
-                                                (proj₁ ([z]′ ⊢Δ [σ])))
-                   ⊢s = PE.subst (λ x → Δ ⊢ subst σ s ∷ x ^ [ ! , ι lF ])
-                                 (natrec2SucCase σ F ! lF)
-                                 (escapeTerm (proj₁ ([F₊] ⊢Δ [σ]))
-                                                (proj₁ ([s] ⊢Δ [σ])))
-                   r = _⊢_⇒_∷_^_.natrec2-suc {n = subst σ n}
-                                          {z = subst σ z} {s = subst σ s}
-                                          {F = subst (liftSubst σ) F}
-                                          ⊢n ⊢F ⊢z ⊢s
-               in PE.subst (λ x → Δ ⊢ subst σ (natrec2 lF F z s (suc2 n))
-                                    ⇒ (subst σ t) ∷ x ^ _)
-                           (PE.trans (PE.trans (substCompEq F)
-                             (substVar-to-subst (λ { 0 → PE.refl
-                                         ; (1+ x) → PE.trans (subst-wk (σ x))
-                                                              (subst-id (σ x))
-                                         })
-                                      F))
-                             (PE.sym (substCompEq F)))
-                           r)
-                        [F[sucn]] y
-    in  [Γ]₃ , modelsTermEq [F[sucn]] d y r
   fundamentalTermEq (natrec-zero {z} {s} {F} ⊢F ⊢z ⊢s)
     with fundamental ⊢F | fundamentalTerm ⊢z | fundamentalTerm ⊢s
   fundamentalTermEq (natrec-zero {z} {s} {F} {l} ⊢F ⊢z ⊢s) | [Γ] , [F]
@@ -1380,137 +1017,68 @@ abstract
                                     (λ {Δ} {σ} ⊢Δ [σ] → cast-ℕ-S (⊢eΔ {Δ} {σ} ⊢Δ [σ]) (⊢nΔ {Δ} {σ} ⊢Δ [σ]))
                                     [ℕ] [suc-cast]
     in [Γ]₁ , modelsTermEq [ℕ] [id] [suc-cast] [eq]
-  fundamentalTermEq (cast-ℕ2-0 {e} ⊢e) with fundamentalTerm ⊢e
+  fundamentalTermEq {Γ} (cast-Ind-ctr {ind} {j} {e} {args} {Ts} ind∈ eq ⊢e ⊢args) with fundamentalTerm ⊢e
   ... | [Γ] , [Id] , [e]ₜ =
-    let ⊢eΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([Id] {Δ} {σ} ⊢Δ [σ])) (proj₁ ([e]ₜ {Δ} {σ} ⊢Δ [σ]))
-        [zero] = zero2ᵛ {l = ∞} [Γ]
-        [id] , [eq] = redSubstTermᵛ {ℕ2} {cast ⁰ ℕ2 ℕ2 e zero2} {zero2} {∞} [Γ]
-                                    (λ {Δ} {σ} ⊢Δ [σ] → cast-ℕ2-0 (⊢eΔ {Δ} {σ} ⊢Δ [σ]))
-                                    (ℕ2ᵛ [Γ]) [zero]
-    in [Γ] , modelsTermEq (ℕ2ᵛ [Γ]) [id] [zero] [eq]
-  fundamentalTermEq (cast-ℕ2-S {e} {n} ⊢e ⊢n) with fundamentalTerm ⊢e | fundamentalTerm ⊢n
-  ... | [Γ] , [Id] , [e]ₜ | [Γ]₁ , [ℕ2] , [n]ₜ =
-    let [Id]′  = S.irrelevance {A = Id (U _) ℕ2 ℕ2} [Γ] [Γ]₁ [Id]
-        [e]ₜ′ = S.irrelevanceTerm {A = Id (U _) ℕ2 ℕ2} {t = e} [Γ] [Γ]₁ [Id] [Id]′ [e]ₜ
-        ⊢eΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([Id]′ {Δ} {σ} ⊢Δ [σ])) (proj₁ ([e]ₜ′ {Δ} {σ} ⊢Δ [σ]))
-        ⊢nΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([ℕ2] {Δ} {σ} ⊢Δ [σ])) (proj₁ ([n]ₜ {Δ} {σ} ⊢Δ [σ]))
-        [suc-cast] = suc2ᵛ {n = cast ⁰ ℕ2 ℕ2 e n} [Γ]₁ [ℕ2] (castᵗᵛ {ℕ2} {ℕ2} { ! } {n} {e} [Γ]₁ (maybeEmbᵛ {A = Univ _ _} [Γ]₁ (Uᵛ emb< [Γ]₁))
-                                                                (ℕ2ᵗᵛ [Γ]₁) (ℕ2ᵗᵛ [Γ]₁) [ℕ2] [ℕ2] [n]ₜ [Id]′ [e]ₜ′)
-        [id] , [eq] = redSubstTermᵛ {ℕ2} {cast ⁰ ℕ2 ℕ2 e (suc2 n)} {suc2 (cast ⁰ ℕ2 ℕ2 e n)} {∞} [Γ]₁
-                                    (λ {Δ} {σ} ⊢Δ [σ] → cast-ℕ2-S (⊢eΔ {Δ} {σ} ⊢Δ [σ]) (⊢nΔ {Δ} {σ} ⊢Δ [σ]))
-                                    [ℕ2] [suc-cast]
-    in [Γ]₁ , modelsTermEq [ℕ2] [id] [suc-cast] [eq]
-  -- Clone of cast-ℕ2-S: redSubstTermᵛ + ctrᵛ of cast-mapped args (via castᵗᵛ).
-  fundamentalTermEq {Γ} (cast-Ind-ctr {i} {j} {e} {args} ⊢e ⊢args) with fundamentalTerm ⊢e
-  ... | [Γ] , [Id] , [e]ₜ =
-    let [Ind] = Indᵛ {i = i} {l = ∞} [Γ]
-        [args]ᵥ = fundamentalAllInd {i = i} {j = j} {args = args} [Γ] [Ind] ⊢args
+    let [Ind] = Indᵛ {i = (SU.SInd.name ind)} {l = ∞} [Γ]
+        [args]ᵥ = fundamentalAllInd {ind = ind} {j = j} {Ts = Ts} {args = args} [Γ] [Ind] eq ⊢args
         [U] = maybeEmbᵛ {A = Univ _ _} [Γ] (Uᵛ emb< [Γ])
-        [Indᵗ] = maybeEmbTermᵛ {A = Univ _ _} {t = Ind i} [Γ] (Uᵛ emb< [Γ]) (Indᵗᵛ [Γ])
-        castArgs = map (λ a → cast ⁰ (Ind i) (Ind i) e a) args
+        [Indᵗ] = maybeEmbTermᵛ {A = Univ _ _} {t = Ind (SU.SInd.name ind)} [Γ] (Uᵛ emb< [Γ]) (Indᵗᵛ [Γ])
+        castArgs = map (λ a → cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e a) args
         [cast-args]ᵥ = mapCastArgs [Γ] [Ind] [U] [Indᵗ] [Id] [e]ₜ [args]ᵥ
-        ⊢cast-args = mapCastAll [Γ] ⊢e (all∈ (SU.ctrArgsTypesPositive i j)) ⊢args
-        [ctr-cast] = ctrᵛ {i = i} {j = j} {args = castArgs} {l = ∞} [Γ] [Ind] ⊢cast-args [cast-args]ᵥ
+        ⊢cast-args = mapCastAll [Γ] ⊢e (all∈ (SU.ctrArgsTypesPositive ind j Ts eq)) ⊢args
+        [ctr-cast] = ctrᵛ {ind = ind} {j = j} {args = castArgs} {Ts = Ts} {l = ∞}
+                          [Γ] [Ind] ind∈ eq ⊢cast-args [cast-args]ᵥ
         ⊢eΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([Id] {Δ} {σ} ⊢Δ [σ])) (proj₁ ([e]ₜ {Δ} {σ} ⊢Δ [σ]))
-        [id] , [eq] = redSubstTermᵛ {Ind i} {cast ⁰ (Ind i) (Ind i) e (ctr i j args)}
-                                    {ctr i j castArgs} {∞} [Γ]
+        [id] , [eq] = redSubstTermᵛ {Ind (SU.SInd.name ind)} {cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e (ctr (SU.SInd.name ind) j args)}
+                                    {ctr (SU.SInd.name ind) j castArgs} {∞} [Γ]
                                     (λ {Δ} {σ} ⊢Δ [σ] →
-                                       let step = cast-Ind-ctr (⊢eΔ {Δ} {σ} ⊢Δ [σ])
+                                       let step = cast-Ind-ctr ind∈ eq (⊢eΔ {Δ} {σ} ⊢Δ [σ])
                                                               (substAll-ctrArgs {σ = σ} [Γ] ⊢Δ [σ] ⊢args)
-                                           lhs≡ = PE.cong (cast ⁰ (Ind i) (Ind i) (subst σ e))
-                                                          (subst-ctr σ i j args)
-                                           rhs≡ = PE.trans (subst-ctr σ i j castArgs)
-                                                    (PE.cong (ctr i j)
-                                                      (PE.trans (map-map (subst σ) (λ a → cast ⁰ (Ind i) (Ind i) e a) args)
-                                                        (PE.sym (map-map (λ a → cast ⁰ (Ind i) (Ind i) (subst σ e) a)
+                                           lhs≡ = PE.cong (cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) (subst σ e))
+                                                          (subst-ctr σ (SU.SInd.name ind) j args)
+                                           rhs≡ = PE.trans (subst-ctr σ (SU.SInd.name ind) j castArgs)
+                                                    (PE.cong (ctr (SU.SInd.name ind) j)
+                                                      (PE.trans (map-map (subst σ) (λ a → cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e a) args)
+                                                        (PE.sym (map-map (λ a → cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) (subst σ e) a)
                                                                          (subst σ) args))))
-                                       in PE.subst₂ (λ t u → Δ ⊢ t ⇒ u ∷ Ind i ^ ι ⁰)
+                                       in PE.subst₂ (λ t u → Δ ⊢ t ⇒ u ∷ Ind (SU.SInd.name ind) ^ ι ⁰)
                                             (PE.sym lhs≡) (PE.sym rhs≡) step)
                                     [Ind] [ctr-cast]
     in [Γ] , modelsTermEq [Ind] [id] [ctr-cast] [eq]
     where
-      emb-stype-pos : ∀ (T : SU.Type) → SU.isPositive i T → emb-stype T PE.≡ Ind i
+
+      emb-stype-pos : ∀ (T : SU.Type) → SU.isPositive (SU.SInd.name ind) T → emb-stype T PE.≡ Ind (SU.SInd.name ind)
       emb-stype-pos (SU.Ind j′) i≡i = PE.cong Ind (PE.sym i≡i)
       emb-stype-pos (SU.Arrow _ _) ()
 
       mapCastArgs : ∀ {args′} ([Γ]′ : ⊩ᵛ Γ)
-                  → ([Ind]′ : Γ ⊩ᵛ⟨ ∞ ⟩ Ind i ^ [ ! , ι ⁰ ] / [Γ]′)
+                  → ([Ind]′ : Γ ⊩ᵛ⟨ ∞ ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ]′)
                   → ([U]′ : Γ ⊩ᵛ⟨ ∞ ⟩ Univ ! ⁰ ^ [ ! , ι ¹ ] / [Γ]′)
-                  → ([Indᵗ]′ : Γ ⊩ᵛ⟨ ∞ ⟩ Ind i ∷ Univ ! ⁰ ^ [ ! , ι ¹ ] / [Γ]′ / [U]′)
-                  → ([Id]′ : Γ ⊩ᵛ⟨ ∞ ⟩ Id (U ⁰) (Ind i) (Ind i) ^ [ % , ι ⁰ ] / [Γ]′)
-                  → ([e]ₜ′ : Γ ⊩ᵛ⟨ ∞ ⟩ e ∷ Id (U ⁰) (Ind i) (Ind i) ^ [ % , ι ⁰ ] / [Γ]′ / [Id]′)
-                  → All (λ a → Γ ⊩ᵛ⟨ ∞ ⟩ a ∷ Ind i ^ [ ! , ι ⁰ ] / [Γ]′ / [Ind]′) args′
-                  → All (λ a → Γ ⊩ᵛ⟨ ∞ ⟩ a ∷ Ind i ^ [ ! , ι ⁰ ] / [Γ]′ / [Ind]′)
-                        (map (λ a → cast ⁰ (Ind i) (Ind i) e a) args′)
+                  → ([Indᵗ]′ : Γ ⊩ᵛ⟨ ∞ ⟩ Ind (SU.SInd.name ind) ∷ Univ ! ⁰ ^ [ ! , ι ¹ ] / [Γ]′ / [U]′)
+                  → ([Id]′ : Γ ⊩ᵛ⟨ ∞ ⟩ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ] / [Γ]′)
+                  → ([e]ₜ′ : Γ ⊩ᵛ⟨ ∞ ⟩ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ] / [Γ]′ / [Id]′)
+                  → All (λ a → Γ ⊩ᵛ⟨ ∞ ⟩ a ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ]′ / [Ind]′) args′
+                  → All (λ a → Γ ⊩ᵛ⟨ ∞ ⟩ a ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ]′ / [Ind]′)
+                        (map (λ a → cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e a) args′)
       mapCastArgs _ _ _ _ _ _ []ₐ = []ₐ
       mapCastArgs {args′ = a List∷ as} [Γ]′ [Ind]′ [U]′ [Indᵗ]′ [Id]′ [e]ₜ′ ([a]ₜ ∷ₐ [as]ₜ) =
-        castᵗᵛ {Ind i} {Ind i} { ! } {a} {e} [Γ]′ [U]′ [Indᵗ]′ [Indᵗ]′ [Ind]′ [Ind]′ [a]ₜ [Id]′ [e]ₜ′
+        castᵗᵛ {Ind (SU.SInd.name ind)} {Ind (SU.SInd.name ind)} { ! } {a} {e} [Γ]′ [U]′ [Indᵗ]′ [Indᵗ]′ [Ind]′ [Ind]′ [a]ₜ [Id]′ [e]ₜ′
         ∷ₐ mapCastArgs [Γ]′ [Ind]′ [U]′ [Indᵗ]′ [Id]′ [e]ₜ′ [as]ₜ
 
       mapCastAll : ([Γ]′ : ⊩ᵛ Γ)
-                 → Γ ⊢ e ∷ Id (U ⁰) (Ind i) (Ind i) ^ [ % , ι ⁰ ]
+                 → Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ]
                  → ∀ {args′} {Ts : List SU.Type}
-                 → All (SU.isPositive i) Ts
+                 → All (SU.isPositive (SU.SInd.name ind)) Ts
                  → Γ ⊢All args′ ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
-                 → Γ ⊢All map (λ a → cast ⁰ (Ind i) (Ind i) e a) args′ ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+                 → Γ ⊢All map (λ a → cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e a) args′ ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
       mapCastAll _ _ []ₐ εⱼ = εⱼ
       mapCastAll [Γ]′ ⊢e′ (pos ∷ₐ poss) (consⱼ ⊢t ⊢ts) =
         let emb≡Ind = emb-stype-pos _ pos
             ⊢tInd = PE.subst (λ A → _ ⊢ _ ∷ A ^ [ ! , ι ⁰ ]) emb≡Ind ⊢t
             ⊢cast = castⱼ (Indⱼ (soundContext [Γ]′)) (Indⱼ (soundContext [Γ]′)) ⊢e′ ⊢tInd
-            ⊢cast′ = PE.subst (λ A → _ ⊢ cast ⁰ (Ind i) (Ind i) e _ ∷ A ^ [ ! , ι ⁰ ])
+            ⊢cast′ = PE.subst (λ A → _ ⊢ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e _ ∷ A ^ [ ! , ι ⁰ ])
                               (PE.sym emb≡Ind) ⊢cast
         in  consⱼ ⊢cast′ (mapCastAll [Γ]′ ⊢e′ poss ⊢ts)
-  fundamentalTermEq {Γ} (cast-equiv-fwd {e} {n} ⊢e ⊢n) with fundamentalTerm ⊢e | fundamentalTerm ⊢n
-  ... | [Γ] , [Id] , [e]ₜ | [Γ]₁ , [ℕ] , [n]ₜ =
-    let [Id]′  = S.irrelevance {A = Id (U _) ℕ ℕ2} [Γ] [Γ]₁ [Id]
-        [e]ₜ′ = S.irrelevanceTerm {A = Id (U _) ℕ ℕ2} {t = e} [Γ] [Γ]₁ [Id] [Id]′ [e]ₜ
-        ⊢eΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([Id]′ {Δ} {σ} ⊢Δ [σ])) (proj₁ ([e]ₜ′ {Δ} {σ} ⊢Δ [σ]))
-        ⊢nΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([ℕ] {Δ} {σ} ⊢Δ [σ])) (proj₁ ([n]ₜ {Δ} {σ} ⊢Δ [σ]))
-        [ℕ2] = ℕ2ᵛ {l = ∞} [Γ]₁
-        [Π] = Πℕℕ2ᵛ [Γ]₁
-        [G] : Γ ∙ ℕ ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ ∞ ⟩ wk1 ℕ2 ^ [ ! , ι ⁰ ] / [Γ]₁ ∙ [ℕ]
-        [G] {Δ} {σ} ⊢Δ [σ] =
-          wk1ᵛ {A = ℕ2} {F = ℕ} {rA = [ ! , ι ⁰ ]} {rF = [ ! , ι ⁰ ]} {l = ∞} {l' = ∞}
-                [Γ]₁ [ℕ] [ℕ2] {Δ = Δ} {σ = σ} ⊢Δ [σ]
-        [ℕ2ₙ] = substSΠ {F = ℕ} {G = wk1 ℕ2} {t = n} {rF = !} {lF = ⁰} {lG = ⁰} {lΠ = ⁰} {l = ∞}
-                          [Γ]₁ [ℕ] [Π] [n]ₜ
-        [fwd∘n] = appᵛ {F = ℕ} {G = wk1 ℕ2} {rF = !} {lF = ⁰} {lG = ⁰} {lΠ = ⁰}
-                       {t = emb_oterm_term (E.Equiv.fwd equiv)} {u = n} {l = ∞}
-                       [Γ]₁ [ℕ] (λ {Δ} {σ} ⊢Δ [σ] → [G] {Δ = Δ} {σ = σ} ⊢Δ [σ]) [Π] (embFwdᵛ [Γ]₁) [n]ₜ
-        [id] , [eq] = redSubstTermᵛ {ℕ2} {cast ⁰ ℕ ℕ2 e n}
-                                    {(emb_oterm_term (E.Equiv.fwd equiv)) ∘ n ^ ⁰} {∞} [Γ]₁
-                                    (λ {Δ} {σ} ⊢Δ [σ] →
-                                       cast-equiv-fwd-subst {Δ = Δ} {σ = σ} {e = e} {n = n} ⊢Δ
-                                         (⊢eΔ {Δ} {σ} ⊢Δ [σ])
-                                         (⊢nΔ {Δ} {σ} ⊢Δ [σ]))
-                                    [ℕ2ₙ] [fwd∘n]
-    in [Γ]₁ , modelsTermEq [ℕ2ₙ] [id] [fwd∘n] [eq]
-  fundamentalTermEq {Γ} (cast-equiv-bwd {e} {n} ⊢e ⊢n) with fundamentalTerm ⊢e | fundamentalTerm ⊢n
-  ... | [Γ] , [Id] , [e]ₜ | [Γ]₁ , [ℕ2] , [n]ₜ =
-    let [Id]′  = S.irrelevance {A = Id (U _) ℕ2 ℕ} [Γ] [Γ]₁ [Id]
-        [e]ₜ′ = S.irrelevanceTerm {A = Id (U _) ℕ2 ℕ} {t = e} [Γ] [Γ]₁ [Id] [Id]′ [e]ₜ
-        ⊢eΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([Id]′ {Δ} {σ} ⊢Δ [σ])) (proj₁ ([e]ₜ′ {Δ} {σ} ⊢Δ [σ]))
-        ⊢nΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([ℕ2] {Δ} {σ} ⊢Δ [σ])) (proj₁ ([n]ₜ {Δ} {σ} ⊢Δ [σ]))
-        [ℕ] = ℕᵛ {l = ∞} [Γ]₁
-        [Π] = Πℕ2ℕᵛ [Γ]₁
-        [G] : Γ ∙ ℕ2 ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ ∞ ⟩ wk1 ℕ ^ [ ! , ι ⁰ ] / [Γ]₁ ∙ [ℕ2]
-        [G] {Δ} {σ} ⊢Δ [σ] =
-          wk1ᵛ {A = ℕ} {F = ℕ2} {rA = [ ! , ι ⁰ ]} {rF = [ ! , ι ⁰ ]} {l = ∞} {l' = ∞}
-                [Γ]₁ [ℕ2] [ℕ] {Δ = Δ} {σ = σ} ⊢Δ [σ]
-        [ℕₙ] = substSΠ {F = ℕ2} {G = wk1 ℕ} {t = n} {rF = !} {lF = ⁰} {lG = ⁰} {lΠ = ⁰} {l = ∞}
-                       [Γ]₁ [ℕ2] [Π] [n]ₜ
-        [bwd∘n] = appᵛ {F = ℕ2} {G = wk1 ℕ} {rF = !} {lF = ⁰} {lG = ⁰} {lΠ = ⁰}
-                       {t = emb_oterm_term (E.Equiv.bwd equiv)} {u = n} {l = ∞}
-                       [Γ]₁ [ℕ2] (λ {Δ} {σ} ⊢Δ [σ] → [G] {Δ = Δ} {σ = σ} ⊢Δ [σ]) [Π] (embBwdᵛ [Γ]₁) [n]ₜ
-        [id] , [eq] = redSubstTermᵛ {ℕ} {cast ⁰ ℕ2 ℕ e n}
-                                    {(emb_oterm_term (E.Equiv.bwd equiv)) ∘ n ^ ⁰} {∞} [Γ]₁
-                                    (λ {Δ} {σ} ⊢Δ [σ] →
-                                       cast-equiv-bwd-subst {Δ = Δ} {σ = σ} {e = e} {n = n} ⊢Δ
-                                         (⊢eΔ {Δ} {σ} ⊢Δ [σ])
-                                         (⊢nΔ {Δ} {σ} ⊢Δ [σ]))
-                                    [ℕₙ] [bwd∘n]
-    in [Γ]₁ , modelsTermEq [ℕₙ] [id] [bwd∘n] [eq]
   fundamentalTermEq {Γ} (cast-Π {A} {A'} {rA} {B} {B'} {e} {f} ⊢A ⊢B ⊢A' ⊢B' ⊢e ⊢f)
     with fundamentalTerm ⊢A | fundamentalTerm ⊢B | fundamentalTerm ⊢A' | fundamentalTerm ⊢B' | fundamentalTerm ⊢e | fundamentalTerm ⊢f 
   ... | [ΓA] , [UA] , [A]ₜ | [ΓB] ∙ [AB] , [UB] , [B]ₜ | [ΓA'] , [UA'] , [A']ₜ | [ΓB'] ∙ [AB'] , [UB'] , [B']ₜ | [Γ] , [Id] , [e]ₜ | [Γ]₁ , [ΠAB] , [f]ₜ =
@@ -1531,17 +1099,18 @@ abstract
      in [Γ]₁ , cast-Πᵗᵛ {A} {B} {A'} {B'} {rA} {Γ} {e} {f} [Γ]₁ [A] [A'] (λ {Δ} {σ} → [UB]′ {Δ} {σ}) (λ {Δ} {σ} → [UB']′ {Δ} {σ})
                       [A]ₜ′ [B]ₜ′ [A']ₜ′ [B']ₜ′ [Id]′ [e]ₜ′ [ΠAB] [f]ₜ
 
-  fundamentalAllInd {Γ} {i} {j} [Γ] [Ind] ⊢args =
-    go (SU.ctrArgsTypeList i j) (all∈ (SU.ctrArgsTypesPositive i j)) ⊢args
+  fundamentalAllInd {Γ} {ind} {j} {Ts} [Γ] [Ind] eq ⊢args =
+    go Ts (all∈ (SU.ctrArgsTypesPositive ind j Ts eq)) ⊢args
     where
-      emb-stype-pos : ∀ (T : SU.Type) → SU.isPositive i T → emb-stype T PE.≡ Ind i
+
+      emb-stype-pos : ∀ (T : SU.Type) → SU.isPositive (SU.SInd.name ind) T → emb-stype T PE.≡ Ind (SU.SInd.name ind)
       emb-stype-pos (SU.Ind j′) i≡i = PE.cong Ind (PE.sym i≡i)
       emb-stype-pos (SU.Arrow _ _) ()
 
       go : ∀ {args} (Ts : List SU.Type)
-         → All (SU.isPositive i) Ts
+         → All (SU.isPositive (SU.SInd.name ind)) Ts
          → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
-         → All (λ a → Γ ⊩ᵛ⟨ ∞ ⟩ a ∷ Ind i ^ [ ! , ι ⁰ ] / [Γ] / [Ind]) args
+         → All (λ a → Γ ⊩ᵛ⟨ ∞ ⟩ a ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind]) args
       go [] []ₐ εⱼ = []ₐ
       go (T List∷ Ts) (pos ∷ₐ poss) (consⱼ {t = t} ⊢t ⊢ts)
         with fundamentalTerm ⊢t
@@ -1552,11 +1121,11 @@ abstract
                              emb≡Ind ([A] , [t])
             [A]′ = proj₁ [At]′
             [t]′ = proj₂ [At]′
-            [t]″ = S.irrelevanceTerm {A = Ind i} {t = t} [Γt] [Γ] [A]′ [Ind] [t]′
+            [t]″ = S.irrelevanceTerm {A = Ind (SU.SInd.name ind)} {t = t} [Γt] [Γ] [A]′ [Ind] [t]′
         in  [t]″ ∷ₐ go Ts poss ⊢ts
 
-  fundamentalAllMethods {Γ} {i} {P} {rG} {lG} {ms} [Γ] ⊢ms =
-    go ms (indRectBranchTyList i P rG lG) ⊢ms
+  fundamentalAllMethods {Γ} {ind} {P} {rG} {lG} {ms} [Γ] ⊢ms =
+    go ms (indRectBranchTyList ind P rG lG) ⊢ms
     where
       go : ∀ ms′ As
          → Γ ⊢All ms′ ∷ As ^ [ rG , ι lG ]
@@ -1612,7 +1181,6 @@ abstract
     in [Γ]₁' , Id-U-ΠΠᵗᵛ [Γ]₁' [A]′ [A']′ (λ {Δ} {σ} → [UB]′ {Δ} {σ}) (λ {Δ} {σ} → [UB']′ {Δ} {σ}) [A]ₜ′ [B]ₜ′ [A']ₜ′ [B']ₜ′
 -}
 
-
 -- Fundamental theorem for substitutions.
 fundamentalSubst : ∀ {Γ Δ σ} (⊢Γ : ⊢ Γ) (⊢Δ : ⊢ Δ)
       → Δ ⊢ˢ σ ∷ Γ
@@ -1665,9 +1233,9 @@ subTerm [Γ] ⊢Δ [σ] ⊢t =
       [σ]′ = S.irrelevanceSubst [Γ] [Γ]₁ ⊢Δ ⊢Δ [σ]
   in  escapeTerm (proj₁ ([A] ⊢Δ [σ]′)) (proj₁ ([t] ⊢Δ [σ]′))
 
-substAll-ctrArgs {Γ} {Δ} {σ} {i} {j} {args} [Γ] ⊢Δ [σ] ⊢args =
+substAll-ctrArgs {Γ} {Δ} {σ} {Ts} {args} [Γ] ⊢Δ [σ] ⊢args =
   PE.subst (λ As → Δ ⊢All map (subst σ) args ∷ As ^ [ ! , ι ⁰ ])
-           (map-subst-emb-stype σ (SU.ctrArgsTypeList i j))
+           (map-subst-emb-stype σ Ts)
            (go ⊢args)
   where
     go : ∀ {args′ As} → Γ ⊢All args′ ∷ As ^ [ ! , ι ⁰ ]
@@ -1675,9 +1243,9 @@ substAll-ctrArgs {Γ} {Δ} {σ} {i} {j} {args} [Γ] ⊢Δ [σ] ⊢args =
     go εⱼ = εⱼ
     go (consⱼ ⊢t ⊢ts) = consⱼ (subTerm [Γ] ⊢Δ [σ] ⊢t) (go ⊢ts)
 
-substAll-indRectBranch {Γ} {Δ} {σ} {i} {P} {rG} {lG} {ms} [Γ] ⊢Δ [σ] ⊢ms =
+substAll-indRectBranch {Γ} {Δ} {σ} {ind} {P} {rG} {lG} {ms} [Γ] ⊢Δ [σ] ⊢ms =
   PE.subst (λ As → Δ ⊢All map (subst σ) ms ∷ As ^ [ rG , ι lG ])
-           (subst-indRectBranchTyList σ i P rG lG)
+           (subst-indRectBranchTyList σ ind P rG lG)
            (go ⊢ms)
   where
     go : ∀ {ms′ As} → Γ ⊢All ms′ ∷ As ^ [ rG , ι lG ]

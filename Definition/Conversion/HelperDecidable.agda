@@ -1,33 +1,34 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Conversion.HelperDecidable where
-open import Definition.Untyped
-open import Definition.Untyped.Properties
-open import Definition.Typed as T
-open import Definition.Typed.Properties
-open import Definition.Conversion
-open import Definition.Conversion.Whnf
-open import Definition.Conversion.Soundness
-open import Definition.Conversion.Symmetry
-open import Definition.Conversion.Transitivity
-open import Definition.Conversion.SymmetrySize
-open import Definition.Conversion.Stability
-open import Definition.Conversion.Conversion
-open import Definition.Conversion.Lift
-open import Definition.Conversion.Inversion
-open import Definition.Conversion.ConvSize
-open import Definition.Conversion.ConversionProp
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.Substitution
-open import Definition.Typed.Consequences.Injectivity
-open import Definition.Typed.Consequences.Reduction
-open import Definition.Typed.Consequences.Equality
-open import Definition.Typed.Consequences.Inequality as IE
-open import Definition.Typed.Consequences.NeTypeEq
-open import Definition.Typed.Consequences.SucCong
-open import Definition.Typed.Consequences.Inversion
-open import Definition.Typed.Consequences.TypeUnicity
-open import Definition.Conversion.Consequences.Completeness
-open import Definition.Conversion.EqRelInstance
+module Definition.Conversion.HelperDecidable (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs as T
+open import Definition.Typed.Properties senv equivs
+open import Definition.Conversion senv equivs
+open import Definition.Conversion.Whnf senv swf equivs
+open import Definition.Conversion.Soundness senv swf equivs
+open import Definition.Conversion.Symmetry senv swf equivs
+open import Definition.Conversion.Transitivity senv swf equivs
+open import Definition.Conversion.SymmetrySize senv swf equivs
+open import Definition.Conversion.Stability senv swf equivs
+open import Definition.Conversion.Conversion senv swf equivs
+open import Definition.Conversion.Lift senv swf equivs
+open import Definition.Conversion.Inversion senv swf equivs
+open import Definition.Conversion.ConvSize senv equivs
+open import Definition.Conversion.ConversionProp senv swf equivs
+open import Definition.Typed.Consequences.Syntactic senv swf equivs
+open import Definition.Typed.Consequences.Substitution senv swf equivs
+open import Definition.Typed.Consequences.Injectivity senv swf equivs
+open import Definition.Typed.Consequences.Reduction senv swf equivs
+open import Definition.Typed.Consequences.Equality senv swf equivs
+open import Definition.Typed.Consequences.Inequality senv swf equivs as IE
+open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
+open import Definition.Typed.Consequences.SucCong senv swf equivs
+open import Definition.Typed.Consequences.Inversion senv swf equivs
+open import Definition.Typed.Consequences.TypeUnicity senv swf equivs
+open import Definition.Conversion.Consequences.Completeness senv swf equivs
+open import Definition.Conversion.EqRelInstance senv swf equivs
 open import Tools.Nat
 open import Tools.Product
 open import Tools.Empty
@@ -56,15 +57,11 @@ neutralconvTerm~↑! neA (ne-ins x x₁ x₂ ([~] A D whnfB k~l)) = _ , k~l
 noNeℕ : Neutral ℕ → ⊥
 noNeℕ ()
 
-noNeℕ2 : Neutral ℕ2 → ⊥
-noNeℕ2 ()
-
 noNe0 : Neutral zero → ⊥
 noNe0 ()
 
 noNeSuc : ∀ {n} → Neutral (suc n) → ⊥
 noNeSuc ()
-
 
 noNeΠ : ∀ {A rA B} → Neutral (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° ⁰ ^ !) → ⊥
 noNeΠ ()
@@ -79,14 +76,8 @@ noNeUniv ()
 neutralZero : Neutral zero → ⊥
 neutralZero ()
 
-neutralZero2 : Neutral zero2 → ⊥
-neutralZero2 ()
-
 neutralSuc : ∀ {n} → Neutral (suc n) → ⊥
 neutralSuc ()
-
-neutralSuc2 : ∀ {n} → Neutral (suc2 n) → ⊥
-neutralSuc2 ()
 
 noℕ~ℕ : ∀ {Γ X l} → Γ ⊢ ℕ ~ ℕ ↓! X ^ l → ⊥
 noℕ~ℕ ()
@@ -99,7 +90,6 @@ sizeSubst₂-gen :  ∀ {A B a b a' b'}
               → (t : P a b)
               → size (PE.subst₂ P ea eb t) PE.≡ size t
 sizeSubst₂-gen _ _ PE.refl PE.refl _ = PE.refl              
-
 
 abstract -- Agda will do some slow unfolding without abstract
  
@@ -135,7 +125,6 @@ abstract -- Agda will do some slow unfolding without abstract
         l≡l , ⊢U≡A = neTypeEq neT ⊢t∷U ⊢t
         A≡U = U≡A-whnf ⊢U≡A whnfA
     in sizeSubst₂-gen (λ X Y → _ ⊢ _ ~ _ ↓! X ^ Y) size~↓! A≡U (PE.sym l≡l) t~u
-
 
 -- Algorithmic equality of variables infers propositional equality.
 strongVarEq : ∀ {m n A Γ l} → Γ ⊢ var n ~ var m ↑! A ^ l → n PE.≡ m
@@ -186,9 +175,8 @@ decConv↓Term-ℕ-ins (zero-refl x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃))
 decConv↓Term-ℕ-ins (zero-refl x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂))
   with ne~↓! x₁
 ... | _ , () , _
-decConv↓Term-ℕ-ins (zero-refl x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂))
-  with ne~↓! x₁
-... | _ , () , _
+decConv↓Term-ℕ-ins (zero-refl x) ([~] .(Ind _) D whnfB (castInd-refl' x₁ x₂)) =
+  ⊥-elim (Ind≢ℕ (whnfRed* D Indₙ))
 decConv↓Term-ℕ-ins (suc-cong x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) =
   let _ , _ , neA = ne~↓! x₁
       e = whnfRed* D (ne neA)
@@ -196,36 +184,8 @@ decConv↓Term-ℕ-ins (suc-cong x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) 
 decConv↓Term-ℕ-ins (suc-cong x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂))
   with ne~↓! x₁
 ... | _ , () , _
-decConv↓Term-ℕ-ins (suc-cong x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂))
-  with ne~↓! x₁
-... | _ , () , _
-
-decConv↓Term-ℕ2-ins : ∀ {t u v Γ l}
- → Γ ⊢ t [conv↓] u ∷ ℕ2 ^ l
- → Γ ⊢ t ~ v ↓! ℕ2 ^ l
- → Γ ⊢ t ~ u ↓! ℕ2 ^ l
-decConv↓Term-ℕ2-ins (ℕ2-ins x) t~t = x
-decConv↓Term-ℕ2-ins (ne-ins x x₁ () x₃) t~t
-decConv↓Term-ℕ2-ins (zero2-refl x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) =
-  let _ , _ , neA = ne~↓! x₁
-      e = whnfRed* D (ne neA)
-  in ⊥-elim (ℕ2≢ne neA (PE.sym e))
-decConv↓Term-ℕ2-ins (zero2-refl x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂))
-  with ne~↓! x₁
-... | _ , () , _
-decConv↓Term-ℕ2-ins (zero2-refl x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂))
-  with ne~↓! x₁
-... | _ , () , _
-decConv↓Term-ℕ2-ins (suc2-cong x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) =
-  let _ , _ , neA = ne~↓! x₁
-      e = whnfRed* D (ne neA)
-  in ⊥-elim (ℕ2≢ne neA (PE.sym e))
-decConv↓Term-ℕ2-ins (suc2-cong x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂))
-  with ne~↓! x₁
-... | _ , () , _
-decConv↓Term-ℕ2-ins (suc2-cong x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂))
-  with ne~↓! x₁
-... | _ , () , _
+decConv↓Term-ℕ-ins (suc-cong x) ([~] .(Ind _) D whnfB (castInd-refl' x₁ x₂)) =
+  ⊥-elim (Ind≢ℕ (whnfRed* D Indₙ))
 
 decConv↓Term-U-ins : ∀ {t u v Γ r lU l}
   → Γ ⊢ t [conv↓] u ∷ Univ r lU ^ l
@@ -240,8 +200,8 @@ decConv↓Term-U-ins (Π-cong x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉) ([~]
 decConv↓Term-U-ins (Π-cong x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉) ([~] .ℕ D whnfB (castℕ-refl' x x₁₀)) =
   let e = whnfRed* D ℕₙ in ⊥-elim (U≢ℕ (PE.sym e))
 
-decConv↓Term-U-ins (Π-cong x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉) ([~] .ℕ2 D whnfB (castℕ2-refl' x x₁₀)) =
-  let e = whnfRed* D ℕ2ₙ in ⊥-elim (U≢ℕ2 (PE.sym e))
+decConv↓Term-U-ins (Π-cong x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉) ([~] .(Ind _) D whnfB (castInd-refl' x x₁₀)) =
+  let e = whnfRed* D Indₙ in ⊥-elim (U≢Ind (PE.sym e))
 
 decConv↓Term-ne-ins : ∀ {t u A Γ l}
   → Neutral A
@@ -265,9 +225,8 @@ decConv↓Term-ℕ (zero-refl x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) ¬u
 decConv↓Term-ℕ (zero-refl x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂)) ¬u~u
  with ne~↓! x₁
 ... | _ , () , _
-decConv↓Term-ℕ (zero-refl x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂)) ¬u~u
- with ne~↓! x₁
-... | _ , () , _
+decConv↓Term-ℕ (zero-refl x) ([~] .(Ind _) D whnfB (castInd-refl' x₁ x₂)) ¬u~u =
+  ⊥-elim (Ind≢ℕ (whnfRed* D Indₙ))
 decConv↓Term-ℕ (suc-cong x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) ¬u~u =
   let _ , _ , neA = ne~↓! x₁
       e = whnfRed* D (ne neA)
@@ -275,37 +234,8 @@ decConv↓Term-ℕ (suc-cong x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) ¬u~
 decConv↓Term-ℕ (suc-cong x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂)) ¬u~u
  with ne~↓! x₁
 ... | _ , () , _
-decConv↓Term-ℕ (suc-cong x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂)) ¬u~u
- with ne~↓! x₁
-... | _ , () , _
-
-decConv↓Term-ℕ2 : ∀ {t u v Γ l}
-  → Γ ⊢ t [conv↓] u ∷ ℕ2 ^ l
-  → Γ ⊢ t ~ v ↓! ℕ2 ^ l
-  → ¬ (Γ ⊢ t ~ u ↓! ℕ2 ^ l)
-  → ⊥
-decConv↓Term-ℕ2 (ℕ2-ins x) t~t ¬u~u = ¬u~u x
-decConv↓Term-ℕ2 (ne-ins x x₁ () x₃) t~t ¬u~u
-decConv↓Term-ℕ2 (zero2-refl x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) ¬u~u =
-  let _ , _ , neA = ne~↓! x₁
-      e = whnfRed* D (ne neA)
-  in ⊥-elim (ℕ2≢ne neA (PE.sym e))
-decConv↓Term-ℕ2 (zero2-refl x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂)) ¬u~u
-  with ne~↓! x₁
-... | _ , () , _
-decConv↓Term-ℕ2 (zero2-refl x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂)) ¬u~u
-  with ne~↓! x₁
-... | _ , () , _
-decConv↓Term-ℕ2 (suc2-cong x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) ¬u~u =
-  let _ , _ , neA = ne~↓! x₁
-      e = whnfRed* D (ne neA)
-  in ⊥-elim (ℕ2≢ne neA (PE.sym e))
-decConv↓Term-ℕ2 (suc2-cong x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂)) ¬u~u
-  with ne~↓! x₁
-... | _ , () , _
-decConv↓Term-ℕ2 (suc2-cong x) ([~] .ℕ2 D whnfB (castℕ2-refl' x₁ x₂)) ¬u~u
-  with ne~↓! x₁
-... | _ , () , _
+decConv↓Term-ℕ (suc-cong x) ([~] .(Ind _) D whnfB (castInd-refl' x₁ x₂)) ¬u~u =
+  ⊥-elim (Ind≢ℕ (whnfRed* D Indₙ))
 
 decConv↓Term-U : ∀ {t u v Γ r lU l}
   → Γ ⊢ t [conv↓] u ∷ Univ r lU ^ l
@@ -319,9 +249,8 @@ decConv↓Term-U (Π-cong x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉ x₁₀) ([~] 
   in ⊥-elim (U≢ne neA (PE.sym e))
 decConv↓Term-U (Π-cong x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉ x₁₀) ([~] .ℕ D whnfB (castℕ-refl' x x₁₀')) ¬u~u =
   let e = whnfRed* D ℕₙ in ⊥-elim (U≢ℕ (PE.sym e))
-decConv↓Term-U (Π-cong x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉ x₁₀) ([~] .ℕ2 D whnfB (castℕ2-refl' x x₁₀')) ¬u~u =
-  let e = whnfRed* D ℕ2ₙ in ⊥-elim (U≢ℕ2 (PE.sym e))
-
+decConv↓Term-U (Π-cong x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉ x₁₀) ([~] .(Ind _) D whnfB (castInd-refl' x x₁₀')) ¬u~u =
+  let e = whnfRed* D Indₙ in ⊥-elim (U≢Ind (PE.sym e))
 
 abstract -- Agda will do some slow unfolding without abstract
 
@@ -397,7 +326,6 @@ abstract
     let whnfM , neA , neB = ne~↓! A~B
     in convConv↓Term (convert~-aux B) (convert~-aux' Γ≡Δ A B A~B) (ne neA) (PE.subst (λ X → _ ⊢ _ [conv↓] _ ∷ _ ^ ι X) (PE.sym (convert~-aux'' Γ≡Δ A B A~B)) t)
 
-
   convert'~size : ∀ {Γ Δ A A' lA B B' lB t u M lM}
     → (Γ≡Δ : ⊢ Γ ≡ Δ)
     → (A~ : Γ ⊢ A ~ A' ↓! U lA ^ next lA)
@@ -411,17 +339,14 @@ abstract
     in PE.trans (convConv↓TermSize (convert~-aux B) (convert~-aux' Γ≡Δ A B A~B) (ne neA) (PE.subst (λ X → _ ⊢ _ [conv↓] _ ∷ _ ^ ι X) (PE.sym (convert~-aux'' Γ≡Δ A B A~B)) t))
                 (sizeSubst-gen (λ X → _ ⊢ _ [conv↓] _ ∷ _ ^ ι X) sizeConv↓Term t (PE.sym (convert~-aux'' Γ≡Δ A B A~B)))
                 
-
 abstract
 
   castℕInv : ∀ {l e t} → Neutral (cast l ℕ ℕ e t) → Neutral t 
   castℕInv (castℕℕₙ net) = net
 
-  castℕ2Inv : ∀ {l e t} → Neutral (cast l ℕ2 ℕ2 e t) → Neutral t 
-  castℕ2Inv (castℕ2ℕ2ₙ net) = net
-
   castIndInv : ∀ {l i e t} → Neutral (cast l (Ind i) (Ind i) e t) → Neutral t
   castIndInv (castIndIndₙ net) = net
+  castIndInv (castIndInd≢ₙ i≢i) = ⊥-elim (i≢i PE.refl)
 
   cast-t-≡ : ∀ {Γ A B B' t t' e X lX} 
                 → Γ ⊢ t' ∷ B' ^ [ ! , ι ⁰ ]

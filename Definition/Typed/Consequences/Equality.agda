@@ -1,19 +1,19 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.Consequences.Equality where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.EqRelInstance
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Properties.Escape
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Fundamental.Reducibility
-open import Definition.Typed.Consequences.Injectivity
+module Definition.Typed.Consequences.Equality (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Properties.Escape senv equivs
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
+open import Definition.Typed.Consequences.Injectivity senv swf equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 {-
-
 
 -- conversion is cumulative 
 
@@ -33,7 +33,6 @@ convCumul′ : ∀ {A B rA lA lA' Γ} → (l< : lA ≤∞ lA') → ([A] : Γ ⊩
 convCumul′ (<∞is≤∞ l<) [A] [A≡B] = {!!}
 convCumul′ (≡is≤∞ PE.refl) [A] [A≡B] = [A≡B]
 
-
 convCumul : ∀ {A B rA lA lA' Γ} → lA ≤∞ lA' → Γ ⊢ A ≡ B ^ [ rA , lA ] → Γ ⊢ A ≡ B ^ [ rA , lA' ]
 convCumul {A} {B} {rA} {lA} {lA'} {Γ} (<∞is≤∞ l<) A≡B =
   let X = reducibleEq A≡B
@@ -51,8 +50,6 @@ convCumul {A} {B} {rA} {lA} {lA'} {Γ} (<∞is≤∞ l<) A≡B =
 --   in {!!}                        
 convCumul (≡is≤∞ PE.refl) A≡B = A≡B
 -}
-
-
 
 U≡A′ : ∀ {A rU Γ l lU nlU } ([U] : Γ ⊩⟨ l ⟩U Univ rU lU ^ nlU) 
     → Γ ⊩⟨ l ⟩ Univ rU lU ≡ A ^ [ ! , nlU ] / (U-intr [U])
@@ -101,25 +98,6 @@ U≡A-whnf {A} X whnfA = whnfRed* (U≡A X) whnfA
       [A] = proj₁ (proj₂ X)
       [ℕ≡A] = proj₂ (proj₂ X)
   in ℕ≡A′ (ℕ-elim [ℕ]) (irrelevanceEq [ℕ] (ℕ-intr (ℕ-elim [ℕ])) [ℕ≡A]) whnfA
-
-ℕ2≡A′ : ∀ {A Γ l} ([ℕ2] : Γ ⊩⟨ l ⟩ℕ2 ℕ2)
-    → Γ ⊩⟨ l ⟩ ℕ2 ≡ A ^ [ ! , ι ⁰ ] / (ℕ2-intr [ℕ2])
-    → Whnf A
-    → A PE.≡ ℕ2
-ℕ2≡A′ (noemb x) [ℕ2≡A] whnfA = whnfRed* [ℕ2≡A] whnfA
-ℕ2≡A′ (emb emb< [ℕ2]) [ℕ2≡A] whnfA = ℕ2≡A′ [ℕ2] [ℕ2≡A] whnfA
-ℕ2≡A′ (emb ∞< [ℕ2]) [ℕ2≡A] whnfA = ℕ2≡A′ [ℕ2] [ℕ2≡A] whnfA
-
-ℕ2≡A : ∀ {A Γ}
-    → Γ ⊢ ℕ2 ≡ A ^ [ ! , ι ⁰ ]
-    → Whnf A
-    → A PE.≡ ℕ2
-ℕ2≡A {A} ℕ2≡A whnfA =
-  let X = reducibleEq ℕ2≡A
-      [ℕ2] = proj₁ X
-      [A] = proj₁ (proj₂ X)
-      [ℕ2≡A] = proj₂ (proj₂ X)
-  in ℕ2≡A′ (ℕ2-elim [ℕ2]) (irrelevanceEq [ℕ2] (ℕ2-intr (ℕ2-elim [ℕ2])) [ℕ2≡A]) whnfA
 
 Ind≡A′ : ∀ {A Γ l i} ([Ind] : Γ ⊩⟨ l ⟩Ind (Ind i) ^ i)
     → Γ ⊩⟨ l ⟩ Ind i ≡ A ^ [ ! , ι ⁰ ] / (Ind-intr [Ind])
@@ -185,7 +163,6 @@ ne≡A {A} neK ne≡A whnfA =
       [ne≡A] = proj₂ (proj₂ X)
   in ne≡A′ (ne-elim neK [ne])
         (irrelevanceEq [ne] (ne-intr (ne-elim neK [ne])) [ne≡A]) whnfA
-
 
 Π≡A′ : ∀ {A F G rF lF lG lΠ Γ l} ([Π] : Γ ⊩⟨ l ⟩Π Π F ^ rF ° lF ▹ G ° lG ° lΠ ^ ! ^[ lΠ ] )
     → Γ ⊩⟨ l ⟩ Π F ^ rF ° lF ▹ G ° lG ° lΠ ^ ! ≡ A ^ [ ! ,  ι lΠ ] / (Π-intr [Π])

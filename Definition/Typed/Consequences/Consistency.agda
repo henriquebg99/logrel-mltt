@@ -1,13 +1,14 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.Consequences.Consistency where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.EqRelInstance
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Fundamental.Reducibility
+module Definition.Typed.Consequences.Consistency (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
 open import Tools.Empty
 open import Tools.Product
 import Tools.PropositionalEquality as PE

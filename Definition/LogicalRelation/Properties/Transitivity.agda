@@ -1,17 +1,20 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Properties.Transitivity {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Properties.Transitivity (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped
-open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.Weakening renaming (wk to TWwk)
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Properties.Escape
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.Properties.Conversion
+open import Definition.Untyped senv
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Weakening senv equivs renaming (wk to TWwk)
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Properties.Escape senv equivs
+open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.Properties.Conversion senv equivs
 open import Tools.Product
 open import Tools.Empty
 open import Tools.List using (All₂; []ₐ; _∷ₐ_)
@@ -32,7 +35,6 @@ mutual
     in
     PE.subst₂ (λ X Y → _ ⊢ _ ⇒* Univ X Y ^ [ ! , _ ]) (PE.sym r≡r) (PE.sym l≡l) B≡C
   transEqT (ℕᵥ D D′ D″) A≡B B≡C = B≡C
-  transEqT (ℕ2ᵥ D D′ D″) A≡B B≡C = B≡C
   transEqT (Indᵥ D D′ D″) A≡B B≡C = B≡C
   transEqT (Emptyᵥ D D′ D″) A≡B B≡C = B≡C
   transEqT (ne (ne K [[ ⊢A , ⊢B , D ]] neK K≡K) (ne K₁ D₁ neK₁ _)
@@ -140,7 +142,6 @@ mutual
            → Γ ⊩⟨ l ⟩  A ≡ C  ^ [ r , ll ] / [A]
   transEq′ PE.refl PE.refl PE.refl PE.refl PE.refl PE.refl [A] [B] [C] A≡B B≡C = transEq [A] [B] [C] A≡B B≡C
 
-
 transEqTermNe : ∀ {Γ n n′ n″ A r}
               → Γ ⊩neNf n  ≡ n′  ∷ A ^ r
               → Γ ⊩neNf n′ ≡ n″ ∷ A ^ r
@@ -172,31 +173,6 @@ mutual
   transNatural-prop prop zeroᵣ = prop
   transNatural-prop (ne (neNfₜ₌ neK () k≡m)) (sucᵣ x₃)
   transNatural-prop (ne [k≡k′]) (ne [k′≡k″]) =
-    ne (transEqTermNe [k≡k′] [k′≡k″])
-
-  transEqTermℕ2 : ∀ {Γ n n′ n″}
-               → Γ ⊩ℕ2 n  ≡ n′  ∷ℕ2
-               → Γ ⊩ℕ2 n′ ≡ n″ ∷ℕ2
-               → Γ ⊩ℕ2 n  ≡ n″ ∷ℕ2
-  transEqTermℕ2 (ℕ2ₜ₌ k k′ d d′ t≡u prop)
-               (ℕ2ₜ₌ k₁ k″ d₁ d″ t≡u₁ prop₁) =
-    let k₁Whnf = natural2Whnf (proj₁ (split2 prop₁))
-        k′Whnf = natural2Whnf (proj₂ (split2 prop))
-        k₁≡k′ = whrDet*Term (redₜ d₁ , k₁Whnf) (redₜ d′ , k′Whnf)
-        prop′ = PE.subst (λ x → [Natural2]-prop _ x _) k₁≡k′ prop₁
-    in  ℕ2ₜ₌ k k″ d d″ (≅ₜ-trans t≡u (PE.subst (λ x → _ ⊢ x ≅ _ ∷ _ ^ _) k₁≡k′ t≡u₁))
-            (transNatural2-prop prop prop′)
-
-  transNatural2-prop : ∀ {Γ k k′ k″}
-                    → [Natural2]-prop Γ k k′
-                    → [Natural2]-prop Γ k′ k″
-                    → [Natural2]-prop Γ k k″
-  transNatural2-prop (suc2ᵣ x) (suc2ᵣ x₁) = suc2ᵣ (transEqTermℕ2 x x₁)
-  transNatural2-prop (suc2ᵣ x) (ne (neNfₜ₌ () neM k≡m))
-  transNatural2-prop zero2ᵣ prop₁ = prop₁
-  transNatural2-prop prop zero2ᵣ = prop
-  transNatural2-prop (ne (neNfₜ₌ neK () k≡m)) (suc2ᵣ x₃)
-  transNatural2-prop (ne [k≡k′]) (ne [k′≡k″]) =
     ne (transEqTermNe [k≡k′] [k′≡k″])
 
   transEqTermInd : ∀ {Γ i n n′ n″}
@@ -252,7 +228,6 @@ transEqTermEmpty : ∀ {Γ n n′ n″}
   → Γ ⊩Empty n  ≡ n″ ∷Empty
 transEqTermEmpty (Emptyₜ₌ (ne a b)) (Emptyₜ₌ (ne c d)) = Emptyₜ₌ (ne a d)
 
-
 -- Transitivity of term equality.
 transEqTerm⁰ : ∀ {Γ A t u v r}
                ([A] : Γ ⊩⟨ ι ⁰ ⟩ A ^ r)
@@ -260,7 +235,6 @@ transEqTerm⁰ : ∀ {Γ A t u v r}
              → Γ ⊩⟨ ι ⁰ ⟩ u ≡ v ∷ A ^ r / [A]
              → Γ ⊩⟨ ι ⁰ ⟩ t ≡ v ∷ A ^ r / [A]
 transEqTerm⁰ (ℕᵣ D) [t≡u] [u≡v] = transEqTermℕ [t≡u] [u≡v]
-transEqTerm⁰ (ℕ2ᵣ D) [t≡u] [u≡v] = transEqTermℕ2 [t≡u] [u≡v]
 transEqTerm⁰ (Indᵣ D) [t≡u] [u≡v] = transEqTermInd [t≡u] [u≡v]
 transEqTerm⁰ (Emptyᵣ D) [t≡u] [u≡v] = transEqTermEmpty [t≡u] [u≡v]
 transEqTerm⁰ {r = [ ! , l ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ (neNfₜ₌ neK₁ neM k≡m))
@@ -306,7 +280,6 @@ transEqTerm¹ {Γ} {A} {t} {u} {v} {r} (Uᵣ (Uᵣ rU ⁰ l< eq d)) (Uₜ₌ [t]
   in
   Uₜ₌ [t] [v] A≡C [t≡v]
 transEqTerm¹ (ℕᵣ D) [t≡u] [u≡v] = transEqTermℕ [t≡u] [u≡v]
-transEqTerm¹ (ℕ2ᵣ D) [t≡u] [u≡v] = transEqTermℕ2 [t≡u] [u≡v]
 transEqTerm¹ (Indᵣ D) [t≡u] [u≡v] = transEqTermInd [t≡u] [u≡v]
 transEqTerm¹ (Emptyᵣ D) [t≡u] [u≡v] = transEqTermEmpty [t≡u] [u≡v]
 transEqTerm¹ {r = [ ! , l ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ (neNfₜ₌ neK₁ neM k≡m))
@@ -366,7 +339,6 @@ transEqTerm∞ {Γ} {A} {t} {u} {v} {r} (Uᵣ (Uᵣ rU ¹ l< eq d)) (Uₜ₌ [t]
   in
   Uₜ₌ [t] [v] A≡C [t≡v]
 transEqTerm∞ (ℕᵣ D) [t≡u] [u≡v] = transEqTermℕ [t≡u] [u≡v]
-transEqTerm∞ (ℕ2ᵣ D) [t≡u] [u≡v] = transEqTermℕ2 [t≡u] [u≡v]
 transEqTerm∞ (Indᵣ D) [t≡u] [u≡v] = transEqTermInd [t≡u] [u≡v]
 transEqTerm∞ (Emptyᵣ D) [t≡u] [u≡v] = transEqTermEmpty [t≡u] [u≡v]
 transEqTerm∞ {r = [ ! , l ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ (neNfₜ₌ neK₁ neM k≡m))

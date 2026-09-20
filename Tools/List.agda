@@ -3,7 +3,9 @@
 module Tools.List where
 
 open import Tools.Nat
+open import Tools.Maybe
 open import Tools.Product
+open import Tools.Empty
 open import Tools.PropositionalEquality
 
 infixr 30 _∷_
@@ -130,6 +132,16 @@ map-injective {xs = _ ∷ _} {ys = []} _ ()
 map-injective {xs = _ ∷ xs} {ys = _ ∷ ys} inj eq =
   cong₂ _∷_ (inj (∷-inj₁ eq)) (map-injective inj (∷-inj₂ eq))
 
+∈ₗ-map : ∀ {A B} (f : A → B) {x xs} → x ∈ₗ xs → f x ∈ₗ map f xs
+∈ₗ-map f hereₗ      = hereₗ
+∈ₗ-map f (thereₗ h) = thereₗ (∈ₗ-map f h)
+
+-- Lists without repetitions
+
+data NoDup {A : Set} : List A → Set where
+  []ₙ  : NoDup []
+  _∷ₙ_ : ∀ {x xs} → (x ∈ₗ xs → ⊥) → NoDup xs → NoDup (x ∷ xs)
+
 ∈ₗ-map-1+ : ∀ xs x → x ∈ₗ map 1+ xs →
   ∃ λ y → (x ≡ 1+ y) × (y ∈ₗ xs)
 ∈ₗ-map-1+ [] x ()
@@ -220,3 +232,80 @@ lookupAll₂ : ∀ {A} {P : A → A → Set} {xs ys} (dx dy : A) →
 lookupAll₂ dx dy []ₐ n ()
 lookupAll₂ dx dy (p ∷ₐ _) 0 (leS _) = p
 lookupAll₂ dx dy (_ ∷ₐ ps) (1+ n) (leS h) = lookupAll₂ dx dy ps n h
+
+-- Lookup, [nothing] when the index is out of range
+nth : {A : Set} → List A → Nat → Maybe A
+nth []       _      = nothing
+nth (x ∷ _)  0      = just x
+nth (_ ∷ xs) (1+ n) = nth xs n
+
+nth-∈ₗ : ∀ {A} (xs : List A) n {x : A} → nth xs n ≡ just x → x ∈ₗ xs
+nth-∈ₗ []       n      ()
+nth-∈ₗ (x ∷ xs) 0      refl = hereₗ
+nth-∈ₗ (x ∷ xs) (1+ n) eq   = thereₗ (nth-∈ₗ xs n eq)
+
+nth-length : ∀ {A} (xs : List A) n {x : A} → nth xs n ≡ just x → n << length xs
+nth-length []       n      ()
+nth-length (x ∷ xs) 0      refl = leS le0
+nth-length (x ∷ xs) (1+ n) eq   = leS (nth-length xs n eq)
+
+nth-map : ∀ {A B} (f : A → B) (xs : List A) n {x : A} →
+  nth xs n ≡ just x → nth (map f xs) n ≡ just (f x)
+nth-map f []       n      ()
+nth-map f (x ∷ xs) 0      refl = refl
+nth-map f (x ∷ xs) (1+ n) eq   = nth-map f xs n eq
+
+nthAll₂ : ∀ {A} {P : A → A → Set} {xs ys x y} → All₂ P xs ys →
+  ∀ n → nth xs n ≡ just x → nth ys n ≡ just y → P x y
+nthAll₂ []ₐ       n      ()   _
+nthAll₂ (p ∷ₐ _)  0      refl refl = p
+nthAll₂ (_ ∷ₐ ps) (1+ n) eq   eq′  = nthAll₂ ps n eq eq′
+
+nthAll₃ : ∀ {A B C} {P : A → B → C → Set} {xs ys zs x y z} → All₃ P xs ys zs →
+  ∀ n → nth xs n ≡ just x → nth ys n ≡ just y → nth zs n ≡ just z → P x y z
+nthAll₃ []ₐ       n      ()   _    _
+nthAll₃ (p ∷ₐ _)  0      refl refl refl = p
+nthAll₃ (_ ∷ₐ ps) (1+ n) eq   eq′  eq″  = nthAll₃ ps n eq eq′ eq″
+
+nth-lookupDefault : ∀ {A} (d : A) xs n → n << length xs →
+  nth xs n ≡ just (lookupDefault d xs n)
+nth-lookupDefault d []       n      ()
+nth-lookupDefault d (x ∷ xs) 0      _        = refl
+nth-lookupDefault d (x ∷ xs) (1+ n) (leS h)  = nth-lookupDefault d xs n h
+
+-- Indexing a list by its own positions, as in [combine (seq 0 n) xs]
+map-zip-range : ∀ {A B} (f : A → B) (xs : List A) →
+  map f xs ≡ map (λ p → f (proj₂ p)) (zip (range (length xs)) xs)
+map-zip-range f [] = refl
+map-zip-range f (x ∷ xs) =
+  trans (cong (f x ∷_) (map-zip-range f xs))
+    (sym (trans (cong (map (λ p → f (proj₂ p))) (zip-range-cons x xs))
+      (cong (f x ∷_) (map-shift (zip (range (length xs)) xs)))))
+  where
+  map-shift : ∀ ys →
+    map (λ p → f (proj₂ p)) (map (λ q → (1+ (proj₁ q) , proj₂ q)) ys)
+    ≡ map (λ p → f (proj₂ p)) ys
+  map-shift []       = refl
+  map-shift (y ∷ ys) = cong (f (proj₂ y) ∷_) (map-shift ys)
+
+nth-zip-range : ∀ {A} (xs : List A) n {x : A} → nth xs n ≡ just x →
+  nth (zip (range (length xs)) xs) n ≡ just (n , x)
+nth-zip-range []       n      ()
+nth-zip-range (y ∷ ys) 0      refl =
+  cong (λ l → nth l 0) (zip-range-cons y ys)
+nth-zip-range (y ∷ ys) (1+ n) eq =
+  trans (cong (λ l → nth l (1+ n)) (zip-range-cons y ys))
+        (nth-map (λ p → (1+ (proj₁ p) , proj₂ p))
+                 (zip (range (length ys)) ys) n (nth-zip-range ys n eq))
+
+zip-range-nth : ∀ {A} (xs : List A) p →
+  p ∈ₗ zip (range (length xs)) xs → nth xs (proj₁ p) ≡ just (proj₂ p)
+zip-range-nth []       p ()
+zip-range-nth (x ∷ xs) p h = go (subst (p ∈ₗ_) (zip-range-cons x xs) h)
+  where
+  shift = λ (q : Nat × _) → (1+ (proj₁ q) , proj₂ q)
+  go : p ∈ₗ ((0 , x) ∷ map shift (zip (range (length xs)) xs))
+     → nth (x ∷ xs) (proj₁ p) ≡ just (proj₂ p)
+  go hereₗ = refl
+  go (thereₗ h′) with ∈ₗ-map-inv shift (zip (range (length xs)) xs) p h′
+  ... | q , refl , q∈ = zip-range-nth xs q q∈

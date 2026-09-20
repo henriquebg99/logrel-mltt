@@ -1,15 +1,16 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Conversion.Conversion where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.RedSteps
-open import Definition.Typed.Properties
-open import Definition.Conversion
-open import Definition.Conversion.Stability
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.Injectivity
-open import Definition.Typed.Consequences.Equality
-open import Definition.Typed.Consequences.Reduction
+module Definition.Conversion.Conversion (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.RedSteps senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Conversion senv equivs
+open import Definition.Conversion.Stability senv swf equivs
+open import Definition.Typed.Consequences.Syntactic senv swf equivs
+open import Definition.Typed.Consequences.Injectivity senv swf equivs
+open import Definition.Typed.Consequences.Equality senv swf equivs
+open import Definition.Typed.Consequences.Reduction senv swf equivs
 open import Tools.Product
 open import Tools.List using (All₂; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
@@ -41,10 +42,6 @@ mutual
     let eqN = ℕ≡A A≡B whnfB 
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
                 (ℕ-ins (stability~↓! Γ≡Δ x))
-  convConv↓Term Γ≡Δ A≡B whnfB (ℕ2-ins x) =
-    let eqN = ℕ2≡A A≡B whnfB 
-    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
-                (ℕ2-ins (stability~↓! Γ≡Δ x))
   convConv↓Term Γ≡Δ A≡B whnfB (Ind-ins x) =
     let eqN = Ind≡A A≡B whnfB 
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
@@ -61,19 +58,10 @@ mutual
         _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
        (zero-refl ⊢Δ)
-  convConv↓Term Γ≡Δ A≡B whnfB (zero2-refl x) =
-    let eqN = ℕ2≡A A≡B whnfB 
-        _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
-       (zero2-refl ⊢Δ)
   convConv↓Term Γ≡Δ A≡B whnfB (suc-cong x) =
     let eqN = ℕ≡A A≡B whnfB 
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
                 (suc-cong (stabilityConv↑Term Γ≡Δ x))
-  convConv↓Term Γ≡Δ A≡B whnfB (suc2-cong x) =
-    let eqN = ℕ2≡A A≡B whnfB 
-    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
-                (suc2-cong (stabilityConv↑Term Γ≡Δ x))
   convConv↓Term Γ≡Δ A≡B whnfB (η-eq l< l<' x x₁ x₂ y y₁ x₃) =
     let F′ , G′ , eqΠ = Π≡A A≡B whnfB
         A≡B' = PE.subst (λ X → _ ⊢ _ ≡ X ^ _) eqΠ A≡B
@@ -92,10 +80,6 @@ mutual
     let eqU = U≡A-whnf A≡B whnfB
         _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU) (ℕ-refl ⊢Δ)
-  convConv↓Term Γ≡Δ A≡B whnfB (ℕ2-refl x) =
-    let eqU = U≡A-whnf A≡B whnfB
-        _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU) (ℕ2-refl ⊢Δ)
   convConv↓Term Γ≡Δ A≡B whnfB (Empty-refl _) =
     let eqU = U≡A-whnf A≡B whnfB
         _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
@@ -108,11 +92,11 @@ mutual
     let eqU = U≡A-whnf A≡B whnfB
         _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU) (Ind-refl ⊢Δ)
-  convConv↓Term Γ≡Δ A≡B whnfB (ctr-cong ⊢Γ len args) =
+  convConv↓Term Γ≡Δ A≡B whnfB (ctr-cong ⊢Γ ind∈ eq len args) =
     let eqI = Ind≡A A≡B whnfB
         _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqI)
-                (ctr-cong ⊢Δ len (All₂-conv Γ≡Δ args))
+                (ctr-cong ⊢Δ ind∈ eq len (All₂-conv Γ≡Δ args))
 
   convConv↓Term Γ≡Δ A≡B whnfB (Id-cong x x₁ x₂) =
     let eqU = U≡A-whnf A≡B whnfB
@@ -131,8 +115,6 @@ convConvTerm : ∀ {t u A B Γ l}
               → Γ ⊢ A ≡ B ^ [ ! , l ]
               → Γ ⊢ t [conv↑] u ∷ B ^ l
 convConvTerm t<>u A≡B = convConv↑Term (reflConEq (wfEq A≡B)) A≡B t<>u
-
-
 
 conv~↑% : ∀ {t u A B Γ l}
               → Γ ⊢ t ~ u ↑% A ^ l

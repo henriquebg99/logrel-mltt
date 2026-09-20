@@ -1,16 +1,18 @@
-module Definition.OTyped where
-open import Definition.OUntyped
+import Definition.SUntyped as SI
+module Definition.OTyped (senv : SI.SEnv) where
+open import Definition.OUntyped senv
 open import Tools.Nat using (Nat; 1+; _+_; _-_; plusZero; plusSuc; plus-comm; _<<_; _≟_; leS; le0; le-refl; le-plus-left; minus-suc)
 open import Tools.Product
 open import Tools.Empty
 open import Tools.Nullary using (yes; no)
 open import Tools.List using (List; map; foldr; length; range; length-map; range-suc; zip; _∷ʳ_; replicate; replicate-snoc; length-replicate; zip-range-cons; _∈ₗ_; hereₗ; thereₗ; ∈ₗ-map-1+; ∈ₗ-range; ∈ₗ-map-inv; zip-∈ₗ)
+open import Tools.Maybe using (just)
 open import Tools.Inequality using (Bool; true; false; eqb; filter; filter-map; if_then_else_; filter-∈ₗ)
 import Tools.List as TL
 import Tools.PropositionalEquality as PE
 open import Definition.Sort
 import Definition.SUntyped as SU
-import Definition.STyped as ST
+import Definition.STyped senv as ST
 
 infixl 30 _∙_
 infix 30 Πⱼ_▹_▹_▹_
@@ -43,7 +45,6 @@ mutual
          → ⊢ Γ
          → Γ ⊢ (Univ r l) ∷ (Univ ! l') ^ [ ! , next l' ]
     ℕⱼ      : ⊢ Γ → Γ ⊢ ℕ ∷ U ⁰ ^ [ ! , ι ¹ ]
-    ℕ2ⱼ     : ⊢ Γ → Γ ⊢ ℕ2 ∷ U ⁰ ^ [ ! , ι ¹ ]
     Emptyⱼ : ⊢ Γ → Γ ⊢ sEmpty ∷ SProp ^ [ ! , ι ¹ ]
     Πⱼ_▹_▹_▹_ : ∀ {F rF lF G lG r l}
            → (r PE.≡ ! → lF ≤ l × lG ≤ l)
@@ -89,11 +90,6 @@ mutual
     sucⱼ    : ∀ {n}
            → Γ ⊢ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
            → Γ ⊢ suc n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-    zero2ⱼ  : ⊢ Γ
-           → Γ ⊢ zero2 ∷ ℕ2 ^ [ ! , ι ⁰ ]
-    suc2ⱼ   : ∀ {n}
-           → Γ ⊢ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
-           → Γ ⊢ suc2 n ∷ ℕ2 ^ [ ! , ι ⁰ ]
     natrecⱼ : ∀ {G rG lG s z n}
            → (rG PE.≡ % → lG PE.≡ ⁰)
            → Γ ∙ ℕ ^ [ ! ,  ι ⁰ ] ⊢ G ^ [ rG , ι lG ]
@@ -101,24 +97,20 @@ mutual
            → Γ       ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (G ^ rG ° lG ▹▹ G [ suc (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ [ rG , ι lG ]
            → Γ       ⊢ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
            → Γ       ⊢ natrec lG G z s n ∷ G [ n ] ^ [ rG , ι lG ]
-    natrec2ⱼ : ∀ {G rG lG s z n}
-           → (rG PE.≡ % → lG PE.≡ ⁰)
-           → Γ ∙ ℕ2 ^ [ ! , ι ⁰ ] ⊢ G ^ [ rG , ι lG ]
-           → Γ       ⊢ z ∷ G [ zero2 ] ^ [ rG , ι lG ]
-           → Γ       ⊢ s ∷ Π ℕ2 ^ ! ° ⁰ ▹ (G ^ rG ° lG ▹▹ G [ suc2 (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ [ rG , ι lG ]
-           → Γ       ⊢ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
-           → Γ       ⊢ natrec2 lG G z s n ∷ G [ n ] ^ [ rG , ι lG ]
     Indⱼ    : ∀ {n} → ⊢ Γ → Γ ⊢ Ind n ∷ U ⁰ ^ [ ! , ι ¹ ]
-    Ctrⱼ    : ∀ {i j args}
+    Ctrⱼ    : ∀ {ind j args Ts}
            → ⊢ Γ
-           → Γ ⊢All args ∷ map emb-stype-oterm (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
-           → Γ ⊢ ctr i j args ∷ Ind i ^ [ ! , ι ⁰ ]
-    IndRectⱼ : ∀ {i P rG lG t ms}
+           → ind ∈ₗ senv
+           → SU.ctrArgsTypeList ind j PE.≡ just Ts
+           → Γ ⊢All args ∷ map emb-stype-oterm Ts ^ [ ! , ι ⁰ ]
+           → Γ ⊢ ctr (SU.SInd.name ind) j args ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+    IndRectⱼ : ∀ {ind P rG lG t ms}
            → (rG PE.≡ % → lG PE.≡ ⁰)
-           → Γ ⊢ P ∷ Π Ind i ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
-           → Γ ⊢ t ∷ Ind i ^ [ ! , ι ⁰ ]
-           → Γ ⊢All ms ∷ indRectBranchTyList i P rG lG ^ [ rG , ι lG ]
-           → Γ ⊢ IndRect i lG P t ms ∷ (P ∘ t ^ ¹) ^ [ rG , ι lG ]
+           → ind ∈ₗ senv
+           → Γ ⊢ P ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
+           → Γ ⊢ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+           → Γ ⊢All ms ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ]
+           → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ∷ (P ∘ t ^ ¹) ^ [ rG , ι lG ]
     Emptyrecⱼ : ∀ {A lA rA e}
            → Γ ⊢ A ^ [ rA , ι lA ] → Γ ⊢ e ∷ sEmpty ^ [ % ,  ι ⁰ ] -> Γ ⊢ Emptyrec lA ⁰ A e ∷ A ^ [ rA , ι lA ]
     Idⱼ : ∀ {A l t u}
@@ -172,7 +164,6 @@ mutual
            → Γ ⊢ B ≡ C ^ r
            → Γ ⊢ A ≡ C ^ r
 
-
   -- Term equality
   data _⊢_≡_∷_^_ (Γ : Con Term) : Term → Term → Term → TypeInfo → Set where
     refl        : ∀ {t A l}
@@ -218,21 +209,12 @@ mutual
     suc-cong    : ∀ {m n}
                 → Γ ⊢ m ≡ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
                 → Γ ⊢ suc m ≡ suc n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-    suc2-cong   : ∀ {m n}
-                → Γ ⊢ m ≡ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
-                → Γ ⊢ suc2 m ≡ suc2 n ∷ ℕ2 ^ [ ! , ι ⁰ ]
     natrec-cong : ∀ {z z′ s s′ n n′ F F′ l}
                 → Γ ∙ ℕ ^ [ ! ,  ι ⁰ ] ⊢ F ≡ F′ ^ [ ! , ι l ]
                 → Γ     ⊢ z ≡ z′ ∷ F [ zero ] ^ [ ! , ι l ]
                 → Γ     ⊢ s ≡ s′ ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l  ]
                 → Γ     ⊢ n ≡ n′ ∷ ℕ ^ [ ! ,  ι ⁰ ]
                 → Γ     ⊢ natrec l F z s n ≡ natrec l F′ z′ s′ n′ ∷ F [ n ] ^ [ ! , ι l ]
-    natrec2-cong : ∀ {z z′ s s′ n n′ F F′ l}
-                → Γ ∙ ℕ2 ^ [ ! , ι ⁰ ] ⊢ F ≡ F′ ^ [ ! , ι l ]
-                → Γ     ⊢ z ≡ z′ ∷ F [ zero2 ] ^ [ ! , ι l ]
-                → Γ     ⊢ s ≡ s′ ∷ Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc2 (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                → Γ     ⊢ n ≡ n′ ∷ ℕ2 ^ [ ! , ι ⁰ ]
-                → Γ     ⊢ natrec2 l F z s n ≡ natrec2 l F′ z′ s′ n′ ∷ F [ n ] ^ [ ! , ι l ]
     natrec-zero : ∀ {z s F l}
                 → Γ ∙ ℕ ^ [ ! ,  ι ⁰ ] ⊢ F ^ [ ! , ι l ]
                 → Γ     ⊢ z ∷ F [ zero ] ^ [ ! , ι l ]
@@ -245,18 +227,6 @@ mutual
                 → Γ     ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
                 → Γ     ⊢ natrec l F z s (suc n) ≡ (s ∘ n ^ l) ∘ (natrec l F z s n) ^ l
                         ∷ F [ suc n ] ^ [ ! , ι l ]
-    natrec2-zero : ∀ {z s F l}
-                → Γ ∙ ℕ2 ^ [ ! , ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                → Γ     ⊢ z ∷ F [ zero2 ] ^ [ ! , ι l ]
-                → Γ     ⊢ s ∷ Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc2 (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                → Γ     ⊢ natrec2 l F z s zero2 ≡ z ∷ F [ zero2 ] ^ [ ! , ι l ]
-    natrec2-suc  : ∀ {n z s F l}
-                → Γ     ⊢ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
-                → Γ ∙ ℕ2 ^ [ ! , ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                → Γ     ⊢ z ∷ F [ zero2 ] ^ [ ! , ι l ]
-                → Γ     ⊢ s ∷ Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc2 (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                → Γ     ⊢ natrec2 l F z s (suc2 n) ≡ (s ∘ n ^ l) ∘ (natrec2 l F z s n) ^ l
-                        ∷ F [ suc2 n ] ^ [ ! , ι l ]
     Emptyrec-cong : ∀ {A A' l e e'}
                 → Γ ⊢ A ≡ A' ^ [ ! , ι l ]
                 → Γ ⊢ e ∷ sEmpty ^ [ % , ι ⁰ ]
@@ -307,23 +277,14 @@ mutual
                → Γ ⊢ cast ⁰ ℕ ℕ e (suc n)
                    ≡ suc (cast ⁰ ℕ ℕ e n)
                    ∷ ℕ ^ [ ! , ι ⁰ ]
-    cast-ℕ2-0 : ∀ {e}
-               → Γ ⊢ e ∷ Id (U ⁰) ℕ2 ℕ2 ^ [ % , ι ⁰ ]
-               → Γ ⊢ cast ⁰ ℕ2 ℕ2 e zero2
-                   ≡ zero2
-                   ∷ ℕ2 ^ [ ! , ι ⁰ ]
-    cast-ℕ2-S : ∀ {e n}
-               → Γ ⊢ e ∷ Id (U ⁰) ℕ2 ℕ2 ^ [ % , ι ⁰ ]
-               → Γ ⊢ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
-               → Γ ⊢ cast ⁰ ℕ2 ℕ2 e (suc2 n)
-                   ≡ suc2 (cast ⁰ ℕ2 ℕ2 e n)
-                   ∷ ℕ2 ^ [ ! , ι ⁰ ]
-    cast-Ind-ctr : ∀ {i j e args}
-               → Γ ⊢ e ∷ Id (U ⁰) (Ind i) (Ind i) ^ [ % , ι ⁰ ]
-               → Γ ⊢All args ∷ map emb-stype-oterm (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
-               → Γ ⊢ cast ⁰ (Ind i) (Ind i) e (ctr i j args)
-                   ≡ ctr i j (map (λ a → cast ⁰ (Ind i) (Ind i) e a) args)
-                   ∷ Ind i ^ [ ! , ι ⁰ ]
+    cast-Ind-ctr : ∀ {ind j e args Ts}
+               → ind ∈ₗ senv
+               → SU.ctrArgsTypeList ind j PE.≡ just Ts
+               → Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ]
+               → Γ ⊢All args ∷ map emb-stype-oterm Ts ^ [ ! , ι ⁰ ]
+               → Γ ⊢ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e (ctr (SU.SInd.name ind) j args)
+                   ≡ ctr (SU.SInd.name ind) j (map (λ a → cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e a) args)
+                   ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
 
 mutual
   data _⊢_⇒_∷_^_ (Γ : Con Term) : Term → Term → Term → TypeLevel → Set where
@@ -351,12 +312,6 @@ mutual
                  → Γ     ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
                  → Γ     ⊢ n ⇒ n′ ∷ ℕ ^ ι ⁰
                  → Γ     ⊢ natrec l F z s n ⇒ natrec l F z s n′ ∷ F [ n ] ^ ι l
-    natrec2-subst : ∀ {z s n n′ F l}
-                 → Γ ∙ ℕ2 ^ [ ! , ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                 → Γ     ⊢ z ∷ F [ zero2 ] ^ [ ! , ι l ]
-                 → Γ     ⊢ s ∷ Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc2 (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                 → Γ     ⊢ n ⇒ n′ ∷ ℕ2 ^ ι ⁰
-                 → Γ     ⊢ natrec2 l F z s n ⇒ natrec2 l F z s n′ ∷ F [ n ] ^ ι l
     natrec-zero  : ∀ {z s F l }
                  → Γ ∙ ℕ ^ [ ! , ι ⁰ ] ⊢ F ^ [ ! , ι l ]
                  → Γ     ⊢ z ∷ F [ zero ] ^ [ ! , ι l ]
@@ -369,18 +324,6 @@ mutual
                  → Γ     ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
                  → Γ     ⊢ natrec l F z s (suc n) ⇒ (s ∘ n ^ l) ∘ (natrec l F z s n) ^ l
                          ∷ F [ suc n ] ^ ι l
-    natrec2-zero  : ∀ {z s F l}
-                 → Γ ∙ ℕ2 ^ [ ! , ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                 → Γ     ⊢ z ∷ F [ zero2 ] ^ [ ! , ι l ]
-                 → Γ     ⊢ s ∷ Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc2 (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                 → Γ     ⊢ natrec2 l F z s zero2 ⇒ z ∷ F [ zero2 ] ^ ι l
-    natrec2-suc   : ∀ {n z s F l}
-                 → Γ     ⊢ n ∷ ℕ2 ^ [ ! , ι ⁰ ]
-                 → Γ ∙ ℕ2 ^ [ ! , ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                 → Γ     ⊢ z ∷ F [ zero2 ] ^ [ ! , ι l ]
-                 → Γ     ⊢ s ∷ Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc2 (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                 → Γ     ⊢ natrec2 l F z s (suc2 n) ⇒ (s ∘ n ^ l) ∘ (natrec2 l F z s n) ^ l
-                         ∷ F [ suc2 n ] ^ ι l
     cast-subst : ∀ {A A' B e t} → let l = ⁰ in
                     Γ ⊢ A ⇒ A' ∷ U l ^ next l
                   → Γ ⊢ B ∷ U l ^ [ ! , next l ]
@@ -538,7 +481,6 @@ Unitⱼ ⊢Γ = Πⱼ (λ abs → ⊥-elim (!≢% (PE.sym abs))) ▹ (λ _ → P
 Ugenⱼ : ∀ {r Γ l} → ⊢ Γ → Γ ⊢ Univ r l ^ [ ! , next l ]
 Ugenⱼ {l = ⁰} ⊢Γ = univ (univ 0<1 ⊢Γ)
 Ugenⱼ {l = ¹} ⊢Γ = Uⱼ ⊢Γ
-
 
 -- embedding of simple terms into OTerm preserves typing
 
@@ -762,21 +704,19 @@ emb-sterm-oterm-preserves-typing = go
                     (map-cong (range n') (λ j → PE.cong var (minus-suc (k + n') j)))
       in PE.trans step₁ (PE.trans step₂ (PE.cong (var (k + n') TL.∷_) step₃))
 
-  ⊢-ctr : ∀ {Γ} i j k P →
-    let as = SU.ctrArgsTypeList i j
-        n = length (ctrArgsTypeList i j)
-        Γ' = (Γ ∙∙ map emb-stype-oterm as) ∙∙ replicate k (emb-stype-oterm P)
+  ⊢-ctr : ∀ {Γ} ind j Ss k P → ind ∈ₗ senv → SU.ctrArgsTypeList ind j PE.≡ just Ss →
+    let n = length (ctrArgsTypeList Ss)
+        Γ' = (Γ ∙∙ map emb-stype-oterm Ss) ∙∙ replicate k (emb-stype-oterm P)
     in ⊢ Γ' →
-       Γ' ⊢ ctr i j (map (λ j → var (((k + n) - 1) - j)) (range n))
-         ∷ Ind i ^ [ ! , ι ⁰ ]
-  ⊢-ctr {Γ} i j k P ⊢Γ' =
-    let as = SU.ctrArgsTypeList i j
-        Γ' = (Γ ∙∙ map emb-stype-oterm as) ∙∙ replicate k (emb-stype-oterm P)
-    in  Ctrⱼ ⊢Γ' (PE.subst
+       Γ' ⊢ ctr (SU.SInd.name ind) j (map (λ j → var (((k + n) - 1) - j)) (range n))
+         ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+  ⊢-ctr {Γ} ind j Ss k P ind∈ eq ⊢Γ' =
+    let Γ' = (Γ ∙∙ map emb-stype-oterm Ss) ∙∙ replicate k (emb-stype-oterm P)
+    in  Ctrⱼ ⊢Γ' ind∈ eq (PE.subst
           (λ n → Γ' ⊢All map (λ j → var (((k + n) - 1) - j)) (range n)
-                       ∷ map emb-stype-oterm as ^ [ ! , ι ⁰ ])
-          (PE.sym (length-map (λ T → (emb-stype-oterm T , 0)) (SU.ctrArgsTypeList i j)))
-          (⊢All-ctor-vars as k P ⊢Γ'))
+                       ∷ map emb-stype-oterm Ss ^ [ ! , ι ⁰ ])
+          (PE.sym (length-map (λ T → (emb-stype-oterm T , 0)) Ss))
+          (⊢All-ctor-vars Ss k P ⊢Γ'))
 
   foldr-Π⁰-stypes-≡∷ : ∀ {Γ} As C D →
     ⊢ Γ →
@@ -790,10 +730,10 @@ emb-sterm-oterm-preserves-typing = go
       (foldr-Π⁰-stypes-≡∷ {Γ = Γ ∙ emb-stype-oterm A ^ [ ! , ι ⁰ ]} As C D
         (⊢Γ ∙ univ (emb-stype-oterm-has-type A ⊢Γ)) C≡D)
 
-  length-ctrRecIndices : ∀ i j →
-    length (ctrRecIndices i j) PE.≡ SU.ctrRecCount i j
-  length-ctrRecIndices i j =
-    let as = SU.ctrArgsTypeList i j
+  length-ctrRecIndices : ∀ i Ss →
+    length (ctrRecIndices i Ss) PE.≡ SU.recCountList i Ss
+  length-ctrRecIndices i Ss =
+    let as = Ss
     in PE.trans (length-map proj₁
                    (filter (λ jT → SU.ctrArgIsRecursive i (proj₂ jT))
                      (zip (range (length as)) as)))
@@ -824,49 +764,49 @@ emb-sterm-oterm-preserves-typing = go
                        (zip (range (length Ts)) Ts)))
           (length-filter-rec i Ts)
 
-  method≡branch : ∀ {Γ} i P j → ⊢ Γ →
-    Γ ⊢ emb-stype-oterm (SU.indRectBranchTy i j P)
-      ≡ indRectBranchTy i j (lam (Ind i) ▹ wk1 (emb-stype-oterm P) ^ ¹) ! ⁰
+  method≡branch : ∀ {Γ} ind P j Ss → ind ∈ₗ senv → SU.ctrArgsTypeList ind j PE.≡ just Ss → ⊢ Γ →
+    Γ ⊢ emb-stype-oterm (SU.indRectBranchTy (SU.SInd.name ind) Ss P)
+      ≡ indRectBranchTy (SU.SInd.name ind) j Ss (lam (Ind (SU.SInd.name ind)) ▹ wk1 (emb-stype-oterm P) ^ ¹) ! ⁰
       ^ [ ! , ι ⁰ ]
-  method≡branch {Γ} i P j ⊢Γ =
+  method≡branch {Γ} ind P j Ss ind∈ ctr≡ ⊢Γ =
     univ
       (PE.subst₂
         (λ A B → Γ ⊢ A ≡ B ∷ U ⁰ ^ [ ! , next ⁰ ])
-        (PE.sym (emb-indRectBranchTy-stype i j P))
+        (PE.sym (emb-indRectBranchTy-stype (SU.SInd.name ind) Ss P))
         (PE.sym rhs≡)
         (PE.subst
           (λ k' → Γ ⊢ foldr Π⁰ (foldr Π⁰ Pemb (replicate k' Pemb)) (map emb-stype-oterm as)
                         ≡ foldr Π⁰ innerR (map emb-stype-oterm as) ∷ U ⁰ ^ [ ! , next ⁰ ])
-          (length-ctrRecIndices i j)
+          (length-ctrRecIndices (SU.SInd.name ind) Ss)
           (foldr-Π⁰-stypes-≡∷ as innerL innerR ⊢Γ inner≡)))
     where
-    as = SU.ctrArgsTypeList i j
+    as = Ss
     Pemb = emb-stype-oterm P
-    Pλ = lam (Ind i) ▹ wk1 Pemb ^ ¹
-    n = length (ctrArgsTypeList i j)
-    k = length (ctrRecIndices i j)
+    Pλ = lam (Ind (SU.SInd.name ind)) ▹ wk1 Pemb ^ ¹
+    n = length (ctrArgsTypeList Ss)
+    k = length (ctrRecIndices (SU.SInd.name ind) Ss)
     innerL = foldr Π⁰ Pemb (replicate k Pemb)
-    concR = wk1^ (k + n) Pλ ∘ ctr i j (map (λ j → var (((k + n) - 1) - j)) (range n)) ^ ¹
-    recs = ctrRecIndices i j
+    concR = wk1^ (k + n) Pλ ∘ ctr (SU.SInd.name ind) j (map (λ j → var (((k + n) - 1) - j)) (range n)) ^ ¹
+    recs = ctrRecIndices (SU.SInd.name ind) Ss
     ihTys = map (λ pj →
               wk1^ (n + proj₂ pj) Pλ ∘ var (((n - 1) - proj₁ pj) + proj₂ pj) ^ ¹)
               (zip recs (range k))
     innerR = foldr Π⁰ concR ihTys
-    rhs≡ : indRectBranchTy i j Pλ ! ⁰ PE.≡ foldr Π⁰ innerR (map emb-stype-oterm as)
+    rhs≡ : indRectBranchTy (SU.SInd.name ind) j Ss Pλ ! ⁰ PE.≡ foldr Π⁰ innerR (map emb-stype-oterm as)
     rhs≡ = PE.cong (foldr Π⁰ innerR)
-             (map-map proj₁ (λ T → (emb-stype-oterm T , 0)) (SU.ctrArgsTypeList i j))
-    emb-indRectBranchTy-stype : ∀ i j P →
-      emb-stype-oterm (SU.indRectBranchTy i j P) PE.≡
+             (map-map proj₁ (λ T → (emb-stype-oterm T , 0)) (Ss))
+    emb-indRectBranchTy-stype : ∀ i Ss P →
+      emb-stype-oterm (SU.indRectBranchTy i Ss P) PE.≡
       foldr Π⁰ (foldr Π⁰ (emb-stype-oterm P)
-                  (replicate (SU.ctrRecCount i j) (emb-stype-oterm P)))
-        (map emb-stype-oterm (SU.ctrArgsTypeList i j))
-    emb-indRectBranchTy-stype i j P =
+                  (replicate (SU.recCountList i Ss) (emb-stype-oterm P)))
+        (map emb-stype-oterm Ss)
+    emb-indRectBranchTy-stype i Ss P =
       PE.trans (emb-arrows Ts (SU.arrowRepeat k′ P P))
         (PE.cong (λ B → foldr Π⁰ B (map emb-stype-oterm Ts))
           (emb-arrowRepeat k′ P P))
       where
-      Ts = SU.ctrArgsTypeList i j
-      k′  = SU.ctrRecCount i j
+      Ts = Ss
+      k′  = SU.recCountList i Ss
       emb-arrows : ∀ As B →
         emb-stype-oterm (SU.arrows As B) PE.≡
         foldr Π⁰ (emb-stype-oterm B) (map emb-stype-oterm As)
@@ -949,12 +889,12 @@ emb-sterm-oterm-preserves-typing = go
       goIH ℓ TL.[] ⊢Δ eq _ rewrite eq =
         PE.subst
           (λ f → (Γ0 ∙∙ replicate k Pemb) ⊢ Pemb ≡
-                   f ∘ ctr i j (map (λ j → var (((k + n) - 1) - j)) (range n)) ^ ¹
+                   f ∘ ctr (SU.SInd.name ind) j (map (λ j → var (((k + n) - 1) - j)) (range n)) ^ ¹
                    ∷ U ⁰ ^ [ ! , next ⁰ ])
-          (PE.sym (wk1^-Pλ (k + n) i P))
-          (sym (β-const-P i P
-                 (ctr i j (map (λ j → var (((k + n) - 1) - j)) (range n)))
-                 ⊢Δ (⊢-ctr {Γ = Γ} i j k P ⊢Δ)))
+          (PE.sym (wk1^-Pλ (k + n) (SU.SInd.name ind) P))
+          (sym (β-const-P (SU.SInd.name ind) P
+                 (ctr (SU.SInd.name ind) j (map (λ j → var (((k + n) - 1) - j)) (range n)))
+                 ⊢Δ (⊢-ctr {Γ = Γ} ind j Ss k P ind∈ ctr≡ ⊢Δ)))
       goIH ℓ (ih TL.∷ ihs) ⊢Δ eq ihdrop =
         Π-cong (λ _ → ⁰min ⁰ , ⁰min ⁰) (λ ())
           (univ (emb-stype-oterm-has-type P ⊢Δ))
@@ -965,8 +905,8 @@ emb-sterm-oterm-preserves-typing = go
               (λ f → (Γ0 ∙∙ replicate ℓ Pemb) ⊢
                        f ∘ var (((n - 1) - nth recs ℓ) + ℓ) ^ ¹
                        ≡ Pemb ∷ U ⁰ ^ [ ! , next ⁰ ])
-              (PE.sym (wk1^-Pλ (n + ℓ) i P))
-              (β-const-P i P (var (((n - 1) - nth recs ℓ) + ℓ)) ⊢Δ ⊢a))))
+              (PE.sym (wk1^-Pλ (n + ℓ) (SU.SInd.name ind) P))
+              (β-const-P (SU.SInd.name ind) P (var (((n - 1) - nth recs ℓ) + ℓ)) ⊢Δ ⊢a))))
           (let eqΔ : ((Γ0 ∙∙ replicate ℓ Pemb) ∙ Pemb ^ [ ! , ι ⁰ ]) PE.≡
                      (Γ0 ∙∙ replicate (1+ ℓ) Pemb)
                eqΔ = PE.trans (∙∙-∷ʳ Γ0 (replicate ℓ Pemb) Pemb)
@@ -1072,17 +1012,17 @@ emb-sterm-oterm-preserves-typing = go
         eqb≡true m n′ q with m ≟ n′
         eqb≡true m n′ q | yes e = e
         eqb≡true m n′ () | no _
-        rec-true-Ind : ∀ T → SU.ctrArgIsRecursive i T PE.≡ true →
-          T PE.≡ SU.Ind i
+        rec-true-Ind : ∀ T → SU.ctrArgIsRecursive (SU.SInd.name ind) T PE.≡ true →
+          T PE.≡ SU.Ind (SU.SInd.name ind)
         rec-true-Ind (SU.Arrow _ _) ()
-        rec-true-Ind (SU.Ind j′) q = PE.cong SU.Ind (eqb≡true j′ i q)
+        rec-true-Ind (SU.Ind j′) q = PE.cong SU.Ind (eqb≡true j′ (SU.SInd.name ind) q)
         pairs = zip (range (length as)) as
-        recP = λ (jT : Nat × SU.Type) → SU.ctrArgIsRecursive i (proj₂ jT)
+        recP = λ (jT : Nat × SU.Type) → SU.ctrArgIsRecursive (SU.SInd.name ind) (proj₂ jT)
         filtered = filter recP pairs
         ℓ<<filtered : ℓ << length filtered
         ℓ<<filtered = PE.subst (ℓ <<_) (length-map proj₁ filtered) ℓ<<k
         pair = nthA (0 , SU.Ind 0) filtered ℓ
-        nthT≡Ind : nthA (SU.Ind 0) as (nth recs ℓ) PE.≡ SU.Ind i
+        nthT≡Ind : nthA (SU.Ind 0) as (nth recs ℓ) PE.≡ SU.Ind (SU.SInd.name ind)
         nthT≡Ind =
           PE.trans
             (PE.cong (nthA (SU.Ind 0) as)
@@ -1108,8 +1048,8 @@ emb-sterm-oterm-preserves-typing = go
           in ∈ₗ-range (length as) (nth recs ℓ) inn-range
         ∈-ctor-arg : ∀ {Δ} (As : List SU.Type) (idx : Nat) →
           idx << length As →
-          nthA (SU.Ind 0) As idx PE.≡ SU.Ind i →
-          ((length As - 1) - idx) ∷ Ind i ^ [ ! , ι ⁰ ]
+          nthA (SU.Ind 0) As idx PE.≡ SU.Ind (SU.SInd.name ind) →
+          ((length As - 1) - idx) ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
             ∈ (Δ ∙∙ map emb-stype-oterm As)
         ∈-ctor-arg {Δ} TL.[] idx ()
         ∈-ctor-arg {Δ} (A TL.∷ As) 0 _ nthEq =
@@ -1124,20 +1064,20 @@ emb-sterm-oterm-preserves-typing = go
                 (λ B → repeat wk1 (wk1 (emb-stype-oterm B))
                          (length (map emb-stype-oterm As)))
                 nthEq)
-              (repeat-wk1-Ind (length (map emb-stype-oterm As)) i))
+              (repeat-wk1-Ind (length (map emb-stype-oterm As)) (SU.SInd.name ind)))
             (there* (map emb-stype-oterm As) here)
         ∈-ctor-arg {Δ} (A TL.∷ As) (1+ idx) (leS p) nthEq =
           PE.subst
-            (λ idx′ → idx′ ∷ Ind i ^ [ ! , ι ⁰ ]
+            (λ idx′ → idx′ ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
               ∈ ((Δ ∙ emb-stype-oterm A ^ [ ! , ι ⁰ ])
                    ∙∙ map emb-stype-oterm As))
             (PE.sym (minus-suc (length As) idx))
             (∈-ctor-arg {Δ = Δ ∙ emb-stype-oterm A ^ [ ! , ι ⁰ ]}
               As idx p nthEq)
-        ∈Γ0 : ((length as - 1) - nth recs ℓ) ∷ Ind i ^ [ ! , ι ⁰ ] ∈ Γ0
+        ∈Γ0 : ((length as - 1) - nth recs ℓ) ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ∈ Γ0
         ∈Γ0 = ∈-ctor-arg as (nth recs ℓ) rec<<n nthT≡Ind
         ⊢a : (Γ0 ∙∙ replicate ℓ Pemb) ⊢
-               var (((n - 1) - nth recs ℓ) + ℓ) ∷ Ind i ^ [ ! , ι ⁰ ]
+               var (((n - 1) - nth recs ℓ) + ℓ) ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
         ⊢a = var ⊢Δ
           (PE.subst₂
             (λ idx ty → idx ∷ ty ^ [ ! , ι ⁰ ]
@@ -1150,27 +1090,33 @@ emb-sterm-oterm-preserves-typing = go
                 (PE.cong (λ m → ((m - 1) - nth recs ℓ) + ℓ)
                   (PE.sym n≡len-as))))
             (PE.trans
-              (PE.cong (repeat wk1 (Ind i))
+              (PE.cong (repeat wk1 (Ind (SU.SInd.name ind)))
                 (length-replicate ℓ Pemb))
-              (repeat-wk1-Ind ℓ i))
+              (repeat-wk1-Ind ℓ (SU.SInd.name ind)))
             (there* (replicate ℓ Pemb) ∈Γ0))
 
-  emb-indRectBranchTyList-stype : ∀ {Γ} i P → ⊢ Γ →
-    TysEq Γ (map emb-stype-oterm (SU.indRectBranchTypeList i P))
-            (indRectBranchTyList i (lam (Ind i) ▹ wk1 (emb-stype-oterm P) ^ ¹) ! ⁰)
+  emb-indRectBranchTyList-stype : ∀ {Γ} ind P → ind ∈ₗ senv → ⊢ Γ →
+    TysEq Γ (map emb-stype-oterm (SU.indRectBranchTypeList ind P))
+            (indRectBranchTyList ind (lam (Ind (SU.SInd.name ind)) ▹ wk1 (emb-stype-oterm P) ^ ¹) ! ⁰)
             ([ ! , ι ⁰ ])
-  emb-indRectBranchTyList-stype {Γ} i P ⊢Γ =
+  emb-indRectBranchTyList-stype {Γ} ind P ind∈ ⊢Γ =
     PE.subst₂ (λ As Bs → TysEq Γ As Bs ([ ! , ι ⁰ ]))
-      (PE.sym (map-map emb-stype-oterm (λ j → SU.indRectBranchTy i j P)
-                (range (SU.indCtrCount i))))
+      (PE.sym (PE.trans
+        (map-map emb-stype-oterm (λ Ts → SU.indRectBranchTy (SU.SInd.name ind) Ts P) Tss)
+        (TL.map-zip-range (λ Ts → emb-stype-oterm (SU.indRectBranchTy (SU.SInd.name ind) Ts P)) Tss)))
       PE.refl
-      (map-≡tys (range (SU.indCtrCount i)) (λ j → method≡branch i P j ⊢Γ))
+      (map-≡tys ctrs
+        (λ jTs jTs∈ → method≡branch ind P (proj₁ jTs) (proj₂ jTs) ind∈
+                        (TL.zip-range-nth Tss jTs jTs∈) ⊢Γ))
     where
-    map-≡tys : ∀ {Γ r} {f g : Nat → Term} ns →
-      (∀ j → Γ ⊢ f j ≡ g j ^ r) →
+    Tss = SU.SInd.ctrArgsTypes ind
+    ctrs = zip (range (SU.indCtrCount ind)) Tss
+    map-≡tys : ∀ {Γ r} {A : Set} {f g : A → Term} ns →
+      (∀ j → j TL.∈ₗ ns → Γ ⊢ f j ≡ g j ^ r) →
       TysEq Γ (map f ns) (map g ns) r
     map-≡tys TL.[] _ = ε
-    map-≡tys (n TL.∷ ns) h = cons (h n) (map-≡tys ns h)
+    map-≡tys (n TL.∷ ns) h =
+      cons (h n TL.hereₗ) (map-≡tys ns (λ j j∈ → h j (TL.thereₗ j∈)))
 
   mutual
     go-all : ∀ {Γ args As}
@@ -1202,23 +1148,23 @@ emb-sterm-oterm-preserves-typing = go
       lamⱼ (λ _ → ⁰min ⁰ , ⁰min ⁰) (λ ())
         (univ (emb-stype-oterm-has-type A (emb-scon-wf _)))
         (go t∈)
-    go (ST.ctrⱼ {i} {j} _ _ args∈) =
-      Ctrⱼ (emb-scon-wf _) (go-all args∈)
-    go {Γ} (ST.indRectⱼ {i} {P} {t} {ms} t∈ ms∈) =
+    go (ST.ctrⱼ {ind} {j} ind∈ eq _ args∈) =
+      Ctrⱼ (emb-scon-wf _) ind∈ eq (go-all args∈)
+    go {Γ} (ST.indRectⱼ {ind} {P} {t} {ms} ind∈ _ t∈ ms∈) =
       let ⊢Γ = emb-scon-wf Γ
           ⊢Ind = univ (Indⱼ ⊢Γ)
           ⊢ΓInd = ⊢Γ ∙ ⊢Ind
           Pemb = emb-stype-oterm P
-          Pλ = lam (Ind i) ▹ wk1 Pemb ^ ¹
+          Pλ = lam (Ind (SU.SInd.name ind)) ▹ wk1 Pemb ^ ¹
           ⊢Pemb∙ = emb-stype-oterm-has-type P ⊢ΓInd
           ⊢wk1Pemb =
-            PE.subst (λ u → emb-scon Γ ∙ Ind i ^ [ ! , ι ⁰ ] ⊢ u ∷ U ⁰ ^ [ ! , next ⁰ ])
+            PE.subst (λ u → emb-scon Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ u ∷ U ⁰ ^ [ ! , next ⁰ ])
               (PE.sym (emb-stype-wk-id P (step id)))
               ⊢Pemb∙
           ⊢Pλ = lamⱼ (λ _ → ⁰min ¹ , ≡is≤ PE.refl) (λ ()) ⊢Ind ⊢wk1Pemb
           ⊢t = go t∈
-          ⊢ms = convAll (go-all ms∈) (emb-indRectBranchTyList-stype i P ⊢Γ)
-          ⊢elim = IndRectⱼ (λ ()) ⊢Pλ ⊢t ⊢ms
+          ⊢ms = convAll (go-all ms∈) (emb-indRectBranchTyList-stype ind P ind∈ ⊢Γ)
+          ⊢elim = IndRectⱼ (λ ()) ind∈ ⊢Pλ ⊢t ⊢ms
           βeq = β-red (⁰min ¹) (≡is≤ PE.refl) ⊢Ind ⊢wk1Pemb ⊢t
           βty = PE.subst
             (λ T → emb-scon Γ ⊢ Pλ ∘ emb-sterm-oterm t ^ ¹ ≡ T ∷ U ⁰ ^ [ ! , next ⁰ ])

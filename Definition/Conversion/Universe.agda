@@ -1,12 +1,13 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Conversion.Universe where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.RedSteps
-open import Definition.Conversion
-open import Definition.Conversion.Reduction
-open import Definition.Conversion.Lift
+module Definition.Conversion.Universe (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.RedSteps senv equivs
+open import Definition.Conversion senv equivs
+open import Definition.Conversion.Reduction senv equivs
+open import Definition.Conversion.Lift senv swf equivs
 import Tools.PropositionalEquality as PE
 -- Algorithmic equality of terms in WHNF of type U are equal as types.
 univConv↓ : ∀ {A B r Γ l}

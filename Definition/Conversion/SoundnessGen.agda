@@ -1,16 +1,17 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Conversion.SoundnessGen where
-open import Definition.Untyped
-open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.Weakening as T hiding (wk; wkTerm; wkEqTerm)
-open import Definition.ConversionGen
-open import Definition.Conversion.WhnfGen
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.NeTypeEq
-open import Definition.Typed.Consequences.Inversion
-open import Definition.Typed.Consequences.Equality
+module Definition.Conversion.SoundnessGen (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Weakening senv equivs as T hiding (wk; wkTerm; wkEqTerm)
+open import Definition.ConversionGen senv equivs
+open import Definition.Conversion.WhnfGen senv swf equivs
+open import Definition.Typed.Consequences.Syntactic senv swf equivs
+open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
+open import Definition.Typed.Consequences.Inversion senv swf equivs
+open import Definition.Typed.Consequences.Equality senv swf equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 inversion-lam' : ∀ {t F F' G rF lF lG lΠ Γ} → Γ ⊢ lam F ▹ t ^ lΠ ∷ Π F' ^ rF ° lF ▹ G ° lG ° lΠ ^ ! ^ [ ! , ι lΠ ] →

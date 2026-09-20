@@ -120,6 +120,11 @@ abstract
           [ var 1 + var 2 ]
           [ var 1 + [ var 0 + var 2 ] ] PE.refl
 
+        <=-help-rigid1 :  ∀ {a b : Nat} → 1+ (a + b) <= ((1+ a) + (1+ b))
+        <=-help-rigid1 {a} {b} = inequality (vars (1 ∷ a ∷ b ∷ []))
+          [ var 0 + [ var 1 + var 2 ] ]
+          [ [ var 0 + var 1 ] + [ var 0 + var 2 ] ] PE.refl
+
         <=-help-ab' :  ∀ {a b c d : Nat} → (a + b) <= (a + c + 1+ (b + d))
         <=-help-ab' {a} {b} {c} {d} = inequality (vars (1 ∷ a ∷ b ∷ c ∷ d ∷ []))
           [ var 1 + var 2 ]

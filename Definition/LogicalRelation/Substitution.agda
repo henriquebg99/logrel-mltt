@@ -1,9 +1,12 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution {{eqrel : EqRelSet}} where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.LogicalRelation
+module Definition.LogicalRelation.Substitution (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.LogicalRelation senv equivs
 open import Tools.Product
 open import Tools.Unit
 -- The validity judgements:

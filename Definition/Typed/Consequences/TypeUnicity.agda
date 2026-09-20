@@ -1,28 +1,35 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.Consequences.TypeUnicity where
-open import Definition.Untyped hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
-open import Definition.Untyped.Properties using (subst-Univ-either)
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.Weakening
-open import Definition.Typed.Consequences.Equality
+module Definition.Typed.Consequences.TypeUnicity (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
+open import Definition.Untyped.Properties senv using (subst-Univ-either)
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Weakening senv equivs
+open import Definition.Typed.Consequences.Equality senv swf equivs
 -- import Definition.Typed.Consequences.Inequality as Ineq
-open import Definition.Typed.Consequences.Injectivity
-open import Definition.Typed.Consequences.NeTypeEq
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.RelevanceUnicity
-open import Definition.Typed.Consequences.Substitution
-open import Definition.Conversion.Stability
-open import Definition.Typed.Consequences.InjectivitySProp
+open import Definition.Typed.Consequences.Injectivity senv swf equivs
+open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
+open import Definition.Typed.Consequences.Syntactic senv swf equivs
+open import Definition.Typed.Consequences.RelevanceUnicity senv swf equivs
+open import Definition.Typed.Consequences.Substitution senv swf equivs
+open import Definition.Conversion.Stability senv swf equivs
+open import Definition.Typed.Consequences.InjectivitySProp senv swf equivs
 open import Tools.Product
 open import Tools.Empty
 open import Tools.Sum using (_⊎_; inj₁; inj₂)
 import Tools.PropositionalEquality as PE
+
+-- ctr / IndRect gen-spines use map (same issue as relevance-uniq-map-spine).
+postulate
+  type-uniq-map-spine : ∀ {Γ t T₁ T₂ r₁ l₁ l₂} →
+    Γ ⊢ t ∷ T₁ ^ [ r₁ , l₁ ] → Γ ⊢ t ∷ T₂ ^ [ r₁ , l₂ ] → l₁ PE.≡ l₂ × Γ ⊢ T₁ ≡ T₂ ^ [ r₁ , l₁ ]
+
 type-uniq : ∀ {Γ t T₁ T₂ r₁ l₁ l₂} → Γ ⊢ t ∷ T₁ ^ [ r₁ , l₁ ] → Γ ⊢ t ∷ T₂ ^ [ r₁ , l₂ ] →
                  l₁ PE.≡ l₂ × Γ ⊢ T₁ ≡ T₂ ^ [ r₁ , l₁ ]
 type-uniq (univ 0<1 x) (univ 0<1 x') = PE.refl , refl (Ugenⱼ x)
 type-uniq (ℕⱼ x) (ℕⱼ x₁) = PE.refl , refl (Ugenⱼ x)
-type-uniq (ℕ2ⱼ x) (ℕ2ⱼ x₁) = PE.refl , refl (Ugenⱼ x)
+type-uniq (Indⱼ x) (Indⱼ x₁) = PE.refl , refl (Ugenⱼ x)
 type-uniq (Emptyⱼ x) (Emptyⱼ x₁) = PE.refl , refl (Ugenⱼ x)
 type-uniq (Πⱼ x ▹ x₁ ▹ X ▹ X₁) (Πⱼ x₂ ▹ x₃ ▹ Y ▹ Y₁) =
     let _ , eU = type-uniq X₁ Y₁
@@ -112,17 +119,12 @@ type-uniq {Γ = Γ} (sndⱼ {A} {A'} {rA = %} {B} {B'} X X₁ X₂ Z e) (sndⱼ 
         A≡A , erA , elA , elB , B≡B = injectivity (univ (PE.subst (λ R → Γ ⊢ Π A ^ % ° ⁰ ▹ B ° ⁰ ° ⁰ ^ ! ≡ Π AA ^ ! ° ⁰ ▹ BB ° ⁰ ° ⁰ ^ ! ∷ U ⁰ ^ [ ! , R ]) (PE.sym el) Π≡Π))
     in ⊥-elim (!≢% (PE.sym erA))
 type-uniq (zeroⱼ x) (zeroⱼ x₁) = PE.refl , refl (univ (ℕⱼ x))
-type-uniq (zero2ⱼ x) (zero2ⱼ x₁) = PE.refl , refl (univ (ℕ2ⱼ x))
 type-uniq (sucⱼ X) (sucⱼ Y) = PE.refl , refl (univ (ℕⱼ (wfTerm X)))
-type-uniq (suc2ⱼ X) (suc2ⱼ Y) = PE.refl , refl (univ (ℕ2ⱼ (wfTerm X)))
+type-uniq ⊢t@(Ctrⱼ _ _ _ _) ⊢u = type-uniq-map-spine ⊢t ⊢u
 type-uniq (natrecⱼ _ x X X₁ X₂) (natrecⱼ _ y Y Y₁ Y₂) =
     let _ , U≡U = type-uniq (un-univ x) (un-univ y)
         er , _ = Uinjectivity U≡U
     in PE.refl , refl (substitution x (singleSubst X₂) (wfTerm X) ) 
-type-uniq (natrec2ⱼ _ x X X₁ X₂) (natrec2ⱼ _ y Y Y₁ Y₂) =
-    let _ , U≡U = type-uniq (un-univ x) (un-univ y)
-        er , _ = Uinjectivity U≡U
-    in PE.refl , refl (substitution x (singleSubst X₂) (wfTerm X) )
 type-uniq (equiv-eqⱼ x) (equiv-eqⱼ x₁) =
     PE.refl , refl (syntacticTerm (equiv-eqⱼ x))
 type-uniq (Emptyrecⱼ x X) (Emptyrecⱼ y Y) =
@@ -136,7 +138,8 @@ type-uniq (transpⱼ x x₁ X X₁ X₂ X₃) (transpⱼ x₂ x₃ Y Y₁ Y₂ Y
 type-uniq (castⱼ X X₁ X₂ X₃) (castⱼ Y Y₁ Y₂ Y₃) =
     let _ , _ = type-uniq X₃ Y₃
     in PE.refl , refl (univ X₁)
-type-uniq (conv X x) Y = let el , eA = type-uniq X Y in el , trans (sym x) eA 
+type-uniq ⊢t@(IndRectⱼ _ _ _ _ _) ⊢u = type-uniq-map-spine ⊢t ⊢u
+type-uniq (conv X x) Y = let el , eA = type-uniq X Y in el , trans (sym x) eA
 type-uniq X (conv Y y) =
     let el , eA = type-uniq X Y
     in el , trans eA (PE.subst (λ l → _ ⊢ _ ≡ _ ^ [ _ , l ]) (PE.sym el) y)

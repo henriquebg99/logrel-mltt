@@ -1,15 +1,16 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Conversion.Consequences.Completeness where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Conversion
-open import Definition.Typed.Properties
-open import Definition.Conversion.EqRelInstance
-open import Definition.Conversion.Inversion
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Substitution
-open import Definition.LogicalRelation.Substitution.Escape
-open import Definition.LogicalRelation.Fundamental
+module Definition.Conversion.Consequences.Completeness (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Conversion senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Conversion.EqRelInstance senv swf equivs
+open import Definition.Conversion.Inversion senv swf equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Substitution senv equivs
+open import Definition.LogicalRelation.Substitution.Escape senv equivs
+open import Definition.LogicalRelation.Fundamental senv swf equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 open import Tools.Empty
@@ -33,6 +34,3 @@ completeEqNeutral net neu t≡u = neutralconv↓ net neu (completeEqTerm↓ Uₙ
 
 completeEqℕ : ∀ {t u l Γ} → Neutral t → Neutral u →  Γ ⊢ t ≡ u ∷ ℕ ^  [ ! , l ] → Γ ⊢ t ~ u ↓! ℕ ^ l
 completeEqℕ net neu t≡u = neutralℕconv↓ net neu (completeEqTerm↓ ℕₙ (ne net) (ne neu) t≡u)
-
-completeEqℕ2 : ∀ {t u l Γ} → Neutral t → Neutral u →  Γ ⊢ t ≡ u ∷ ℕ2 ^  [ ! , l ] → Γ ⊢ t ~ u ↓! ℕ2 ^ l
-completeEqℕ2 net neu t≡u = neutralℕ2conv↓ net neu (completeEqTerm↓ ℕ2ₙ (ne net) (ne neu) t≡u)

@@ -1,18 +1,21 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution.Properties {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Substitution.Properties (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped
-open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Weakening
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Substitution
-open import Definition.LogicalRelation.Substitution.Irrelevance
+open import Definition.Untyped senv
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Weakening senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Substitution senv equivs
+open import Definition.LogicalRelation.Substitution.Irrelevance senv equivs
      using (irrelevanceSubst′)
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.Properties
-import Definition.LogicalRelation.Weakening as LR
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.Properties senv equivs
+import Definition.LogicalRelation.Weakening senv equivs as LR
 open import Tools.Unit
 open import Tools.Product
 import Tools.PropositionalEquality as PE

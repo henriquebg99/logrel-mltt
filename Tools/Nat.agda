@@ -125,6 +125,10 @@ le-plus-left : ∀ {m n} l → m <= n → m <= (l + n)
 le-plus-left Nat.zero H = H
 le-plus-left (1+ l) H = le-suc (le-plus-left l H)
 
+le-plus-right : ∀ {m} n → m <= (m + n)
+le-plus-right {Nat.zero} n = le0
+le-plus-right {1+ m} n = leS (le-plus-right n)
+
 le-plus : ∀ {m n l k} → m <= n → l <= k → (m + l) <= (n + k)
 le-plus {Nat.zero} {Nat.zero} H₁ H₂ = H₂
 le-plus {Nat.zero} {1+ n} le0 H₂ = le-plus-left (1+ n) H₂

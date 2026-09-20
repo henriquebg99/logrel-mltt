@@ -1,13 +1,16 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Irrelevance {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Irrelevance (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 open import Tools.Empty using (⊥; ⊥-elim)
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.ShapeView
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.ShapeView senv equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 -- Irrelevance for propositionally equal types
@@ -48,7 +51,6 @@ reduction-irrelevant-Univ= : ∀ {Γ A t u l l' ll ll' l< l<' r r' el el' D D'}
         Γ ⊩⟨ l' ⟩ t ≡ u ∷ A ^ [ ! , next ll ] / Uᵣ (Uᵣ r' ll' l<' el' D')
 reduction-irrelevant-Univ= {l = ι ¹} {ι ¹} {⁰} {⁰} PE.refl (Uₜ₌ [t] [u] A≡B [t≡u]) = Uₜ₌ (reduction-irrelevant-Univ PE.refl [t]) (reduction-irrelevant-Univ PE.refl [u]) A≡B [t≡u]
 reduction-irrelevant-Univ= {l = ∞} {∞} {¹} {¹} {l<} {l<'} PE.refl (Uₜ₌ [t] [u] A≡B [t≡u]) = Uₜ₌ (reduction-irrelevant-Univ PE.refl [t]) (reduction-irrelevant-Univ PE.refl [u]) A≡B [t≡u]
-
 
 -- NB: for Pi cases it seems like it would be cleaner to do
 -- irrelevanceFoo (Pi ...) rewrite whrDet* ...
@@ -91,7 +93,6 @@ mutual
                        → ShapeView Γ l l′ A A r r p q
                        → Γ ⊩⟨ l ⟩ A ≡ B ^ r / p → Γ ⊩⟨ l′ ⟩ A ≡ B ^ r / q
   irrelevanceEqT (ℕᵥ D D′) A≡B = A≡B
-  irrelevanceEqT (ℕ2ᵥ D D′) A≡B = A≡B
   irrelevanceEqT (Indᵥ D D′) A≡B = A≡B
   irrelevanceEqT (Emptyᵥ D D′) A≡B = A≡B
   irrelevanceEqT (ne (ne K D neK _) (ne K₁ D₁ neK₁ K≡K₁)) (ne₌ M D′ neM K≡M)
@@ -140,7 +141,6 @@ mutual
                     → Γ ⊩⟨ l ⟩ A ^ r
                     → Γ ⊩⟨ l' ⟩ A ^ r
   irrelevance-level l< (ℕᵣ x) = ℕᵣ x
-  irrelevance-level l< (ℕ2ᵣ x) = ℕ2ᵣ x
   irrelevance-level l< (Indᵣ x) = Indᵣ x
   irrelevance-level l< (Emptyᵣ x) = Emptyᵣ x
   irrelevance-level l< (ne x) = ne x
@@ -158,7 +158,6 @@ mutual
   irrelevance-level l< (Idᵣ′ F t u l D ⊢F ⊢t ⊢u A≡A) = Idᵣ′ F t u l D ⊢F ⊢t ⊢u A≡A
   irrelevance-level {r = [ .! , ll ]} ∞< (Uᵣ (Uᵣ r .⁰ emb< eq d)) = emb ∞< (Uᵣ (Uᵣ r _ emb< eq d))
   irrelevance-level ∞< (emb emb< [A]) = emb ∞< (emb emb< [A])
-
 
 --------------------------------------------------------------------------------
 
@@ -196,7 +195,6 @@ mutual
                          → ShapeView Γ l l′ A A r r p q
                          → Γ ⊩⟨ l ⟩ t ∷ A ^ r / p → Γ ⊩⟨ l′ ⟩ t ∷ A ^ r / q
   irrelevanceTermT (ℕᵥ D D′) t = t
-  irrelevanceTermT (ℕ2ᵥ D D′) t = t
   irrelevanceTermT (Indᵥ D D′) t = t
   irrelevanceTermT (Emptyᵥ D D′) t = t
   irrelevanceTermT { r = [ ! , ll ]  } (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (neₜ k d nf)
@@ -279,7 +277,6 @@ mutual
                            → ShapeView Γ l l′ A A r r p q
                            → Γ ⊩⟨ l ⟩ t ≡ u ∷ A ^ r / p → Γ ⊩⟨ l′ ⟩ t ≡ u ∷ A ^ r / q
   irrelevanceEqTermT (ℕᵥ D D′) t≡u = t≡u
-  irrelevanceEqTermT (ℕ2ᵥ D D′) t≡u = t≡u
   irrelevanceEqTermT (Indᵥ D D′) t≡u = t≡u
   irrelevanceEqTermT (Emptyᵥ D D′) t≡u = t≡u
   irrelevanceEqTermT { r = [ ! , ll ] } (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (neₜ₌ k m d d′ nf)

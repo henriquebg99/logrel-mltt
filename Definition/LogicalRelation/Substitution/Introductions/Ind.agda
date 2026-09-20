@@ -1,20 +1,24 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution.Introductions.Ind {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Substitution.Introductions.Ind (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Substitution
-open import Definition.LogicalRelation.Substitution.Introductions.Universe
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.LogicalRelation.Properties senv equivs
+open import Definition.LogicalRelation.Substitution senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Universe senv equivs
 open import Tools.Nat
 open import Tools.Product
-open import Tools.List using (All; All₂; []ₐ; _∷ₐ_; map; length; length-map; all∈)
+open import Tools.Maybe using (just)
+open import Tools.List using (All; All₂; []ₐ; _∷ₐ_; _∈ₗ_; map; length; length-map; all∈)
   renaming ([] to []ₗ; _∷_ to _∷ₗ_)
 import Tools.PropositionalEquality as PE
 import Definition.SUntyped as SU
@@ -53,37 +57,41 @@ mapAll₂Ind {l} {Γ} {i} {D = D} (p ∷ₐ ps) =
 ------------------------------------------------------------------------
 -- Reducible constructors (specific Ind derivation)
 
-ctrTerm′ : ∀ {l Γ i j args}
-         → ([Ind] : Γ ⊩⟨ l ⟩Ind Ind i ^ i)
-         → Γ ⊢All args ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
-         → All (λ a → Γ ⊩⟨ l ⟩ a ∷ Ind i ^ [ ! , ι ⁰ ] / Ind-intr [Ind]) args
-         → Γ ⊩⟨ l ⟩ ctr i j args ∷ Ind i ^ [ ! , ι ⁰ ] / Ind-intr [Ind]
-ctrTerm′ {l} {i = i} {j = j} {args = args} (noemb D) ⊢args ps =
+ctrTerm′ : ∀ {l Γ ind j args Ts}
+         → ([Ind] : Γ ⊩⟨ l ⟩Ind Ind (SU.SInd.name ind) ^ SU.SInd.name ind)
+         → ind ∈ₗ senv
+         → SU.ctrArgsTypeList ind j PE.≡ just Ts
+         → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+         → All (λ a → Γ ⊩⟨ l ⟩ a ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / Ind-intr [Ind]) args
+         → Γ ⊩⟨ l ⟩ ctr (SU.SInd.name ind) j args ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / Ind-intr [Ind]
+ctrTerm′ {l} {ind = ind} {j = j} {args = args} {Ts = Ts} (noemb D) ind∈ eq ⊢args ps =
   let indArgs = mapAllInd {l = l} {D = D} ps
       ⊢Γ = wf (escape {l = l} (Ind-intr (noemb D)))
-      ⊢ctr = Ctrⱼ ⊢Γ ⊢args
-      lens = PE.trans (⊢All-length ⊢args) (length-map emb-stype (SU.ctrArgsTypeList i j))
-  in  Indₜ (ctr i j args) (idRedTerm:*: ⊢ctr)
-           (≅-ctr-cong ⊢Γ lens (≅AllInd ⊢Γ (reflAllInd indArgs)))
+      ⊢ctr = Ctrⱼ ⊢Γ ind∈ eq ⊢args
+      lens = PE.trans (⊢All-length ⊢args) (length-map emb-stype Ts)
+  in  Indₜ (ctr (SU.SInd.name ind) j args) (idRedTerm:*: ⊢ctr)
+           (≅-ctr-cong ⊢Γ ind∈ eq lens (≅AllInd ⊢Γ (reflAllInd indArgs)))
            (ctrᵣ indArgs)
   where
     ⊢All-length : ∀ {Γ ts As r} → Γ ⊢All ts ∷ As ^ r → length ts PE.≡ length As
     ⊢All-length εⱼ = PE.refl
     ⊢All-length (consⱼ _ rest) = PE.cong 1+ (⊢All-length rest)
-ctrTerm′ (emb emb< x) ⊢args ps = ctrTerm′ x ⊢args ps
-ctrTerm′ (emb ∞< x) ⊢args ps = ctrTerm′ x ⊢args ps
+ctrTerm′ (emb emb< x) ind∈ eq ⊢args ps = ctrTerm′ x ind∈ eq ⊢args ps
+ctrTerm′ (emb ∞< x) ind∈ eq ⊢args ps = ctrTerm′ x ind∈ eq ⊢args ps
 
 -- Reducible inductive constructors from reducible arguments.
-ctrTerm : ∀ {l Γ i j args}
-        → ([Ind] : Γ ⊩⟨ l ⟩ Ind i ^ [ ! , ι ⁰ ])
-        → Γ ⊢All args ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
-        → All (λ a → Γ ⊩⟨ l ⟩ a ∷ Ind i ^ [ ! , ι ⁰ ] / [Ind]) args
-        → Γ ⊩⟨ l ⟩ ctr i j args ∷ Ind i ^ [ ! , ι ⁰ ] / [Ind]
-ctrTerm {i = i} [Ind] ⊢args ps =
+ctrTerm : ∀ {l Γ ind j args Ts}
+        → ([Ind] : Γ ⊩⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ])
+        → ind ∈ₗ senv
+        → SU.ctrArgsTypeList ind j PE.≡ just Ts
+        → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+        → All (λ a → Γ ⊩⟨ l ⟩ a ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Ind]) args
+        → Γ ⊩⟨ l ⟩ ctr (SU.SInd.name ind) j args ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Ind]
+ctrTerm [Ind] ind∈ eq ⊢args ps =
   let [Ind]′ = Ind-intr (Ind-elim [Ind])
       ps′ = mapAllIrr [Ind] [Ind]′ ps
   in  irrelevanceTerm [Ind]′ [Ind]
-                      (ctrTerm′ (Ind-elim [Ind]) ⊢args ps′)
+                      (ctrTerm′ (Ind-elim [Ind]) ind∈ eq ⊢args ps′)
   where
     mapAllIrr : ∀ {l Γ i args}
               → ([A] [B] : Γ ⊩⟨ l ⟩ Ind i ^ [ ! , ι ⁰ ])
@@ -96,40 +104,46 @@ ctrTerm {i = i} [Ind] ⊢args ps =
 ------------------------------------------------------------------------
 -- Reducible constructor equality
 
-ctrEqTerm′ : ∀ {l Γ i j args args'}
-           → ([Ind] : Γ ⊩⟨ l ⟩Ind Ind i ^ i)
-           → Γ ⊢All args ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
-           → Γ ⊢All args' ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
-           → All₂ (λ a a' → Γ ⊩⟨ l ⟩ a ≡ a' ∷ Ind i ^ [ ! , ι ⁰ ] / Ind-intr [Ind]) args args'
-           → Γ ⊩⟨ l ⟩ ctr i j args ≡ ctr i j args' ∷ Ind i ^ [ ! , ι ⁰ ] / Ind-intr [Ind]
-ctrEqTerm′ {l} {i = i} {j = j} {args = args} {args' = args'} (noemb D) ⊢args ⊢args' ps =
+ctrEqTerm′ : ∀ {l Γ ind j args args' Ts}
+           → ([Ind] : Γ ⊩⟨ l ⟩Ind Ind (SU.SInd.name ind) ^ SU.SInd.name ind)
+           → ind ∈ₗ senv
+           → SU.ctrArgsTypeList ind j PE.≡ just Ts
+           → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+           → Γ ⊢All args' ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+           → All₂ (λ a a' → Γ ⊩⟨ l ⟩ a ≡ a' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / Ind-intr [Ind]) args args'
+           → Γ ⊩⟨ l ⟩ ctr (SU.SInd.name ind) j args ≡ ctr (SU.SInd.name ind) j args'
+                 ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / Ind-intr [Ind]
+ctrEqTerm′ {l} {ind = ind} {j = j} {args = args} {args' = args'} {Ts = Ts} (noemb D) ind∈ eq ⊢args ⊢args' ps =
   let indEq = mapAll₂Ind {l = l} {D = D} ps
       ⊢Γ = wf (escape {l = l} (Ind-intr (noemb D)))
-      ⊢ctr  = Ctrⱼ ⊢Γ ⊢args
-      ⊢ctr' = Ctrⱼ ⊢Γ ⊢args'
-      lens = PE.trans (⊢All-length ⊢args) (length-map emb-stype (SU.ctrArgsTypeList i j))
-  in  Indₜ₌ (ctr i j args) (ctr i j args')
+      ⊢ctr  = Ctrⱼ ⊢Γ ind∈ eq ⊢args
+      ⊢ctr' = Ctrⱼ ⊢Γ ind∈ eq ⊢args'
+      lens = PE.trans (⊢All-length ⊢args) (length-map emb-stype Ts)
+  in  Indₜ₌ (ctr (SU.SInd.name ind) j args) (ctr (SU.SInd.name ind) j args')
             (idRedTerm:*: ⊢ctr) (idRedTerm:*: ⊢ctr')
-            (≅-ctr-cong ⊢Γ lens (≅AllInd ⊢Γ indEq))
+            (≅-ctr-cong ⊢Γ ind∈ eq lens (≅AllInd ⊢Γ indEq))
             (ctrᵣ indEq)
   where
     ⊢All-length : ∀ {Γ ts As r} → Γ ⊢All ts ∷ As ^ r → length ts PE.≡ length As
     ⊢All-length εⱼ = PE.refl
     ⊢All-length (consⱼ _ rest) = PE.cong 1+ (⊢All-length rest)
-ctrEqTerm′ (emb emb< x) ⊢args ⊢args' ps = ctrEqTerm′ x ⊢args ⊢args' ps
-ctrEqTerm′ (emb ∞< x) ⊢args ⊢args' ps = ctrEqTerm′ x ⊢args ⊢args' ps
+ctrEqTerm′ (emb emb< x) ind∈ eq ⊢args ⊢args' ps = ctrEqTerm′ x ind∈ eq ⊢args ⊢args' ps
+ctrEqTerm′ (emb ∞< x) ind∈ eq ⊢args ⊢args' ps = ctrEqTerm′ x ind∈ eq ⊢args ⊢args' ps
 
-ctrEqTerm : ∀ {l Γ i j args args'}
-          → ([Ind] : Γ ⊩⟨ l ⟩ Ind i ^ [ ! , ι ⁰ ])
-          → Γ ⊢All args ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
-          → Γ ⊢All args' ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ]
-          → All₂ (λ a a' → Γ ⊩⟨ l ⟩ a ≡ a' ∷ Ind i ^ [ ! , ι ⁰ ] / [Ind]) args args'
-          → Γ ⊩⟨ l ⟩ ctr i j args ≡ ctr i j args' ∷ Ind i ^ [ ! , ι ⁰ ] / [Ind]
-ctrEqTerm {i = i} [Ind] ⊢args ⊢args' ps =
+ctrEqTerm : ∀ {l Γ ind j args args' Ts}
+          → ([Ind] : Γ ⊩⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ])
+          → ind ∈ₗ senv
+          → SU.ctrArgsTypeList ind j PE.≡ just Ts
+          → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+          → Γ ⊢All args' ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+          → All₂ (λ a a' → Γ ⊩⟨ l ⟩ a ≡ a' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Ind]) args args'
+          → Γ ⊩⟨ l ⟩ ctr (SU.SInd.name ind) j args ≡ ctr (SU.SInd.name ind) j args'
+                ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Ind]
+ctrEqTerm [Ind] ind∈ eq ⊢args ⊢args' ps =
   let [Ind]′ = Ind-intr (Ind-elim [Ind])
       ps′ = mapAll₂Irr [Ind] [Ind]′ ps
   in  irrelevanceEqTerm [Ind]′ [Ind]
-                        (ctrEqTerm′ (Ind-elim [Ind]) ⊢args ⊢args' ps′)
+                        (ctrEqTerm′ (Ind-elim [Ind]) ind∈ eq ⊢args ⊢args' ps′)
   where
     mapAll₂Irr : ∀ {l Γ i args args'}
                → ([A] [B] : Γ ⊩⟨ l ⟩ Ind i ^ [ ! , ι ⁰ ])
@@ -200,20 +214,22 @@ applyAll₂ᵛ [Γ] [Ind] ⊢Δ [σ] ([a≡a'] ∷ₐ ps) =
 ------------------------------------------------------------------------
 -- Validity of constructors
 
-ctrᵛ : ∀ {Γ i j args l}
+ctrᵛ : ∀ {Γ ind j args Ts l}
      → ([Γ] : ⊩ᵛ Γ)
-     → ([Ind] : Γ ⊩ᵛ⟨ l ⟩ Ind i ^ [ ! , ι ⁰ ] / [Γ])
-     → (⊢args : Γ ⊢All args ∷ map emb-stype (SU.ctrArgsTypeList i j) ^ [ ! , ι ⁰ ])
-     → All (λ a → Γ ⊩ᵛ⟨ l ⟩ a ∷ Ind i ^ [ ! , ι ⁰ ] / [Γ] / [Ind]) args
-     → Γ ⊩ᵛ⟨ l ⟩ ctr i j args ∷ Ind i ^ [ ! , ι ⁰ ] / [Γ] / [Ind]
-ctrᵛ {i = i} {j = j} {args = args} {l = l} [Γ] [Ind] ⊢args [args] {σ = σ} ⊢Δ [σ] =
+     → ([Ind] : Γ ⊩ᵛ⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ])
+     → (ind∈ : ind ∈ₗ senv)
+     → (eq : SU.ctrArgsTypeList ind j PE.≡ just Ts)
+     → (⊢args : Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ])
+     → All (λ a → Γ ⊩ᵛ⟨ l ⟩ a ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind]) args
+     → Γ ⊩ᵛ⟨ l ⟩ ctr (SU.SInd.name ind) j args ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind]
+ctrᵛ {ind = ind} {j = j} {args = args} {Ts = Ts} {l = l} [Γ] [Ind] ind∈ eq ⊢args [args] {σ = σ} ⊢Δ [σ] =
   let [Indσ] = proj₁ ([Ind] ⊢Δ [σ])
       [args]σ = applyAllᵛ [Γ] [Ind] ⊢Δ [σ] [args]
       lens = PE.trans (length-map (subst σ) args)
                      (PE.trans (⊢All-length ⊢args)
-                               (length-map emb-stype (SU.ctrArgsTypeList i j)))
-      ⊢argsσ = escapeAll [Indσ] ⊢Δ (all∈ (SU.ctrArgsTypesPositive i j)) [args]σ lens
-      [ctr] = ctrTerm [Indσ] ⊢argsσ [args]σ
+                               (length-map emb-stype Ts))
+      ⊢argsσ = escapeAll [Indσ] ⊢Δ (all∈ (SU.ctrArgsTypesPositive ind j Ts eq)) [args]σ lens
+      [ctr] = ctrTerm [Indσ] ind∈ eq ⊢argsσ [args]σ
   in  PE.subst (λ t → _ ⊩⟨ _ ⟩ t ∷ Ind i ^ [ ! , ι ⁰ ] / [Indσ])
                (PE.sym (subst-ctr σ i j args))
                [ctr]
@@ -222,15 +238,17 @@ ctrᵛ {i = i} {j = j} {args = args} {l = l} [Γ] [Ind] ⊢args [args] {σ = σ}
              [args]σ′ = applyAllᵛ [Γ] [Ind] ⊢Δ [σ′] [args]
              lens′ = PE.trans (length-map (subst σ′) args)
                               (PE.trans (⊢All-length ⊢args)
-                                        (length-map emb-stype (SU.ctrArgsTypeList i j)))
-             ⊢argsσ′ = escapeAll [Indσ′] ⊢Δ (all∈ (SU.ctrArgsTypesPositive i j)) [args]σ′ lens′
+                                        (length-map emb-stype Ts))
+             ⊢argsσ′ = escapeAll [Indσ′] ⊢Δ (all∈ (SU.ctrArgsTypesPositive ind j Ts eq)) [args]σ′ lens′
              [args]≡ = applyAllEqᵛ [Γ] [Ind] ⊢Δ [σ] [σ′] [σ≡σ′] [args]
-             [ctr≡] = ctrEqTerm [Indσ] ⊢argsσ ⊢argsσ′ [args]≡
+             [ctr≡] = ctrEqTerm [Indσ] ind∈ eq ⊢argsσ ⊢argsσ′ [args]≡
          in  PE.subst₂ (λ t u → _ ⊩⟨ _ ⟩ t ≡ u ∷ Ind i ^ [ ! , ι ⁰ ] / [Indσ])
                        (PE.sym (subst-ctr σ i j args))
                        (PE.sym (subst-ctr σ′ i j args))
                        [ctr≡])
   where
+    i = SU.SInd.name ind
+
     ⊢All-length : ∀ {Γ ts As r} → Γ ⊢All ts ∷ As ^ r → length ts PE.≡ length As
     ⊢All-length εⱼ = PE.refl
     ⊢All-length (consⱼ _ rest) = PE.cong 1+ (⊢All-length rest)

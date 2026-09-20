@@ -1,12 +1,14 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Conversion.Weakening where
-open import Definition.Untyped as U hiding (wk)
-open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Weakening
-open import Definition.Conversion
+module Definition.Conversion.Weakening (senv : SI.SEnv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv as U hiding (wk)
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Weakening senv equivs
+open import Definition.Conversion senv equivs
 open import Tools.List using (List; All₂; []ₐ; _∷ₐ_; map; length; length-map)
 import Tools.PropositionalEquality as PE
+import Definition.SUntyped as SU
 mutual
   -- Weakening of algorithmic equality of neutrals.
   wk~↑! : ∀ {ρ t u A Γ Δ l} ([ρ] : ρ ∷ Δ ⊆ Γ) → ⊢ Δ
@@ -27,54 +29,40 @@ mutual
                           (PE.subst (λ x → Δ ⊢ U.wk ρ h [conv↑] U.wk ρ g ∷ x ^ ι ll)
                                     (wk-β-natrec _ F ! _) (wkConv↑Term [ρ] ⊢Δ x₂))
                           (wk~↓! [ρ] ⊢Δ t~u))
-  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (natrec2-cong {k} {l} {h} {g} {a₀} {b₀} {F} {G} {ll} x x₁ x₂ t~u) =
-    PE.subst (λ x → _ ⊢ U.wk ρ (natrec2 _ F a₀ h k) ~ _ ↑! x ^ _) (PE.sym (wk-β F))
-             (natrec2-cong (wkConv↑ (lift [ρ]) (⊢Δ ∙ (univ (ℕ2ⱼ ⊢Δ))) x)
-                           (PE.subst (λ x → _ ⊢ _ [conv↑] _ ∷ x ^ _) (wk-β F)
-                                     (wkConv↑Term [ρ] ⊢Δ x₁))
-                           (PE.subst (λ x → Δ ⊢ U.wk ρ h [conv↑] U.wk ρ g ∷ x ^ ι ll)
-                                     (wk-β-natrec2 _ F ! _) (wkConv↑Term [ρ] ⊢Δ x₂))
-                           (wk~↓! [ρ] ⊢Δ t~u))
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (Emptyrec-cong {k} {l} {F} {G} x t~u) =
     Emptyrec-cong (wkConv↑ [ρ] ⊢Δ x) (wk~↑% [ρ] ⊢Δ t~u)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-cong X x x₁ x₂ x₃) =
     cast-cong (wk~↓! [ρ] ⊢Δ X) (wk~↓! [ρ] ⊢Δ x) (wkConv↓Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-ℕ X x x₁ x₂) =
     cast-ℕ (wk~↓! [ρ] ⊢Δ X) (wkConv↑Term [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂)
-  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-ℕ2 X x x₁ x₂) =
-    cast-ℕ2 (wk~↓! [ρ] ⊢Δ X) (wkConv↑Term [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-Π x X x₁ x₂ x₃) =
     cast-Π (wkConv↑Term [ρ] ⊢Δ x) (wk~↓! [ρ] ⊢Δ X) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-Πℕ x x₁ x₂ x₃) =
     cast-Πℕ (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
-  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-Πℕ2 x x₁ x₂ x₃) =
-    cast-Πℕ2 (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-ℕΠ x x₁ x₂ x₃) =
     cast-ℕΠ (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
-  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-ℕ2Π x x₁ x₂ x₃) =
-    cast-ℕ2Π (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-ΠΠ%! x x₁ x₂ x₃ x₄) =
     cast-ΠΠ%! (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkConv↑Term [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃) (wkTerm [ρ] ⊢Δ x₄)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-ΠΠ!% x x₁ x₂ x₃ x₄) =
     cast-ΠΠ!% (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkConv↑Term [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃) (wkTerm [ρ] ⊢Δ x₄)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-refl x x₃ x₄) = cast-refl (wk~↓! [ρ] ⊢Δ x) (wkConv↓Term [ρ] ⊢Δ x₃) (wkTerm [ρ] ⊢Δ x₄)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (castℕ-refl x x₁) = castℕ-refl (wk~↓! [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁)
-  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (castℕ2-refl x x₁) = castℕ2-refl (wk~↓! [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-refl' x x₃ x₄) = cast-refl' (wk~↓! [ρ] ⊢Δ x) (wkConv↓Term [ρ] ⊢Δ x₃) (wkTerm [ρ] ⊢Δ x₄)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (castℕ-refl' x x₁) = castℕ-refl' (wk~↓! [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁)
-  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (castℕ2-refl' x x₁) = castℕ2-refl' (wk~↓! [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-neℕ x x₁ x₂ x₃) = cast-neℕ (wk~↓! [ρ] ⊢Δ x)  (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
-  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-neℕ2 x x₁ x₂ x₃) = cast-neℕ2 (wk~↓! [ρ] ⊢Δ x)  (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-neΠ X x x₁ x₂ x₃) = cast-neΠ (wkConv↑Term [ρ] ⊢Δ X) (wk~↓! [ρ] ⊢Δ x)  (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
-  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (IndRect-cong {i} {P} {P'} {lG} {t} {t'} {ms} {ms'} x x₁ x₂) =
+  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (IndRect-cong {ind} {P} {P'} {t} {t'} {ms} {ms'} {lG} ind∈ x x₁ x₂) =
     PE.subst₂ (λ a b → Δ ⊢ a ~ b ↑! U.wk ρ (P ∘ t ^ ¹) ^ ι lG)
-      (PE.sym (wk-IndRect ρ i lG P t ms))
-      (PE.sym (wk-IndRect ρ i lG P' t' ms'))
-      (IndRect-cong (wkConv↑Term [ρ] ⊢Δ x)
+      (PE.sym (wk-IndRect ρ (SU.SInd.name ind) lG P t ms))
+      (PE.sym (wk-IndRect ρ (SU.SInd.name ind) lG P' t' ms'))
+      (IndRect-cong ind∈
+                    (wkConv↑Term [ρ] ⊢Δ x)
                     (wk~↓! [ρ] ⊢Δ x₁)
                     (PE.subst (λ As → Δ ⊢All map (U.wk ρ) ms ≡ map (U.wk ρ) ms' ∷ As ^ [ ! , ι lG ])
-                              (wk-indRectBranchTyList ρ i P ! lG)
+                              (wk-indRectBranchTyList ρ ind P ! lG)
                               (wkAllEq [ρ] ⊢Δ x₂)))
+  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (castInd-refl' x x₁) =
+    castInd-refl' (wk~↓! [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-neInd x x₁ x₂ x₃) =
     cast-neInd (wk~↓! [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-Ind x x₁ x₂ x₃) =
@@ -87,12 +75,8 @@ mutual
     cast-ΠInd (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-Indℕ x x₁ x₂) =
     cast-Indℕ (wkConv↑Term [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂)
-  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-Indℕ2 x x₁ x₂) =
-    cast-Indℕ2 (wkConv↑Term [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂)
-  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-ℕInd x x₁ x₂ x₃) =
-    cast-ℕInd (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
-  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-ℕ2Ind x x₁ x₂ x₃) =
-    cast-ℕ2Ind (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
+  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-ℕInd x x₁ x₂) =
+    cast-ℕInd (wkConv↑Term [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-IndInd x x₁ x₂ x₃) =
     cast-IndInd x (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
 
@@ -148,8 +132,6 @@ mutual
   wkConv↓Term ρ ⊢Δ (ne x) = ne (wk~↓! ρ ⊢Δ x)
   wkConv↓Term ρ ⊢Δ (ℕ-ins x) =
     ℕ-ins (wk~↓! ρ ⊢Δ x)
-  wkConv↓Term ρ ⊢Δ (ℕ2-ins x) =
-    ℕ2-ins (wk~↓! ρ ⊢Δ x)
   wkConv↓Term ρ ⊢Δ (Ind-ins x) =
     Ind-ins (wk~↓! ρ ⊢Δ x)
   -- wkConv↓Term ρ ⊢Δ (Empty-ins x) =
@@ -157,9 +139,7 @@ mutual
   wkConv↓Term {ρ} [ρ] ⊢Δ (ne-ins t u x x₁) =
     ne-ins (wkTerm [ρ] ⊢Δ t) (wkTerm [ρ] ⊢Δ u) (wkNeutral ρ x) (wk~↓! [ρ] ⊢Δ x₁)
   wkConv↓Term ρ ⊢Δ (zero-refl x) = zero-refl ⊢Δ
-  wkConv↓Term ρ ⊢Δ (zero2-refl x) = zero2-refl ⊢Δ
   wkConv↓Term ρ ⊢Δ (suc-cong t<>u) = suc-cong (wkConv↑Term ρ ⊢Δ t<>u)
-  wkConv↓Term ρ ⊢Δ (suc2-cong t<>u) = suc2-cong (wkConv↑Term ρ ⊢Δ t<>u)
   wkConv↓Term {ρ} {Δ = Δ} [ρ] ⊢Δ (η-eq {F = F} {G = G} {rF = rF} {lF = lF} {lG = lG} l< l<' x x₁ x₂ y y₁ t<>u) =
     let ⊢ρF = wk [ρ] ⊢Δ x
     in  η-eq l< l<' ⊢ρF (wkTerm [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂)
@@ -170,18 +150,17 @@ mutual
                         PE.refl
                         (wkConv↑Term (lift [ρ]) (⊢Δ ∙ ⊢ρF) t<>u))
   wkConv↓Term ρ ⊢Δ (ℕ-refl x) = ℕ-refl ⊢Δ
-  wkConv↓Term ρ ⊢Δ (ℕ2-refl x) = ℕ2-refl ⊢Δ
   wkConv↓Term ρ ⊢Δ (Ind-refl x) = Ind-refl ⊢Δ
   wkConv↓Term ρ ⊢Δ (Empty-refl _) = Empty-refl ⊢Δ
   wkConv↓Term ρ ⊢Δ (Π-cong eql eqr eqlF eqlG l< l<'   x A<>B A<>B₁) =
     let ⊢ρF = wk ρ ⊢Δ x
     in  Π-cong eql eqr eqlF eqlG l< l<' ⊢ρF (wkConv↑Term ρ ⊢Δ A<>B) (wkConv↑Term (lift ρ) (⊢Δ ∙ ⊢ρF) A<>B₁)
   wkConv↓Term {ρ} {Δ = Δ} [ρ] ⊢Δ (Id-cong X x x₁) = Id-cong (wkConv↑Term [ρ] ⊢Δ X) (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁)
-  wkConv↓Term {ρ} {Δ = Δ} [ρ] ⊢Δ (ctr-cong {i} {j} {args} {args'} ⊢Γ len eqs) =
-    PE.subst₂ (λ t u → Δ ⊢ t [conv↓] u ∷ Ind i ^ ι ⁰)
-      (PE.sym (wk-ctr ρ i j args))
-      (PE.sym (wk-ctr ρ i j args'))
-      (ctr-cong ⊢Δ
+  wkConv↓Term {ρ} {Δ = Δ} [ρ] ⊢Δ (ctr-cong {ind} {j} {args} {args'} ⊢Γ ind∈ eq len eqs) =
+    PE.subst₂ (λ t u → Δ ⊢ t [conv↓] u ∷ Ind (SU.SInd.name ind) ^ ι ⁰)
+      (PE.sym (wk-ctr ρ (SU.SInd.name ind) j args))
+      (PE.sym (wk-ctr ρ (SU.SInd.name ind) j args'))
+      (ctr-cong ⊢Δ ind∈ eq
         (PE.trans (length-map (U.wk ρ) args) len)
         (wkAll₂Conv [ρ] ⊢Δ eqs))
 
@@ -190,4 +169,3 @@ mutual
     All₂ (λ a a' → Δ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) (map (U.wk ρ) args) (map (U.wk ρ) args')
   wkAll₂Conv [ρ] ⊢Δ []ₐ = []ₐ
   wkAll₂Conv [ρ] ⊢Δ (p ∷ₐ ps) = wkConv↑Term [ρ] ⊢Δ p ∷ₐ wkAll₂Conv [ρ] ⊢Δ ps
-

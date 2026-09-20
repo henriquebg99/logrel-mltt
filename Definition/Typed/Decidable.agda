@@ -1,14 +1,15 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.Decidable where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Conversion
-open import Definition.Conversion.Decidable
-open import Definition.Conversion.Soundness
-open import Definition.Conversion.Stability
-open import Definition.Conversion.Consequences.Completeness
+module Definition.Typed.Decidable (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Consequences.Syntactic senv swf equivs
+open import Definition.Conversion senv equivs
+open import Definition.Conversion.Decidable senv swf equivs
+open import Definition.Conversion.Soundness senv swf equivs
+open import Definition.Conversion.Stability senv swf equivs
+open import Definition.Conversion.Consequences.Completeness senv swf equivs
 open import Tools.Nullary
 open import Tools.Product
 open import Tools.Nat

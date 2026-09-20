@@ -1,25 +1,28 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution.Introductions.SingleSubst {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Substitution.Introductions.SingleSubst (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped
-open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Weakening as T
-open import Definition.Typed.Properties
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Weakening as LW
-open import Definition.LogicalRelation.Irrelevance as L
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Substitution
-open import Definition.LogicalRelation.Substitution.Irrelevance as S
-open import Definition.LogicalRelation.Substitution.Properties
-open import Definition.LogicalRelation.Substitution.Conversion
-open import Definition.LogicalRelation.Substitution.Weakening
-open import Definition.LogicalRelation.Substitution.MaybeEmbed
-open import Definition.LogicalRelation.Substitution.Introductions.Universe
-open import Definition.LogicalRelation.Fundamental.Variable
+open import Definition.Untyped senv
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Weakening senv equivs as T
+open import Definition.Typed.Properties senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.LogicalRelation.Weakening senv equivs as LW
+open import Definition.LogicalRelation.Irrelevance senv equivs as L
+open import Definition.LogicalRelation.Properties senv equivs
+open import Definition.LogicalRelation.Substitution senv equivs
+open import Definition.LogicalRelation.Substitution.Irrelevance senv equivs as S
+open import Definition.LogicalRelation.Substitution.Properties senv equivs
+open import Definition.LogicalRelation.Substitution.Conversion senv equivs
+open import Definition.LogicalRelation.Substitution.Weakening senv equivs
+open import Definition.LogicalRelation.Substitution.MaybeEmbed senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Universe senv equivs
+open import Definition.LogicalRelation.Fundamental.Variable senv equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 -- Validity of substitution of single variable in types.

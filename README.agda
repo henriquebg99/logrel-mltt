@@ -11,7 +11,6 @@ module README (equiv : E.Equiv) (equivRed : forall (eqrel : ER.EqRelSet equiv) â
 -- Git repository: https://github.com/CoqHott/logrel-mltt/tree/impredicativity-cast-compute-refl
 -- DOI of this artifact: 10.5281/zenodo.10499152
 
-
 ------------------
 -- INTRODUCTION --
 ------------------
@@ -71,7 +70,6 @@ open import Definition.Typed.Properties equiv
 
 -- Well-formed weakening and its properties.
 open import Definition.Typed.Weakening equiv
-
 
 ------------------------------
 -- KRIPKE LOGICAL RELATIONS --
@@ -154,10 +152,6 @@ open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec equiv
 -- Validity of natural numbers and its eliminator
 open import Definition.LogicalRelation.Substitution.Introductions.Nat equiv equivRed
 open import Definition.LogicalRelation.Substitution.Introductions.Natrec equiv equivRed
-
--- Validity of second natural numbers and its eliminator
-open import Definition.LogicalRelation.Substitution.Introductions.Nat2 equiv equivRed
-open import Definition.LogicalRelation.Substitution.Introductions.Natrec2 equiv equivRed
 
 -- Validity of Î -types, abstractions and applications
 open import Definition.LogicalRelation.Substitution.Introductions.Pi equiv equivRed

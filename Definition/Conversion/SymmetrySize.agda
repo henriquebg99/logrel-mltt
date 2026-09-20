@@ -1,23 +1,25 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Conversion.SymmetrySize where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Conversion
-open import Definition.Conversion.Stability
-open import Definition.Conversion.Soundness
-open import Definition.Conversion.Conversion
-open import Definition.Conversion.Whnf
-open import Definition.Conversion.ConvSize
-open import Definition.Conversion.ConversionProp
-open import Definition.Conversion.Symmetry
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.Equality
-open import Definition.Typed.Consequences.Reduction
-open import Definition.Typed.Consequences.Injectivity
-open import Definition.Typed.Consequences.Substitution
-open import Definition.Typed.Consequences.SucCong
+module Definition.Conversion.SymmetrySize (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Conversion senv equivs
+open import Definition.Conversion.Stability senv swf equivs
+open import Definition.Conversion.Soundness senv swf equivs
+open import Definition.Conversion.Conversion senv swf equivs
+open import Definition.Conversion.Whnf senv swf equivs
+open import Definition.Conversion.ConvSize senv equivs
+open import Definition.Conversion.ConversionProp senv swf equivs
+open import Definition.Conversion.Symmetry senv swf equivs
+open import Definition.Typed.Consequences.Syntactic senv swf equivs
+open import Definition.Typed.Consequences.Equality senv swf equivs
+open import Definition.Typed.Consequences.Reduction senv swf equivs
+open import Definition.Typed.Consequences.Injectivity senv swf equivs
+open import Definition.Typed.Consequences.Substitution senv swf equivs
+open import Definition.Typed.Consequences.SucCong senv swf equivs
 open import Tools.Product
+open import Tools.List using (All₂; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
 open import Tools.Nat
 size-subst : ∀ {t u A B Γ r} (A≡B : A PE.≡ B) (t~u : Γ ⊢ t ~ u ↓! A ^ r)
@@ -60,19 +62,6 @@ mutual
         c = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₂)) (size-symConv↑Term Γ≡Δ x₂)
         d = PE.trans (size-subst B≡ℕ u~t) (size-sym~↓! Γ≡Δ t~u)
     in PE.cong₄ (λ X Y Z T → 1 + X + Y + Z + T) a b c d
-  size-sym~↑! Γ≡Δ (natrec2-cong x x₁ x₂ t~u) =
-    let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-        B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
-        B≡ℕ2 = ℕ2≡A A≡B whnfB
-        F≡G = stabilityEq (Γ≡Δ ∙ refl (univ (ℕ2ⱼ ⊢Γ))) (soundnessConv↑ x)
-        F[0]≡G[0] = substTypeEq F≡G (refl (zero2ⱼ ⊢Δ))
-        a : sizeConv↑ (symConv↑ (Γ≡Δ ∙ (refl (univ (ℕ2ⱼ ⊢Γ)))) x) PE.≡ sizeConv↑ x
-        a = size-symConv↑ (Γ≡Δ ∙ (refl (univ (ℕ2ⱼ ⊢Γ)))) x
-        b : sizeConv↑Term (convConvTerm (symConv↑Term Γ≡Δ x₁) F[0]≡G[0]) PE.≡ sizeConv↑Term x₁
-        b = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₁)) (size-symConv↑Term Γ≡Δ x₁)
-        c = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₂)) (size-symConv↑Term Γ≡Δ x₂)
-        d = PE.trans (size-subst B≡ℕ2 u~t) (size-sym~↓! Γ≡Δ t~u)
-    in PE.cong₄ (λ X Y Z T → 1 + X + Y + Z + T) a b c d
   size-sym~↑! Γ≡Δ (Emptyrec-cong x t~u) =
     let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
         u~t = sym~↑% Γ≡Δ t~u
@@ -110,11 +99,17 @@ mutual
         B≡ℕ = ℕ≡A N≡B whnfB
         a = PE.trans (size-subst B≡ℕ u~t) (size-sym~↓! Γ≡Δ x)
     in PE.cong (λ X → 1 + X) a
-  size-sym~↑! Γ≡Δ (castℕ2-refl x x₁) =
+  size-sym~↑! Γ≡Δ (castInd-refl x x₁) =
     let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
         B , whnfB , N≡B , u~t = sym~↓! Γ≡Δ x
-        B≡ℕ2 = ℕ2≡A N≡B whnfB
-        a = PE.trans (size-subst B≡ℕ2 u~t) (size-sym~↓! Γ≡Δ x)
+        B≡Ind = Ind≡A N≡B whnfB
+        a = PE.trans (size-subst B≡Ind u~t) (size-sym~↓! Γ≡Δ x)
+    in PE.cong (λ X → 1 + X) a
+  size-sym~↑! Γ≡Δ (castInd-refl' x x₁) =
+    let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
+        B , whnfB , N≡B , u~t = sym~↓! Γ≡Δ x
+        B≡Ind = Ind≡A N≡B whnfB
+        a = PE.trans (size-subst B≡Ind u~t) (size-sym~↓! Γ≡Δ x)
     in PE.cong (λ X → 1 + X) a
   size-sym~↑! Γ≡Δ (cast-refl' x x₁ x₂) =
     let A≡A = soundness~↓! x
@@ -134,12 +129,6 @@ mutual
         B≡ℕ = ℕ≡A N≡B whnfB
         a = PE.trans (size-subst B≡ℕ u~t) (size-sym~↓! Γ≡Δ x)
     in PE.cong (λ X → 1 + X) a
-  size-sym~↑! Γ≡Δ (castℕ2-refl' x x₁) =
-    let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-        B , whnfB , N≡B , u~t = sym~↓! Γ≡Δ x
-        B≡ℕ2 = ℕ2≡A N≡B whnfB
-        a = PE.trans (size-subst B≡ℕ2 u~t) (size-sym~↓! Γ≡Δ x)
-    in PE.cong (λ X → 1 + X) a
   size-sym~↑! Γ≡Δ (cast-neℕ x x₁ x₂ x₃) =
     let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
         U , whnfU , U≡U' , A'~A = sym~↓! Γ≡Δ x
@@ -148,7 +137,7 @@ mutual
         a = PE.trans (size-subst U≡B A'~A) (size-sym~↓! Γ≡Δ x)
         b = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₁)) (size-symConv↑Term Γ≡Δ x₁)
     in PE.cong₂ (λ X Y → 1 + X + Y) a b
-  size-sym~↑! Γ≡Δ (cast-neℕ2 x x₁ x₂ x₃) =
+  size-sym~↑! Γ≡Δ (cast-neInd x x₁ x₂ x₃) =
     let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
         U , whnfU , U≡U' , A'~A = sym~↓! Γ≡Δ x
         U≡B = U≡A-whnf U≡U' whnfU
@@ -156,7 +145,7 @@ mutual
         a = PE.trans (size-subst U≡B A'~A) (size-sym~↓! Γ≡Δ x)
         b = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₁)) (size-symConv↑Term Γ≡Δ x₁)
     in PE.cong₂ (λ X Y → 1 + X + Y) a b
-  size-sym~↑! Γ≡Δ (cast-ℕ X x x₁ x₂) =
+  size-sym~↑! Γ≡Δ (cast-Ind X x x₁ x₂) =
     let U , whnfU , U≡U' , A'~A = sym~↓! Γ≡Δ X
         B'~B = symConv↑Term Γ≡Δ x
         U≡B = U≡A-whnf U≡U' whnfU
@@ -164,7 +153,7 @@ mutual
         a = PE.trans (size-subst U≡B A'~A) (size-sym~↓! Γ≡Δ X)
         b = size-symConv↑Term Γ≡Δ x
     in PE.cong₂ (λ X Y → 1 + X + Y) a b
-  size-sym~↑! Γ≡Δ (cast-ℕ2 X x x₁ x₂) =
+  size-sym~↑! Γ≡Δ (cast-ℕ X x x₁ x₂) =
     let U , whnfU , U≡U' , A'~A = sym~↓! Γ≡Δ X
         B'~B = symConv↑Term Γ≡Δ x
         U≡B = U≡A-whnf U≡U' whnfU
@@ -195,19 +184,27 @@ mutual
         a = size-symConv↑Term Γ≡Δ x
         b = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₁)) (size-symConv↑Term Γ≡Δ x₁)
     in PE.cong₂ (λ X Y → 1 + X + Y) a b
-  size-sym~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) =
-    let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-        a = size-symConv↑Term Γ≡Δ x
-        b = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₁)) (size-symConv↑Term Γ≡Δ x₁)
-    in PE.cong₂ (λ X Y → 1 + X + Y) a b
   size-sym~↑! Γ≡Δ (cast-ℕΠ x x₁ x₂ x₃) = PE.cong₂ (λ X Y → 1 + X + Y) (size-symConv↑Term Γ≡Δ x) (size-symConv↑Term Γ≡Δ x₁)
-  size-sym~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) = PE.cong₂ (λ X Y → 1 + X + Y) (size-symConv↑Term Γ≡Δ x) (size-symConv↑Term Γ≡Δ x₁)
+  size-sym~↑! Γ≡Δ (cast-IndΠ x x₁ x₂ x₃) =
+    PE.cong₂ (λ X Y → 1 + X + Y) (size-symConv↑Term Γ≡Δ x) (size-symConv↑Term Γ≡Δ x₁)
+  size-sym~↑! Γ≡Δ (cast-ΠInd x x₁ x₂ x₃) =
+    let b = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₁)) (size-symConv↑Term Γ≡Δ x₁)
+    in PE.cong₂ (λ X Y → 1 + X + Y) (size-symConv↑Term Γ≡Δ x) b
+  size-sym~↑! Γ≡Δ (cast-Indℕ x x₁ x₂) = PE.cong (λ X → 1 + X) (size-symConv↑Term Γ≡Δ x)
+  size-sym~↑! Γ≡Δ (cast-ℕInd x x₁ x₂) = PE.cong (λ X → 1 + X) (size-symConv↑Term Γ≡Δ x)
+  size-sym~↑! Γ≡Δ (cast-IndInd x x₁ x₂ x₃) = PE.cong (λ X → 1 + X) (size-symConv↑Term Γ≡Δ x₁)
   size-sym~↑! Γ≡Δ (cast-ΠΠ%! x x₁ x₂ x₃ x₄) =
     let a = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₂)) (size-symConv↑Term Γ≡Δ x₂)
     in PE.cong₃ (λ X Y Z → 1 + X + Y + Z) (size-symConv↑Term Γ≡Δ x) (size-symConv↑Term Γ≡Δ x₁) a
   size-sym~↑! Γ≡Δ (cast-ΠΠ!% x x₁ x₂ x₃ x₄) =
     let a = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₂)) (size-symConv↑Term Γ≡Δ x₂)
     in PE.cong₃ (λ X Y Z → 1 + X + Y + Z) (size-symConv↑Term Γ≡Δ x) (size-symConv↑Term Γ≡Δ x₁) a
+  size-sym~↑! Γ≡Δ (IndRect-cong _ x x₁ x₂) =
+    let B , whnfB , Ind≡B , t'~t = sym~↓! Γ≡Δ x₁
+        B≡Ind = Ind≡A Ind≡B whnfB
+        a = size-symConv↑Term Γ≡Δ x
+        b = PE.trans (size-subst B≡Ind t'~t) (size-sym~↓! Γ≡Δ x₁)
+    in PE.cong₂ (λ X Y → 1 + X + Y) a b
 
   size-sym~↓! : ∀ {t u A Γ Δ l} (Γ≡Δ : ⊢ Γ ≡ Δ)
         (t~u : Γ ⊢ t ~ u ↓! A ^ l) → size~↓! (proj₂ (proj₂ (proj₂ (sym~↓! Γ≡Δ t~u)))) PE.≡ size~↓! t~u
@@ -231,7 +228,6 @@ mutual
         a = PE.trans (size-subst U≡B u~t) (size-sym~↓! Γ≡Δ t~u)
     in PE.cong (λ X → 1 + X) a
   size-symConv↓Term Γ≡Δ (ℕ-refl x) = PE.refl
-  size-symConv↓Term Γ≡Δ (ℕ2-refl x) = PE.refl
   size-symConv↓Term Γ≡Δ (Empty-refl x) = PE.refl
   size-symConv↓Term Γ≡Δ (Π-cong PE.refl PE.refl PE.refl PE.refl l< l<' x A<>B A<>B₁) =
     let F≡H = soundnessConv↑Term A<>B
@@ -247,11 +243,6 @@ mutual
         B≡ℕ = ℕ≡A A≡B whnfB
         a = PE.trans (size-subst B≡ℕ u~t) (size-sym~↓! Γ≡Δ t~u)
     in PE.cong (λ X → 1 + X) a
-  size-symConv↓Term Γ≡Δ (ℕ2-ins t~u) =
-    let B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
-        B≡ℕ2 = ℕ2≡A A≡B whnfB
-        a = PE.trans (size-subst B≡ℕ2 u~t) (size-sym~↓! Γ≡Δ t~u)
-    in PE.cong (λ X → 1 + X) a
   size-symConv↓Term Γ≡Δ (Ind-ins t~u) =
     let B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
         B≡Ind = Ind≡A A≡B whnfB
@@ -261,9 +252,17 @@ mutual
     let B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
     in PE.cong (λ X → 1 + X) (size-sym~↓! Γ≡Δ t~u)
   size-symConv↓Term Γ≡Δ (zero-refl x) = PE.refl
-  size-symConv↓Term Γ≡Δ (zero2-refl x) = PE.refl
+  size-symConv↓Term Γ≡Δ (Ind-refl x) = PE.refl
+  size-symConv↓Term Γ≡Δ (ctr-cong x x₁ x₂ x₃ x₄) = PE.cong 1+ (symAll₂Size Γ≡Δ x₄)
+    where
+    symAll₂Size : ∀ {args args' i Γ Δ}
+                → (Γ≡Δ : ⊢ Γ ≡ Δ)
+                → (ps : All₂ (λ a a' → Γ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) args args')
+                → sizeConv↑TermAll (symAll₂ Γ≡Δ ps) PE.≡ sizeConv↑TermAll ps
+    symAll₂Size Γ≡Δ []ₐ = PE.refl
+    symAll₂Size Γ≡Δ (p ∷ₐ ps) =
+      PE.cong₂ _+_ (size-symConv↑Term Γ≡Δ p) (symAll₂Size Γ≡Δ ps)
   size-symConv↓Term Γ≡Δ (suc-cong x) = PE.cong (λ X → 1 + X) (size-symConv↑Term Γ≡Δ x)
-  size-symConv↓Term Γ≡Δ (suc2-cong x) = PE.cong (λ X → 1 + X) (size-symConv↑Term Γ≡Δ x)
   size-symConv↓Term Γ≡Δ (η-eq l< l<' x x₁ x₂ y y₁ t<>u) =
     PE.cong (λ X → 1 + X) (size-symConv↑Term (Γ≡Δ ∙ refl x) t<>u)
 

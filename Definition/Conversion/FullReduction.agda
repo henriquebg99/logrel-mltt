@@ -1,26 +1,27 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Conversion.FullReduction where
-open import Definition.Untyped as U hiding (wk)
-open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.EqRelInstance
-open import Definition.Typed.Weakening
-open import Definition.Conversion
-open import Definition.Conversion.Whnf
-open import Definition.Conversion.Soundness
-open import Definition.Conversion.Stability
-open import Definition.Typed.Consequences.Inversion
-open import Definition.Typed.Consequences.Injectivity
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.NeTypeEq
-open import Definition.Typed.Consequences.Equality
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Properties.Escape
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Fundamental.Reducibility
-open import Definition.Typed.Consequences.RelevanceUnicity
+module Definition.Conversion.FullReduction (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv as U hiding (wk)
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Typed.Weakening senv equivs
+open import Definition.Conversion senv equivs
+open import Definition.Conversion.Whnf senv swf equivs
+open import Definition.Conversion.Soundness senv swf equivs
+open import Definition.Conversion.Stability senv swf equivs
+open import Definition.Typed.Consequences.Inversion senv swf equivs
+open import Definition.Typed.Consequences.Injectivity senv swf equivs
+open import Definition.Typed.Consequences.Syntactic senv swf equivs
+open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
+open import Definition.Typed.Consequences.Equality senv swf equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Properties.Escape senv equivs
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
+open import Definition.Typed.Consequences.RelevanceUnicity senv swf equivs
 open import Tools.Empty using (⊥; ⊥-elim)
 open import Tools.Product
 import Tools.PropositionalEquality as PE

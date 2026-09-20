@@ -1,6 +1,8 @@
 -- Laws for weakenings and substitutions.
-module Definition.Untyped.Properties where
-open import Definition.Untyped
+
+import Definition.SUntyped as SI
+module Definition.Untyped.Properties (senv : SI.SEnv) where
+open import Definition.Untyped senv
 open import Tools.Nat
 open import Tools.List
 open import Tools.Inequality using (filter; filter-∈ₗ)
@@ -8,7 +10,7 @@ open import Tools.Product
 open import Tools.PropositionalEquality renaming (subst to PEsubst)
 open import Tools.Empty using (⊥; ⊥-elim)
 import Definition.SUntyped as SU
-import Definition.OUntyped as O
+import Definition.OUntyped senv as O
 -- helper function on relevance
 relevance-discr : ! ≡ % → ⊥
 relevance-discr ()
@@ -231,7 +233,6 @@ mutual
                                      (subst-id t)))
               (substGen-id g)
 
-
 -- Correctness of composition of weakening and substitution.
 
 -- Composition of liftings is lifting of the composition.
@@ -319,7 +320,6 @@ wk-subst-lift G = trans (wk-subst G) (subst-lift-•ₛ G)
 wk≡subst : ∀ ρ t → wk ρ t ≡ subst (toSubst ρ) t
 wk≡subst ρ t = trans (cong (wk ρ) (sym (subst-id t))) (wk-subst t)
 
-
 -- Composition of substitutions.
 
 -- Composition of liftings is lifting of the composition.
@@ -392,17 +392,6 @@ wk-β-natrec ρ G rG lG =
          (trans (subst-wk G)
                 (substVar-to-subst (λ { 0 → refl ; (1+ x) → refl}) G)))))) refl refl refl) refl refl refl
 
-wk-β-natrec2 : ∀ ρ G rG lG
-  → Π ℕ2 ^ ! ° ⁰ ▹ (Π wk (lift ρ) G ^ rG ° lG ▹ wk (lift (lift ρ)) (wk1 (G [ suc2 (var 0) ]↑)) ° lG ° lG ^ rG) ° lG ° lG ^ rG
-  ≡ Π ℕ2 ^ ! ° ⁰ ▹ (wk (lift ρ) G ^ rG ° lG ▹▹ wk (lift ρ) G [ suc2 (var 0) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG
-wk-β-natrec2 ρ G rG lG =
-  cong7 Π_^_°_▹_°_°_^_ refl refl refl (cong7 Π_^_°_▹_°_°_^_ refl refl refl
-    (trans (wk-comp (lift (lift ρ)) (step id)
-                    (subst (consSubst (wk1Subst var) (suc2 (var 0))) G))
-       (trans (wk-subst G) (sym (trans (wk-subst (wk (lift ρ) G))
-         (trans (subst-wk G)
-                (substVar-to-subst (λ { 0 → refl ; (1+ x) → refl}) G)))))) refl refl refl) refl refl refl
-
 wk-cast : ∀ ρ l A B e t → wk ρ (cast l A B e t) ≡ cast l (wk ρ A) (wk ρ B) (wk ρ e) (wk ρ t)
 wk-cast ρ l A B e t = refl
 
@@ -414,9 +403,6 @@ subst-app σ f a l = refl
 
 wk-ℕ : ∀ ρ → wk ρ ℕ ≡ ℕ
 wk-ℕ ρ = refl
-
-wk-ℕ2 : ∀ ρ → wk ρ ℕ2 ≡ ℕ2
-wk-ℕ2 ρ = refl
 
 -- Composing a singleton substitution and a lifted substitution.
 -- sg u ∘ lift σ = cons id u ∘ lift σ = cons σ u
@@ -614,81 +600,6 @@ natrecIrrelevantSubst′ F z s n =
                (trans (substCompEq F)
                       (substVar-to-subst (natrecIrrelevantSubstLemma′ F z s n) F)))
 
-natrec2SucCaseLemma : ∀ {σ} (x : Nat)
-  → (step id •ₛ consSubst (wk1Subst idSubst) (suc2 (var 0)) ₛ•ₛ liftSubst σ) x
-  ≡ (liftSubst (liftSubst σ) ₛ• step id ₛ•ₛ consSubst (wk1Subst idSubst) (suc2 (var 0))) x
-natrec2SucCaseLemma 0 = refl
-natrec2SucCaseLemma {σ} (1+ x) =
-  trans (subst-wk (σ x))
-           (sym (trans (wk1-wk (step id) _)
-                             (wk≡subst (step (step id)) (σ x))))
-
-natrec2SucCase : ∀ σ F rF lF
-  → Π ℕ2 ^ ! ° ⁰ ▹ (Π subst (liftSubst σ) F ^ rF ° lF
-                ▹ subst (liftSubst (liftSubst σ)) (wk1 (F [ suc2 (var 0) ]↑)) ° lF ° lF ^ rF) ° lF ° lF ^ rF
-  ≡ Π ℕ2 ^ ! ° ⁰ ▹ (subst (liftSubst σ) F ^ rF ° lF ▹▹ subst (liftSubst σ) F [ suc2 (var 0) ]↑ ° lF ° lF ^ rF) ° lF ° lF ^ rF
-natrec2SucCase σ F rF lF =
-  cong7 Π_^_°_▹_°_°_^_ refl refl refl
-    (cong7 Π_^_°_▹_°_°_^_ refl refl refl
-       (trans (trans (subst-wk (F [ suc2 (var 0) ]↑))
-                           (substCompEq F))
-                 (sym (trans (wk-subst (subst (liftSubst σ) F))
-                                   (trans (substCompEq F)
-                                             (substVar-to-subst natrec2SucCaseLemma F))))) refl refl refl) refl refl refl
-
-natrec2IrrelevantSubstLemma : ∀ {l} F z s m σ (x : Nat)
-  → (sgSubst (natrec2 l (subst (liftSubst σ) F) (subst σ z) (subst σ s) m)
-     ₛ•ₛ liftSubst (sgSubst m)
-     ₛ•ₛ liftSubst (liftSubst σ)
-     ₛ•  step id
-     ₛ•ₛ consSubst (tail idSubst) (suc2 (var 0))) x
-  ≡ (consSubst σ (suc2 m)) x
-natrec2IrrelevantSubstLemma F z s m σ 0 =
-  cong suc2 (trans (subst-wk m) (subst-id m))
-natrec2IrrelevantSubstLemma F z s m σ (1+ x) =
-  trans (subst-wk (wk (step id) (σ x)))
-           (trans (subst-wk (σ x))
-                     (subst-id (σ x)))
-
-natrec2IrrelevantSubst : ∀ {l} F z s m σ
-  → subst (consSubst σ (suc2 m)) F
-  ≡ subst (liftSubst (sgSubst m))
-          (subst (liftSubst (liftSubst σ))
-                 (wk1 (F [ suc2 (var 0) ]↑)))
-                   [ natrec2 l (subst (liftSubst σ) F) (subst σ z) (subst σ s) m ]
-natrec2IrrelevantSubst F z s m σ =
-  sym (trans (substCompEq (subst (liftSubst (liftSubst σ))
-        (wk (step id)
-         (subst (consSubst (tail idSubst) (suc2 (var 0))) F))))
-         (trans (substCompEq (wk (step id)
-        (subst (consSubst (tail idSubst) (suc2 (var 0))) F)))
-        (trans
-           (subst-wk (subst (consSubst (tail idSubst) (suc2 (var 0))) F))
-           (trans (substCompEq F)
-                     (substVar-to-subst (natrec2IrrelevantSubstLemma F z s m σ) F)))))
-
-natrec2IrrelevantSubstLemma′ : ∀ {l} F z s n (x : Nat)
-  → (sgSubst (natrec2 l F z s n)
-     ₛ•ₛ liftSubst (sgSubst n)
-     ₛ•  step id
-     ₛ•ₛ consSubst (tail idSubst) (suc2 (var 0))) x
-  ≡ (consSubst var (suc2 n)) x
-natrec2IrrelevantSubstLemma′ F z s n 0 =
-  cong suc2 (trans (subst-wk n) (subst-id n))
-natrec2IrrelevantSubstLemma′ F z s n (1+ x) = refl
-
-natrec2IrrelevantSubst′ : ∀ {l} F z s n
-  → subst (liftSubst (sgSubst n))
-      (wk1 (F [ suc2 (var 0) ]↑))
-      [ natrec2 l F z s n ]
-  ≡ F [ suc2 n ]
-natrec2IrrelevantSubst′ F z s n =
-  trans (substCompEq (wk (step id)
-                         (subst (consSubst (tail idSubst) (suc2 (var 0))) F)))
-        (trans (subst-wk (subst (consSubst (tail idSubst) (suc2 (var 0))) F))
-               (trans (substCompEq F)
-                      (substVar-to-subst (natrec2IrrelevantSubstLemma′ F z s n) F)))
-
 cons0wkLift1-id : ∀ σ G
     → subst (sgSubst (var 0))
             (wk (lift (step id)) (subst (liftSubst σ) G))
@@ -854,21 +765,19 @@ subst-Univ-either a (gen (Natreckind x) c) ()
 subst-Univ-either a (gen (Emptykind l) c) ()
 subst-Univ-either a (gen (Emptyreckind l ll) c) ()
 
-
 castNeutralInv : ∀ {l A B e t} → Neutral A → Neutral B → Neutral (cast l A B e t) → Neutral t 
 castNeutralInv neA neB (castₙ _ _ net) = net
-
 
 ------------------------------------------------------------------------
 -- Weakening of IndRect method types
 
-wk-indRectBranchTy : ∀ ρ i j P rG lG →
-  wk ρ (indRectBranchTy i j P rG lG) ≡
-  indRectBranchTy i j (wk ρ P) rG lG
-wk-indRectBranchTy ρ i j P rG lG =
-  let Ts = ctrArgsTypeList i j
+wk-indRectBranchTy : ∀ ρ i j Ss P rG lG →
+  wk ρ (indRectBranchTy i j Ss P rG lG) ≡
+  indRectBranchTy i j Ss (wk ρ P) rG lG
+wk-indRectBranchTy ρ i j Ss P rG lG =
+  let Ts = ctrArgsTypeList Ss
       n = length Ts
-      recs = ctrRecIndices i j
+      recs = ctrRecIndices i Ss
       k = length recs
       vars = map (λ v → var (((k + n) - 1) - v)) (range n)
       conc Q = wk1^ (k + n) Q ∘ ctr i j vars ^ ¹
@@ -878,11 +787,11 @@ wk-indRectBranchTy ρ i j P rG lG =
       Πarg = λ A B → Π A ^ ! ° ⁰ ▹ B ° lG ° lG ^ rG
       Πih  = λ A B → Π A ^ rG ° lG ▹ B ° lG ° lG ^ rG
       n≡ = trans (length-map (λ p → (emb_oterm_term (proj₁ p) , proj₂ p))
-                           (O.ctrArgsTypeList i j))
+                           (O.ctrArgsTypeList Ss))
                 (length-map (λ T → (O.emb-stype-oterm T , 0))
-                            (SU.ctrArgsTypeList i j))
+                            (Ss))
       recs< : ∀ r → r ∈ₗ recs → r << n
-      recs< r h = PEsubst (r <<_) (sym n≡) (ctrRec-< i j r h)
+      recs< r h = PEsubst (r <<_) (sym n≡) (ctrRec-< i Ss r h)
       ihTys≡go : ∀ Q → ihTys Q ≡ ihGo n Q 0 recs
       ihTys≡go Q = sym (ihGo-range n Q recs)
       k≡len : length (ihTys P) ≡ k
@@ -908,7 +817,7 @@ wk-indRectBranchTy ρ i j P rG lG =
   trans
     (wk-foldr-Π-closed ρ ! ⁰ lG rG
       (foldr Πih (conc P) (ihTys P)) argTys
-      (λ ρ' → wk-argTys ρ' i j))
+      (λ ρ' → wk-argTys ρ' Ss))
     (trans
       (cong
         (λ ℓ → foldr Πarg (wk (repeat lift ρ ℓ) (foldr Πih (conc P) (ihTys P))) argTys)
@@ -936,30 +845,30 @@ wk-indRectBranchTy ρ i j P rG lG =
   minus-<- (1+ n) (1+ r) (leS p) =
     le-suc (PEsubst (_<< n) (sym (minus-suc n r)) (minus-<- n r p))
 
-  argTys-≡ : ∀ i j →
-    map proj₁ (ctrArgsTypeList i j) ≡
-    map (λ T → emb_oterm_term (O.emb-stype-oterm T)) (SU.ctrArgsTypeList i j)
-  argTys-≡ i j =
-    let As = SU.ctrArgsTypeList i j in
+  argTys-≡ : ∀ Ss →
+    map proj₁ (ctrArgsTypeList Ss) ≡
+    map (λ T → emb_oterm_term (O.emb-stype-oterm T)) (Ss)
+  argTys-≡ Ss =
+    let As = Ss in
     trans
       (map-map proj₁ (λ p → (emb_oterm_term (proj₁ p) , proj₂ p))
-                     (O.ctrArgsTypeList i j))
+                     (O.ctrArgsTypeList Ss))
       (map-map (λ p → emb_oterm_term (proj₁ p))
                (λ T → (O.emb-stype-oterm T , 0)) As)
 
-  wk-argTys : ∀ ρ i j →
-    map (wk ρ) (map proj₁ (ctrArgsTypeList i j)) ≡
-    map proj₁ (ctrArgsTypeList i j)
-  wk-argTys ρ i j =
-    trans (cong (map (wk ρ)) (argTys-≡ i j))
+  wk-argTys : ∀ ρ Ss →
+    map (wk ρ) (map proj₁ (ctrArgsTypeList Ss)) ≡
+    map proj₁ (ctrArgsTypeList Ss)
+  wk-argTys ρ Ss =
+    trans (cong (map (wk ρ)) (argTys-≡ Ss))
       (trans
         (map-map (wk ρ) (λ T → emb_oterm_term (O.emb-stype-oterm T))
-                 (SU.ctrArgsTypeList i j))
+                 (Ss))
         (trans
-          (map-cong (SU.ctrArgsTypeList i j)
+          (map-cong (Ss)
             (λ A → trans (cong (wk ρ) (emb-stype-hom A))
                      (trans (wk-emb-stype ρ A) (sym (emb-stype-hom A)))))
-          (sym (argTys-≡ i j))))
+          (sym (argTys-≡ Ss))))
 
   repeat-lift-lift : ∀ ρ n →
     repeat lift (lift ρ) n ≡ lift (repeat lift ρ n)
@@ -1010,11 +919,11 @@ wk-indRectBranchTy ρ i j P rG lG =
                           (wk (lift (repeat lift ρ (length As))) Z))
                    (tel-lift ρ 0 As))))
 
-  ctrRec-< : ∀ ind index r →
-    r ∈ₗ ctrRecIndices ind index →
-    r << length (SU.ctrArgsTypeList ind index)
-  ctrRec-< ind index r h =
-    let as = SU.ctrArgsTypeList ind index
+  ctrRec-< : ∀ ind Ss r →
+    r ∈ₗ ctrRecIndices ind Ss →
+    r << length (Ss)
+  ctrRec-< ind Ss r h =
+    let as = Ss
         n  = length as
         pairs = zip (range n) as
         filtered = filter (λ jT → SU.ctrArgIsRecursive ind (proj₂ jT)) pairs
@@ -1123,23 +1032,26 @@ wk-indRectBranchTy ρ i j P rG lG =
   length-ihGo n Q ℓ [] = refl
   length-ihGo n Q ℓ (r ∷ rs) = cong 1+ (length-ihGo n Q (1+ ℓ) rs)
 
-wk-indRectBranchTyList : ∀ ρ i P rG lG →
-  map (wk ρ) (indRectBranchTyList i P rG lG) ≡
-  indRectBranchTyList i (wk ρ P) rG lG
-wk-indRectBranchTyList ρ i P rG lG =
+wk-indRectBranchTyList : ∀ ρ ind P rG lG →
+  map (wk ρ) (indRectBranchTyList ind P rG lG) ≡
+  indRectBranchTyList ind (wk ρ P) rG lG
+wk-indRectBranchTyList ρ ind P rG lG =
   trans
-    (map-map (wk ρ) (λ j → indRectBranchTy i j P rG lG)
-             (range (SU.indCtrCount i)))
-    (map-cong (range (SU.indCtrCount i))
-      (λ j → wk-indRectBranchTy ρ i j P rG lG))
+    (map-map (wk ρ)
+      (λ jTs → indRectBranchTy (SU.SInd.name ind) (proj₁ jTs) (proj₂ jTs) P rG lG)
+      ctrs)
+    (map-cong ctrs
+      (λ jTs → wk-indRectBranchTy ρ (SU.SInd.name ind) (proj₁ jTs) (proj₂ jTs) P rG lG))
+  where
+  ctrs = zip (range (SU.indCtrCount ind)) (SU.SInd.ctrArgsTypes ind)
 
-subst-indRectBranchTy : ∀ σ i j P rG lG →
-  subst σ (indRectBranchTy i j P rG lG) ≡
-  indRectBranchTy i j (subst σ P) rG lG
-subst-indRectBranchTy σ i j P rG lG =
-  let Ts = ctrArgsTypeList i j
+subst-indRectBranchTy : ∀ σ i j Ss P rG lG →
+  subst σ (indRectBranchTy i j Ss P rG lG) ≡
+  indRectBranchTy i j Ss (subst σ P) rG lG
+subst-indRectBranchTy σ i j Ss P rG lG =
+  let Ts = ctrArgsTypeList Ss
       n = length Ts
-      recs = ctrRecIndices i j
+      recs = ctrRecIndices i Ss
       k = length recs
       vars = map (λ v → var (((k + n) - 1) - v)) (range n)
       conc Q = wk1^ (k + n) Q ∘ ctr i j vars ^ ¹
@@ -1149,11 +1061,11 @@ subst-indRectBranchTy σ i j P rG lG =
       Πarg = λ A B → Π A ^ ! ° ⁰ ▹ B ° lG ° lG ^ rG
       Πih  = λ A B → Π A ^ rG ° lG ▹ B ° lG ° lG ^ rG
       n≡ = trans (length-map (λ p → (emb_oterm_term (proj₁ p) , proj₂ p))
-                           (O.ctrArgsTypeList i j))
+                           (O.ctrArgsTypeList Ss))
                 (length-map (λ T → (O.emb-stype-oterm T , 0))
-                            (SU.ctrArgsTypeList i j))
+                            (Ss))
       recs< : ∀ r → r ∈ₗ recs → r << n
-      recs< r h = PEsubst (r <<_) (sym n≡) (ctrRec-< i j r h)
+      recs< r h = PEsubst (r <<_) (sym n≡) (ctrRec-< i Ss r h)
       ihTys≡go : ∀ Q → ihTys Q ≡ ihGo n Q 0 recs
       ihTys≡go Q = sym (ihGo-range n Q recs)
       k≡len : length (ihTys P) ≡ k
@@ -1179,7 +1091,7 @@ subst-indRectBranchTy σ i j P rG lG =
   trans
     (subst-foldr-Π-closed σ ! ⁰ lG rG
       (foldr Πih (conc P) (ihTys P)) argTys
-      (λ σ' → subst-argTys σ' i j))
+      (λ σ' → subst-argTys σ' Ss))
     (trans
       (cong
         (λ ℓ → foldr Πarg (subst (repeat liftSubst σ ℓ) (foldr Πih (conc P) (ihTys P))) argTys)
@@ -1209,30 +1121,30 @@ subst-indRectBranchTy σ i j P rG lG =
   minus-<- (1+ n) (1+ r) (leS p) =
     le-suc (PEsubst (_<< n) (sym (minus-suc n r)) (minus-<- n r p))
 
-  argTys-≡ : ∀ i j →
-    map proj₁ (ctrArgsTypeList i j) ≡
-    map (λ T → emb_oterm_term (O.emb-stype-oterm T)) (SU.ctrArgsTypeList i j)
-  argTys-≡ i j =
-    let As = SU.ctrArgsTypeList i j in
+  argTys-≡ : ∀ Ss →
+    map proj₁ (ctrArgsTypeList Ss) ≡
+    map (λ T → emb_oterm_term (O.emb-stype-oterm T)) (Ss)
+  argTys-≡ Ss =
+    let As = Ss in
     trans
       (map-map proj₁ (λ p → (emb_oterm_term (proj₁ p) , proj₂ p))
-                     (O.ctrArgsTypeList i j))
+                     (O.ctrArgsTypeList Ss))
       (map-map (λ p → emb_oterm_term (proj₁ p))
                (λ T → (O.emb-stype-oterm T , 0)) As)
 
-  subst-argTys : ∀ σ i j →
-    map (subst σ) (map proj₁ (ctrArgsTypeList i j)) ≡
-    map proj₁ (ctrArgsTypeList i j)
-  subst-argTys σ i j =
-    trans (cong (map (subst σ)) (argTys-≡ i j))
+  subst-argTys : ∀ σ Ss →
+    map (subst σ) (map proj₁ (ctrArgsTypeList Ss)) ≡
+    map proj₁ (ctrArgsTypeList Ss)
+  subst-argTys σ Ss =
+    trans (cong (map (subst σ)) (argTys-≡ Ss))
       (trans
         (map-map (subst σ) (λ T → emb_oterm_term (O.emb-stype-oterm T))
-                 (SU.ctrArgsTypeList i j))
+                 (Ss))
         (trans
-          (map-cong (SU.ctrArgsTypeList i j)
+          (map-cong (Ss)
             (λ A → trans (cong (subst σ) (emb-stype-hom A))
                      (trans (subst-emb-stype σ A) (sym (emb-stype-hom A)))))
-          (sym (argTys-≡ i j))))
+          (sym (argTys-≡ Ss))))
 
   repeat-liftSubst-lift : ∀ σ n →
     repeat liftSubst (liftSubst σ) n ≡ liftSubst (repeat liftSubst σ n)
@@ -1283,11 +1195,11 @@ subst-indRectBranchTy σ i j P rG lG =
                           (subst (liftSubst (repeat liftSubst σ (length As))) Z))
                    (tel-liftSubst σ 0 As))))
 
-  ctrRec-< : ∀ ind index r →
-    r ∈ₗ ctrRecIndices ind index →
-    r << length (SU.ctrArgsTypeList ind index)
-  ctrRec-< ind index r h =
-    let as = SU.ctrArgsTypeList ind index
+  ctrRec-< : ∀ ind Ss r →
+    r ∈ₗ ctrRecIndices ind Ss →
+    r << length (Ss)
+  ctrRec-< ind Ss r h =
+    let as = Ss
         n  = length as
         pairs = zip (range n) as
         filtered = filter (λ jT → SU.ctrArgIsRecursive ind (proj₂ jT)) pairs
@@ -1396,12 +1308,15 @@ subst-indRectBranchTy σ i j P rG lG =
   length-ihGo n Q ℓ [] = refl
   length-ihGo n Q ℓ (r ∷ rs) = cong 1+ (length-ihGo n Q (1+ ℓ) rs)
 
-subst-indRectBranchTyList : ∀ σ i P rG lG →
-  map (subst σ) (indRectBranchTyList i P rG lG) ≡
-  indRectBranchTyList i (subst σ P) rG lG
-subst-indRectBranchTyList σ i P rG lG =
+subst-indRectBranchTyList : ∀ σ ind P rG lG →
+  map (subst σ) (indRectBranchTyList ind P rG lG) ≡
+  indRectBranchTyList ind (subst σ P) rG lG
+subst-indRectBranchTyList σ ind P rG lG =
   trans
-    (map-map (subst σ) (λ j → indRectBranchTy i j P rG lG)
-             (range (SU.indCtrCount i)))
-    (map-cong (range (SU.indCtrCount i))
-      (λ j → subst-indRectBranchTy σ i j P rG lG))
+    (map-map (subst σ)
+      (λ jTs → indRectBranchTy (SU.SInd.name ind) (proj₁ jTs) (proj₂ jTs) P rG lG)
+      ctrs)
+    (map-cong ctrs
+      (λ jTs → subst-indRectBranchTy σ (SU.SInd.name ind) (proj₁ jTs) (proj₂ jTs) P rG lG))
+  where
+  ctrs = zip (range (SU.indCtrCount ind)) (SU.SInd.ctrArgsTypes ind)

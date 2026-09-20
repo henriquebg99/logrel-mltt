@@ -1,20 +1,22 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Properties.Escape {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Properties.Escape (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Weakening
-open import Definition.Typed.Properties
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Properties.Reflexivity
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Weakening senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Properties.Reflexivity senv equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 -- Reducible types are well-formed.
 escape : ∀ {l Γ A r} → Γ ⊩⟨ l ⟩ A ^ r → Γ ⊢ A ^ r
 escape (Uᵣ′ _ _ _ _ _ PE.refl [[ ⊢A , ⊢B , D ]]) = ⊢A
 escape (ℕᵣ [[ ⊢A , ⊢B , D ]]) = ⊢A
-escape (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) = ⊢A
 escape (Indᵣ [[ ⊢A , ⊢B , D ]]) = ⊢A
 escape (Emptyᵣ [[ ⊢A , ⊢B , D ]]) = ⊢A
 escape (ne′ K [[ ⊢A , ⊢B , D ]] neK K≡K) = ⊢A
@@ -31,7 +33,6 @@ escapeEq : ∀ {l Γ A B r} → ([A] : Γ ⊩⟨ l ⟩ A ^ r)
 escapeEq (Uᵣ′ _ _ _ ⁰ _ PE.refl [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ Uₙ Uₙ (≅-univ (≅-U⁰refl (wf ⊢A)))
 escapeEq (Uᵣ′ _ _ _ ¹ _ PE.refl [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ Uₙ Uₙ (≅-U¹refl (wf ⊢A))
 escapeEq (ℕᵣ [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ ℕₙ ℕₙ (≅-univ (≅ₜ-ℕrefl (wf ⊢A)))
-escapeEq (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ ℕ2ₙ ℕ2ₙ (≅-univ (≅ₜ-ℕ2refl (wf ⊢A)))
 escapeEq (Indᵣ [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ Indₙ Indₙ (≅-univ (≅ₜ-Indrefl (wf ⊢A)))
 escapeEq (Emptyᵣ [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ Emptyₙ Emptyₙ (≅-univ ((≅ₜ-Emptyrefl (wf ⊢A))))
 escapeEq (ne′ K D neK K≡K) (ne₌ M D′ neM K≡M) =
@@ -50,8 +51,6 @@ escapeTerm : ∀ {l Γ A t r} → ([A] : Γ ⊩⟨ l ⟩ A ^ r)
               → Γ ⊢ t ∷ A ^ r
 escapeTerm (Uᵣ′ _ _ _ _ l< PE.refl D) (Uₜ A [[ ⊢t , ⊢u , d ]] typeA A≡A [A]) = conv ⊢t (sym (subset* (red D)))
 escapeTerm (ℕᵣ D) (ℕₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
-  conv ⊢t (sym (subset* (red D)))
-escapeTerm (ℕ2ᵣ D) (ℕ2ₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
   conv ⊢t (sym (subset* (red D)))
 escapeTerm (Indᵣ D) (Indₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
   conv ⊢t (sym (subset* (red D)))
@@ -77,10 +76,6 @@ escapeTermEq (ℕᵣ D) (ℕₜ₌ k k′ d d′ k≡k′ prop) =
   let natK , natK′ = split prop
   in  ≅ₜ-red (red D) (redₜ d) (redₜ d′) ℕₙ
              (naturalWhnf natK) (naturalWhnf natK′) k≡k′
-escapeTermEq (ℕ2ᵣ D) (ℕ2ₜ₌ k k′ d d′ k≡k′ prop) =
-  let natK , natK′ = split2 prop
-  in  ≅ₜ-red (red D) (redₜ d) (redₜ d′) ℕ2ₙ
-             (natural2Whnf natK) (natural2Whnf natK′) k≡k′
 escapeTermEq (Indᵣ D) (Indₜ₌ k k′ d d′ k≡k′ prop) =
   let indK , indK′ = splitInd prop
   in  ≅ₜ-red (red D) (redₜ d) (redₜ d′) Indₙ

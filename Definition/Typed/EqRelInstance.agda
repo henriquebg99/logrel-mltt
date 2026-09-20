@@ -1,12 +1,12 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.EqRelInstance where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.Weakening
-open import Definition.Typed.Properties
-open import Definition.Typed.Reduction
-open import Definition.Typed.EqualityRelation
+module Definition.Typed.EqRelInstance (senv : SI.SEnv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Weakening senv equivs
+open import Definition.Typed.Reduction senv equivs
+open import Definition.Typed.EqualityRelation senv equivs
 open import Tools.Function
 Urefl   : ∀ {r l Γ} → ⊢ Γ → Γ ⊢ (Univ r l) ≡ (Univ r l) ^ [ ! , next l ]
 Urefl {l = ⁰} ⊢Γ = refl (univ (univ 0<1 ⊢Γ))
@@ -18,34 +18,27 @@ eqRelInstance = eqRel _⊢_≡_^_ _⊢_≡_∷_^_ _⊢_≡_∷_^_
                       sym genSym genSym trans genTrans genTrans
                       conv conv wkEq wkEqTerm wkEqTerm
                       reduction reductionₜ
-                      Urefl (refl ∘ᶠ univ 0<1) (refl ∘ᶠ ℕⱼ) (refl ∘ᶠ ℕ2ⱼ) (refl ∘ᶠ Indⱼ) (refl ∘ᶠ Emptyⱼ)
-                      Π-cong (refl ∘ᶠ zeroⱼ) (refl ∘ᶠ zero2ⱼ) suc-cong suc2-cong
+                      Urefl (refl ∘ᶠ univ 0<1) (refl ∘ᶠ ℕⱼ) (refl ∘ᶠ Indⱼ) (refl ∘ᶠ Emptyⱼ)
+                      Π-cong (refl ∘ᶠ zeroⱼ) suc-cong
                       ctr-cong
                       (λ lF lG x x₁ x₂ x₃ x₄ x₅ → η-eq lF lG x x₁ x₂ x₅)
-                      genVar app-cong natrec-cong natrec2-cong IndRect-cong Emptyrec-cong
+                      genVar app-cong natrec-cong IndRect-cong Emptyrec-cong
                       Id-cong
                       cast-cong (λ A≡A t≡t e e' → cast-cong A≡A (refl (ℕⱼ (wfTerm e))) t≡t e e')
-                      (λ A≡A t≡t e e' → cast-cong A≡A (refl (ℕ2ⱼ (wfTerm e))) t≡t e e')
                       (λ {i} A≡A t≡t e e' → cast-cong A≡A (refl (Indⱼ (wfTerm e))) t≡t e e')
                       cast-cong
                       (λ A t~u ⊢t ⊢e → trans (cast-refl A ⊢e ⊢t) (conv t~u (univ A)))
                       (λ t~u ⊢t ⊢e → trans (cast-refl (refl (ℕⱼ (wfTerm ⊢t))) ⊢e ⊢t) t~u)
-                      (λ t~u ⊢t ⊢e → trans (cast-refl (refl (ℕ2ⱼ (wfTerm ⊢t))) ⊢e ⊢t) t~u)
                       (λ {i} t~u ⊢t ⊢e → trans (cast-refl (refl (Indⱼ (wfTerm ⊢t))) ⊢e ⊢t) t~u)
                       (λ ⊢Γ → cast-cong (refl (ℕⱼ ⊢Γ)))
-                      (λ ⊢Γ → cast-cong (refl (ℕ2ⱼ ⊢Γ)))
                       (λ {i} ⊢Γ → cast-cong (refl (Indⱼ ⊢Γ)))
                       cast-cong
                       (λ ⊢A ⊢P P → cast-cong (refl (ℕⱼ (wf (univ ⊢A)))) P)
-                      (λ ⊢A ⊢P P → cast-cong (refl (ℕ2ⱼ (wf (univ ⊢A)))) P)
                       (λ {i} ⊢A ⊢P P → cast-cong (refl (Indⱼ (wf (univ ⊢A)))) P)
                       (λ ⊢A ⊢P P → cast-cong P (refl (ℕⱼ (wf (univ ⊢A)))))
-                      (λ ⊢A ⊢P P → cast-cong P (refl (ℕ2ⱼ (wf (univ ⊢A)))))
                       (λ {i} ⊢A ⊢P P → cast-cong P (refl (Indⱼ (wf (univ ⊢A)))))
                       (λ {i} t≡t' e e' → cast-cong (refl (Indⱼ (wfTerm e))) (refl (ℕⱼ (wfTerm e))) t≡t' e e')
                       (λ {i} t≡t' e e' → cast-cong (refl (ℕⱼ (wfTerm e))) (refl (Indⱼ (wfTerm e))) t≡t' e e')
-                      (λ {i} t≡t' e e' → cast-cong (refl (Indⱼ (wfTerm e))) (refl (ℕ2ⱼ (wfTerm e))) t≡t' e e')
-                      (λ {i} t≡t' e e' → cast-cong (refl (ℕ2ⱼ (wfTerm e))) (refl (Indⱼ (wfTerm e))) t≡t' e e')
                       (λ {i} {j} i≢j t≡t' e e' → cast-cong (refl (Indⱼ (wfTerm e))) (refl (Indⱼ (wfTerm e))) t≡t' e e')
                       (λ ⊢A ⊢P P ⊢A' ⊢P' P' → cast-cong P P')
                       (λ ⊢A ⊢P P ⊢A' ⊢P' P' → cast-cong P P')

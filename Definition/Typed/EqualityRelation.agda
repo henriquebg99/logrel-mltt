@@ -1,11 +1,14 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.EqualityRelation where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Weakening using (_∷_⊆_)
+module Definition.Typed.EqualityRelation (senv : SI.SEnv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Weakening senv equivs using (_∷_⊆_)
 import Tools.PropositionalEquality as PE
 open import Tools.Product
-open import Tools.List using (List; All₂; length)
+open import Tools.List using (List; All₂; length; _∈ₗ_)
+open import Tools.Maybe using (just)
+open import Tools.Nat using (_<<_)
 import Definition.SUntyped as SU
 -- Generic equality relation used with the logical relation
 record EqRelSet : Set₁ where
@@ -109,9 +112,6 @@ record EqRelSet : Set₁ where
     -- Natural number type reflexivity
     ≅ₜ-ℕrefl  : ∀ {Γ} → ⊢ Γ → Γ ⊢ ℕ ≅ ℕ ∷ U ⁰ ^ [ ! , next ⁰ ]
 
-    -- Second natural number type reflexivity
-    ≅ₜ-ℕ2refl  : ∀ {Γ} → ⊢ Γ → Γ ⊢ ℕ2 ≅ ℕ2 ∷ U ⁰ ^ [ ! , next ⁰ ]
-
     -- Inductive type reflexivity
     ≅ₜ-Indrefl : ∀ {Γ i} → ⊢ Γ → Γ ⊢ Ind i ≅ Ind i ∷ U ⁰ ^ [ ! , next ⁰ ]
 
@@ -130,21 +130,18 @@ record EqRelSet : Set₁ where
     -- Zero reflexivity
     ≅ₜ-zerorefl : ∀ {Γ} → ⊢ Γ → Γ ⊢ zero ≅ zero ∷ ℕ ^ [ ! , ι ⁰ ]
 
-    -- Zero2 reflexivity
-    ≅ₜ-zero2refl : ∀ {Γ} → ⊢ Γ → Γ ⊢ zero2 ≅ zero2 ∷ ℕ2 ^ [ ! , ι ⁰ ]
-
     -- Successor congruence
     ≅-suc-cong : ∀ {m n Γ} → Γ ⊢ m ≅ n ∷ ℕ ^ [ ! , ι ⁰ ] → Γ ⊢ suc m ≅ suc n ∷ ℕ ^ [ ! , ι ⁰ ]
 
-    -- Successor2 congruence
-    ≅-suc2-cong : ∀ {m n Γ} → Γ ⊢ m ≅ n ∷ ℕ2 ^ [ ! , ι ⁰ ] → Γ ⊢ suc2 m ≅ suc2 n ∷ ℕ2 ^ [ ! , ι ⁰ ]
-
     -- Constructor congruence (all args of type Ind i by positivity)
-    ≅-ctr-cong : ∀ {i j args args' Γ}
+    ≅-ctr-cong : ∀ {ind j args args' Ts Γ}
                → ⊢ Γ -- necessary because the list of arguments might be empty
-               → length args PE.≡ length (SU.ctrArgsTypeList i j)
-               → All₂ (λ a a' → Γ ⊢ a ≅ a' ∷ Ind i ^ [ ! , ι ⁰ ]) args args'
-               → Γ ⊢ ctr i j args ≅ ctr i j args' ∷ Ind i ^ [ ! , ι ⁰ ]
+               → ind ∈ₗ senv
+               → SU.ctrArgsTypeList ind j PE.≡ just Ts
+               → length args PE.≡ length Ts
+               → All₂ (λ a a' → Γ ⊢ a ≅ a' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]) args args'
+               → Γ ⊢ ctr (SU.SInd.name ind) j args ≅ ctr (SU.SInd.name ind) j args'
+                     ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
 
     -- η-equality
     ≅-η-eq : ∀ {f g F G rF lF lG l Γ}
@@ -175,20 +172,14 @@ record EqRelSet : Set₁ where
              → Γ     ⊢ n ~ n′ ∷ ℕ ^ [ ! , ι ⁰ ]
              → Γ     ⊢ natrec l F z s n ~ natrec l F′ z′ s′ n′ ∷ F [ n ] ^ [ ! , ι l ]
 
-    -- Second natural recursion congurence
-    ~-natrec2 : ∀ {z z′ s s′ n n′ F F′ l Γ}
-             → Γ ∙ ℕ2 ^ [ ! , ι ⁰ ] ⊢ F ≅ F′ ^ [ ! , ι l ]
-             → Γ     ⊢ z ≅ z′ ∷ F [ zero2 ] ^ [ ! , ι l ]
-             → Γ     ⊢ s ≅ s′ ∷ Π ℕ2 ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc2 (var 0) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-             → Γ     ⊢ n ~ n′ ∷ ℕ2 ^ [ ! , ι ⁰ ]
-             → Γ     ⊢ natrec2 l F z s n ~ natrec2 l F′ z′ s′ n′ ∷ F [ n ] ^ [ ! , ι l ]
-
     -- Inductive eliminator congruence (scrutinee neutral)
-    ~-IndRect : ∀ {i P P' lG t t' ms ms' Γ}
-             → Γ ⊢ P ≅ P' ∷ Π Ind i ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
-             → Γ ⊢ t ~ t' ∷ Ind i ^ [ ! , ι ⁰ ]
-             → Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList i P ! lG ^ [ ! , ι lG ]
-             → Γ ⊢ IndRect i lG P t ms ~ IndRect i lG P' t' ms' ∷ (P ∘ t ^ ¹) ^ [ ! , ι lG ]
+    ~-IndRect : ∀ {ind P P' lG t t' ms ms' Γ}
+             → ind ∈ₗ senv
+             → Γ ⊢ P ≅ P' ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
+             → Γ ⊢ t ~ t' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+             → Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
+             → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ~ IndRect (SU.SInd.name ind) lG P' t' ms'
+                   ∷ (P ∘ t ^ ¹) ^ [ ! , ι lG ]
 
     -- Empty recursion congurence
     ~-Emptyrec : ∀ {e e′ F F′ l Γ}
@@ -223,14 +214,6 @@ record EqRelSet : Set₁ where
            → Γ ⊢ e' ∷ (Id (U ⁰) A' ℕ) ^ [ % , ι ⁰ ]
            → Γ ⊢ cast l A ℕ e t ~ cast l A' ℕ e' t' ∷ ℕ ^ [ ! , ι l ]
 
-    ~-castneℕ2 : ∀ {A A' e e' t t' Γ} →
-           let l = ⁰ in
-             Γ ⊢ A ~ A' ∷ U l ^ [ ! , next l ]
-           → Γ ⊢ t ≅ t' ∷ A ^ [ ! , ι l ]
-           → Γ ⊢ e ∷ (Id (U ⁰) A ℕ2) ^ [ % , ι ⁰ ]
-           → Γ ⊢ e' ∷ (Id (U ⁰) A' ℕ2) ^ [ % , ι ⁰ ]
-           → Γ ⊢ cast l A ℕ2 e t ~ cast l A' ℕ2 e' t' ∷ ℕ2 ^ [ ! , ι l ]
-
     ~-castneInd : ∀ {i A A' e e' t t' Γ} →
            let l = ⁰ in
              Γ ⊢ A ~ A' ∷ U l ^ [ ! , next l ]
@@ -263,13 +246,6 @@ record EqRelSet : Set₁ where
            → Γ ⊢ e ∷ (Id (U ⁰) ℕ ℕ) ^ [ % , ι ⁰ ]
            → Γ ⊢ cast l ℕ ℕ e t ~ u ∷ ℕ ^ [ ! , ι l ]
 
-    ~-castℕ2-refl : ∀ {e t u Γ} →
-           let l = ⁰ in
-             Γ ⊢ t ~ u ∷ ℕ2 ^ [ ! , ι l ]
-           → Γ ⊢ t ∷ ℕ2 ^ [ ! , ι l ]
-           → Γ ⊢ e ∷ (Id (U ⁰) ℕ2 ℕ2) ^ [ % , ι ⁰ ]
-           → Γ ⊢ cast l ℕ2 ℕ2 e t ~ u ∷ ℕ2 ^ [ ! , ι l ]
-
     ~-castInd-refl : ∀ {i e t u Γ} →
            let l = ⁰ in
              Γ ⊢ t ~ u ∷ Ind i ^ [ ! , ι l ]
@@ -284,14 +260,6 @@ record EqRelSet : Set₁ where
             → Γ ⊢ e ∷ (Id (U ⁰) ℕ B) ^ [ % , ι ⁰ ]
             → Γ ⊢ e' ∷ (Id (U ⁰) ℕ B') ^ [ % , ι ⁰ ]
             → Γ ⊢ cast ⁰ ℕ B e t ~ cast ⁰ ℕ B' e' t' ∷ B ^ [ ! , ι ⁰ ]
-
-    ~-castℕ2 : ∀ {B B' e e' t t' Γ}
-            → ⊢ Γ
-            → Γ ⊢ B ~ B' ∷ U ⁰ ^ [ ! , next ⁰ ]
-            → Γ ⊢ t ≅ t' ∷ ℕ2 ^ [ ! , ι ⁰ ]
-            → Γ ⊢ e ∷ (Id (U ⁰) ℕ2 B) ^ [ % , ι ⁰ ]
-            → Γ ⊢ e' ∷ (Id (U ⁰) ℕ2 B') ^ [ % , ι ⁰ ]
-            → Γ ⊢ cast ⁰ ℕ2 B e t ~ cast ⁰ ℕ2 B' e' t' ∷ B ^ [ ! , ι ⁰ ]
 
     ~-castInd : ∀ {i B B' e e' t t' Γ}
             → ⊢ Γ
@@ -319,15 +287,6 @@ record EqRelSet : Set₁ where
              → Γ ⊢ e' ∷ (Id (U ⁰) ℕ (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !)) ^ [ % , ι ⁰ ]
              → Γ ⊢ cast ⁰ ℕ (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) e t ~ cast ⁰ ℕ (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !) e' t' ∷ (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) ^ [ ! , ι ⁰ ]
 
-    ~-castℕ2Π : ∀ {A A' rA P P' e e' t t' Γ}
-             → Γ ⊢ A ∷ Univ rA ⁰ ^ [ ! , next ⁰ ]
-             → Γ ∙ A ^ [ rA , ι ⁰ ] ⊢ P ∷ U ⁰ ^ [ ! , next ⁰ ]
-             → Γ ⊢ Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ ! ≅ Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ ! ∷ U ⁰ ^ [ ! , next ⁰ ]
-             → Γ ⊢ t ≅ t' ∷ ℕ2 ^ [ ! , ι ⁰ ]
-             → Γ ⊢ e ∷ (Id (U ⁰) ℕ2 (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !)) ^ [ % , ι ⁰ ]
-             → Γ ⊢ e' ∷ (Id (U ⁰) ℕ2 (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !)) ^ [ % , ι ⁰ ]
-             → Γ ⊢ cast ⁰ ℕ2 (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) e t ~ cast ⁰ ℕ2 (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !) e' t' ∷ (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) ^ [ ! , ι ⁰ ]
-
     ~-castIndΠ : ∀ {i A A' rA P P' e e' t t' Γ}
              → Γ ⊢ A ∷ Univ rA ⁰ ^ [ ! , next ⁰ ]
              → Γ ∙ A ^ [ rA , ι ⁰ ] ⊢ P ∷ U ⁰ ^ [ ! , next ⁰ ]
@@ -346,16 +305,6 @@ record EqRelSet : Set₁ where
              → Γ ⊢ e ∷ (Id (U ⁰) (Π A ^ rA ° l ▹ P ° l ° ⁰ ^ !) ℕ) ^ [ % , ι ⁰ ]
              → Γ ⊢ e' ∷ (Id (U ⁰) (Π A' ^ rA ° l ▹ P' ° l  ° ⁰ ^ !) ℕ) ^ [ % , ι ⁰ ]
              → Γ ⊢ cast l (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) ℕ e t ~ cast l (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !) ℕ e' t' ∷ ℕ ^ [ ! , ι ⁰ ]
-
-    ~-castΠℕ2 : ∀ {A A' rA P P' e e' t t' Γ} →
-             let l = ⁰ in
-               Γ ⊢ A ∷ Univ rA l ^ [ ! , next l ]
-             → Γ ∙ A ^ [ rA , ι l ] ⊢ P ∷ U l ^ [ ! , next l ]
-             → Γ ⊢ Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ ! ≅ Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ ! ∷ U ⁰ ^ [ ! , next ⁰ ]
-             → Γ ⊢ t ≅ t' ∷ (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) ^ [ ! , ι l ]
-             → Γ ⊢ e ∷ (Id (U ⁰) (Π A ^ rA ° l ▹ P ° l ° ⁰ ^ !) ℕ2) ^ [ % , ι ⁰ ]
-             → Γ ⊢ e' ∷ (Id (U ⁰) (Π A' ^ rA ° l ▹ P' ° l  ° ⁰ ^ !) ℕ2) ^ [ % , ι ⁰ ]
-             → Γ ⊢ cast l (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) ℕ2 e t ~ cast l (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !) ℕ2 e' t' ∷ ℕ2 ^ [ ! , ι ⁰ ]
 
     ~-castΠInd : ∀ {i A A' rA P P' e e' t t' Γ} →
              let l = ⁰ in
@@ -378,18 +327,6 @@ record EqRelSet : Set₁ where
              → Γ ⊢ e ∷ (Id (U ⁰) ℕ (Ind i)) ^ [ % , ι ⁰ ]
              → Γ ⊢ e' ∷ (Id (U ⁰) ℕ (Ind i)) ^ [ % , ι ⁰ ]
              → Γ ⊢ cast ⁰ ℕ (Ind i) e t ~ cast ⁰ ℕ (Ind i) e' t' ∷ Ind i ^ [ ! , ι ⁰ ]
-
-    ~-castIndℕ2 : ∀ {i e e' t t' Γ}
-             → Γ ⊢ t ≅ t' ∷ Ind i ^ [ ! , ι ⁰ ]
-             → Γ ⊢ e ∷ (Id (U ⁰) (Ind i) ℕ2) ^ [ % , ι ⁰ ]
-             → Γ ⊢ e' ∷ (Id (U ⁰) (Ind i) ℕ2) ^ [ % , ι ⁰ ]
-             → Γ ⊢ cast ⁰ (Ind i) ℕ2 e t ~ cast ⁰ (Ind i) ℕ2 e' t' ∷ ℕ2 ^ [ ! , ι ⁰ ]
-
-    ~-castℕ2Ind : ∀ {i e e' t t' Γ}
-             → Γ ⊢ t ≅ t' ∷ ℕ2 ^ [ ! , ι ⁰ ]
-             → Γ ⊢ e ∷ (Id (U ⁰) ℕ2 (Ind i)) ^ [ % , ι ⁰ ]
-             → Γ ⊢ e' ∷ (Id (U ⁰) ℕ2 (Ind i)) ^ [ % , ι ⁰ ]
-             → Γ ⊢ cast ⁰ ℕ2 (Ind i) e t ~ cast ⁰ ℕ2 (Ind i) e' t' ∷ Ind i ^ [ ! , ι ⁰ ]
 
     ~-castIndInd≢ : ∀ {i j e e' t t' Γ}
              → i PE.≢ j
@@ -429,7 +366,6 @@ record EqRelSet : Set₁ where
   ~-to-≅ : ∀ {t u r l Γ} → Γ ⊢ t ~ u ∷ (Univ r l) ^ [ ! , next l ] → Γ ⊢ t ≅ u ^ [ r , ι l ]
   ~-to-≅ t~u = ≅-univ (~-to-≅ₜ t~u)
 
-
 open EqRelSet {{...}}
 
 ~-castℕℕ : ∀ {{eqrel : EqRelSet}} {e e' t t' Γ}
@@ -440,15 +376,6 @@ open EqRelSet {{...}}
              → Γ ⊢ e' ∷ (Id (U ⁰) ℕ ℕ) ^ [ % , ι ⁰ ]
              → Γ ⊢ cast ⁰ ℕ ℕ e t ~ cast ⁰ ℕ ℕ e' t' ∷ ℕ ^ [ ! , ι ⁰ ]
 ~-castℕℕ t~t ⊢t ⊢t' ⊢e ⊢e' = ~-castℕ-refl (~-sym (~-castℕ-refl (~-sym t~t) ⊢t' ⊢e')) ⊢t ⊢e
-
-~-castℕ2ℕ2 : ∀ {{eqrel : EqRelSet}} {e e' t t' Γ}
-             → Γ ⊢ t ~ t' ∷ ℕ2 ^ [ ! , ι ⁰ ]
-             → Γ ⊢ t ∷ ℕ2 ^ [ ! , ι ⁰ ]
-             → Γ ⊢ t' ∷ ℕ2 ^ [ ! , ι ⁰ ]
-             → Γ ⊢ e ∷ (Id (U ⁰) ℕ2 ℕ2) ^ [ % , ι ⁰ ]
-             → Γ ⊢ e' ∷ (Id (U ⁰) ℕ2 ℕ2) ^ [ % , ι ⁰ ]
-             → Γ ⊢ cast ⁰ ℕ2 ℕ2 e t ~ cast ⁰ ℕ2 ℕ2 e' t' ∷ ℕ2 ^ [ ! , ι ⁰ ]
-~-castℕ2ℕ2 t~t ⊢t ⊢t' ⊢e ⊢e' = ~-castℕ2-refl (~-sym (~-castℕ2-refl (~-sym t~t) ⊢t' ⊢e')) ⊢t ⊢e
 
 ~-castIndInd : ∀ {{eqrel : EqRelSet}} {i e e' t t' Γ}
              → Γ ⊢ t ~ t' ∷ Ind i ^ [ ! , ι ⁰ ]

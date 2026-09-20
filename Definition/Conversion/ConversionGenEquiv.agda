@@ -1,30 +1,32 @@
 -- Algorithmic equality.
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Conversion.ConversionGenEquiv where
-open import Definition.Untyped
-open import Definition.Typed
+module Definition.Conversion.ConversionGenEquiv (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
 open import Tools.Nat
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-open import Definition.LogicalRelation
-open import Definition.Conversion
-open import Definition.ConversionGen
-open import Definition.Conversion.Lift
-open import Definition.Conversion.Whnf as W
-open import Definition.Conversion.WhnfGen as WG
-open import Definition.Conversion.Soundness as S
-open import Definition.Conversion.SoundnessGen as SG
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.Inversion
-open import Definition.Typed.Consequences.Equality
-open import Definition.Typed.Consequences.TypeUnicity
-open import Definition.Typed.Consequences.Injectivity
-open import Definition.Typed.Consequences.NeTypeEq
-open import Definition.Typed.Consequences.Inequality as I
-open import Definition.Typed.Properties
-open import Definition.Conversion.Symmetry
-open import Definition.Conversion.Stability
-open import Definition.Typed.EqRelInstance
+open import Definition.LogicalRelation senv equivs
+open import Definition.Conversion senv equivs
+open import Definition.ConversionGen senv equivs
+open import Definition.Conversion.Lift senv swf equivs
+open import Definition.Conversion.Whnf senv swf equivs as W
+open import Definition.Conversion.WhnfGen senv swf equivs as WG
+open import Definition.Conversion.Soundness senv swf equivs as S
+open import Definition.Conversion.SoundnessGen senv swf equivs as SG
+open import Definition.Typed.Consequences.Syntactic senv swf equivs
+open import Definition.Typed.Consequences.Inversion senv swf equivs
+open import Definition.Typed.Consequences.Equality senv swf equivs
+open import Definition.Typed.Consequences.TypeUnicity senv swf equivs
+open import Definition.Typed.Consequences.Injectivity senv swf equivs
+open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
+open import Definition.Typed.Consequences.Inequality senv swf equivs as I
+open import Definition.Typed.Properties senv equivs
+open import Definition.Conversion.Symmetry senv swf equivs
+open import Definition.Conversion.Stability senv swf equivs
+open import Definition.Typed.EqRelInstance senv equivs
 open import Tools.Empty
 notIdU : ∀ {Γ A t u l} → Γ ⊢ Id A t u ^ [ ! , l ] → ⊥
 notIdU (univ x) =

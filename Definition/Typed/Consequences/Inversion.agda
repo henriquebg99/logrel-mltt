@@ -1,14 +1,16 @@
 -- Inversion of contexts
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.Consequences.Inversion where
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.EqRelInstance
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.Substitution
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Fundamental.Reducibility
+module Definition.Typed.Consequences.Inversion (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Typed.Consequences.Syntactic senv swf equivs
+open import Definition.Typed.Consequences.Substitution senv swf equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 inversion-ctx : ∀ {Γ A r} → ⊢ Γ ∙ A ^ r → ⊢ Γ  × Γ ⊢ A ^ r
@@ -23,7 +25,6 @@ inversion-U (conv x x₁) with inversion-U x
 typeinfo-PE-injectivity : ∀ {r r' l l'} → [ r , l ] PE.≡ [ r' , l' ] → r PE.≡ r' × l PE.≡ l'
 typeinfo-PE-injectivity PE.refl = PE.refl , PE.refl
 
-
 -- Inversion of contexts
 
 inversion-ne' : ∀ {Γ t A ll l} → Neutral A
@@ -34,8 +35,6 @@ inversion-ne' neA (Uᵣ (Uᵣ r l′ l< eq d)) [t] whnft with whnfRed* (red d) (
 inversion-ne' () (Uᵣ (Uᵣ r l′ l< eq d)) [t] whnft | PE.refl 
 inversion-ne' neA (ℕᵣ d) [t] whnft with whnfRed* (red d) (ne neA) 
 inversion-ne' () (ℕᵣ d) [t] whnft | PE.refl
-inversion-ne' neA (ℕ2ᵣ d) [t] whnft with whnfRed* (red d) (ne neA) 
-inversion-ne' () (ℕ2ᵣ d) [t] whnft | PE.refl
 inversion-ne' neA (Indᵣ D) [t] whnft with whnfRed* (red D) (ne neA) 
 inversion-ne' () (Indᵣ D) [t] whnft | PE.refl
 inversion-ne' neA (ne′ K D neK K≡K) (neₜ k d (neNfₜ neK₁ ⊢k k≡k)) whnft =
@@ -49,17 +48,10 @@ inversion-ne' neA (emb ∞< [A]) [t] whnft = inversion-ne' neA [A] [t] whnft
 inversion-ne : ∀ {Γ t A l} → Neutral A → Whnf t → Γ ⊢ t ∷ A ^ [ ! , l ] → Neutral t
 inversion-ne neA whnft ⊢t =  let [A] , [t] = reducibleTerm ⊢t in inversion-ne' neA [A] [t] whnft
 
-
 -- Inversion of natural number type.
 inversion-ℕ : ∀ {Γ C r} → Γ ⊢ ℕ ∷ C ^ r → Γ ⊢ C ≡ U ⁰ ^ r × r PE.≡ [ ! , next ⁰ ]
 inversion-ℕ (ℕⱼ x) = refl (Ugenⱼ x) , PE.refl
 inversion-ℕ (conv x x₁) with inversion-ℕ x
-... | [C≡U] , PE.refl = trans (sym x₁) [C≡U] , PE.refl
-
--- Inversion of second natural number type.
-inversion-ℕ2 : ∀ {Γ C r} → Γ ⊢ ℕ2 ∷ C ^ r → Γ ⊢ C ≡ U ⁰ ^ r × r PE.≡ [ ! , next ⁰ ]
-inversion-ℕ2 (ℕ2ⱼ x) = refl (Ugenⱼ x) , PE.refl
-inversion-ℕ2 (conv x x₁) with inversion-ℕ2 x
 ... | [C≡U] , PE.refl = trans (sym x₁) [C≡U] , PE.refl
 
 -- Inversion of inductive type formers.
@@ -146,7 +138,6 @@ inversion-app-irr (l% ▹ _ ▹ _ ▹ d ∘ⱼ d₁) = let lG< , l< = l% PE.refl
 inversion-app-irr (conv d x) = let a , b , c , d , e , g , h , j , k , l = inversion-app-irr d
                                in  a , b , c , d , e , g , h , j , k , l 
 
-
 -- Inversion of lambda.
 inversion-lam : ∀ {t F A r lΠ Γ} → Γ ⊢ lam F ▹ t ^ lΠ ∷ A ^ r →
   ∃₂ λ rF lF → ∃₂ λ G rG → ∃ λ lG → Γ ⊢ F ^ [ rF , ι lF ]
@@ -157,7 +148,6 @@ inversion-lam (lamⱼ l< l<' x x₁) = _ , _ , _ , _ , _ , x , x₁ ,
                                    refl (univ (Πⱼ l< ▹ l<' ▹ (un-univ x) ▹ un-univ (syntacticTerm x₁))) , PE.refl
 inversion-lam (conv x x₁) = let a , b , c , d , e , f , g , h , i = inversion-lam x
                             in  a , b , c , d , e , f , g , trans (sym (PE.subst (λ rx → _ ⊢ _ ≡ _ ^ rx) i x₁)) h , i
-
 
 -- Inversion of Id-types.
 inversion-Id : ∀ {A t u C r Γ}
@@ -171,7 +161,6 @@ inversion-Id : ∀ {A t u C r Γ}
 inversion-Id (Idⱼ {l = l} A t u) = l , A , t , u , refl (Ugenⱼ (wfTerm A)) , PE.refl
 inversion-Id (conv x x₁) = let l , a , b , c , d , r≡! = inversion-Id x
                            in l , a , b , c , trans (sym (PE.subst (λ rx → _ ⊢ _ ≡ _ ^ rx) r≡! x₁)) d , r≡!
-
 
 -- Inversion of cast-types.
 inversion-cast : ∀ {A B e t l C r Γ}

@@ -1,8 +1,10 @@
-module Definition.STyped where
+import Definition.SUntyped as SI
+module Definition.STyped (senv : SI.SEnv) where
 
 open import Definition.SUntyped
 open import Tools.Nat using (Nat; _<<_)
 open import Tools.List
+open import Tools.Maybe using (just)
 open import Tools.PropositionalEquality using (_≡_)
 
 infixr 30 _∙_
@@ -40,12 +42,15 @@ mutual
     lamⱼ  : ∀ {A B t}
           → (A ∙ Γ) ⊢ t ∷ B
           → Γ ⊢ lam A t ∷ Arrow A B
-    ctrⱼ  : ∀ {i j args}
-          → j << indCtrCount i
-          → length args ≡ length (ctrArgsTypeList i j)
-          → Γ ⊢All args ∷ ctrArgsTypeList i j
-          → Γ ⊢ ctr i j args ∷ Ind i
-    indRectⱼ : ∀ {i P t ms}
-          → Γ ⊢ t ∷ Ind i
-          → Γ ⊢All ms ∷ indRectBranchTypeList i P
-          → Γ ⊢ IndRect i P t ms ∷ P
+    ctrⱼ  : ∀ {ind j args Ts}
+          → ind ∈ₗ senv
+          → ctrArgsTypeList ind j ≡ just Ts
+          → length args ≡ length Ts
+          → Γ ⊢All args ∷ Ts
+          → Γ ⊢ ctr (SInd.name ind) j args ∷ Ind (SInd.name ind)
+    indRectⱼ : ∀ {ind P t ms}
+          → ind ∈ₗ senv
+          → indsInSEnv senv P
+          → Γ ⊢ t ∷ Ind (SInd.name ind)
+          → Γ ⊢All ms ∷ indRectBranchTypeList ind P
+          → Γ ⊢ IndRect (SInd.name ind) P t ms ∷ P

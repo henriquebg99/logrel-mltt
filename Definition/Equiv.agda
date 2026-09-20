@@ -1,19 +1,19 @@
-module Definition.Equiv where
-open import Definition.OUntyped
-open import Definition.OTyped
+import Definition.SUntyped as SI
+module Definition.Equiv (senv : SI.SEnv) where
+open import Definition.OUntyped senv
+open import Definition.OTyped senv
 open import Definition.Sort
-import Definition.Untyped as U
+import Definition.Untyped senv as U
 import Tools.PropositionalEquality as PE
--- Analence between ℕ and ℕ2.
-ℕ→ℕ2 : Term
-ℕ→ℕ2 = Π ℕ ^ ! ° ⁰ ▹ ℕ2 ° ⁰ ° ⁰ ^ !
+open import Tools.List using (List)
 
-ℕ2→ℕ : Term
-ℕ2→ℕ = Π ℕ2 ^ ! ° ⁰ ▹ ℕ ° ⁰ ° ⁰ ^ !
+-- An equivalence between ℕ and ℕ.
+ℕ→ℕ : Term
+ℕ→ℕ = Π ℕ ^ ! ° ⁰ ▹ ℕ ° ⁰ ° ⁰ ^ !
 
 retrTy : Term → Term → Term
 retrTy fwd bwd =
-  Π ℕ2 ^ ! ° ⁰ ▹ Id ℕ2 (var 0) (fwd ∘ (bwd ∘ var 0 ^ ⁰) ^ ⁰) ° ⁰ ° ⁰ ^ %
+  Π ℕ ^ ! ° ⁰ ▹ Id ℕ (var 0) (fwd ∘ (bwd ∘ var 0 ^ ⁰) ^ ⁰) ° ⁰ ° ⁰ ^ %
 
 sectTy : Term → Term → Term
 sectTy fwd bwd =
@@ -32,8 +32,12 @@ record Equiv : Set where
     fwd-emb-subst : ∀ σ → U.subst (U.repeat U.liftSubst σ 0) (U.emb_oterm_term fwd) PE.≡ U.emb_oterm_term fwd
     bwd-emb-subst : ∀ σ → U.subst (U.repeat U.liftSubst σ 0) (U.emb_oterm_term bwd) PE.≡ U.emb_oterm_term bwd
 
-    ⊢fwd  : ∀ {Γ} → ⊢ Γ → Γ ⊢ fwd ∷ ℕ→ℕ2 ^ [ ! , ι ⁰ ]
-    ⊢bwd  : ∀ {Γ} → ⊢ Γ → Γ ⊢ bwd ∷ ℕ2→ℕ ^ [ ! , ι ⁰ ]
+    ⊢fwd  : ∀ {Γ} → ⊢ Γ → Γ ⊢ fwd ∷ ℕ→ℕ ^ [ ! , ι ⁰ ]
+    ⊢bwd  : ∀ {Γ} → ⊢ Γ → Γ ⊢ bwd ∷ ℕ→ℕ ^ [ ! , ι ⁰ ]
     ⊢retr : ∀ {Γ} → ⊢ Γ → Γ ⊢ retr ∷ retrTy fwd bwd ^ [ ! , ι ⁰ ]
     ⊢sect : ∀ {Γ} → ⊢ Γ → Γ ⊢ sect ∷ sectTy fwd bwd ^ [ ! , ι ⁰ ]
 
+-- A list of equivalences, as in Uniquevalence.uty, where the typing relation
+-- is relative to [list (equiv env)]
+Equivs : Set
+Equivs = List Equiv

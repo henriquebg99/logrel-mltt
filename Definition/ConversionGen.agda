@@ -1,8 +1,10 @@
 -- Algorithmic equality.
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.ConversionGen where
-open import Definition.Untyped
-open import Definition.Typed
+module Definition.ConversionGen (senv : SI.SEnv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
 open import Tools.Nat
 open import Tools.Product
 import Tools.PropositionalEquality as PE

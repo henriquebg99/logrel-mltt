@@ -1,13 +1,16 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Properties.Successor {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Properties.Successor (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.ShapeView
+open import Definition.Untyped senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.ShapeView senv equivs
 open import Tools.Product
 -- Helper function for successors for specific reducible derivations.
 sucTerm′ : ∀ {l Γ n}
@@ -56,51 +59,3 @@ sucEqTerm [ℕ] [n≡n′] =
   let [n≡n′]′ = irrelevanceEqTerm [ℕ] (ℕ-intr (ℕ-elim [ℕ])) [n≡n′]
   in  irrelevanceEqTerm (ℕ-intr (ℕ-elim [ℕ])) [ℕ]
                         (sucEqTerm′ (ℕ-elim [ℕ]) [n≡n′]′)
-
--- Helper function for successors for specific reducible derivations.
-suc2Term′ : ∀ {l Γ n}
-           ([ℕ2] : Γ ⊩⟨ l ⟩ℕ2 ℕ2)
-         → Γ ⊩⟨ l ⟩ n ∷ ℕ2 ^ [ ! , ι ⁰ ] / ℕ2-intr [ℕ2]
-         → Γ ⊩⟨ l ⟩ suc2 n ∷ ℕ2 ^ [ ! , ι ⁰ ] / ℕ2-intr [ℕ2]
-suc2Term′ (noemb D) (ℕ2ₜ n [[ ⊢t , ⊢u , d ]] n≡n prop) =
-  let natN = natural2 prop
-  in  ℕ2ₜ _ [[ suc2ⱼ ⊢t , suc2ⱼ ⊢t , id (suc2ⱼ ⊢t) ]]
-         (≅-suc2-cong (≅ₜ-red (red D) d d ℕ2ₙ
-                             (natural2Whnf natN) (natural2Whnf natN) n≡n))
-         (suc2ᵣ (ℕ2ₜ n [[ ⊢t , ⊢u , d ]] n≡n prop))
-suc2Term′ (emb emb< x) [n] = suc2Term′ x [n]
-suc2Term′ (emb ∞< x) [n] = suc2Term′ x [n]
-
--- Reducible second natural numbers can be used to construct reducible successors.
-suc2Term : ∀ {l Γ n} ([ℕ2] : Γ ⊩⟨ l ⟩ ℕ2 ^ [ ! , ι ⁰ ])
-        → Γ ⊩⟨ l ⟩ n ∷ ℕ2 ^ [ ! , ι ⁰ ] / [ℕ2]
-        → Γ ⊩⟨ l ⟩ suc2 n ∷ ℕ2 ^ [ ! , ι ⁰ ] / [ℕ2]
-suc2Term [ℕ2] [n] =
-  let [n]′ = irrelevanceTerm [ℕ2] (ℕ2-intr (ℕ2-elim [ℕ2])) [n]
-  in  irrelevanceTerm (ℕ2-intr (ℕ2-elim [ℕ2]))
-                      [ℕ2]
-                      (suc2Term′ (ℕ2-elim [ℕ2]) [n]′)
-
--- Helper function for successor equality for specific reducible derivations.
-suc2EqTerm′ : ∀ {l Γ n n′}
-             ([ℕ2] : Γ ⊩⟨ l ⟩ℕ2 ℕ2)
-           → Γ ⊩⟨ l ⟩ n ≡ n′ ∷ ℕ2 ^ [ ! , ι ⁰ ] / ℕ2-intr [ℕ2]
-           → Γ ⊩⟨ l ⟩ suc2 n ≡ suc2 n′ ∷ ℕ2 ^ [ ! , ι ⁰ ] / ℕ2-intr [ℕ2]
-suc2EqTerm′ (noemb D) (ℕ2ₜ₌ k k′ [[ ⊢t , ⊢u , d ]]
-                              [[ ⊢t₁ , ⊢u₁ , d₁ ]] t≡u prop) =
-  let natK , natK′ = split2 prop
-  in  ℕ2ₜ₌ _ _ (idRedTerm:*: (suc2ⱼ ⊢t)) (idRedTerm:*: (suc2ⱼ ⊢t₁))
-        (≅-suc2-cong (≅ₜ-red (red D) d d₁ ℕ2ₙ (natural2Whnf natK) (natural2Whnf natK′) t≡u))
-        (suc2ᵣ (ℕ2ₜ₌ k k′ [[ ⊢t , ⊢u , d ]] [[ ⊢t₁ , ⊢u₁ , d₁ ]] t≡u prop))
-suc2EqTerm′ (emb emb< x) [n≡n′] = suc2EqTerm′ x [n≡n′]
-suc2EqTerm′ (emb ∞< x) [n≡n′] = suc2EqTerm′ x [n≡n′]
-
--- Reducible second natural number equality can be used to construct reducible equality
--- of the successors of the numbers.
-suc2EqTerm : ∀ {l Γ n n′} ([ℕ2] : Γ ⊩⟨ l ⟩ ℕ2 ^ [ ! , ι ⁰ ] )
-          → Γ ⊩⟨ l ⟩ n ≡ n′ ∷ ℕ2 ^ [ ! , ι ⁰ ] / [ℕ2]
-          → Γ ⊩⟨ l ⟩ suc2 n ≡ suc2 n′ ∷ ℕ2 ^ [ ! , ι ⁰ ] / [ℕ2]
-suc2EqTerm [ℕ2] [n≡n′] =
-  let [n≡n′]′ = irrelevanceEqTerm [ℕ2] (ℕ2-intr (ℕ2-elim [ℕ2])) [n≡n′]
-  in  irrelevanceEqTerm (ℕ2-intr (ℕ2-elim [ℕ2])) [ℕ2]
-                        (suc2EqTerm′ (ℕ2-elim [ℕ2]) [n≡n′]′)

@@ -1,34 +1,36 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution.Introductions.CastRefl {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Substitution.Introductions.CastRefl (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped
-open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Properties
-import Definition.Typed.Weakening as Twk
-open import Definition.Typed.EqualityRelation
-open import Definition.Typed.RedSteps
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Application
-open import Definition.LogicalRelation.Substitution
-import Definition.LogicalRelation.Weakening as Lwk
-open import Definition.LogicalRelation.Substitution.Properties
-import Definition.LogicalRelation.Substitution.Irrelevance as S
-open import Definition.LogicalRelation.Substitution.Reflexivity
-open import Definition.LogicalRelation.Substitution.Weakening
+open import Definition.Untyped senv
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+import Definition.Typed.Weakening senv equivs as Twk
+open import Definition.Typed.RedSteps senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.Properties senv equivs
+open import Definition.LogicalRelation.Application senv equivs
+open import Definition.LogicalRelation.Substitution senv equivs
+import Definition.LogicalRelation.Weakening senv equivs as Lwk
+open import Definition.LogicalRelation.Substitution.Properties senv equivs
+import Definition.LogicalRelation.Substitution.Irrelevance senv equivs as S
+open import Definition.LogicalRelation.Substitution.Reflexivity senv equivs
+open import Definition.LogicalRelation.Substitution.Weakening senv equivs
 -- open import Definition.LogicalRelation.Substitution.Introductions.Nat
-open import Definition.LogicalRelation.Substitution.Introductions.Empty
-open import Definition.LogicalRelation.ShapeView
+open import Definition.LogicalRelation.Substitution.Introductions.Empty senv equivs
+open import Definition.LogicalRelation.ShapeView senv equivs
 -- open import Definition.LogicalRelation.Substitution.Introductions.Pi
 -- open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst
-open import Definition.LogicalRelation.Substitution.Introductions.Universe
-open import Definition.LogicalRelation.Substitution.MaybeEmbed
-open import Definition.LogicalRelation.Substitution.Introductions.Castlemmas
-open import Definition.LogicalRelation.Substitution.Introductions.Cast
-open import Definition.LogicalRelation.Substitution.Introductions.Ind using (≅AllInd)
+open import Definition.LogicalRelation.Substitution.Introductions.Universe senv equivs
+open import Definition.LogicalRelation.Substitution.MaybeEmbed senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Castlemmas senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Cast senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Ind senv equivs using (≅AllInd)
 open import Tools.Product
 open import Tools.Empty using (⊥; ⊥-elim)
 open import Tools.List using (All; All₂; []ₐ; _∷ₐ_; map; length; length-map)
@@ -75,45 +77,6 @@ import Definition.SUntyped as SU
                                                                   (conv:⇒*: (CastRed*Termℕℕ ⊢eℕℕ d) (sym (subset* DB)))))
                    (conv:⇒*: d (sym (subset* DB))) (~-conv (~-castℕ-refl k≡k ⊢k ⊢eℕℕ ) (sym (subset* DB)))
 
-
-[castrefl]ℕ2 : ∀ {A B t e Γ}
-             (⊢Γ : ⊢ Γ)
-             ([A] : Γ ⊩ℕ2 A)
-             ([B] : Γ ⊩ℕ2 B)
-             ([A≡B] : Γ ⊩⟨ ι ⁰ ⟩ A ≡ B ^ [ ! , ι ⁰ ] / ℕ2ᵣ [A])
-             (⊢t : Γ ⊢ t ∷ A ^ [ ! , ι ⁰ ])
-             ([t] : Γ ⊩⟨ ι ⁰ ⟩ t ∷ A ^ [ ! , ι ⁰ ] / ℕ2ᵣ [A])
-             (⊢e : Γ ⊢ e ∷ Id (U ⁰) A B ^ [ % , ι ⁰ ])
-             → Γ ⊩⟨ ι ⁰ ⟩ cast ⁰ A B e t ≡ t ∷ B ^ [ ! , ι ⁰ ] / ℕ2ᵣ [B]
-[castrefl]ℕ2 {e = e} ⊢Γ [[ ⊢A , ⊢ℕ2A , DA ]] [[ ⊢B , ⊢ℕ2B , DB ]] [A≡B] ⊢t (ℕ2ₜ .(suc2 a) d n≡n (suc2ᵣ {a} x)) ⊢e =
-  let ⊢eℕℕ = conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B) )) (un-univ≡ (subset* DA)) (un-univ≡ (subset* DB))))
-      rec = [castrefl]ℕ2 ⊢Γ (idRed:*: ⊢ℕ2A) (idRed:*: ⊢ℕ2A) (reflEq {l = ι ⁰} (ℕ2ᵣ (idRed:*: ⊢ℕ2A)))
-                       (escapeTerm {l = ι ⁰} (ℕ2ᵣ (idRed:*: ⊢ℕ2A)) x) x ⊢eℕℕ
-      cast≅ = escapeTermEq {l = ι ⁰} (ℕ2ᵣ (idRed:*: ⊢ℕ2A)) rec
-  in ℕ2ₜ₌ (suc2 (cast ⁰ ℕ2 ℕ2 e a)) (suc2 a) (conv:⇒*: (transTerm:⇒:* (CastRed*Term ⊢B ⊢e ⊢t (un-univ:⇒*: [[ ⊢A , ⊢ℕ2A , DA ]]))
-                                                   (transTerm:⇒:* (CastRed*Termℕ2 (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B) )) (un-univ≡ (subset* DA))
-                                                                  (refl (un-univ ⊢B))))) (conv ⊢t (subset* DA)) [[ ⊢B , ⊢ℕ2B , DB ]])
-                                                                  (conv:⇒*: (transTerm:⇒:* (CastRed*Termℕ2ℕ2 ⊢eℕℕ d)
-                                                                  (CastRed*Termℕ2suc ⊢eℕℕ (escapeTerm {l = ι ⁰} (ℕ2ᵣ (idRed:*: ⊢ℕ2A)) x)))
-                                                                  (sym (subset* DB))))) (subset* DB))
-                                                  d (≅-suc2-cong cast≅) (suc2ᵣ rec)
-[castrefl]ℕ2 ⊢Γ [[ ⊢A , ⊢ℕ2A , DA ]] [[ ⊢B , ⊢ℕ2B , DB ]] [A≡B] ⊢t (ℕ2ₜ .zero2 d n≡n zero2ᵣ) ⊢e =
-  let ⊢eℕℕ = conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B) )) (un-univ≡ (subset* DA)) (un-univ≡ (subset* DB))))
-  in ℕ2ₜ₌ zero2 zero2 (conv:⇒*: (transTerm:⇒:* (CastRed*Term ⊢B ⊢e ⊢t (un-univ:⇒*: [[ ⊢A , ⊢ℕ2A , DA ]]))
-                                                   (transTerm:⇒:* (CastRed*Termℕ2 (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B) )) (un-univ≡ (subset* DA))
-                                                                  (refl (un-univ ⊢B))))) (conv ⊢t (subset* DA)) [[ ⊢B , ⊢ℕ2B , DB ]])
-                                                                  (conv:⇒*: (transTerm:⇒:* (CastRed*Termℕ2ℕ2 ⊢eℕℕ d)
-                                                                    (CastRed*Termℕ2zero ⊢eℕℕ)) (sym (subset* DB))))) (subset* DB))
-         d (≅ₜ-zero2refl ⊢Γ) zero2ᵣ
-[castrefl]ℕ2 ⊢Γ [[ ⊢A , ⊢ℕ2A , DA ]] [[ ⊢B , ⊢ℕ2B , DB ]] [A≡B] ⊢t (ℕ2ₜ n d n≡n (ne (neNfₜ neK ⊢k k≡k))) ⊢e =
-  let ⊢eℕℕ = conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B) )) (un-univ≡ (subset* DA)) (un-univ≡ (subset* DB))))
-  in neuEqTerm:⇒*: {l = ι ⁰} (ℕ2ᵣ [[ ⊢B , ⊢ℕ2B , DB ]]) (castℕ2ℕ2ₙ neK) neK
-                   (transTerm:⇒:* (CastRed*Term ⊢B ⊢e ⊢t (un-univ:⇒*: [[ ⊢A , ⊢ℕ2A , DA ]]))
-                                                   (transTerm:⇒:* (CastRed*Termℕ2 (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B) ))(un-univ≡ (subset* DA))
-                                                                  (refl (un-univ ⊢B))))) (conv ⊢t (subset* DA)) [[ ⊢B , ⊢ℕ2B , DB ]])
-                                                                  (conv:⇒*: (CastRed*Termℕ2ℕ2 ⊢eℕℕ d) (sym (subset* DB)))))
-                   (conv:⇒*: d (sym (subset* DB))) (~-conv (~-castℕ2-refl k≡k ⊢k ⊢eℕℕ ) (sym (subset* DB)))
-
 [castrefl]Ind : ∀ {A B t e i Γ}
              (⊢Γ : ⊢ Γ)
              ([A] : Γ ⊩Ind A ^ i)
@@ -126,17 +89,17 @@ import Definition.SUntyped as SU
 [castrefl]Ind {e = e} {i = i} {Γ = Γ} ⊢Γ [[ ⊢A , ⊢IndA , DA ]] [[ ⊢B , ⊢IndB , DB ]] [A≡B] ⊢t
   (Indₜ .(ctr i j args) d n≡n (ctrᵣ {j} {args} ps)) ⊢e =
   let ⊢eII = conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B))) (un-univ≡ (subset* DA)) (un-univ≡ (subset* DB))))
-      ⊢args = inversion-Ctr (_⊢_:⇒*:_∷_^_.⊢u d)
+      ind , Ts , ind∈ , name≡ , eq , ⊢args = inversion-Ctr (_⊢_:⇒*:_∷_^_.⊢u d)
       castEq = castAllEq ps
       lens = PE.trans (length-map (λ a → cast ⁰ (Ind i) (Ind i) e a) args)
-               (PE.trans (⊢All-length ⊢args) (length-map emb-stype (SU.ctrArgsTypeList i j)))
+               (PE.trans (⊢All-length ⊢args) (length-map emb-stype Ts))
   in Indₜ₌ (ctr i j (map (λ a → cast ⁰ (Ind i) (Ind i) e a) args)) (ctr i j args)
            (conv:⇒*: (transTerm:⇒:* (CastRed*Term ⊢B ⊢e ⊢t (un-univ:⇒*: [[ ⊢A , ⊢IndA , DA ]]))
                               (transTerm:⇒:* (CastRed*TermInd (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B))) (un-univ≡ (subset* DA))
                                                              (refl (un-univ ⊢B))))) (conv ⊢t (subset* DA)) [[ ⊢B , ⊢IndB , DB ]])
                                              (conv:⇒*: (transTerm:⇒:* (CastRed*TermIndInd ⊢eII d)
-                                             (CastRed*TermIndctr ⊢eII ⊢args)) (sym (subset* DB))))) (subset* DB))
-           d (≅-ctr-cong ⊢Γ lens (≅AllInd ⊢Γ castEq)) (ctrᵣ castEq)
+                                             (CastRed*TermIndctr′ ind∈ name≡ eq ⊢eII ⊢args)) (sym (subset* DB))))) (subset* DB))
+           d (≅-ctr-cong′ ⊢Γ ind∈ name≡ eq lens (≅AllInd ⊢Γ castEq)) (ctrᵣ castEq)
   where
     castAllEq : ∀ {ts} → All (λ a → Γ ⊩Ind a ∷Ind i) ts
               → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i)
@@ -160,7 +123,6 @@ import Definition.SUntyped as SU
                                                              (refl (un-univ ⊢B))))) (conv ⊢t (subset* DA)) [[ ⊢B , ⊢IndB , DB ]])
                                              (conv:⇒*: (CastRed*TermIndInd ⊢eII d) (sym (subset* DB)))))
                    (conv:⇒*: d (sym (subset* DB))) (~-conv (~-castInd-refl k≡k ⊢k ⊢eII ) (sym (subset* DB)))
-
 
 [castrefl]Ne : ∀ {A B Γ}
          (⊢Γ : ⊢ Γ)
@@ -188,7 +150,6 @@ import Definition.SUntyped as SU
                    (conv:⇒*: d (trans (sym ⊢A≡K) (≅-eq (escapeEq {l = ι ⁰} (ne [A]) [A≡B]))))
                    (~-conv (~-cast-refl K≡M k≡k ⊢k ⊢e') (sym ⊢B≡M) )
 
-
 [castreflShape] : ∀ {A B t e Γ r}
          (⊢Γ : ⊢ Γ)
          ([A] : Γ ⊩⟨ ι ⁰ ⟩ A ^ [ r , ι ⁰ ])
@@ -199,7 +160,6 @@ import Definition.SUntyped as SU
          (⊢e : Γ ⊢ e ∷ Id (Univ r ⁰) A B ^ [ % , ι ⁰ ])
          → Γ ⊩⟨ ι ⁰ ⟩ cast ⁰ A B e t ≡ t ∷ B ^ [ r , ι ⁰ ] / [B]
 [castreflShape] ⊢Γ .(ℕᵣ ℕA) .(ℕᵣ ℕB) [A≡B] (ℕᵥ ℕA ℕB) [t] ⊢e = [castrefl]ℕ ⊢Γ ℕA ℕB [A≡B] (escapeTerm {l = ι ⁰} (ℕᵣ ℕA) [t]) [t] ⊢e
-[castreflShape] ⊢Γ .(ℕ2ᵣ ℕ2A) .(ℕ2ᵣ ℕ2B) [A≡B] (ℕ2ᵥ ℕ2A ℕ2B) [t] ⊢e = [castrefl]ℕ2 ⊢Γ ℕ2A ℕ2B [A≡B] (escapeTerm {l = ι ⁰} (ℕ2ᵣ ℕ2A) [t]) [t] ⊢e
 [castreflShape] {r = !} ⊢Γ .(ne neA) .(ne neB) [A≡B] (ne neA neB) [t] ⊢e = [castrefl]Ne ⊢Γ neA neB [A≡B] [t] ⊢e
 [castreflShape] {A} {B} {t} {e} {Γ} {.!} ⊢Γ .(Πᵣ′ ! ⁰ ⁰ (≡is≤ PE.refl) (≡is≤ PE.refl) F G [[ ⊢A , ⊢Π , DΠ ]] ⊢F ⊢G A≡A [F] [G] G-ext)
                    .(Πᵣ′ ! ⁰ ⁰ (≡is≤ PE.refl) (≡is≤ PE.refl) F₁ G₁ [[ ⊢B , ⊢Π₁ , DΠ₁ ]] ⊢F₁ ⊢G₁ A≡A₁ [F]₁ [G]₁ G-ext₁)

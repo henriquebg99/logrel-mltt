@@ -1,12 +1,15 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution.Irrelevance {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Substitution.Irrelevance (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped 
-open import Definition.Typed
-open import Definition.LogicalRelation
-import Definition.LogicalRelation.Irrelevance as LR
-open import Definition.LogicalRelation.Substitution
+open import Definition.Untyped senv 
+open import Definition.Typed senv equivs
+open import Definition.LogicalRelation senv equivs
+import Definition.LogicalRelation.Irrelevance senv equivs as LR
+open import Definition.LogicalRelation.Substitution senv equivs
 open import Tools.Product
 open import Tools.Unit
 import Tools.PropositionalEquality as PE
@@ -69,7 +72,7 @@ irrelevance′ : ∀ {l A A′ r Γ} (eq : A PE.≡ A′)
 irrelevance′ {l} {A} PE.refl [Γ] [Γ]′ [A] ⊢Δ [σ] = irrelevance {A = A} [Γ] [Γ]′ [A] ⊢Δ [σ]
 
 
-open import Definition.LogicalRelation.Properties
+open import Definition.LogicalRelation.Properties senv equivs
 -- Irrelevance of valid types with different derivations of contexts
 -- with lifting of equal types
 irrelevanceLift : ∀ {l A rA F H rF Γ}

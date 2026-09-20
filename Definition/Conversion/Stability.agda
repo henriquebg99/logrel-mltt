@@ -1,12 +1,13 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Conversion.Stability where
-open import Definition.Untyped
-open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Weakening
-open import Definition.Conversion
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Typed.Consequences.Substitution
+module Definition.Conversion.Stability (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Weakening senv equivs
+open import Definition.Conversion senv equivs
+open import Definition.Typed.Consequences.Syntactic senv swf equivs
+open import Definition.Typed.Consequences.Substitution senv swf equivs
 open import Tools.List using (All₂; []ₐ; _∷ₐ_)
 open import Tools.Product
 import Tools.PropositionalEquality as PE
@@ -96,27 +97,13 @@ stabilityRedTerm Γ≡Δ (natrec-suc x x₁ x₂ x₃) =
   let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
   in  natrec-suc (stabilityTerm Γ≡Δ x) (stability (Γ≡Δ ∙ refl (univ (ℕⱼ ⊢Γ))) x₁)
                  (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
-stabilityRedTerm Γ≡Δ (natrec2-subst x x₁ x₂ d) =
-  let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
-  in  natrec2-subst (stability (Γ≡Δ ∙ refl (univ (ℕ2ⱼ ⊢Γ))) x) (stabilityTerm Γ≡Δ x₁)
-                   (stabilityTerm Γ≡Δ x₂) (stabilityRedTerm Γ≡Δ d)
-stabilityRedTerm Γ≡Δ (natrec2-zero x x₁ x₂) =
-  let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
-  in  natrec2-zero (stability (Γ≡Δ ∙ refl (univ (ℕ2ⱼ ⊢Γ))) x) (stabilityTerm Γ≡Δ x₁)
-                  (stabilityTerm Γ≡Δ x₂)
-stabilityRedTerm Γ≡Δ (natrec2-suc x x₁ x₂ x₃) =
-  let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
-  in  natrec2-suc (stabilityTerm Γ≡Δ x) (stability (Γ≡Δ ∙ refl (univ (ℕ2ⱼ ⊢Γ))) x₁)
-                 (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
-stabilityRedTerm Γ≡Δ (IndRect-subst ⊢P d ⊢ms) =
-  IndRect-subst (stabilityTerm Γ≡Δ ⊢P) (stabilityRedTerm Γ≡Δ d) (stabilityAll Γ≡Δ ⊢ms)
-stabilityRedTerm Γ≡Δ (IndRect-ctr ⊢P ⊢args ⊢ms) =
-  IndRect-ctr (stabilityTerm Γ≡Δ ⊢P) (stabilityAll Γ≡Δ ⊢args) (stabilityAll Γ≡Δ ⊢ms)
+stabilityRedTerm Γ≡Δ (IndRect-subst ind∈ ⊢P d ⊢ms) =
+  IndRect-subst ind∈ (stabilityTerm Γ≡Δ ⊢P) (stabilityRedTerm Γ≡Δ d) (stabilityAll Γ≡Δ ⊢ms)
+stabilityRedTerm Γ≡Δ (IndRect-ctr ind∈ eq ⊢P ⊢args ⊢ms nth≡) =
+  IndRect-ctr ind∈ eq (stabilityTerm Γ≡Δ ⊢P) (stabilityAll Γ≡Δ ⊢args) (stabilityAll Γ≡Δ ⊢ms) nth≡
 stabilityRedTerm Γ≡Δ (cast-subst X x x₁ x₂) = cast-subst (stabilityRedTerm Γ≡Δ X) (stabilityTerm Γ≡Δ x) (stabilityTerm Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂)
 stabilityRedTerm Γ≡Δ (cast-ℕ-subst X x x₁) =
   cast-ℕ-subst (stabilityRedTerm Γ≡Δ X) (stabilityTerm Γ≡Δ x) (stabilityTerm Γ≡Δ x₁)
-stabilityRedTerm Γ≡Δ (cast-ℕ2-subst X x x₁) =
-  cast-ℕ2-subst (stabilityRedTerm Γ≡Δ X) (stabilityTerm Γ≡Δ x) (stabilityTerm Γ≡Δ x₁)
 stabilityRedTerm Γ≡Δ (cast-Ind-subst X x x₁) =
   cast-Ind-subst (stabilityRedTerm Γ≡Δ X) (stabilityTerm Γ≡Δ x) (stabilityTerm Γ≡Δ x₁)
 stabilityRedTerm Γ≡Δ (cast-Π-subst x x₁ X x₂ x₃) =
@@ -126,13 +113,8 @@ stabilityRedTerm Γ≡Δ (cast-Π x x₁ x₂ x₃ x₄ x₅) =
 stabilityRedTerm Γ≡Δ (cast-ℕ-0 x) = cast-ℕ-0 (stabilityTerm Γ≡Δ x)
 stabilityRedTerm Γ≡Δ (cast-ℕ-S x x₁) = cast-ℕ-S (stabilityTerm Γ≡Δ x) (stabilityTerm Γ≡Δ x₁)
 stabilityRedTerm Γ≡Δ (cast-ℕ-cong x X) = cast-ℕ-cong (stabilityTerm Γ≡Δ x) (stabilityRedTerm Γ≡Δ X)
-stabilityRedTerm Γ≡Δ (cast-ℕ2-0 x) = cast-ℕ2-0 (stabilityTerm Γ≡Δ x)
-stabilityRedTerm Γ≡Δ (cast-ℕ2-S x x₁) = cast-ℕ2-S (stabilityTerm Γ≡Δ x) (stabilityTerm Γ≡Δ x₁)
-stabilityRedTerm Γ≡Δ (cast-ℕ2-cong x X) = cast-ℕ2-cong (stabilityTerm Γ≡Δ x) (stabilityRedTerm Γ≡Δ X)
-stabilityRedTerm Γ≡Δ (cast-Ind-ctr x x₁) = cast-Ind-ctr (stabilityTerm Γ≡Δ x) (stabilityAll Γ≡Δ x₁)
+stabilityRedTerm Γ≡Δ (cast-Ind-ctr ind∈ eq x x₁) = cast-Ind-ctr ind∈ eq (stabilityTerm Γ≡Δ x) (stabilityAll Γ≡Δ x₁)
 stabilityRedTerm Γ≡Δ (cast-Ind-cong x X) = cast-Ind-cong (stabilityTerm Γ≡Δ x) (stabilityRedTerm Γ≡Δ X)
-stabilityRedTerm Γ≡Δ (cast-equiv-fwd x x₁) = cast-equiv-fwd (stabilityTerm Γ≡Δ x) (stabilityTerm Γ≡Δ x₁)
-stabilityRedTerm Γ≡Δ (cast-equiv-bwd x x₁) = cast-equiv-bwd (stabilityTerm Γ≡Δ x) (stabilityTerm Γ≡Δ x₁)
 stabilityRedTerm Γ≡Δ (cast-ne-subst x₁ x₂ x₃ x₄ x₅) = cast-ne-subst (stabilityTerm Γ≡Δ x₁) x₂ (stabilityRedTerm Γ≡Δ x₃) (stabilityTerm Γ≡Δ x₄) (stabilityTerm Γ≡Δ x₅)
 stabilityRedTerm Γ≡Δ (cast-ne-cong x₁ x₂ x₃ x₄ x₅ x₆) = cast-ne-cong (stabilityTerm Γ≡Δ x₁) x₂ (stabilityTerm Γ≡Δ x₃) x₄ (stabilityTerm Γ≡Δ x₅) (stabilityRedTerm Γ≡Δ x₆)
 
@@ -149,7 +131,6 @@ stabilityRed* Γ≡Δ (x ⇨ D) = stabilityRed Γ≡Δ x ⇨ stabilityRed* Γ≡
 stabilityRed*Term : ∀ {t u A Γ Δ l} → ⊢ Γ ≡ Δ → Γ ⊢ t ⇒* u ∷ A ^ l → Δ ⊢ t ⇒* u ∷ A ^ l
 stabilityRed*Term Γ≡Δ (id x) = id (stabilityTerm Γ≡Δ x)
 stabilityRed*Term Γ≡Δ (x ⇨ d) = stabilityRedTerm Γ≡Δ x ⇨ stabilityRed*Term Γ≡Δ d
-
 
 mutual
   -- Stability of algorithmic equality of neutrals.
@@ -169,46 +150,33 @@ mutual
                    (stabilityConv↑Term Γ≡Δ x₂)
                    (stabilityConv↑Term Γ≡Δ x₃)
                    (stability~↓! Γ≡Δ k~l)
-  stability~↑! Γ≡Δ (natrec2-cong x₁ x₂ x₃ k~l) =
-    let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
-    in natrec2-cong (stabilityConv↑ (Γ≡Δ ∙ (refl (univ (ℕ2ⱼ ⊢Γ)))) x₁)
-                   (stabilityConv↑Term Γ≡Δ x₂)
-                   (stabilityConv↑Term Γ≡Δ x₃)
-                   (stability~↓! Γ≡Δ k~l)
   stability~↑! Γ≡Δ (Emptyrec-cong x₁ k~l) =
     Emptyrec-cong (stabilityConv↑ Γ≡Δ x₁)
                 (stability~↑% Γ≡Δ k~l)
   stability~↑! Γ≡Δ (cast-cong X x x₁ x₂ x₃) = cast-cong (stability~↓! Γ≡Δ X) (stability~↓! Γ≡Δ x)
                                                         (stabilityConv↓Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
   stability~↑! Γ≡Δ (cast-ℕ X x x₁ x₂) = cast-ℕ (stability~↓! Γ≡Δ X) (stabilityConv↑Term Γ≡Δ x) (stabilityTerm Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂)
-  stability~↑! Γ≡Δ (cast-ℕ2 X x x₁ x₂) = cast-ℕ2 (stability~↓! Γ≡Δ X) (stabilityConv↑Term Γ≡Δ x) (stabilityTerm Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂)
   stability~↑! Γ≡Δ (cast-Π x X x₁ x₂ x₃) = cast-Π (stabilityConv↑Term Γ≡Δ x) (stability~↓! Γ≡Δ X) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
   stability~↑! Γ≡Δ (cast-Πℕ x x₁ x₂ x₃) = cast-Πℕ (stabilityConv↑Term Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
-  stability~↑! Γ≡Δ (cast-Πℕ2 x x₁ x₂ x₃) = cast-Πℕ2 (stabilityConv↑Term Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
   stability~↑! Γ≡Δ (cast-ℕΠ x x₁ x₂ x₃) = cast-ℕΠ (stabilityConv↑Term Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
-  stability~↑! Γ≡Δ (cast-ℕ2Π x x₁ x₂ x₃) = cast-ℕ2Π (stabilityConv↑Term Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
   stability~↑! Γ≡Δ (cast-ΠΠ%! x x₁ x₂ x₃ x₄) = cast-ΠΠ%! (stabilityConv↑Term Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityConv↑Term Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃) (stabilityTerm Γ≡Δ x₄)
   stability~↑! Γ≡Δ (cast-ΠΠ!% x x₁ x₂ x₃ x₄) = cast-ΠΠ!% (stabilityConv↑Term Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityConv↑Term Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃) (stabilityTerm Γ≡Δ x₄)
   stability~↑! Γ≡Δ (cast-refl x x₁ x₂) = cast-refl (stability~↓! Γ≡Δ x) (stabilityConv↓Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂)
   stability~↑! Γ≡Δ (castℕ-refl x x₁) = castℕ-refl (stability~↓! Γ≡Δ x) (stabilityTerm Γ≡Δ x₁) 
-  stability~↑! Γ≡Δ (castℕ2-refl x x₁) = castℕ2-refl (stability~↓! Γ≡Δ x) (stabilityTerm Γ≡Δ x₁) 
   stability~↑! Γ≡Δ (cast-refl' x x₁ x₂) = cast-refl' (stability~↓! Γ≡Δ x) (stabilityConv↓Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) 
   stability~↑! Γ≡Δ (castℕ-refl' x x₁) = castℕ-refl' (stability~↓! Γ≡Δ x) (stabilityTerm Γ≡Δ x₁) 
-  stability~↑! Γ≡Δ (castℕ2-refl' x x₁) = castℕ2-refl' (stability~↓! Γ≡Δ x) (stabilityTerm Γ≡Δ x₁) 
+  stability~↑! Γ≡Δ (castInd-refl' x x₁) = castInd-refl' (stability~↓! Γ≡Δ x) (stabilityTerm Γ≡Δ x₁) 
   stability~↑! Γ≡Δ (cast-neℕ x x₁ x₂ x₃) = cast-neℕ (stability~↓! Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
-  stability~↑! Γ≡Δ (cast-neℕ2 x x₁ x₂ x₃) = cast-neℕ2 (stability~↓! Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
   stability~↑! Γ≡Δ (cast-neΠ x x₁ x₂ x₃ x₄) = cast-neΠ (stabilityConv↑Term Γ≡Δ x) (stability~↓! Γ≡Δ x₁) (stabilityConv↑Term Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃) (stabilityTerm Γ≡Δ x₄)
-  stability~↑! Γ≡Δ (IndRect-cong x x₁ x₂) =
-    IndRect-cong (stabilityConv↑Term Γ≡Δ x) (stability~↓! Γ≡Δ x₁) (stabilityAll≡ Γ≡Δ x₂)
+  stability~↑! Γ≡Δ (IndRect-cong ind∈ x x₁ x₂) =
+    IndRect-cong ind∈ (stabilityConv↑Term Γ≡Δ x) (stability~↓! Γ≡Δ x₁) (stabilityAll≡ Γ≡Δ x₂)
   stability~↑! Γ≡Δ (cast-neInd x x₁ x₂ x₃) = cast-neInd (stability~↓! Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
   stability~↑! Γ≡Δ (cast-Ind x x₁ x₂ x₃) = cast-Ind (stability~↓! Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
   stability~↑! Γ≡Δ (castInd-refl x x₁) = castInd-refl (stability~↓! Γ≡Δ x) (stabilityTerm Γ≡Δ x₁)
   stability~↑! Γ≡Δ (cast-IndΠ x x₁ x₂ x₃) = cast-IndΠ (stabilityConv↑Term Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
   stability~↑! Γ≡Δ (cast-ΠInd x x₁ x₂ x₃) = cast-ΠInd (stabilityConv↑Term Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
   stability~↑! Γ≡Δ (cast-Indℕ x x₁ x₂) = cast-Indℕ (stabilityConv↑Term Γ≡Δ x) (stabilityTerm Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂)
-  stability~↑! Γ≡Δ (cast-Indℕ2 x x₁ x₂) = cast-Indℕ2 (stabilityConv↑Term Γ≡Δ x) (stabilityTerm Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂)
-  stability~↑! Γ≡Δ (cast-ℕInd x x₁ x₂ x₃) = cast-ℕInd (stabilityConv↑Term Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
-  stability~↑! Γ≡Δ (cast-ℕ2Ind x x₁ x₂ x₃) = cast-ℕ2Ind (stabilityConv↑Term Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
+  stability~↑! Γ≡Δ (cast-ℕInd x x₁ x₂) = cast-ℕInd (stabilityConv↑Term Γ≡Δ x) (stabilityTerm Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂)
   stability~↑! Γ≡Δ (cast-IndInd x x₁ x₂ x₃) = cast-IndInd x (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
   
   stability~↑% : ∀ {k l A Γ Δ lA}
@@ -272,9 +240,6 @@ mutual
   stabilityConv↓Term Γ≡Δ (ℕ-refl x) =
     let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in  ℕ-refl ⊢Δ
-  stabilityConv↓Term Γ≡Δ (ℕ2-refl x) =
-    let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-    in  ℕ2-refl ⊢Δ
   stabilityConv↓Term Γ≡Δ (Empty-refl _) =
     let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in  Empty-refl ⊢Δ
@@ -284,8 +249,6 @@ mutual
   stabilityConv↓Term Γ≡Δ (Id-cong X x x₁) = Id-cong (stabilityConv↑Term Γ≡Δ X) (stabilityConv↑Term Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁)
   stabilityConv↓Term Γ≡Δ (ℕ-ins x) =
     ℕ-ins (stability~↓! Γ≡Δ x)
-  stabilityConv↓Term Γ≡Δ (ℕ2-ins x) =
-    ℕ2-ins (stability~↓! Γ≡Δ x)
   stabilityConv↓Term Γ≡Δ (Ind-ins x) =
     Ind-ins (stability~↓! Γ≡Δ x)
   stabilityConv↓Term Γ≡Δ (Ind-refl x) =
@@ -296,17 +259,13 @@ mutual
   stabilityConv↓Term Γ≡Δ (zero-refl x) =
     let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in  zero-refl ⊢Δ
-  stabilityConv↓Term Γ≡Δ (zero2-refl x) =
-    let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-    in  zero2-refl ⊢Δ
   stabilityConv↓Term Γ≡Δ (suc-cong t<>u) = suc-cong (stabilityConv↑Term Γ≡Δ t<>u)
-  stabilityConv↓Term Γ≡Δ (suc2-cong t<>u) = suc2-cong (stabilityConv↑Term Γ≡Δ t<>u)
   stabilityConv↓Term Γ≡Δ (η-eq l< l<' F x x₁ y y₁ t<>u) =
     η-eq l< l<' (stability Γ≡Δ F) (stabilityTerm Γ≡Δ x) (stabilityTerm Γ≡Δ x₁)
          y y₁ (stabilityConv↑Term (Γ≡Δ ∙ refl F) t<>u)
-  stabilityConv↓Term Γ≡Δ (ctr-cong ⊢Γ len args<>args') =
+  stabilityConv↓Term Γ≡Δ (ctr-cong ⊢Γ ind∈ eq len args<>args') =
     let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-    in  ctr-cong ⊢Δ len (All₂-stab Γ≡Δ args<>args')
+    in  ctr-cong ⊢Δ ind∈ eq len (All₂-stab Γ≡Δ args<>args')
 
   All₂-stab : ∀ {args args' i Γ Δ} →
     ⊢ Γ ≡ Δ →

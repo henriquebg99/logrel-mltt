@@ -1,14 +1,17 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution.Weakening {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Substitution.Weakening (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped
-open import Definition.Untyped.Properties
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.Substitution
-open import Definition.LogicalRelation.Substitution.MaybeEmbed
-open import Definition.LogicalRelation.Substitution.Introductions.Universe
+open import Definition.Untyped senv
+open import Definition.Untyped.Properties senv
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.Substitution senv equivs
+open import Definition.LogicalRelation.Substitution.MaybeEmbed senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Universe senv equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 -- Weakening of valid types by one.

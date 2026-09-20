@@ -1,18 +1,21 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Application {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation.Application (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped
-open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Weakening using (id)
-open import Definition.Typed.Properties
-open import Definition.Typed.RedSteps
-open import Definition.Typed.Reduction
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.ShapeView
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.Properties
+open import Definition.Untyped senv
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Weakening senv equivs using (id)
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.RedSteps senv equivs
+open import Definition.Typed.Reduction senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.Properties senv equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 -- Helper function for application of specific type derivations.

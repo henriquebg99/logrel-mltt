@@ -1,15 +1,19 @@
-open import Definition.Typed.EqualityRelation
+import Definition.Typed.EqualityRelation as ER
+
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation {{eqrel : EqRelSet}} where
+module Definition.LogicalRelation (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped as U
-open import Definition.Typed
-open import Definition.Typed.Weakening
-open import Definition.Typed.Reduction
+open import Definition.Untyped senv as U
+open import Definition.Typed senv equivs
+open import Definition.Typed.Weakening senv equivs
+open import Definition.Typed.Reduction senv equivs
 open import Tools.Nat
 open import Tools.Product
 open import Tools.List using (List; All; All₂)
 import Tools.PropositionalEquality as PE
+import Definition.SUntyped as SU
 -- The different cases of the logical relation are spread out through out
 -- this file. This is due to them having different dependencies.
 -- We will refer to expressions that satisfies the logical relation as reducible.
@@ -135,54 +139,6 @@ split (sucᵣ x) = sucₙ , sucₙ
 split zeroᵣ = zeroₙ , zeroₙ
 split (ne (neNfₜ₌ neK neM k≡m)) = ne neK , ne neM
 
--- Reducibility of second natural numbers:
-
--- Second natural number type
-_⊩ℕ2_ : (Γ : Con Term) (A : Term) → Set
-Γ ⊩ℕ2 A = Γ ⊢ A :⇒*: ℕ2 ^ [ ! , ι ⁰ ]
-
--- Second natural number type equality
-_⊩ℕ2_≡_ : (Γ : Con Term) (A B : Term) → Set
-Γ ⊩ℕ2 A ≡ B = Γ ⊢ B ⇒* ℕ2 ^ [ ! , ι ⁰ ]
-
-mutual
-  -- Second natural number term
-  data _⊩ℕ2_∷ℕ2 (Γ : Con Term) (t : Term) : Set where
-    ℕ2ₜ : (n : Term) (d : Γ ⊢ t :⇒*: n ∷ ℕ2 ^ ι ⁰) (n≡n : Γ ⊢ n ≅ n ∷ ℕ2 ^ [ ! , ι ⁰ ])
-         (prop : Natural2-prop Γ n)
-       → Γ ⊩ℕ2 t ∷ℕ2
-
-  -- WHNF property of second natural number terms
-  data Natural2-prop (Γ : Con Term) : (n : Term) → Set where
-    suc2ᵣ  : ∀ {n} → Γ ⊩ℕ2 n ∷ℕ2 → Natural2-prop Γ (suc2 n)
-    zero2ᵣ : Natural2-prop Γ zero2
-    ne    : ∀ {n} → Γ ⊩neNf n ∷ ℕ2 ^ [ ! , ι ⁰ ] → Natural2-prop Γ n
-
-mutual
-  -- Second natural number term equality
-  data _⊩ℕ2_≡_∷ℕ2 (Γ : Con Term) (t u : Term) : Set where
-    ℕ2ₜ₌ : (k k′ : Term) (d : Γ ⊢ t :⇒*: k  ∷ ℕ2 ^ ι ⁰) (d′ : Γ ⊢ u :⇒*: k′ ∷ ℕ2 ^ ι ⁰)
-          (k≡k′ : Γ ⊢ k ≅ k′ ∷ ℕ2 ^ [ ! , ι ⁰ ])
-          (prop : [Natural2]-prop Γ k k′) → Γ ⊩ℕ2 t ≡ u ∷ℕ2
-
-  -- WHNF property of Natural2 number term equality
-  data [Natural2]-prop (Γ : Con Term) : (n n′ : Term) → Set where
-    suc2ᵣ  : ∀ {n n′} → Γ ⊩ℕ2 n ≡ n′ ∷ℕ2 → [Natural2]-prop Γ (suc2 n) (suc2 n′)
-    zero2ᵣ : [Natural2]-prop Γ zero2 zero2
-    ne    : ∀ {n n′} → Γ ⊩neNf n ≡ n′ ∷ ℕ2 ^ [ ! , ι ⁰ ] → [Natural2]-prop Γ n n′
-
--- Natural2 extraction from term WHNF property
-natural2 : ∀ {Γ n} → Natural2-prop Γ n → Natural2 n
-natural2 (suc2ᵣ x) = suc2ₙ
-natural2 zero2ᵣ = zero2ₙ
-natural2 (ne (neNfₜ neK ⊢k k≡k)) = ne2 neK
-
--- Natural2 extraction from term equality WHNF property
-split2 : ∀ {Γ a b} → [Natural2]-prop Γ a b → Natural2 a × Natural2 b
-split2 (suc2ᵣ x) = suc2ₙ , suc2ₙ
-split2 zero2ᵣ = zero2ₙ , zero2ₙ
-split2 (ne (neNfₜ₌ neK neM k≡m)) = ne2 neK , ne2 neM
-
 -- Reducibility of inductive types Ind i:
 
 -- Inductive type
@@ -296,8 +252,6 @@ _⊩Πirr_≡_∷_/_ : (Γ : Con Term) (t u A : Term) ([A] : Γ ⊩Πirr A ) →
       (Γ ⊢ t ∷ Π F ^ rF ° lF ▹ G ° ⁰ ° ⁰ ^ % ^ [ % , ι ⁰ ])
       ×
       (Γ ⊢ u ∷ Π F ^ rF ° lF ▹ G ° ⁰ ° ⁰ ^ % ^ [ % , ι ⁰ ])
-
-
 
 -- Identity types
 record _⊩Id_ (Γ : Con Term) (A : Term) : Set where
@@ -486,7 +440,6 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     data _⊩¹_^_ (Γ : Con Term) : Term → TypeInfo → Set where
       Uᵣ  : ∀ {A ll} → (UA : Γ ⊩¹U A ^ ll) → Γ ⊩¹ A ^ [ ! , ll ]
       ℕᵣ  : ∀ {A} → Γ ⊩ℕ A → Γ ⊩¹ A ^ [ ! , ι ⁰ ]
-      ℕ2ᵣ : ∀ {A} → Γ ⊩ℕ2 A → Γ ⊩¹ A ^ [ ! , ι ⁰ ]
       Indᵣ : ∀ {A i} → Γ ⊩Ind A ^ i → Γ ⊩¹ A ^ [ ! , ι ⁰ ]
       Emptyᵣ : ∀ {A} → Γ ⊩Empty A → Γ ⊩¹ A ^ [ % , ι ⁰ ]
       ne  : ∀ {A r l} → Γ ⊩ne A ^[ r , l ] → Γ ⊩¹ A ^ [ r , ι l ]
@@ -499,7 +452,6 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     _⊩¹_≡_^_/_ : (Γ : Con Term) (A B : Term) (r : TypeInfo) → Γ ⊩¹ A ^ r  → Set
     Γ ⊩¹ A ≡ B ^ [ .! , l ] / Uᵣ UA = Γ ⊩¹U A ≡ B ^ l / UA
     Γ ⊩¹ A ≡ B ^ [ .! , .ι ⁰ ] / ℕᵣ D = Γ ⊩ℕ A ≡ B
-    Γ ⊩¹ A ≡ B ^ [ .! , .ι ⁰ ] / ℕ2ᵣ D = Γ ⊩ℕ2 A ≡ B
     Γ ⊩¹ A ≡ B ^ [ .! , .ι ⁰ ] / Indᵣ {i = i} D = Γ ⊩Ind A ≡ B ^ i
     Γ ⊩¹ A ≡ B ^ [ .% , .ι ⁰ ] / Emptyᵣ D = Γ ⊩Empty A ≡ B
     Γ ⊩¹ A ≡ B ^ [ r , ι l ] / ne neA = Γ ⊩ne A ≡ B ^[ r , l ]/ neA
@@ -512,7 +464,6 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     _⊩¹_∷_^_/_ : (Γ : Con Term) (t A : Term) (r : TypeInfo) → Γ ⊩¹ A ^ r  → Set
     Γ ⊩¹ t ∷ A ^ [ .! , ll ] / Uᵣ UA = Γ ⊩¹U t ∷ A ^ ll / UA
     Γ ⊩¹ t ∷ A ^ .([ ! , ι ⁰ ]) / ℕᵣ x = Γ ⊩ℕ t ∷ℕ
-    Γ ⊩¹ t ∷ A ^ .([ ! , ι ⁰ ]) / ℕ2ᵣ x = Γ ⊩ℕ2 t ∷ℕ2
     Γ ⊩¹ t ∷ A ^ .([ ! , ι ⁰ ]) / Indᵣ {i = i} x = Γ ⊩Ind t ∷Ind i
     Γ ⊩¹ t ∷ A ^ [ .% , ι ⁰ ] / Emptyᵣ x =  Γ ⊩Empty t ∷Empty
     Γ ⊩¹ t ∷ A ^ .([ ! , ι l ]) / ne {r = !} {l} neA = Γ ⊩ne t ∷ A ^ l / neA
@@ -526,7 +477,6 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     _⊩¹_≡_∷_^_/_ : (Γ : Con Term) (t u A : Term) (r : TypeInfo) → Γ ⊩¹ A ^ r → Set
     Γ ⊩¹ t ≡ u ∷ A ^ [ .! , ll ] / Uᵣ UA = Γ ⊩¹U t ≡ u ∷ A ^ ll / UA
     Γ ⊩¹ t ≡ u ∷ A ^ .([ ! , ι ⁰ ]) / ℕᵣ D = Γ ⊩ℕ t ≡ u ∷ℕ
-    Γ ⊩¹ t ≡ u ∷ A ^ .([ ! , ι ⁰ ]) / ℕ2ᵣ D = Γ ⊩ℕ2 t ≡ u ∷ℕ2
     Γ ⊩¹ t ≡ u ∷ A ^ .([ ! , ι ⁰ ]) / Indᵣ {i = i} D = Γ ⊩Ind t ≡ u ∷Ind i
     Γ ⊩¹ t ≡ u ∷ A ^ [ .% , ι ⁰ ] / Emptyᵣ D = Γ ⊩Empty t ≡ u ∷Empty
     Γ ⊩¹ t ≡ u ∷ A ^ .([ ! , ι l ]) / ne {r = !} {l} neA = Γ ⊩ne t ≡ u ∷ A ^  l / neA
@@ -540,7 +490,7 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     kit : LogRelKit
     kit = Kit _⊩¹U_^_ _⊩¹Π_^[_] _⊩¹_^_ _⊩¹_≡_^_/_ _⊩¹_∷_^_/_ _⊩¹_≡_∷_^_/_
 
-open LogRel public using (Uᵣ; ℕᵣ; ℕ2ᵣ; Indᵣ; Emptyᵣ; ne; Πᵣ ; Πirrᵣ ; Idᵣ ; emb; Uₜ; Uₜ₌; Π₌)
+open LogRel public using (Uᵣ; ℕᵣ; Indᵣ; Emptyᵣ; ne; Πᵣ ; Πirrᵣ ; Idᵣ ; emb; Uₜ; Uₜ₌; Π₌)
 
 -- Patterns for the non-records of Π
 pattern Πₜ a b c d e f = a , b , c , d , e , f
@@ -551,7 +501,6 @@ pattern ne′ b c d e = ne (ne b c d e)
 pattern Πᵣ′  a a' a'' lf lg b c d e f g h i j = Πᵣ (Πᵣ a a' a'' lf lg b c d e f g h i j)
 pattern Πirrᵣ′ a b c d e f g h = Πirrᵣ (Πirrᵣ a b c d e f g h)
 pattern Idᵣ′ a b c d e f g h i = Idᵣ (Idᵣ a b c d e f g h i)
-
 
 -- we need to split the LogRelKit into the level part and the general part to convince Agda termination checker
 

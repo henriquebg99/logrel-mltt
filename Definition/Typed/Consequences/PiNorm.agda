@@ -1,19 +1,20 @@
+import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.Consequences.PiNorm where
-open import Definition.Untyped
-open import Definition.Untyped.Properties
-open import Definition.Typed
-open import Definition.Typed.Properties
-open import Definition.Typed.Weakening
-open import Definition.Typed.EqRelInstance
-open import Definition.LogicalRelation
-open import Definition.LogicalRelation.Properties
-open import Definition.LogicalRelation.Irrelevance
-open import Definition.LogicalRelation.Fundamental.Reducibility
-open import Definition.Typed.Consequences.Inversion
-open import Definition.Typed.Consequences.Injectivity
-open import Definition.Typed.Consequences.Syntactic
-open import Definition.Conversion.Stability
+module Definition.Typed.Consequences.PiNorm (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv
+open import Definition.Untyped.Properties senv
+open import Definition.Typed senv equivs
+open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Weakening senv equivs
+open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation.Properties senv equivs
+open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
+open import Definition.Typed.Consequences.Inversion senv swf equivs
+open import Definition.Typed.Consequences.Injectivity senv swf equivs
+open import Definition.Typed.Consequences.Syntactic senv swf equivs
+open import Definition.Conversion.Stability senv swf equivs
 open import Tools.Product
 open import Tools.Empty
 import Tools.PropositionalEquality as PE
@@ -28,7 +29,6 @@ data ΠNorm : Term → Set where
   Πirrₙ : ∀ {F rF lF G} → ΠNorm (Π F ^ rF ° lF ▹ G ° ⁰ ° ⁰ ^ %)
   Idₙ : ∀ {A t u} → ΠNorm (Id A t u)
   ℕₙ : ΠNorm ℕ
-  ℕ2ₙ : ΠNorm ℕ2
   Indₙ : ∀ {i} → ΠNorm (Ind i)
   Emptyₙ : ΠNorm sEmpty
   ne   : ∀ {n} → Neutral n → ΠNorm n
@@ -36,7 +36,6 @@ data ΠNorm : Term → Set where
 ΠNorm-Π : ∀ {F rF lF G lG lΠ} → ΠNorm (Π F ^ rF ° lF ▹ G ° lG ° lΠ ^ !) → ΠNorm G 
 ΠNorm-Π (Πₙ x) = x
 ΠNorm-Π (ne ())
-
 
 data _⊢_⇒Π_∷_^_ (Γ : Con Term) : Term → Term → Term → TypeLevel → Set where
   regular : ∀ {t u A l} → Γ ⊢ t ⇒ u ∷ A ^ l → Γ ⊢ t ⇒Π u ∷ A ^ l
@@ -90,7 +89,6 @@ deep-correct-term ⊢t (deepΠ X) =
   in Πⱼ (λ x → l< (PE.trans (PE.sym erG) x) ) ▹ (λ x → l<' (PE.trans (PE.sym erG) x) ) ▹ ⊢F ▹ ⊢G' ,
      Π-cong (λ x → l< (PE.trans (PE.sym erG) x)) (λ x → l<' (PE.trans (PE.sym erG) x))  (univ ⊢F) (refl ⊢F) G≡G'
 
-
 deep-correct : ∀ {Γ A B r} → Γ ⊢ A ^ r → Γ ⊢ A ⇒Π B ^ r → Γ ⊢ B ^ r × Γ ⊢ A ≡ B ^ r
 deep-correct ⊢A (univ x) =
   let ⊢B , A≡B = deep-correct-term (un-univ ⊢A) x
@@ -112,7 +110,6 @@ doΠNorm′ : ∀ {A rA Γ l} ([A] : Γ ⊩⟨ l ⟩ A ^ rA)
          → ∃ λ B → ΠNorm B × Γ ⊢ B ^ rA × Γ ⊢ A ⇒*Π B ^ rA
 doΠNorm′ (Uᵣ (Uᵣ r l′ l< PE.refl [[ A , U , d ]])) = Univ r l′ , Uₙ , Ugenⱼ (wf A) , regular* d
 doΠNorm′ (ℕᵣ [[ ⊢A , ⊢B , D ]]) = ℕ , ℕₙ , ⊢B , regular* D
-doΠNorm′ (ℕ2ᵣ [[ ⊢A , ⊢B , D ]]) = ℕ2 , ℕ2ₙ , ⊢B , regular* D
 doΠNorm′ (Indᵣ {i = i} [[ ⊢A , ⊢B , D ]]) = Ind i , Indₙ , ⊢B , regular* D
 doΠNorm′ (Emptyᵣ [[ ⊢A , ⊢B , D ]]) = sEmpty , Emptyₙ , ⊢B , regular* D
 doΠNorm′ (ne′ K [[ ⊢A , ⊢B , D ]] neK K≡K) = K , ne neK , ⊢B , regular* D
@@ -139,7 +136,6 @@ doΠNorm ⊢A = doΠNorm′ (reducible ⊢A)
 ΠNorm-whnf Πirrₙ = Πₙ
 ΠNorm-whnf Idₙ = Idₙ
 ΠNorm-whnf ℕₙ = ℕₙ
-ΠNorm-whnf ℕ2ₙ = ℕ2ₙ
 ΠNorm-whnf Indₙ = Indₙ
 ΠNorm-whnf Emptyₙ = Emptyₙ
 ΠNorm-whnf (ne x) = ne x
@@ -167,5 +163,3 @@ detΠNorm* w w′ id (x ⇨ b) = ⊥-elim (ΠNorm-nored x w)
 detΠNorm* w w′ (x ⇨ a) id = ⊥-elim (ΠNorm-nored x w′)
 detΠNorm* w w′ (x ⇨ a) (x₁ ⇨ b) =
   detΠNorm* w w′ a (PE.subst (λ t → _ ⊢ t ⇒*Π _ ^ _) (detΠRed x₁ x) b)
-
-
