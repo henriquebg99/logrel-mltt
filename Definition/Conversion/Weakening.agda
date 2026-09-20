@@ -52,11 +52,12 @@ mutual
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-neℕ x x₁ x₂ x₃) = cast-neℕ (wk~↓! [ρ] ⊢Δ x)  (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-neΠ X x x₁ x₂ x₃) = cast-neΠ (wkConv↑Term [ρ] ⊢Δ X) (wk~↓! [ρ] ⊢Δ x)  (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (IndRect-cong {ind} {P} {P'} {t} {t'} {ms} {ms'} {lG} ind∈ x x₁ x₂) =
-    PE.subst₂ (λ a b → Δ ⊢ a ~ b ↑! U.wk ρ (P ∘ t ^ ¹) ^ ι lG)
+    PE.subst₃ (λ a b c → Δ ⊢ a ~ b ↑! c ^ ι lG)
       (PE.sym (wk-IndRect ρ (SU.SInd.name ind) lG P t ms))
       (PE.sym (wk-IndRect ρ (SU.SInd.name ind) lG P' t' ms'))
+      (PE.sym (wk-β P))
       (IndRect-cong ind∈
-                    (wkConv↑Term [ρ] ⊢Δ x)
+                    (wkConv↑ (lift [ρ]) (⊢Δ ∙ (univ (Indⱼ ⊢Δ))) x)
                     (wk~↓! [ρ] ⊢Δ x₁)
                     (PE.subst (λ As → Δ ⊢All map (U.wk ρ) ms ≡ map (U.wk ρ) ms' ∷ As ^ [ ! , ι lG ])
                               (wk-indRectBranchTyList ρ ind P ! lG)

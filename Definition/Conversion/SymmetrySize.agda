@@ -200,9 +200,10 @@ mutual
     let a = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₂)) (size-symConv↑Term Γ≡Δ x₂)
     in PE.cong₃ (λ X Y Z → 1 + X + Y + Z) (size-symConv↑Term Γ≡Δ x) (size-symConv↑Term Γ≡Δ x₁) a
   size-sym~↑! Γ≡Δ (IndRect-cong _ x x₁ x₂) =
-    let B , whnfB , Ind≡B , t'~t = sym~↓! Γ≡Δ x₁
+    let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
+        B , whnfB , Ind≡B , t'~t = sym~↓! Γ≡Δ x₁
         B≡Ind = Ind≡A Ind≡B whnfB
-        a = size-symConv↑Term Γ≡Δ x
+        a = size-symConv↑ (Γ≡Δ ∙ (refl (univ (Indⱼ ⊢Γ)))) x
         b = PE.trans (size-subst B≡Ind t'~t) (size-sym~↓! Γ≡Δ x₁)
     in PE.cong₂ (λ X Y → 1 + X + Y) a b
 

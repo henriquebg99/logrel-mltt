@@ -20,6 +20,7 @@ infixr 22 _^_°_▹▹_°_°_^_
 infixl 30 _ₛ•ₛ_ _•ₛ_ _ₛ•_
 infix 25 _[_]
 infix 25 _[_]↑
+infix 25 _[_]↑^_
 
 data Kind : Set where
   Ukind : Relevance → Level → Kind
@@ -152,9 +153,9 @@ Ind i = gen (Indkind i) []
 ctr : Nat → Nat → List Term → Term
 ctr i j ts = gen (Ctrkind i j) (map (λ t → ⟦ 0 , t ⟧) ts)
 
--- inductive eliminator (P is a function motive: Ind i → Univ lG)
+-- inductive eliminator (P is a type family over Ind i, so a binder)
 IndRect : Nat → Level → Term → Term → List Term → Term
-IndRect i lG P t ms = gen (IndRectkind i lG) (⟦ 0 , P ⟧ ∷ ⟦ 0 , t ⟧ ∷ map (λ m → ⟦ 0 , m ⟧) ms)
+IndRect i lG P t ms = gen (IndRectkind i lG) (⟦ 1 , P ⟧ ∷ ⟦ 0 , t ⟧ ∷ map (λ m → ⟦ 0 , m ⟧) ms)
 
 ------------------------------------------------------------------------
 -- Embedding of OTerms into Terms
@@ -547,9 +548,9 @@ map-map0-wkGen ρ ts = PE.trans (map-map (λ t → ⟦ 0 , t ⟧) (wk ρ) ts) (P
 
 wk-IndRect : ∀ ρ i lG P t ms →
   wk ρ (IndRect i lG P t ms) PE.≡
-  IndRect i lG (wk ρ P) (wk ρ t) (map (wk ρ) ms)
+  IndRect i lG (wk (lift ρ) P) (wk ρ t) (map (wk ρ) ms)
 wk-IndRect ρ i lG P t ms =
-  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 0 , wk ρ P ⟧ ∷ ⟦ 0 , wk ρ t ⟧ ∷ gs))
+  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 1 , wk (lift ρ) P ⟧ ∷ ⟦ 0 , wk ρ t ⟧ ∷ gs))
     (PE.sym (map-map0-wkGen ρ ms))
 
 wk-ctr : ∀ ρ i j ts →
@@ -565,7 +566,7 @@ wkNeutral ρ (∘ₙ n)    = ∘ₙ (wkNeutral ρ n)
 wkNeutral ρ (natrecₙ n) = natrecₙ (wkNeutral ρ n)
 wkNeutral ρ (IndRectₙ {i} {lG} {P} {t} {ms} n) =
   PE.subst Neutral (PE.sym (wk-IndRect ρ i lG P t ms))
-    (IndRectₙ {P = wk ρ P} {ms = map (wk ρ) ms} (wkNeutral ρ n))
+    (IndRectₙ {P = wk (lift ρ) P} {ms = map (wk ρ) ms} (wkNeutral ρ n))
 wkNeutral ρ Emptyrecₙ = Emptyrecₙ
 wkNeutral ρ (castₙ A B t) = castₙ (wkNeutral ρ A) (wkNeutral ρ B) (wkNeutral ρ t)
 wkNeutral ρ (castnℕₙ A) = castnℕₙ (wkNeutral ρ A)
@@ -690,6 +691,14 @@ idSubst = var
 wk1Subst : Subst → Subst
 wk1Subst σ x = wk1 (σ x)
 
+-- Weaken a substitution by [d].
+--
+-- If Γ ⊢ σ : Δ then Γ∙A₁∙…∙A_d ⊢ wk1^Subst d σ : Δ.
+
+wk1^Subst : Nat → Subst → Subst
+wk1^Subst 0 σ = σ
+wk1^Subst (1+ d) σ = wk1Subst (wk1^Subst d σ)
+
 -- Lift a substitution.
 --
 -- If Γ ⊢ σ : Δ then Γ∙A ⊢ liftSubst σ : Δ∙A.
@@ -771,6 +780,14 @@ t [ s ]↑ = subst (consSubst (wk1Subst idSubst) s) t
 _[_]↑↑ : (t : Term) (s : Term) → Term
 t [ s ]↑↑ = subst (consSubst (wk1Subst (wk1Subst idSubst)) s) t
 
+-- Substitute the first variable of a term with an other term living
+-- under [d] extra binders.
+--
+-- If Γ∙A ⊢ t : B and Γ∙B₁∙…∙B_d ⊢ s : A then Γ∙B₁∙…∙B_d ⊢ t[s]↑^ d : B[s]↑^ d.
+
+_[_]↑^_ : (t : Term) (s : Term) (d : Nat) → Term
+t [ s ]↑^ d = subst (consSubst (wk1^Subst d idSubst) s) t
+
 ------------------------------------------------------------------------
 -- IndRect helpers
 
@@ -792,7 +809,7 @@ wk-IndRect-ctr-rhs : ∀ ρ i lG P m args ms →
   in wk ρ rhs PE.≡
      apps lG (wk ρ m)
               (map (wk ρ) args ++
-                map (λ a → IndRect i lG (wk ρ P) a (map (wk ρ) ms))
+                map (λ a → IndRect i lG (wk (lift ρ) P) a (map (wk ρ) ms))
                     (map (wk ρ) args))
 wk-IndRect-ctr-rhs ρ i lG P m args ms =
   PE.trans (wk-apps ρ lG m
@@ -803,7 +820,7 @@ wk-IndRect-ctr-rhs ρ i lG P m args ms =
            (PE.cong₂ _++_ PE.refl
              (PE.trans (map-map (wk ρ) (λ a → IndRect i lG P a ms) args)
                (PE.trans (map-cong args (λ a → wk-IndRect ρ i lG P a ms))
-                 (PE.sym (map-map (λ a → IndRect i lG (wk ρ P) a (map (wk ρ) ms))
+                 (PE.sym (map-map (λ a → IndRect i lG (wk (lift ρ) P) a (map (wk ρ) ms))
                                   (wk ρ) args)))))))
   where
     wk-apps : ∀ ρ l t us →
@@ -818,9 +835,9 @@ substGen-map0 σ (t ∷ ts) = PE.cong (⟦ 0 , subst σ t ⟧ ∷_) (substGen-ma
 
 subst-IndRect : ∀ σ i lG P t ms →
   subst σ (IndRect i lG P t ms) PE.≡
-  IndRect i lG (subst σ P) (subst σ t) (map (subst σ) ms)
+  IndRect i lG (subst (liftSubst σ) P) (subst σ t) (map (subst σ) ms)
 subst-IndRect σ i lG P t ms =
-  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 0 , subst σ P ⟧ ∷ ⟦ 0 , subst σ t ⟧ ∷ gs))
+  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 1 , subst (liftSubst σ) P ⟧ ∷ ⟦ 0 , subst σ t ⟧ ∷ gs))
     (PE.trans (substGen-map0 σ ms)
               (PE.sym (map-map (λ m → ⟦ 0 , m ⟧) (subst σ) ms)))
 
@@ -836,7 +853,7 @@ subst-IndRect-ctr-rhs : ∀ σ i lG P m args ms →
   in subst σ rhs PE.≡
      apps lG (subst σ m)
               (map (subst σ) args ++
-                map (λ a → IndRect i lG (subst σ P) a (map (subst σ) ms))
+                map (λ a → IndRect i lG (subst (liftSubst σ) P) a (map (subst σ) ms))
                     (map (subst σ) args))
 subst-IndRect-ctr-rhs σ i lG P m args ms =
   PE.trans (subst-apps σ lG m
@@ -847,7 +864,7 @@ subst-IndRect-ctr-rhs σ i lG P m args ms =
            (PE.cong₂ _++_ PE.refl
              (PE.trans (map-map (subst σ) (λ a → IndRect i lG P a ms) args)
                (PE.trans (map-cong args (λ a → subst-IndRect σ i lG P a ms))
-                 (PE.sym (map-map (λ a → IndRect i lG (subst σ P) a (map (subst σ) ms))
+                 (PE.sym (map-map (λ a → IndRect i lG (subst (liftSubst σ) P) a (map (subst σ) ms))
                                   (subst σ) args)))))))
   where
     subst-apps : ∀ σ l t us →
@@ -870,7 +887,7 @@ ctrRecIndices ind Ss =
 -- CIC method type for the constructor [index] of [ind] with argument types
 -- [Ss] at motive [P]:
 --   Π (x_i : A_i). Π (ih_j : P x_j)_{A_j = I}. P (c x⃗)
--- Motive applications use ∘ ^ ¹ (Π-level of Ind → Univ lG).
+-- The motive is a type family over [ind], instantiated with [_[_]↑^_].
 indRectBranchTy : Nat → Nat → List SU.Type → Term → Relevance → Level → Term
 indRectBranchTy ind index Ss P rG lG =
   let Ts = ctrArgsTypeList Ss
@@ -878,9 +895,9 @@ indRectBranchTy ind index Ss P rG lG =
       recs = ctrRecIndices ind Ss
       k = length recs
       vars = map (λ j → var (((k + n) - 1) - j)) (range n)
-      conclusion = wk1^ (k + n) P ∘ ctr ind index vars ^ ¹
+      conclusion = P [ ctr ind index vars ]↑^ (k + n)
       ihTys = map (λ pj →
-                wk1^ (n + proj₂ pj) P ∘ var (((n - 1) - proj₁ pj) + proj₂ pj) ^ ¹)
+                P [ var (((n - 1) - proj₁ pj) + proj₂ pj) ]↑^ (n + proj₂ pj))
                 (zip recs (range k))
       argTys = map proj₁ Ts
   in  foldr (λ A B → Π A ^ ! ° ⁰ ▹ B ° lG ° lG ^ rG)
@@ -999,6 +1016,23 @@ emb-sgSubst t s = emb-substσ-eq (emb-substσ-consSubst O.idSubst s) t
 
 emb-liftSubst : ∀ t s → emb_oterm_term (t O.[ s ]↑) PE.≡ emb_oterm_term t [ emb_oterm_term s ]↑
 emb-liftSubst t s = emb-substσ-eq (λ n → emb-substσ-consSubst-wk1 s n) t
+
+emb-substσ-wk1^Subst : ∀ d σ x →
+  emb-substσ (O.wk1^Subst d σ) x PE.≡ wk1^Subst d (emb-substσ σ) x
+emb-substσ-wk1^Subst 0 σ x = PE.refl
+emb-substσ-wk1^Subst (1+ d) σ x =
+  PE.trans (emb-substσ-wk1Subst (O.wk1^Subst d σ) x)
+    (PE.cong wk1 (emb-substσ-wk1^Subst d σ x))
+
+emb-substσ-consSubst-wk1^ : ∀ d s n →
+  emb-substσ (O.consSubst (O.wk1^Subst d O.idSubst) s) n
+  PE.≡ consSubst (wk1^Subst d idSubst) (emb_oterm_term s) n
+emb-substσ-consSubst-wk1^ d s 0 = PE.refl
+emb-substσ-consSubst-wk1^ d s (1+ n) = emb-substσ-wk1^Subst d O.idSubst n
+
+emb-liftSubst^ : ∀ t s d →
+  emb_oterm_term (t O.[ s ]↑^ d) PE.≡ emb_oterm_term t [ emb_oterm_term s ]↑^ d
+emb-liftSubst^ t s d = emb-substσ-eq (λ n → emb-substσ-consSubst-wk1^ d s n) t
 
 emb-Π : ∀ A r lA B lB l r' →
   emb_oterm_term (O.Π A ^ r ° lA ▹ B ° lB ° l ^ r') PE.≡
@@ -1168,7 +1202,7 @@ emb-IndRect : ∀ i lG P t ms →
   emb_oterm_term (O.IndRect i lG P t ms) PE.≡
   IndRect i lG (emb_oterm_term P) (emb_oterm_term t) (emb-oterm-all ms)
 emb-IndRect i lG P t ms =
-  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 0 , emb_oterm_term P ⟧ ∷ ⟦ 0 , emb_oterm_term t ⟧ ∷ gs))
+  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 1 , emb_oterm_term P ⟧ ∷ ⟦ 0 , emb_oterm_term t ⟧ ∷ gs))
     (PE.trans (emb-otermGen-map0 ms)
               (PE.trans (PE.sym (map-map (λ m → ⟦ 0 , m ⟧) emb_oterm_term ms))
                         (PE.cong (map (λ m → ⟦ 0 , m ⟧)) (PE.sym (emb-oterm-all-map ms)))))
@@ -1184,10 +1218,10 @@ emb-indRectBranchTy ind index Ss P rG lG =
       (PE.cong₂ (foldr (λ A B → Π A ^ ! ° ⁰ ▹ B ° lG ° lG ^ rG))
         (PE.trans (emb-foldr-Π rG lG lG rG ihTysO concO)
           (PE.cong₂ (foldr (λ A B → Π A ^ rG ° lG ▹ B ° lG ° lG ^ rG))
-            (PE.trans (emb-∘ (O.wk1^ (k + n) P)
+            (PE.trans (emb-liftSubst^ P
                           (O.ctr ind index (map (λ j → O.var (((k + n) - 1) - j)) (range n)))
-                          ¹)
-              (PE.cong₂ (λ Q t → Q ∘ t ^ ¹) (emb-wk1^ (k + n) P)
+                          (k + n))
+              (PE.cong (λ t → emb_oterm_term P [ t ]↑^ (k + n))
                 (PE.trans (emb-ctr ind index (map (λ j → O.var (((k + n) - 1) - j)) (range n)))
                   (PE.cong (ctr ind index)
                     (PE.trans
@@ -1196,15 +1230,11 @@ emb-indRectBranchTy ind index Ss P rG lG =
                       (PE.trans (emb-map-var (map (λ j → ((k + n) - 1) - j) (range n)))
                         (map-map var (λ j → ((k + n) - 1) - j) (range n))))))))
             (PE.trans (map-map emb_oterm_term
-                          (λ pj → O.wk1^ (n + proj₂ pj) P
-                            O.∘ O.var (((n - 1) - proj₁ pj) + proj₂ pj) ^ ¹)
+                          (λ pj → P O.[ O.var (((n - 1) - proj₁ pj) + proj₂ pj) ]↑^ (n + proj₂ pj))
                           (zip recs (range (length recs))))
               (map-cong (zip recs (range (length recs)))
-                (λ pj → PE.trans (emb-∘ (O.wk1^ (n + proj₂ pj) P)
-                                    (O.var (((n - 1) - proj₁ pj) + proj₂ pj))
-                                    ¹)
-                  (PE.cong (λ Q → Q ∘ var (((n - 1) - proj₁ pj) + proj₂ pj) ^ ¹)
-                    (emb-wk1^ (n + proj₂ pj) P)))))))
+                (λ pj → emb-liftSubst^ P (O.var (((n - 1) - proj₁ pj) + proj₂ pj))
+                                         (n + proj₂ pj))))))
         (PE.trans (map-map emb_oterm_term proj₁ (O.ctrArgsTypeList Ss))
           (PE.trans (PE.sym (map-map proj₁ (λ p → (emb_oterm_term (proj₁ p) , proj₂ p))
                                (O.ctrArgsTypeList Ss)))
@@ -1212,12 +1242,11 @@ emb-indRectBranchTy ind index Ss P rG lG =
       (PE.cong₂ (λ n′ recs′ →
           foldr (λ A B → Π A ^ ! ° ⁰ ▹ B ° lG ° lG ^ rG)
             (foldr (λ A B → Π A ^ rG ° lG ▹ B ° lG ° lG ^ rG)
-              (wk1^ (length recs′ + n′) (emb_oterm_term P)
-                ∘ ctr ind index (map (λ j → var (((length recs′ + n′) - 1) - j))
-                                    (range n′))
-                ^ ¹)
-              (map (λ pj → wk1^ (n′ + proj₂ pj) (emb_oterm_term P)
-                              ∘ var (((n′ - 1) - proj₁ pj) + proj₂ pj) ^ ¹)
+              (emb_oterm_term P
+                [ ctr ind index (map (λ j → var (((length recs′ + n′) - 1) - j))
+                                    (range n′)) ]↑^ (length recs′ + n′))
+              (map (λ pj → emb_oterm_term P
+                              [ var (((n′ - 1) - proj₁ pj) + proj₂ pj) ]↑^ (n′ + proj₂ pj))
                    (zip recs′ (range (length recs′)))))
             (map proj₁ (ctrArgsTypeList Ss)))
         (PE.sym (length-map (λ p → (emb_oterm_term (proj₁ p) , proj₂ p))
@@ -1227,17 +1256,9 @@ emb-indRectBranchTy ind index Ss P rG lG =
   n = length (O.ctrArgsTypeList Ss)
   recs = O.ctrRecIndices ind Ss
   k = length recs
-  ihTysO = map (λ pj → O.wk1^ (n + proj₂ pj) P
-                     O.∘ O.var (((n - 1) - proj₁ pj) + proj₂ pj) ^ ¹)
+  ihTysO = map (λ pj → P O.[ O.var (((n - 1) - proj₁ pj) + proj₂ pj) ]↑^ (n + proj₂ pj))
                (zip recs (range k))
-  concO = O.wk1^ (k + n) P
-            O.∘ O.ctr ind index (map (λ j → O.var (((k + n) - 1) - j)) (range n))
-            ^ ¹
-
-  emb-wk1^ : ∀ n t → emb_oterm_term (O.wk1^ n t) PE.≡ wk1^ n (emb_oterm_term t)
-  emb-wk1^ 0 t = PE.refl
-  emb-wk1^ (1+ n) t =
-    PE.trans (emb-wk1 (O.wk1^ n t)) (PE.cong wk1 (emb-wk1^ n t))
+  concO = P O.[ O.ctr ind index (map (λ j → O.var (((k + n) - 1) - j)) (range n)) ]↑^ (k + n)
 
   emb-foldr-Π : ∀ rA lA l r As B →
     emb_oterm_term (foldr (λ A B → O.Π A ^ rA ° lA ▹ B ° l ° l ^ r) B As) PE.≡

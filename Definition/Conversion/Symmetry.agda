@@ -64,14 +64,14 @@ mutual
                     (convConvTerm (symConv↑Term Γ≡Δ x₂) (sucCong F≡G))
                     (PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) B≡ℕ u~t)
   sym~↑! Γ≡Δ (IndRect-cong {ind} {lG = lG} ind∈ x x₁ x₂) =
-    let B , whnfB , Ind≡B , t'~t = sym~↓! Γ≡Δ x₁
+    let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
+        B , whnfB , Ind≡B , t'~t = sym~↓! Γ≡Δ x₁
         B≡Ind = Ind≡A Ind≡B whnfB
-        eqₜ = app-cong (soundnessConv↑Term x) (soundness~↓! x₁)
-        ℓ≡ = proj₂ (typelevel-injectivity (Univ-relevant (proj₁ (syntacticEqTerm eqₜ))))
-    in  _ , univ (PE.subst (λ ℓ → _ ⊢ _ ≡ _ ∷ Univ ! lG ^ [ ! , ℓ ]) ℓ≡ eqₜ)
-    ,   IndRect-cong ind∈ (symConv↑Term Γ≡Δ x)
+        P≡P' = stabilityEq (Γ≡Δ ∙ refl (univ (Indⱼ ⊢Γ))) (soundnessConv↑ x)
+    in  _ , substTypeEq (soundnessConv↑ x) (soundness~↓! x₁)
+    ,   IndRect-cong ind∈ (symConv↑ (Γ≡Δ ∙ (refl (univ (Indⱼ ⊢Γ)))) x)
                      (PE.subst (λ A → _ ⊢ _ ~ _ ↓! A ^ _) B≡Ind t'~t)
-                     (symAll (indRectBranchTyListCong {ind = ind} (stabilityEqTerm Γ≡Δ (soundnessConv↑Term x))
+                     (symAll (indRectBranchTyListCong {ind = ind} P≡P'
                                                        (stabilityAll≡ Γ≡Δ x₂)))
   sym~↑! Γ≡Δ (Emptyrec-cong x t~u) =
     let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ

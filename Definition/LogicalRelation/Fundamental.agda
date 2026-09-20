@@ -107,7 +107,7 @@ substAll-indRectBranch : ∀ {Γ Δ σ ind P rG lG ms}
                        → (⊢Δ : ⊢ Δ)
                        → ([σ] : Δ ⊩ˢ σ ∷ Γ / [Γ] / ⊢Δ)
                        → Γ ⊢All ms ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ]
-                       → Δ ⊢All map (subst σ) ms ∷ indRectBranchTyList ind (subst σ P) rG lG ^ [ rG , ι lG ]
+                       → Δ ⊢All map (subst σ) ms ∷ indRectBranchTyList ind (subst (liftSubst σ) P) rG lG ^ [ rG , ι lG ]
 
 
 abstract
@@ -353,19 +353,19 @@ abstract
     in  [Γ] , [Ind]
     ,   ctrᵛ {ind = ind} {j = j} {args = args} {Ts = Ts} {l = ∞} [Γ] [Ind] ind∈ eq args∈ [args]
   fundamentalTerm (IndRectⱼ {ind} {P} {rG} {lG} {t} {ms} abs ind∈ ⊢P ⊢t ⊢ms)
-    with fundamentalTerm ⊢P | fundamentalTerm ⊢t
-  ... | [ΓP] , [ΠP] , [P] | [Γt] , [Indt] , [t] =
+    with fundamental ⊢P | fundamentalTerm ⊢t
+  ... | [ΓP] , [P] | [Γt] , [Indt] , [t] =
     let i = (SU.SInd.name ind)
         [Γ] = [Γt]
         [Ind] = Indᵛ {i = i} {l = ∞} [Γ]
-        [ΠP]′ = S.irrelevance {A = Π Ind i ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ !} [ΓP] [Γ] [ΠP]
-        [P]′ = S.irrelevanceTerm {A = Π Ind i ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ !} {t = P} [ΓP] [Γ] [ΠP] [ΠP]′ [P]
+        [Γ∙Ind] = _∙_ {A = Ind i} [Γ] [Ind]
+        [P]′ = S.irrelevance {A = P} [ΓP] [Γ∙Ind] [P]
         [t]′ = S.irrelevanceTerm {A = Ind i} {t = t} [Γ] [Γ] [Indt] [Ind] [t]
-        [P∘t] = P∘tᵛ {i = i} {P = P} {rG = rG} {lG = lG} {t = t} {l = ∞} [Γ] [Ind] [ΠP]′ [P]′ [t]′
+        [Pt] = substS {F = Ind i} {G = P} {t = t} [Γ] [Ind] [P]′ [t]′
         [ms] = fundamentalAllMethods {ind = ind} {P = P} {rG = rG} {lG = lG} {ms = ms} [Γ] ⊢ms
-    in  [Γ] , [P∘t]
+    in  [Γ] , [Pt]
     ,   IndRectᵛ {ind = ind} {P = P} {rG = rG} {lG = lG} {t = t} {ms = ms} {l = ∞}
-                 abs [Γ] ind∈ [Ind] [ΠP]′ [P]′ [t]′ [P∘t] ⊢ms [ms]
+                 abs [Γ] ind∈ [Ind] [P]′ [t]′ [Pt] ⊢ms [ms]
   fundamentalTerm (conv {t} {A} {B} ⊢t A′≡A)
     with fundamentalTerm ⊢t | fundamentalEq A′≡A
   fundamentalTerm (conv {t} {A} {B} ⊢t A′≡A) | [Γ] , [A′] , [t]
@@ -627,26 +627,25 @@ abstract
         in  [Γ]′ , [a]″ ∷ₐ [as]ᵥ , [a']″ ∷ₐ [as']ᵥ , [a≡a']″ ∷ₐ [as≡]ᵥ
 
   fundamentalTermEq {Γ} (IndRect-cong {ind} {P} {P'} {lG} {t} {t'} {ms} {ms'} ind∈ P≡P' t≡t' ⊢ms≡)
-    with fundamentalTermEq P≡P' | fundamentalTermEq t≡t'
-  ... | [ΓP] , modelsTermEq [ΠP] [P] [P'] [P≡P']
+    with fundamentalEq P≡P' | fundamentalTermEq t≡t'
+  ... | [ΓP] , [P] , [P'] , [P≡P']
       | [Γt] , modelsTermEq [Indt] [t] [t'] [t≡t'] =
     let i = (SU.SInd.name ind)
         [Γ]′ = [Γt]
         [Ind] = Indᵛ {i = i} {l = ∞} [Γ]′
-        [ΠP]′ = S.irrelevance {A = Π Ind i ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ !} [ΓP] [Γ]′ [ΠP]
-        [P]′ = S.irrelevanceTerm {A = Π Ind i ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ !} {t = P}
-                                 [ΓP] [Γ]′ [ΠP] [ΠP]′ [P]
-        [P']′ = S.irrelevanceTerm {A = Π Ind i ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ !} {t = P'}
-                                  [ΓP] [Γ]′ [ΠP] [ΠP]′ [P']
-        [P≡P']′ = S.irrelevanceEqTerm {A = Π Ind i ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ !}
-                                      {t = P} {u = P'} [ΓP] [Γ]′ [ΠP] [ΠP]′ [P≡P']
+        [Ind≡Ind] = reflᵛ {A = Ind i} [Γ]′ [Ind]
+        [Γ∙Ind] = _∙_ {A = Ind i} [Γ]′ [Ind]
+        [P]′ = S.irrelevance {A = P} [ΓP] [Γ∙Ind] [P]
+        [P']′ = S.irrelevance {A = P'} [ΓP] [Γ∙Ind] [P']
+        [P≡P']′ = S.irrelevanceEq {A = P} {B = P'} [ΓP] [Γ∙Ind] [P] [P]′ [P≡P']
         [t]′ = S.irrelevanceTerm {A = Ind i} {t = t} [Γt] [Γ]′ [Indt] [Ind] [t]
         [t']′ = S.irrelevanceTerm {A = Ind i} {t = t'} [Γt] [Γ]′ [Indt] [Ind] [t']
         [t≡t']′ = S.irrelevanceEqTerm {A = Ind i} {t = t} {u = t'} [Γt] [Γ]′ [Indt] [Ind] [t≡t']
-        [P∘t] = P∘tᵛ {i = i} {P = P} {rG = !} {lG = lG} {t = t} {l = ∞} [Γ]′ [Ind] [ΠP]′ [P]′ [t]′
-        [P∘t'] = P∘tᵛ {i = i} {P = P'} {rG = !} {lG = lG} {t = t'} {l = ∞} [Γ]′ [Ind] [ΠP]′ [P']′ [t']′
-        [P∘t≡P∘t'] = P∘t-congᵛ {ind = ind} {P = P} {P' = P'} {rG = !} {lG = lG} {t = t} {t' = t'} {l = ∞}
-                               [Γ]′ [Ind] [ΠP]′ [ΠP]′ [P]′ [P']′ [P≡P']′ [t]′ [t']′ [t≡t']′ [P∘t]
+        [Pt] = substS {F = Ind i} {G = P} {t = t} [Γ]′ [Ind] [P]′ [t]′
+        [P't'] = substS {F = Ind i} {G = P'} {t = t'} [Γ]′ [Ind] [P']′ [t']′
+        [Pt≡P't'] = substSEq {Ind i} {Ind i} {P} {P'} {t} {t'}
+                             [Γ]′ [Ind] [Ind] [Ind≡Ind] [P]′ [P']′ [P≡P']′
+                             [t]′ [t']′ [t≡t']′
         ⊢ms = msLeft ⊢ms≡
         ⊢ms' = msRight ⊢ms≡
         [ms] = fundamentalAllMethods {ind = ind} {P = P} {rG = !} {lG = lG} {ms = ms} [Γ]′ ⊢ms
@@ -654,16 +653,16 @@ abstract
         ⊢ms'P' = msRight (indRectBranchTyListCong {ind = ind} P≡P' ⊢ms≡)
         [ms'] = fundamentalAllMethods {ind = ind} {P = P'} {rG = !} {lG = lG} {ms = ms'} [Γ]′ ⊢ms'P'
     in  [Γ]′
-    ,   modelsTermEq [P∘t]
+    ,   modelsTermEq [Pt]
                      (IndRectᵛ {ind = ind} {P = P} {rG = !} {lG = lG} {t = t} {ms = ms} {l = ∞}
-                               (λ abs → ⊥-elim (!≢% abs)) [Γ]′ ind∈ [Ind] [ΠP]′ [P]′ [t]′ [P∘t] ⊢ms [ms])
-                     (conv₂ᵛ {IndRect i lG P' t' ms'} {P ∘ t ^ ¹} {P' ∘ t' ^ ¹}
-                             [Γ]′ [P∘t] [P∘t'] [P∘t≡P∘t']
+                               (λ abs → ⊥-elim (!≢% abs)) [Γ]′ ind∈ [Ind] [P]′ [t]′ [Pt] ⊢ms [ms])
+                     (conv₂ᵛ {IndRect i lG P' t' ms'} {P [ t ]} {P' [ t' ]}
+                             [Γ]′ [Pt] [P't'] [Pt≡P't']
                              (IndRectᵛ {ind = ind} {P = P'} {rG = !} {lG = lG} {t = t'} {ms = ms'} {l = ∞}
-                                       (λ abs → ⊥-elim (!≢% abs)) [Γ]′ ind∈ [Ind] [ΠP]′ [P']′ [t']′ [P∘t'] ⊢ms'P' [ms']))
+                                       (λ abs → ⊥-elim (!≢% abs)) [Γ]′ ind∈ [Ind] [P']′ [t']′ [P't'] ⊢ms'P' [ms']))
                      (IndRect-congᵛ {ind = ind} {P = P} {P' = P'} {lG = lG} {t = t} {t' = t'} {ms = ms} {ms' = ms'}
-                                    (λ abs → ⊥-elim (!≢% abs)) [Γ]′ [Ind] [ΠP]′ [ΠP]′ [P]′ [P']′ [P≡P']′
-                                    [t]′ [t']′ [t≡t']′ [P∘t] ⊢ms ⊢ms' ⊢ms≡ PE.refl)
+                                    (λ abs → ⊥-elim (!≢% abs)) [Γ]′ [Ind] [P]′ [P']′ [P≡P']′
+                                    [t]′ [t']′ [t≡t']′ [Pt] ⊢ms ⊢ms' ⊢ms≡ PE.refl)
     where
       msLeft : ∀ {ts ts' As r} → Γ ⊢All ts ≡ ts' ∷ As ^ r → Γ ⊢All ts ∷ As ^ r
       msLeft εⱼ = εⱼ
@@ -678,38 +677,44 @@ abstract
         consⱼ (escapeTermᵛ [Γe] [A] [u]) (msRight rest)
 
   fundamentalTermEq {Γ} (IndRect-ctr≡ {ind} {j} {P} {lG} {args} {ms} {m} {Ts} ind∈ eq ⊢P ⊢args ⊢ms nth≡)
-    with fundamentalTerm ⊢P
-  ... | [Γ] , [ΠP] , [P] =
+    with fundamental ⊢P
+  ... | [Γ] ∙ [Ind₀] , [P] =
     let i = (SU.SInd.name ind)
         [Ind] = Indᵛ {i = i} {l = ∞} [Γ]
+        [Γ∙Ind] = _∙_ {A = Ind i} [Γ] [Ind]
+        [P]′ = S.irrelevance {A = P} ([Γ] ∙ [Ind₀]) [Γ∙Ind] [P]
         [args]ᵥ = fundamentalAllInd {ind = ind} {j = j} {Ts = Ts} {args = args} [Γ] [Ind] eq ⊢args
         [d] = ctrᵛ {ind = ind} {j = j} {args = args} {Ts = Ts} {l = ∞} [Γ] [Ind] ind∈ eq ⊢args [args]ᵥ
-        [P∘d] = P∘tᵛ {i = i} {P = P} {rG = !} {lG = lG} {t = ctr i j args} {l = ∞}
-                      [Γ] [Ind] [ΠP] [P] [d]
+        [Pd] = substS {F = Ind i} {G = P} {t = ctr i j args} [Γ] [Ind] [P]′ [d]
         rhs = apps lG m
                      (args ++ map (λ a → IndRect i lG P a ms) args)
         [rhs] = IndRect-ctr-rhsᵛ {ind = ind} {j = j} {P = P} {rG = !} {lG = lG}
                                  {args = args} {ms = ms} {Ts = Ts} {l = ∞}
                                  (λ abs → ⊥-elim (!≢% abs))
-                                 [Γ] [Ind] [d] [P∘d] eq ⊢args ⊢ms nth≡
+                                 [Γ] [Ind] [d] [Pd] eq ⊢args ⊢ms nth≡
         [lhs] , [redEq] =
-          redSubstTermᵛ {A = P ∘ ctr i j args ^ ¹}
+          redSubstTermᵛ {A = P [ ctr i j args ]}
                         {t = IndRect i lG P (ctr i j args) ms}
                         {u = rhs} [Γ]
             (λ {Δ} {σ} ⊢Δ [σ] →
-               let ⊢Pσ = escapeTerm (proj₁ ([ΠP] ⊢Δ [σ])) (proj₁ ([P] ⊢Δ [σ]))
+               let ⊢Indσ = escape (proj₁ ([Ind] ⊢Δ [σ]))
+                   ⊢Pσ = escape (proj₁ ([P]′ (⊢Δ ∙ ⊢Indσ)
+                                             (liftSubstS {F = Ind i} [Γ] ⊢Δ [Ind] [σ])))
                    ⊢argsσ = substAll-ctrArgs {σ = σ} [Γ] ⊢Δ [σ] ⊢args
                    ⊢msσ = substAll-indRectBranch {σ = σ} {ind = ind} {P = P} [Γ] ⊢Δ [σ] ⊢ms
                    step = IndRect-ctr ind∈ eq ⊢Pσ ⊢argsσ ⊢msσ (nth-map (subst σ) ms j nth≡)
                    lhs≡ = PE.trans (subst-IndRect σ i lG P (ctr i j args) ms)
-                                   (PE.cong (λ t′ → IndRect i lG (subst σ P) t′ (map (subst σ) ms))
+                                   (PE.cong (λ t′ → IndRect i lG (subst (liftSubst σ) P) t′
+                                                      (map (subst σ) ms))
                                             (subst-ctr σ i j args))
                    rhs≡ = subst-IndRect-ctr-rhs σ i lG P m args ms
-                   ty≡  = PE.cong (λ t′ → subst σ P ∘ t′ ^ ¹) (subst-ctr σ i j args)
+                   ty≡  = PE.trans (singleSubstLift P (ctr i j args))
+                                   (PE.cong (λ t′ → subst (liftSubst σ) P [ t′ ])
+                                            (subst-ctr σ i j args))
                in  PE.subst₃ (λ t′ u′ A′ → Δ ⊢ t′ ⇒ u′ ∷ A′ ^ ι lG)
                              (PE.sym lhs≡) (PE.sym rhs≡) (PE.sym ty≡) step)
-                        [P∘d] [rhs]
-    in  [Γ] , modelsTermEq [P∘d] [lhs] [rhs] [redEq]
+                        [Pd] [rhs]
+    in  [Γ] , modelsTermEq [Pd] [lhs] [rhs] [redEq]
   fundamentalTermEq (natrec-cong {z} {z′} {s} {s′} {n} {n′} {F} {F′}
                                  F≡F′ z≡z′ s≡s′ n≡n′)
     with fundamentalEq F≡F′ |

@@ -175,11 +175,11 @@ record EqRelSet : Set₁ where
     -- Inductive eliminator congruence (scrutinee neutral)
     ~-IndRect : ∀ {ind P P' lG t t' ms ms' Γ}
              → ind ∈ₗ senv
-             → Γ ⊢ P ≅ P' ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
+             → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P ≅ P' ^ [ ! , ι lG ]
              → Γ ⊢ t ~ t' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
              → Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
              → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ~ IndRect (SU.SInd.name ind) lG P' t' ms'
-                   ∷ (P ∘ t ^ ¹) ^ [ ! , ι lG ]
+                   ∷ P [ t ] ^ [ ! , ι lG ]
 
     -- Empty recursion congurence
     ~-Emptyrec : ∀ {e e′ F F′ l Γ}

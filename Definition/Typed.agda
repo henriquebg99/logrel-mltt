@@ -104,10 +104,10 @@ mutual
     IndRectⱼ : ∀ {ind P rG lG t ms}
            → (rG PE.≡ % → lG PE.≡ ⁰)
            → ind ∈ₗ senv
-           → Γ ⊢ P ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
+           → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P ^ [ rG , ι lG ]
            → Γ ⊢ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
            → Γ ⊢All ms ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ]
-           → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ∷ (P ∘ t ^ ¹) ^ [ rG , ι lG ]
+           → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ∷ P [ t ] ^ [ rG , ι lG ]
     Emptyrecⱼ : ∀ {A lA rA e}
            → Γ ⊢ A ^ [ rA , ι lA ] → Γ ⊢ e ∷ sEmpty ^ [ % ,  ι ⁰ ] -> Γ ⊢ Emptyrec lA ⁰ A e ∷ A ^ [ rA , ι lA ]
     Idⱼ : ∀ {A l t u}
@@ -242,21 +242,21 @@ mutual
                         ∷ F [ suc n ] ^ [ ! , ι l ]
     IndRect-cong : ∀ {ind P P' lG t t' ms ms'}
                 → ind ∈ₗ senv
-                → Γ ⊢ P ≡ P' ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
+                → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P ≡ P' ^ [ ! , ι lG ]
                 → Γ ⊢ t ≡ t' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
                 → Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
-                → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ≡ IndRect (SU.SInd.name ind) lG P' t' ms' ∷ (P ∘ t ^ ¹) ^ [ ! , ι lG ]
+                → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ≡ IndRect (SU.SInd.name ind) lG P' t' ms' ∷ P [ t ] ^ [ ! , ι lG ]
     IndRect-ctr≡ : ∀ {ind j P lG args ms m Ts}
                 → ind ∈ₗ senv
                 → SU.ctrArgsTypeList ind j PE.≡ just Ts
-                → Γ ⊢ P ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
+                → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P ^ [ ! , ι lG ]
                 → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
                 → Γ ⊢All ms ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
                 → nth ms j PE.≡ just m
                 → Γ ⊢ IndRect (SU.SInd.name ind) lG P (ctr (SU.SInd.name ind) j args) ms
                     ≡ apps lG m
                              (args ++ map (λ a → IndRect (SU.SInd.name ind) lG P a ms) args)
-                    ∷ (P ∘ ctr (SU.SInd.name ind) j args ^ ¹) ^ [ ! , ι lG ]
+                    ∷ P [ ctr (SU.SInd.name ind) j args ] ^ [ ! , ι lG ]
     Emptyrec-cong : ∀ {A A' l e e'}
                 → Γ ⊢ A ≡ A' ^ [ ! , ι l ]
                 → Γ ⊢ e ∷ sEmpty ^ [ % , ι ⁰ ]
@@ -355,22 +355,22 @@ mutual
                          ∷ F [ suc n ] ^ ι l
     IndRect-subst : ∀ {ind P lG t t' ms}
                  → ind ∈ₗ senv
-                 → Γ ⊢ P ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
+                 → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P ^ [ ! , ι lG ]
                  → Γ ⊢ t ⇒ t' ∷ Ind (SU.SInd.name ind) ^ ι ⁰
                  → Γ ⊢All ms ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
-                 → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ⇒ IndRect (SU.SInd.name ind) lG P t' ms ∷ (P ∘ t ^ ¹) ^ ι lG
+                 → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ⇒ IndRect (SU.SInd.name ind) lG P t' ms ∷ P [ t ] ^ ι lG
     -- β: positivity ⇒ all ctor args are recursive Ind (SU.SInd.name ind)
     IndRect-ctr : ∀ {ind j P lG args ms m Ts}
                  → ind ∈ₗ senv
                  → SU.ctrArgsTypeList ind j PE.≡ just Ts
-                 → Γ ⊢ P ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
+                 → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P ^ [ ! , ι lG ]
                  → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
                  → Γ ⊢All ms ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
                  → nth ms j PE.≡ just m
                  → Γ ⊢ IndRect (SU.SInd.name ind) lG P (ctr (SU.SInd.name ind) j args) ms
                      ⇒ apps lG m
                               (args ++ map (λ a → IndRect (SU.SInd.name ind) lG P a ms) args)
-                     ∷ (P ∘ ctr (SU.SInd.name ind) j args ^ ¹) ^ ι lG
+                     ∷ P [ ctr (SU.SInd.name ind) j args ] ^ ι lG
     cast-subst : ∀ {A A' B e t} → let l = ⁰ in
                     Γ ⊢ A ⇒ A' ∷ U l ^ next l
                   → Γ ⊢ B ∷ U l ^ [ ! , next l ]
@@ -636,12 +636,14 @@ mutual
                               (emb-oterm-all-map args)
                               (emb-⊢All args∈))))
   emb-⊢∷ {Γ = Γ} (OT.IndRectⱼ {ind} {P} {rG} {lG} {t} {ms} abs ind∈ ⊢P ⊢t ⊢ms) =
-    PE.subst (λ tm → _⊢_∷_^_ (emb_con Γ) tm (emb_oterm_term P ∘ emb_oterm_term t ^ ¹) ([ rG , ι lG ]))
-      (PE.sym (emb-IndRect (SU.SInd.name ind) lG P t ms))
-      (IndRectⱼ abs ind∈ (emb-⊢∷ ⊢P) (emb-⊢∷ ⊢t)
-        (PE.subst (λ As → emb_con Γ ⊢All emb-oterm-all ms ∷ As ^ [ rG , ι lG ])
-                  (emb-indRectBranchTyList ind P rG lG)
-                  (emb-⊢All ⊢ms)))
+    PE.subst (λ Ty → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term (OU.IndRect (SU.SInd.name ind) lG P t ms)) Ty ([ rG , ι lG ]))
+      (PE.sym (emb-sgSubst P t))
+      (PE.subst (λ tm → _⊢_∷_^_ (emb_con Γ) tm (emb_oterm_term P [ emb_oterm_term t ]) ([ rG , ι lG ]))
+        (PE.sym (emb-IndRect (SU.SInd.name ind) lG P t ms))
+        (IndRectⱼ abs ind∈ (emb-⊢ty ⊢P) (emb-⊢∷ ⊢t)
+          (PE.subst (λ As → emb_con Γ ⊢All emb-oterm-all ms ∷ As ^ [ rG , ι lG ])
+                    (emb-indRectBranchTyList ind P rG lG)
+                    (emb-⊢All ⊢ms))))
   emb-⊢∷ (OT.Emptyrecⱼ A e) = Emptyrecⱼ (emb-⊢ty A) (emb-⊢∷ e)
   emb-⊢∷ (OT.Idⱼ A t u) = Idⱼ (emb-⊢∷ A) (emb-⊢∷ t) (emb-⊢∷ u)
   emb-⊢∷ (OT.Idreflⱼ t) = Idreflⱼ (emb-⊢∷ t)
@@ -835,9 +837,9 @@ module NatExample
   Zero : Term
   Zero = ctr natName 0 TL.[]
 
-  -- Method type for O: just P ∘ Zero.
+  -- Method type for O: just P [ Zero ].
   nat-method-ty-Zero : ∀ P rG lG →
-    indRectBranchTy natName 0 TL.[] P rG lG PE.≡ P ∘ Zero ^ ¹
+    indRectBranchTy natName 0 TL.[] P rG lG PE.≡ P [ Zero ]
   nat-method-ty-Zero P rG lG = PE.refl
 
   ≟-refl : (n : Nat) → (n ≟ n) PE.≡ yes PE.refl
@@ -846,22 +848,22 @@ module NatExample
   ... | yes PE.refl | PE.refl = PE.refl
   ... | no p | _ = ⊥-elim (p PE.refl)
 
-  -- Method type for S: Π (n : Ind). Π (ih : wk1 P ∘ n). wk1² P ∘ (S n).
+  -- Method type for S: Π (n : Ind). Π (ih : P [ n ]). P [ S n ].
   nat-method-ty-Succ : ∀ P rG lG →
     indRectBranchTy natName 1 (SU.Ind natName TL.∷ TL.[]) P rG lG PE.≡
     Π Ind natName ^ ! ° ⁰ ▹
-      (Π (wk1 P ∘ var 0 ^ ¹) ^ rG ° lG ▹
-         wk1^ 2 P ∘ ctr natName 1 (var 1 TL.∷ TL.[]) ^ ¹
+      (Π (P [ var 0 ]↑) ^ rG ° lG ▹
+         P [ ctr natName 1 (var 1 TL.∷ TL.[]) ]↑^ 2
        ° lG ° lG ^ rG)
     ° lG ° lG ^ rG
   nat-method-ty-Succ P rG lG rewrite ≟-refl natName = PE.refl
 
   indRectBranchTyList-nat : ∀ P rG lG →
     indRectBranchTyList nat_ind P rG lG PE.≡
-    (P ∘ Zero ^ ¹) TL.∷
+    (P [ Zero ]) TL.∷
     (Π Ind natName ^ ! ° ⁰ ▹
-      (Π (wk1 P ∘ var 0 ^ ¹) ^ rG ° lG ▹
-         wk1^ 2 P ∘ ctr natName 1 (var 1 TL.∷ TL.[]) ^ ¹
+      (Π (P [ var 0 ]↑) ^ rG ° lG ▹
+         P [ ctr natName 1 (var 1 TL.∷ TL.[]) ]↑^ 2
        ° lG ° lG ^ rG)
      ° lG ° lG ^ rG) TL.∷
     TL.[]
@@ -876,17 +878,17 @@ module NatExample
 
   ⊢-nat-IndRect : ∀ {Γ P rG lG t z s} →
     (rG PE.≡ % → lG PE.≡ ⁰) →
-    Γ ⊢ P ∷ Π Ind natName ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] →
+    Γ ∙ Ind natName ^ [ ! , ι ⁰ ] ⊢ P ^ [ rG , ι lG ] →
     Γ ⊢ t ∷ Ind natName ^ [ ! , ι ⁰ ] →
-    Γ ⊢ z ∷ (P ∘ Zero ^ ¹) ^ [ rG , ι lG ] →
+    Γ ⊢ z ∷ (P [ Zero ]) ^ [ rG , ι lG ] →
     Γ ⊢ s ∷
       Π Ind natName ^ ! ° ⁰ ▹
-        (Π (wk1 P ∘ var 0 ^ ¹) ^ rG ° lG ▹
-           wk1^ 2 P ∘ ctr natName 1 (var 1 TL.∷ TL.[]) ^ ¹
+        (Π (P [ var 0 ]↑) ^ rG ° lG ▹
+           P [ ctr natName 1 (var 1 TL.∷ TL.[]) ]↑^ 2
          ° lG ° lG ^ rG)
       ° lG ° lG ^ rG
       ^ [ rG , ι lG ] →
-    Γ ⊢ IndRect natName lG P t (z TL.∷ s TL.∷ TL.[]) ∷ (P ∘ t ^ ¹) ^ [ rG , ι lG ]
+    Γ ⊢ IndRect natName lG P t (z TL.∷ s TL.∷ TL.[]) ∷ P [ t ] ^ [ rG , ι lG ]
   ⊢-nat-IndRect {Γ} {P} {rG} {lG} {t} {z} {s} abs ⊢P ⊢t ⊢z ⊢s =
     IndRectⱼ abs nat∈ ⊢P ⊢t
       (PE.subst (λ As → Γ ⊢All (z TL.∷ s TL.∷ TL.[]) ∷ As ^ [ rG , ι lG ])

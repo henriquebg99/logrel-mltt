@@ -80,7 +80,7 @@ mutual
              (stabilitySizeConv↑Term Γ≡Δ b)
              (stabilitySizeConv↑Term Γ≡Δ x)
   stabilitySize~↑! Γ≡Δ (IndRect-cong _ x x₁ x₂) = PE.cong₂ (λ a b → 1+ (a + b))
-             (stabilitySizeConv↑Term Γ≡Δ x)
+             (stabilitySizeConv↑ _ x)
              (stabilitySize~↓! Γ≡Δ x₁)
   stabilitySize~↑! Γ≡Δ (cast-neInd x x₁ x₂ x₃) = PE.cong₂ (λ a b → 1+ (a + b))
              (stabilitySize~↓! Γ≡Δ x)

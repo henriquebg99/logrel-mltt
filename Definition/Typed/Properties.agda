@@ -43,7 +43,7 @@ wfTerm (conv t A≡B) = wfTerm t
 wfTerm (equiv-eqⱼ ⊢Γ) = ⊢Γ
 wfTerm (Indⱼ ⊢Γ) = ⊢Γ
 wfTerm (Ctrⱼ ⊢Γ _ _ _) = ⊢Γ
-wfTerm (IndRectⱼ _ _ ⊢P _ _) = wfTerm ⊢P
+wfTerm (IndRectⱼ _ _ _ ⊢t _) = wfTerm ⊢t
 
 wf : ∀ {Γ A r} → Γ ⊢ A ^ r → ⊢ Γ
 wf (Uⱼ ⊢Γ) = ⊢Γ
@@ -64,8 +64,9 @@ mutual
   wfEqTerm (natrec-cong F≡F′ z≡z′ s≡s′ n≡n′) = wfEqTerm z≡z′
   wfEqTerm (natrec-zero F z s) = wfTerm z
   wfEqTerm (natrec-suc n F z s) = wfTerm n
-  wfEqTerm (IndRect-cong _ P≡P' _ _) = wfEqTerm P≡P'
-  wfEqTerm (IndRect-ctr≡ _ _ ⊢P _ _ _) = wfTerm ⊢P
+  wfEqTerm (IndRect-cong _ _ t≡t' _) = wfEqTerm t≡t'
+  wfEqTerm (IndRect-ctr≡ _ _ ⊢P _ _ _) with wf ⊢P
+  ... | ⊢Γ ∙ _ = ⊢Γ
   wfEqTerm (Emptyrec-cong A≡A' _ _) = wfEq A≡A'
   wfEqTerm (proof-irrelevance t u) = wfTerm t
   wfEqTerm (Id-cong A t u) = wfEqTerm u
@@ -170,8 +171,9 @@ redFirstTerm (natrec-zero F z s) = natrecⱼ (λ x → ⊥-elim (!≢% x)) F z s
 redFirstTerm (natrec-suc n F z s) = natrecⱼ (λ x → ⊥-elim (!≢% x)) F z s (sucⱼ n)
 redFirstTerm (IndRect-subst ind∈ ⊢P t⇒t' ⊢ms) =
   IndRectⱼ (λ ()) ind∈ ⊢P (redFirstTerm t⇒t') ⊢ms
-redFirstTerm (IndRect-ctr ind∈ eq ⊢P ⊢args ⊢ms _) =
-  IndRectⱼ (λ ()) ind∈ ⊢P (Ctrⱼ (wfTerm ⊢P) ind∈ eq ⊢args) ⊢ms
+redFirstTerm (IndRect-ctr ind∈ eq ⊢P ⊢args ⊢ms _) with wf ⊢P
+... | ⊢Γ ∙ _ =
+  IndRectⱼ (λ ()) ind∈ ⊢P (Ctrⱼ ⊢Γ ind∈ eq ⊢args) ⊢ms
 redFirstTerm (cast-subst A B e t) = castⱼ (redFirstTerm A) B e t
 redFirstTerm (cast-ne-subst A neA B e t) = castⱼ A (redFirstTerm B) e t
 redFirstTerm (cast-ℕ-subst B e t) = castⱼ (ℕⱼ (wfTerm t)) (redFirstTerm B) e t

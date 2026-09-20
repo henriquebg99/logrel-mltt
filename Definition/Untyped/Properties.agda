@@ -773,14 +773,14 @@ castNeutralInv neA neB (castₙ _ _ net) = net
 
 wk-indRectBranchTy : ∀ ρ i j Ss P rG lG →
   wk ρ (indRectBranchTy i j Ss P rG lG) ≡
-  indRectBranchTy i j Ss (wk ρ P) rG lG
+  indRectBranchTy i j Ss (wk (lift ρ) P) rG lG
 wk-indRectBranchTy ρ i j Ss P rG lG =
   let Ts = ctrArgsTypeList Ss
       n = length Ts
       recs = ctrRecIndices i Ss
       k = length recs
       vars = map (λ v → var (((k + n) - 1) - v)) (range n)
-      conc Q = wk1^ (k + n) Q ∘ ctr i j vars ^ ¹
+      conc Q = Q [ ctr i j vars ]↑^ (k + n)
       ihTys Q = map (λ pj → ihFun n Q (proj₁ pj) (proj₂ pj))
                     (zip recs (range k))
       argTys = map proj₁ Ts
@@ -812,7 +812,7 @@ wk-indRectBranchTy ρ i j Ss P rG lG =
             (trans
               (cong (wk-tel ρⁿ 0) (ihTys≡go P))
               (trans (wk-tel-ihGo ρ n P 0 recs recs<)
-                (sym (ihTys≡go (wk ρ P))))))
+                (sym (ihTys≡go (wk (lift ρ) P))))))
   in
   trans
     (wk-foldr-Π-closed ρ ! ⁰ lG rG
@@ -824,11 +824,26 @@ wk-indRectBranchTy ρ i j Ss P rG lG =
         (length-map proj₁ Ts))
       (cong (λ B → foldr Πarg B argTys) inner))
   where
-  wk1^-wk : ∀ n ρ t → wk1^ n (wk ρ t) ≡ wk (repeat lift ρ n) (wk1^ n t)
-  wk1^-wk 0 ρ t = refl
-  wk1^-wk (1+ n) ρ t =
-    trans (cong wk1 (wk1^-wk n ρ t))
-             (wk1-wk≡lift-wk1 (repeat lift ρ n) (wk1^ n t))
+  wk1^Subst-var : ∀ d x → wk1^Subst d idSubst x ≡ var (d + x)
+  wk1^Subst-var 0 x = refl
+  wk1^Subst-var (1+ d) x = cong wk1 (wk1^Subst-var d x)
+
+  wkVar-lifts-plus : ∀ d ρ x → wkVar (repeat lift ρ d) (d + x) ≡ d + wkVar ρ x
+  wkVar-lifts-plus 0 ρ x = refl
+  wkVar-lifts-plus (1+ d) ρ x = cong 1+ (wkVar-lifts-plus d ρ x)
+
+  wk-[]↑^ : ∀ ρ d P u →
+    wk (repeat lift ρ d) (P [ u ]↑^ d) ≡ wk (lift ρ) P [ wk (repeat lift ρ d) u ]↑^ d
+  wk-[]↑^ ρ d P u =
+    trans (wk-subst P) (trans (substVar-to-subst aux P) (sym (subst-wk P)))
+    where
+    aux : ∀ x → (repeat lift ρ d •ₛ consSubst (wk1^Subst d idSubst) u) x
+              ≡ (consSubst (wk1^Subst d idSubst) (wk (repeat lift ρ d) u) ₛ• lift ρ) x
+    aux 0 = refl
+    aux (1+ x) =
+      trans (cong (wk (repeat lift ρ d)) (wk1^Subst-var d x))
+        (trans (cong var (wkVar-lifts-plus d ρ x))
+          (sym (wk1^Subst-var d (wkVar ρ x))))
 
   wkVar-lifts-< : ∀ n ρ x → x << n → wkVar (repeat lift ρ n) x ≡ x
   wkVar-lifts-< (1+ n) ρ 0 (leS _) = refl
@@ -937,13 +952,13 @@ wk-indRectBranchTy ρ i j Ss P rG lG =
 
   wk-ihTy : ∀ ρ n P r ℓ → r << n →
     wk (repeat lift ρ (n + ℓ))
-       (wk1^ (n + ℓ) P ∘ var (((n - 1) - r) + ℓ) ^ ¹)
-    ≡ wk1^ (n + ℓ) (wk ρ P) ∘ var (((n - 1) - r) + ℓ) ^ ¹
+       (P [ var (((n - 1) - r) + ℓ) ]↑^ (n + ℓ))
+    ≡ wk (lift ρ) P [ var (((n - 1) - r) + ℓ) ]↑^ (n + ℓ)
   wk-ihTy ρ n P r ℓ r< =
-    cong₂ (λ Q t → Q ∘ t ^ ¹)
-      (sym (wk1^-wk (n + ℓ) ρ P))
-      (cong var (wkVar-lifts-< (n + ℓ) ρ (((n - 1) - r) + ℓ)
-        (le-plus (minus-<- n r r<) (le-refl ℓ))))
+    trans (wk-[]↑^ ρ (n + ℓ) P (var (((n - 1) - r) + ℓ)))
+      (cong (λ t → wk (lift ρ) P [ t ]↑^ (n + ℓ))
+        (cong var (wkVar-lifts-< (n + ℓ) ρ (((n - 1) - r) + ℓ)
+          (le-plus (minus-<- n r r<) (le-refl ℓ)))))
 
   wk-ctor-vars : ∀ ρ k n →
     map (wk (repeat lift ρ (k + n)))
@@ -965,19 +980,18 @@ wk-indRectBranchTy ρ i j Ss P rG lG =
   wk-conclusion : ∀ ρ i j k n P →
     let vars = map (λ v → var (((k + n) - 1) - v)) (range n) in
     wk (repeat lift ρ (k + n))
-       (wk1^ (k + n) P ∘ ctr i j vars ^ ¹)
-    ≡ wk1^ (k + n) (wk ρ P) ∘ ctr i j vars ^ ¹
+       (P [ ctr i j vars ]↑^ (k + n))
+    ≡ wk (lift ρ) P [ ctr i j vars ]↑^ (k + n)
   wk-conclusion ρ i j k n P =
     let vars = map (λ v → var (((k + n) - 1) - v)) (range n) in
     trans
-      (cong₂ (λ Q t → Q ∘ t ^ ¹)
-        (sym (wk1^-wk (k + n) ρ P))
-        (wk-ctr (repeat lift ρ (k + n)) i j vars))
-      (cong (λ ts → wk1^ (k + n) (wk ρ P) ∘ ctr i j ts ^ ¹)
-        (wk-ctor-vars ρ k n))
+      (wk-[]↑^ ρ (k + n) P (ctr i j vars))
+      (cong (λ t → wk (lift ρ) P [ t ]↑^ (k + n))
+        (trans (wk-ctr (repeat lift ρ (k + n)) i j vars)
+          (cong (ctr i j) (wk-ctor-vars ρ k n))))
 
   ihFun : Nat → Term → Nat → Nat → Term
-  ihFun n Q r ℓ = wk1^ (n + ℓ) Q ∘ var (((n - 1) - r) + ℓ) ^ ¹
+  ihFun n Q r ℓ = Q [ var (((n - 1) - r) + ℓ) ]↑^ (n + ℓ)
 
   ihGo : Nat → Term → Nat → List Nat → List Term
   ihGo n Q ℓ [] = []
@@ -985,7 +999,7 @@ wk-indRectBranchTy ρ i j Ss P rG lG =
 
   wk-tel-ihGo : ∀ ρ n P ℓ rs →
     (∀ r → r ∈ₗ rs → r << n) →
-    wk-tel (repeat lift ρ n) ℓ (ihGo n P ℓ rs) ≡ ihGo n (wk ρ P) ℓ rs
+    wk-tel (repeat lift ρ n) ℓ (ihGo n P ℓ rs) ≡ ihGo n (wk (lift ρ) P) ℓ rs
   wk-tel-ihGo ρ n P ℓ [] _ = refl
   wk-tel-ihGo ρ n P ℓ (r ∷ rs) b =
     cong₂ _∷_
@@ -1034,7 +1048,7 @@ wk-indRectBranchTy ρ i j Ss P rG lG =
 
 wk-indRectBranchTyList : ∀ ρ ind P rG lG →
   map (wk ρ) (indRectBranchTyList ind P rG lG) ≡
-  indRectBranchTyList ind (wk ρ P) rG lG
+  indRectBranchTyList ind (wk (lift ρ) P) rG lG
 wk-indRectBranchTyList ρ ind P rG lG =
   trans
     (map-map (wk ρ)
@@ -1047,14 +1061,14 @@ wk-indRectBranchTyList ρ ind P rG lG =
 
 subst-indRectBranchTy : ∀ σ i j Ss P rG lG →
   subst σ (indRectBranchTy i j Ss P rG lG) ≡
-  indRectBranchTy i j Ss (subst σ P) rG lG
+  indRectBranchTy i j Ss (subst (liftSubst σ) P) rG lG
 subst-indRectBranchTy σ i j Ss P rG lG =
   let Ts = ctrArgsTypeList Ss
       n = length Ts
       recs = ctrRecIndices i Ss
       k = length recs
       vars = map (λ v → var (((k + n) - 1) - v)) (range n)
-      conc Q = wk1^ (k + n) Q ∘ ctr i j vars ^ ¹
+      conc Q = Q [ ctr i j vars ]↑^ (k + n)
       ihTys Q = map (λ pj → ihFun n Q (proj₁ pj) (proj₂ pj))
                     (zip recs (range k))
       argTys = map proj₁ Ts
@@ -1086,7 +1100,7 @@ subst-indRectBranchTy σ i j Ss P rG lG =
             (trans
               (cong (subst-tel σⁿ 0) (ihTys≡go P))
               (trans (subst-tel-ihGo σ n P 0 recs recs<)
-                (sym (ihTys≡go (subst σ P))))))
+                (sym (ihTys≡go (subst (liftSubst σ) P))))))
   in
   trans
     (subst-foldr-Π-closed σ ! ⁰ lG rG
@@ -1098,12 +1112,34 @@ subst-indRectBranchTy σ i j Ss P rG lG =
         (length-map proj₁ Ts))
       (cong (λ B → foldr Πarg B argTys) inner))
   where
-  subst-wk1^ : ∀ n σ t →
-    subst (repeat liftSubst σ n) (wk1^ n t) ≡ wk1^ n (subst σ t)
-  subst-wk1^ 0 σ t = refl
-  subst-wk1^ (1+ n) σ t =
-    trans (Idsym-subst-lemma (repeat liftSubst σ n) (wk1^ n t))
-             (cong wk1 (subst-wk1^ n σ t))
+  wk1^Subst-var : ∀ d x → wk1^Subst d idSubst x ≡ var (d + x)
+  wk1^Subst-var 0 x = refl
+  wk1^Subst-var (1+ d) x = cong wk1 (wk1^Subst-var d x)
+
+  wk1^Subst-subst : ∀ d t → subst (wk1^Subst d idSubst) t ≡ wk1^ d t
+  wk1^Subst-subst 0 t = subst-id t
+  wk1^Subst-subst (1+ d) t =
+    trans (sym (wk-subst {ρ = step id} t)) (cong wk1 (wk1^Subst-subst d t))
+
+  liftSubst-repeat-plus : ∀ d σ x → repeat liftSubst σ d (d + x) ≡ wk1^ d (σ x)
+  liftSubst-repeat-plus 0 σ x = refl
+  liftSubst-repeat-plus (1+ d) σ x = cong wk1 (liftSubst-repeat-plus d σ x)
+
+  subst-[]↑^ : ∀ σ d P u →
+    subst (repeat liftSubst σ d) (P [ u ]↑^ d)
+    ≡ subst (liftSubst σ) P [ subst (repeat liftSubst σ d) u ]↑^ d
+  subst-[]↑^ σ d P u =
+    trans (substCompEq P) (trans (substVar-to-subst aux P) (sym (substCompEq P)))
+    where
+    aux : ∀ x → (repeat liftSubst σ d ₛ•ₛ consSubst (wk1^Subst d idSubst) u) x
+              ≡ (consSubst (wk1^Subst d idSubst) (subst (repeat liftSubst σ d) u)
+                   ₛ•ₛ liftSubst σ) x
+    aux 0 = refl
+    aux (1+ x) =
+      trans (cong (subst (repeat liftSubst σ d)) (wk1^Subst-var d x))
+        (trans (liftSubst-repeat-plus d σ x)
+          (trans (sym (wk1^Subst-subst d (σ x)))
+            (sym (subst-wk {ρ = step id} (σ x)))))
 
   substVar-lifts-< : ∀ n σ x → x << n → repeat liftSubst σ n x ≡ var x
   substVar-lifts-< (1+ n) σ 0 (leS _) = refl
@@ -1213,13 +1249,13 @@ subst-indRectBranchTy σ i j Ss P rG lG =
 
   subst-ihTy : ∀ σ n P r ℓ → r << n →
     subst (repeat liftSubst σ (n + ℓ))
-          (wk1^ (n + ℓ) P ∘ var (((n - 1) - r) + ℓ) ^ ¹)
-    ≡ wk1^ (n + ℓ) (subst σ P) ∘ var (((n - 1) - r) + ℓ) ^ ¹
+          (P [ var (((n - 1) - r) + ℓ) ]↑^ (n + ℓ))
+    ≡ subst (liftSubst σ) P [ var (((n - 1) - r) + ℓ) ]↑^ (n + ℓ)
   subst-ihTy σ n P r ℓ r< =
-    cong₂ (λ Q t → Q ∘ t ^ ¹)
-      (subst-wk1^ (n + ℓ) σ P)
-      (substVar-lifts-< (n + ℓ) σ (((n - 1) - r) + ℓ)
-        (le-plus (minus-<- n r r<) (le-refl ℓ)))
+    trans (subst-[]↑^ σ (n + ℓ) P (var (((n - 1) - r) + ℓ)))
+      (cong (λ t → subst (liftSubst σ) P [ t ]↑^ (n + ℓ))
+        (substVar-lifts-< (n + ℓ) σ (((n - 1) - r) + ℓ)
+          (le-plus (minus-<- n r r<) (le-refl ℓ))))
 
   subst-ctor-vars : ∀ σ k n →
     map (subst (repeat liftSubst σ (k + n)))
@@ -1241,19 +1277,18 @@ subst-indRectBranchTy σ i j Ss P rG lG =
   subst-conclusion : ∀ σ i j k n P →
     let vars = map (λ v → var (((k + n) - 1) - v)) (range n) in
     subst (repeat liftSubst σ (k + n))
-          (wk1^ (k + n) P ∘ ctr i j vars ^ ¹)
-    ≡ wk1^ (k + n) (subst σ P) ∘ ctr i j vars ^ ¹
+          (P [ ctr i j vars ]↑^ (k + n))
+    ≡ subst (liftSubst σ) P [ ctr i j vars ]↑^ (k + n)
   subst-conclusion σ i j k n P =
     let vars = map (λ v → var (((k + n) - 1) - v)) (range n) in
     trans
-      (cong₂ (λ Q t → Q ∘ t ^ ¹)
-        (subst-wk1^ (k + n) σ P)
-        (subst-ctr (repeat liftSubst σ (k + n)) i j vars))
-      (cong (λ ts → wk1^ (k + n) (subst σ P) ∘ ctr i j ts ^ ¹)
-        (subst-ctor-vars σ k n))
+      (subst-[]↑^ σ (k + n) P (ctr i j vars))
+      (cong (λ t → subst (liftSubst σ) P [ t ]↑^ (k + n))
+        (trans (subst-ctr (repeat liftSubst σ (k + n)) i j vars)
+          (cong (ctr i j) (subst-ctor-vars σ k n))))
 
   ihFun : Nat → Term → Nat → Nat → Term
-  ihFun n Q r ℓ = wk1^ (n + ℓ) Q ∘ var (((n - 1) - r) + ℓ) ^ ¹
+  ihFun n Q r ℓ = Q [ var (((n - 1) - r) + ℓ) ]↑^ (n + ℓ)
 
   ihGo : Nat → Term → Nat → List Nat → List Term
   ihGo n Q ℓ [] = []
@@ -1261,7 +1296,7 @@ subst-indRectBranchTy σ i j Ss P rG lG =
 
   subst-tel-ihGo : ∀ σ n P ℓ rs →
     (∀ r → r ∈ₗ rs → r << n) →
-    subst-tel (repeat liftSubst σ n) ℓ (ihGo n P ℓ rs) ≡ ihGo n (subst σ P) ℓ rs
+    subst-tel (repeat liftSubst σ n) ℓ (ihGo n P ℓ rs) ≡ ihGo n (subst (liftSubst σ) P) ℓ rs
   subst-tel-ihGo σ n P ℓ [] _ = refl
   subst-tel-ihGo σ n P ℓ (r ∷ rs) b =
     cong₂ _∷_
@@ -1310,7 +1345,7 @@ subst-indRectBranchTy σ i j Ss P rG lG =
 
 subst-indRectBranchTyList : ∀ σ ind P rG lG →
   map (subst σ) (indRectBranchTyList ind P rG lG) ≡
-  indRectBranchTyList ind (subst σ P) rG lG
+  indRectBranchTyList ind (subst (liftSubst σ) P) rG lG
 subst-indRectBranchTyList σ ind P rG lG =
   trans
     (map-map (subst σ)

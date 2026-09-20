@@ -154,28 +154,29 @@ abstract
            → u PE.≡ IndRect (SI.SInd.name ind) ⁰ P' t' ms'
            → (size~↑! (IndRect-cong ind∈ x x₁ x₂) + size~↑! e') << (1+ n)
            → ∃₂ λ C (e'' : Γ ⊢ IndRect (SI.SInd.name ind) ⁰ P t ms ~ v ↑! C ^ ι ⁰)
-                → Γ ⊢ (P ∘ t ^ ¹) ≡ C ^ [ ! , ι ⁰ ] × Γ ⊢ C ≡ B ^ [ ! , ι ⁰ ]
+                → Γ ⊢ (P [ t ]) ≡ C ^ [ ! , ι ⁰ ] × Γ ⊢ C ≡ B ^ [ ! , ι ⁰ ]
                 × size~↑! e'' <= (size~↑! (IndRect-cong ind∈ x x₁ x₂) + size~↑! e')
   
         go (IndRect-cong ind∈′ y y₁ y₂) eq (leS e) with IndRect-PE-injectivity eq
         ... | name≡ , PE.refl , PE.refl , PE.refl , PE.refl
              with SI.name-inj senv (proj₁ swf) ind∈′ ind∈ name≡
         ... | PE.refl =
-          let P<>P'' , sizeP<>P'' = transConv↑Term {n = n} PE.refl Γ≡Δ (refl (proj₁ (syntacticEqTerm (soundnessConv↑Term x)))) x y
-                                                   (<<-trans (<=-help-ab' {a = sizeConv↑Term x} {b = sizeConv↑Term y} {c = size~↓! x₁} {d = size~↓! y₁}) e)
+          let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
+              P<>P'' , sizeP<>P'' = transConv↑ {n = n} (Γ≡Δ ∙ (refl (univ (Indⱼ ⊢Γ)))) x y
+                                               (<<-trans (<=-help-ab' {a = sizeConv↑ x} {b = sizeConv↑ y} {c = size~↓! x₁} {d = size~↓! y₁}) e)
               C , wC , t~t'' , Ind≡C , _ , sizet~t'' = trans~↓! {n = n} PE.refl Γ≡Δ x₁ y₁
-                                                               (<<-trans (<=-help-ab'' {a = sizeConv↑Term x} {b = size~↓! x₁} {c = sizeConv↑Term y} {d = size~↓! y₁}) e)
+                                                               (<<-trans (<=-help-ab'' {a = sizeConv↑ x} {b = size~↓! x₁} {c = sizeConv↑ y} {d = size~↓! y₁}) e)
               t~tInd = [~] (_⊢_~_↓!_^_.A t~t'')
                            (PE.subst (λ X → Γ ⊢ _⊢_~_↓!_^_.A t~t'' ⇒* X ^ [ ! , ι ⁰ ])
                                      (Ind≡A Ind≡C wC) (_⊢_~_↓!_^_.D t~t''))
                            Indₙ (_⊢_~_↓!_^_.k~l t~t'')
-              ms≡ms'' = transAll x₂ (indRectBranchTyListCong (sym (soundnessConv↑Term x))
+              ms≡ms'' = transAll x₂ (indRectBranchTyListCong (sym (soundnessConv↑ x))
                                                              (stabilityAll≡ (symConEq Γ≡Δ) y₂))
-              Pt≡P't' = univ (app-cong (soundnessConv↑Term x) (soundness~↓! x₁))
+              Pt≡P't' = substTypeEq (soundnessConv↑ x) (soundness~↓! x₁)
           in  _ , IndRect-cong ind∈ P<>P'' t~tInd ms≡ms'' ,
               refl (proj₁ (syntacticEq Pt≡P't')) , Pt≡P't' ,
               leS (<=-trans (<=-cong-+ sizeP<>P'' sizet~t'')
-                            (<=-help-3-abcd {a = sizeConv↑Term x} {b = sizeConv↑Term y} {c = size~↓! x₁} {d = size~↓! y₁}))
+                            (<=-help-3-abcd {a = sizeConv↑ x} {b = sizeConv↑ y} {c = size~↓! x₁} {d = size~↓! y₁}))
   
         go (cast-refl' A~B (ne-ins x' x₁' x₂' ([~] K D whK u~v)) x₄) PE.refl (leS e) =
           let net , neu = ne~↑! (IndRect-cong ind∈ x x₁ x₂)
@@ -255,30 +256,29 @@ abstract
            → u PE.≡ IndRect (SI.SInd.name ind) ¹ P' t' ms'
            → (size~↑! (IndRect-cong ind∈ x x₁ x₂) + size~↑! e') << (1+ n)
            → ∃₂ λ C (e'' : Γ ⊢ IndRect (SI.SInd.name ind) ¹ P t ms ~ v ↑! C ^ ι ¹)
-                → Γ ⊢ (P ∘ t ^ ¹) ≡ C ^ [ ! , ι ¹ ] × Γ ⊢ C ≡ B ^ [ ! , ι ¹ ]
+                → Γ ⊢ (P [ t ]) ≡ C ^ [ ! , ι ¹ ] × Γ ⊢ C ≡ B ^ [ ! , ι ¹ ]
                 × size~↑! e'' <= (size~↑! (IndRect-cong ind∈ x x₁ x₂) + size~↑! e')
   
         go (IndRect-cong ind∈′ y y₁ y₂) eq (leS e) with IndRect-PE-injectivity eq
         ... | name≡ , PE.refl , PE.refl , PE.refl , PE.refl
              with SI.name-inj senv (proj₁ swf) ind∈′ ind∈ name≡
         ... | PE.refl =
-          let P<>P'' , sizeP<>P'' = transConv↑Term {n = n} PE.refl Γ≡Δ (refl (proj₁ (syntacticEqTerm (soundnessConv↑Term x)))) x y
-                                                   (<<-trans (<=-help-ab' {a = sizeConv↑Term x} {b = sizeConv↑Term y} {c = size~↓! x₁} {d = size~↓! y₁}) e)
+          let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
+              P<>P'' , sizeP<>P'' = transConv↑ {n = n} (Γ≡Δ ∙ (refl (univ (Indⱼ ⊢Γ)))) x y
+                                               (<<-trans (<=-help-ab' {a = sizeConv↑ x} {b = sizeConv↑ y} {c = size~↓! x₁} {d = size~↓! y₁}) e)
               C , wC , t~t'' , Ind≡C , _ , sizet~t'' = trans~↓! {n = n} PE.refl Γ≡Δ x₁ y₁
-                                                               (<<-trans (<=-help-ab'' {a = sizeConv↑Term x} {b = size~↓! x₁} {c = sizeConv↑Term y} {d = size~↓! y₁}) e)
+                                                               (<<-trans (<=-help-ab'' {a = sizeConv↑ x} {b = size~↓! x₁} {c = sizeConv↑ y} {d = size~↓! y₁}) e)
               t~tInd = [~] (_⊢_~_↓!_^_.A t~t'')
                            (PE.subst (λ X → Γ ⊢ _⊢_~_↓!_^_.A t~t'' ⇒* X ^ [ ! , ι ⁰ ])
                                      (Ind≡A Ind≡C wC) (_⊢_~_↓!_^_.D t~t''))
                            Indₙ (_⊢_~_↓!_^_.k~l t~t'')
-              ms≡ms'' = transAll x₂ (indRectBranchTyListCong (sym (soundnessConv↑Term x))
+              ms≡ms'' = transAll x₂ (indRectBranchTyListCong (sym (soundnessConv↑ x))
                                                              (stabilityAll≡ (symConEq Γ≡Δ) y₂))
-              eqₜ = app-cong (soundnessConv↑Term x) (soundness~↓! x₁)
-              ℓ≡ = proj₂ (typelevel-injectivity (Univ-relevant (proj₁ (syntacticEqTerm eqₜ))))
-              Pt≡P't' = univ (PE.subst (λ ℓ → Γ ⊢ (P ∘ t ^ ¹) ≡ (P' ∘ t' ^ ¹) ∷ Univ ! ¹ ^ [ ! , ℓ ]) ℓ≡ eqₜ)
+              Pt≡P't' = substTypeEq (soundnessConv↑ x) (soundness~↓! x₁)
           in  _ , IndRect-cong ind∈ P<>P'' t~tInd ms≡ms'' ,
               refl (proj₁ (syntacticEq Pt≡P't')) , Pt≡P't' ,
               leS (<=-trans (<=-cong-+ sizeP<>P'' sizet~t'')
-                            (<=-help-3-abcd {a = sizeConv↑Term x} {b = sizeConv↑Term y} {c = size~↓! x₁} {d = size~↓! y₁}))
+                            (<=-help-3-abcd {a = sizeConv↑ x} {b = sizeConv↑ y} {c = size~↓! x₁} {d = size~↓! y₁}))
   
         go (var-refl _ _) ()
         go (app-cong _ _) ()
@@ -391,7 +391,7 @@ abstract
     -- ctr is not neutral, so a ctr-cong under a cast-refl'/cast-refl cannot be the
     -- middle term of a neutral equality.  These clauses only exist so that the
     -- coverage checker never has to split a ctr-cong against a fixed ctr spine.
-    trans~↑! PE.refl Γ≡Δ t~u (cast-refl' A~B (ctr-cong x₅ x₆ x₇ x₈) x₄) e with ne~↑! t~u
+    trans~↑! PE.refl Γ≡Δ t~u (cast-refl' A~B (ctr-cong x₅ x₆ x₇ x₈ x₉) x₄) e with ne~↑! t~u
     ... | _ , ()
   
     trans~↑! {n = 1+ n} PE.refl Γ≡Δ t~u (cast-refl' A~B (ne-ins x' x₁' x₂' ([~] K D whK u~v)) x₄) (leS e) =
@@ -410,7 +410,7 @@ abstract
         <=-trans (<=-cong-+ (leS (≡-to-<= (stabilitySize~↓! (symConEq Γ≡Δ) A~B))) (leS (leS sizet~v')))
                  <=-help-2-2 
   
-    trans~↑! PE.refl Γ≡Δ (cast-refl A~B (ctr-cong x₅ x₆ x₇ x₈) x₄) u~v e with ne~↑! u~v
+    trans~↑! PE.refl Γ≡Δ (cast-refl A~B (ctr-cong x₅ x₆ x₇ x₈ x₉) x₄) u~v e with ne~↑! u~v
     ... | () , _
   
     trans~↑! {n = 1+ n} PE.refl Γ≡Δ (cast-refl A~B (ne-ins x' x₁' x₂' ([~] K D whK t~u)) x₄) u~v (leS e) =

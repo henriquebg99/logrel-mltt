@@ -31,7 +31,7 @@ mutual
   size~↑! (cast-ℕΠ x x₁ x₂ x₃) = 1 + sizeConv↑Term x + sizeConv↑Term x₁
   size~↑! (cast-ΠΠ%! x x₁ x₂ x₃ x₄) = 1 + sizeConv↑Term x + sizeConv↑Term x₁ + sizeConv↑Term x₂
   size~↑! (cast-ΠΠ!% x x₁ x₂ x₃ x₄) = 1 + sizeConv↑Term x + sizeConv↑Term x₁ + sizeConv↑Term x₂
-  size~↑! (IndRect-cong _ x x₁ x₂) = 1 + sizeConv↑Term x + size~↓! x₁
+  size~↑! (IndRect-cong _ x x₁ x₂) = 1 + sizeConv↑ x + size~↓! x₁
   size~↑! (cast-neInd x x₁ x₂ x₃) = 1 + size~↓! x + sizeConv↑Term x₁
   size~↑! (cast-Ind x x₁ x₂ x₃) = 1 + size~↓! x + sizeConv↑Term x₁
   size~↑! (castInd-refl x x₁) = 1 + size~↓! x

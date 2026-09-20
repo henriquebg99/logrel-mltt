@@ -15,6 +15,7 @@ infixr 22 _^_°_▹▹_°_°_^_
 infixl 30 _ₛ•ₛ_ _•ₛ_ _ₛ•_
 infix 25 _[_]
 infix 25 _[_]↑
+infix 25 _[_]↑^_
 
 data Kind : Set where
   Ukind : Relevance → Level → Kind
@@ -144,7 +145,7 @@ ctr i j ts = gen (Ctrkind i j) (map (λ t → ⟦ 0 , t ⟧) ts)
 
 -- inductive eliminator (P is a function motive: Ind i → Univ lG)
 IndRect : Nat → Level → Term → Term → List Term → Term
-IndRect i lG P t ms = gen (IndRectkind i lG) (⟦ 0 , P ⟧ ∷ ⟦ 0 , t ⟧ ∷ map (λ m → ⟦ 0 , m ⟧) ms)
+IndRect i lG P t ms = gen (IndRectkind i lG) (⟦ 1 , P ⟧ ∷ ⟦ 0 , t ⟧ ∷ map (λ m → ⟦ 0 , m ⟧) ms)
 
 -- Injectivity of term constructors w.r.t. propositional equality.
 
@@ -427,9 +428,9 @@ map-map0-wkGen ρ ts = PE.trans (map-map (λ t → ⟦ 0 , t ⟧) (wk ρ) ts) (P
 
 wk-IndRect : ∀ ρ i lG P t ms →
   wk ρ (IndRect i lG P t ms) PE.≡
-  IndRect i lG (wk ρ P) (wk ρ t) (map (wk ρ) ms)
+  IndRect i lG (wk (lift ρ) P) (wk ρ t) (map (wk ρ) ms)
 wk-IndRect ρ i lG P t ms =
-  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 0 , wk ρ P ⟧ ∷ ⟦ 0 , wk ρ t ⟧ ∷ gs))
+  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 1 , wk (lift ρ) P ⟧ ∷ ⟦ 0 , wk ρ t ⟧ ∷ gs))
     (PE.sym (map-map0-wkGen ρ ms))
 
 -- Weakening of a neutral term.
@@ -440,7 +441,7 @@ wkNeutral ρ (∘ₙ n)    = ∘ₙ (wkNeutral ρ n)
 wkNeutral ρ (natrecₙ n) = natrecₙ (wkNeutral ρ n)
 wkNeutral ρ (IndRectₙ {i} {lG} {P} {t} {ms} n) =
   PE.subst Neutral (PE.sym (wk-IndRect ρ i lG P t ms))
-    (IndRectₙ {P = wk ρ P} {ms = map (wk ρ) ms} (wkNeutral ρ n))
+    (IndRectₙ {P = wk (lift ρ) P} {ms = map (wk ρ) ms} (wkNeutral ρ n))
 wkNeutral ρ Emptyrecₙ = Emptyrecₙ
 wkNeutral ρ (castₙ A B t) = castₙ (wkNeutral ρ A) (wkNeutral ρ B) (wkNeutral ρ t)
 wkNeutral ρ (castnℕₙ A) = castnℕₙ (wkNeutral ρ A)
@@ -557,6 +558,14 @@ idSubst = var
 wk1Subst : Subst → Subst
 wk1Subst σ x = wk1 (σ x)
 
+-- Weaken a substitution by [d].
+--
+-- If Γ ⊢ σ : Δ then Γ∙A₁∙…∙A_d ⊢ wk1^Subst d σ : Δ.
+
+wk1^Subst : Nat → Subst → Subst
+wk1^Subst 0 σ = σ
+wk1^Subst (1+ d) σ = wk1Subst (wk1^Subst d σ)
+
 -- Lift a substitution.
 --
 -- If Γ ⊢ σ : Δ then Γ∙A ⊢ liftSubst σ : Δ∙A.
@@ -638,6 +647,14 @@ t [ s ]↑ = subst (consSubst (wk1Subst idSubst) s) t
 _[_]↑↑ : (t : Term) (s : Term) → Term
 t [ s ]↑↑ = subst (consSubst (wk1Subst (wk1Subst idSubst)) s) t
 
+-- Substitute the first variable of a term with an other term living
+-- under [d] extra binders.
+--
+-- If Γ∙A ⊢ t : B and Γ∙B₁∙…∙B_d ⊢ s : A then Γ∙B₁∙…∙B_d ⊢ t[s]↑^ d : B[s]↑^ d.
+
+_[_]↑^_ : (t : Term) (s : Term) (d : Nat) → Term
+t [ s ]↑^ d = subst (consSubst (wk1^Subst d idSubst) s) t
+
 -- FIXME review
 natrecStepInner : Term → Relevance → Level → Term
 natrecStepInner G rG lG = G ^ rG ° lG ▹▹ (G [ suc (var Nat.zero) ]↑) ° lG ° lG ^ rG
@@ -668,7 +685,7 @@ ctrRecIndices ind Ss =
       (zip (range (length Ss)) Ss))
 
 -- CIC method type: Π (x_i : A_i). Π (ih_j : P x_j)_{A_j = I}. P (c x⃗)
--- Motive applications use ∘ ^ ¹ (Π-level of Ind → Univ lG).
+-- The motive is a type family over [ind], instantiated with [_[_]↑^_].
 indRectBranchTy : Nat → Nat → List S.Type → Term → Relevance → Level → Term
 indRectBranchTy ind index Ss P rG lG =
   let Ts = ctrArgsTypeList Ss
@@ -676,9 +693,9 @@ indRectBranchTy ind index Ss P rG lG =
       recs = ctrRecIndices ind Ss
       k = length recs
       vars = map (λ j → var (((k + n) - 1) - j)) (range n)
-      conclusion = wk1^ (k + n) P ∘ ctr ind index vars ^ ¹
+      conclusion = P [ ctr ind index vars ]↑^ (k + n)
       ihTys = map (λ pj →
-                wk1^ (n + proj₂ pj) P ∘ var (((n - 1) - proj₁ pj) + proj₂ pj) ^ ¹)
+                P [ var (((n - 1) - proj₁ pj) + proj₂ pj) ]↑^ (n + proj₂ pj))
                 (zip recs (range k))
       argTys = map proj₁ Ts
   in  foldr (λ A B → Π A ^ ! ° ⁰ ▹ B ° lG ° lG ^ rG)
@@ -706,7 +723,7 @@ mutual
   emb-sterm-oterm (S.lam A t) = lam (emb-stype-oterm A) ▹ emb-sterm-oterm t ^ ⁰
   emb-sterm-oterm (S.ctr i j args) = ctr i j (emb-sterm-oterm-all args)
   emb-sterm-oterm (S.IndRect i P t ms) =
-    IndRect i ⁰ (lam (Ind i) ▹ wk1 (emb-stype-oterm P) ^ ¹)
+    IndRect i ⁰ (wk1 (emb-stype-oterm P))
       (emb-sterm-oterm t) (emb-sterm-oterm-all ms)
 
   emb-sterm-oterm-all : List S.Term → List Term

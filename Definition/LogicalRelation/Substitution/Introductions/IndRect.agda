@@ -42,7 +42,7 @@ import Definition.OUntyped senv as O
 
 IndRect-subst* : ∀ {Γ ind P lG t t′ ms l}
                → ind ∈ₗ senv
-               → Γ ⊢ P ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
+               → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P ^ [ ! , ι lG ]
                → Γ ⊢ t ⇒* t′ ∷ Ind (SU.SInd.name ind) ^ ι ⁰
                → Γ ⊢All ms ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
                → ([Ind] : Γ ⊩⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ])
@@ -50,9 +50,9 @@ IndRect-subst* : ∀ {Γ ind P lG t t′ ms l}
                → (∀ {u u′} → Γ ⊩⟨ l ⟩ u ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Ind]
                            → Γ ⊩⟨ l ⟩ u′ ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Ind]
                            → Γ ⊩⟨ l ⟩ u ≡ u′ ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Ind]
-                           → Γ ⊢ P ∘ u ^ ¹ ≡ P ∘ u′ ^ ¹ ^ [ ! , ι lG ])
+                           → Γ ⊢ P [ u ] ≡ P [ u′ ] ^ [ ! , ι lG ])
                → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ⇒* IndRect (SU.SInd.name ind) lG P t′ ms
-                     ∷ (P ∘ t ^ ¹) ^ ι lG
+                     ∷ P [ t ] ^ ι lG
 IndRect-subst* ind∈ ⊢P (id ⊢t) ⊢ms [Ind] [t′] prop = id (IndRectⱼ (λ ()) ind∈ ⊢P ⊢t ⊢ms)
 IndRect-subst* ind∈ ⊢P (x ⇨ t⇒t′) ⊢ms [Ind] [t′] prop =
   let q , w = redSubst*Term t⇒t′ [Ind] [t′]
@@ -60,197 +60,6 @@ IndRect-subst* ind∈ ⊢P (x ⇨ t⇒t′) ⊢ms [Ind] [t′] prop =
   in  IndRect-subst ind∈ ⊢P x ⊢ms
       ⇨ conv* (IndRect-subst* ind∈ ⊢P t⇒t′ ⊢ms [Ind] [t′] prop)
               (prop q a (symEqTerm [Ind] s))
-
-------------------------------------------------------------------------
--- Result type P ∘ t ^ ¹ of IndRect (univ of the application).
--- Counterpart of Fundamental's substS {F = ℕ} {G} {t = n} for natrec:
--- IndRect's motive is a Π-term into Univ, so apply then univ.
--- Unfolded under ⊢Δ [σ] to avoid decompΠᵛ metas on closed Univ.
-
-P∘tᵛ : ∀ {Γ i P rG lG t l}
-     → ([Γ] : ⊩ᵛ Γ)
-     → ([Ind] : Γ ⊩ᵛ⟨ l ⟩ Ind i ^ [ ! , ι ⁰ ] / [Γ])
-     → ([ΠP] : Γ ⊩ᵛ⟨ l ⟩ Π Ind i ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [Γ])
-     → ([P] : Γ ⊩ᵛ⟨ l ⟩ P ∷ Π Ind i ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [Γ] / [ΠP])
-     → ([t] : Γ ⊩ᵛ⟨ l ⟩ t ∷ Ind i ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
-     → Γ ⊩ᵛ⟨ l ⟩ (P ∘ t ^ ¹) ^ [ rG , ι lG ] / [Γ]
--- lG = ⁰: next ⁰ = ι ¹ matches substSΠ₁ / appTerm; univEq then lift ι ⁰ → l.
-P∘tᵛ {i = i} {P = P} {rG = rG} {lG = ⁰} {t = t} {l = ∞} [Γ] [Ind] [ΠP] [P] [t]
-      {Δ = Δ} {σ = σ} ⊢Δ [σ] =
-  let [σInd] = proj₁ ([Ind] ⊢Δ [σ])
-      [σΠP]  = proj₁ ([ΠP] ⊢Δ [σ])
-      [σP]   = proj₁ ([P] ⊢Δ [σ])
-      [σt]   = proj₁ ([t] ⊢Δ [σ])
-      [σU]   = substSΠ₁ [σΠP] [σInd] [σt]
-      [σU]′  = irrelevance′ (PE.sym (singleSubstLift {σ = σ} (Univ rG ⁰) t)) [σU]
-      [σP∘t]ₜ = irrelevanceTerm′ (PE.sym (singleSubstLift {σ = σ} (Univ rG ⁰) t)) PE.refl PE.refl
-                                 [σU] [σU]′
-                                 (appTerm PE.refl [σInd] [σU] [σΠP] [σP] [σt])
-      [σA]₀ = univEq [σU]′ [σP∘t]ₜ
-      [σA]  = maybeEmb [σA]₀
-  in  [σA]
-    , (λ {σ′} [σ′] [σ≡σ′] →
-         let [σ′Ind] = proj₁ ([Ind] ⊢Δ [σ′])
-             [σ′t]   = proj₁ ([t] ⊢Δ [σ′])
-             [σt′]   = convTerm₂ [σInd] [σ′Ind]
-                                 (proj₂ ([Ind] ⊢Δ [σ]) [σ′] [σ≡σ′])
-                                 [σ′t]
-             [σP≡]   = proj₂ ([P] ⊢Δ [σ]) [σ′] [σ≡σ′]
-             [σt≡]   = proj₂ ([t] ⊢Δ [σ]) [σ′] [σ≡σ′]
-             [σU≡]′  = irrelevanceEqTerm′ (PE.sym (singleSubstLift {σ = σ} (Univ rG ⁰) t))
-                                          PE.refl PE.refl [σU] [σU]′
-                                          (app-congTerm [σInd] [σU] [σΠP]
-                                            [σP≡] [σt] [σt′] [σt≡])
-         in  irrelevanceEq [σA]₀ [σA]
-                           (univEqEq [σU]′ [σA]₀ [σU≡]′))
-P∘tᵛ {i = i} {P = P} {rG = rG} {lG = ⁰} {t = t} {l = ι ¹} [Γ] [Ind] [ΠP] [P] [t]
-      {Δ = Δ} {σ = σ} ⊢Δ [σ] =
-  let [σInd] = proj₁ ([Ind] ⊢Δ [σ])
-      [σΠP]  = proj₁ ([ΠP] ⊢Δ [σ])
-      [σP]   = proj₁ ([P] ⊢Δ [σ])
-      [σt]   = proj₁ ([t] ⊢Δ [σ])
-      [σU]   = substSΠ₁ [σΠP] [σInd] [σt]
-      [σU]′  = irrelevance′ (PE.sym (singleSubstLift {σ = σ} (Univ rG ⁰) t)) [σU]
-      [σP∘t]ₜ = irrelevanceTerm′ (PE.sym (singleSubstLift {σ = σ} (Univ rG ⁰) t)) PE.refl PE.refl
-                                 [σU] [σU]′
-                                 (appTerm PE.refl [σInd] [σU] [σΠP] [σP] [σt])
-      [σA]₀ = univEq [σU]′ [σP∘t]ₜ
-      [σA]  = maybeEmb′ (<is≤ 0<1) [σA]₀
-  in  [σA]
-    , (λ {σ′} [σ′] [σ≡σ′] →
-         let [σ′Ind] = proj₁ ([Ind] ⊢Δ [σ′])
-             [σ′t]   = proj₁ ([t] ⊢Δ [σ′])
-             [σt′]   = convTerm₂ [σInd] [σ′Ind]
-                                 (proj₂ ([Ind] ⊢Δ [σ]) [σ′] [σ≡σ′])
-                                 [σ′t]
-             [σP≡]   = proj₂ ([P] ⊢Δ [σ]) [σ′] [σ≡σ′]
-             [σt≡]   = proj₂ ([t] ⊢Δ [σ]) [σ′] [σ≡σ′]
-             [σU≡]′  = irrelevanceEqTerm′ (PE.sym (singleSubstLift {σ = σ} (Univ rG ⁰) t))
-                                          PE.refl PE.refl [σU] [σU]′
-                                          (app-congTerm [σInd] [σU] [σΠP]
-                                            [σP≡] [σt] [σt′] [σt≡])
-         in  irrelevanceEq [σA]₀ [σA]
-                           (univEqEq [σU]′ [σA]₀ [σU≡]′))
-P∘tᵛ {i = i} {P = P} {rG = rG} {lG = ⁰} {t = t} {l = ι ⁰} [Γ] [Ind] [ΠP] [P] [t]
-      {Δ = Δ} {σ = σ} ⊢Δ [σ] =
-  let [σInd] = proj₁ ([Ind] ⊢Δ [σ])
-      [σΠP]  = proj₁ ([ΠP] ⊢Δ [σ])
-      [σP]   = proj₁ ([P] ⊢Δ [σ])
-      [σt]   = proj₁ ([t] ⊢Δ [σ])
-      [σU]   = substSΠ₁ [σΠP] [σInd] [σt]
-      [σU]′  = irrelevance′ (PE.sym (singleSubstLift {σ = σ} (Univ rG ⁰) t)) [σU]
-      [σP∘t]ₜ = irrelevanceTerm′ (PE.sym (singleSubstLift {σ = σ} (Univ rG ⁰) t)) PE.refl PE.refl
-                                 [σU] [σU]′
-                                 (appTerm PE.refl [σInd] [σU] [σΠP] [σP] [σt])
-      [σA] = univEq [σU]′ [σP∘t]ₜ
-  in  [σA]
-    , (λ {σ′} [σ′] [σ≡σ′] →
-         let [σ′Ind] = proj₁ ([Ind] ⊢Δ [σ′])
-             [σ′t]   = proj₁ ([t] ⊢Δ [σ′])
-             [σt′]   = convTerm₂ [σInd] [σ′Ind]
-                                 (proj₂ ([Ind] ⊢Δ [σ]) [σ′] [σ≡σ′])
-                                 [σ′t]
-             [σP≡]   = proj₂ ([P] ⊢Δ [σ]) [σ′] [σ≡σ′]
-             [σt≡]   = proj₂ ([t] ⊢Δ [σ]) [σ′] [σ≡σ′]
-             [σU≡]′  = irrelevanceEqTerm′ (PE.sym (singleSubstLift {σ = σ} (Univ rG ⁰) t))
-                                          PE.refl PE.refl [σU] [σU]′
-                                          (app-congTerm [σInd] [σU] [σΠP]
-                                            [σP≡] [σt] [σt′] [σt≡])
-         in  univEqEq [σU]′ [σA] [σU≡]′)
--- lG = ¹: Univ rG ¹ at TypeInfo ι ¹ (from Π annotation ° ¹) cannot be Uᵣ
--- (Uᵣ needs next l′ ≡ ι ¹ ⇒ l′ = ⁰, hence reduction to Univ _ ⁰, so ¹ ≡ ⁰).
--- Well-typed motives cannot use lG = ¹ (Univ r ¹ ∉ U ¹); discharge by contradiction.
-P∘tᵛ {i = i} {P = P} {rG = rG} {lG = ¹} {t = t} {l = l} [Γ] [Ind] [ΠP] [P] [t]
-      {Δ = Δ} {σ = σ} ⊢Δ [σ] =
-  let [σInd] = proj₁ ([Ind] ⊢Δ [σ])
-      [σΠP]  = proj₁ ([ΠP] ⊢Δ [σ])
-      [σt]   = proj₁ ([t] ⊢Δ [σ])
-      [σU]′  = irrelevance′ (PE.sym (singleSubstLift {σ = σ} (Univ rG ¹) t))
-                           (substSΠ₁ [σΠP] [σInd] [σt])
-  in  ⊥-elim (noUniv¹ι¹ [σU]′)
-  where
-    noUniv¹ι¹ : ∀ {Δ r l} → Δ ⊩⟨ l ⟩ Univ r ¹ ^ [ ! , ι ¹ ] → ⊥
-    noUniv¹ι¹ (Uᵣ (Uᵣ _ ⁰ _ eq d)) =
-      let _ , ¹≡⁰ = univRed* (red d)
-      in  ⁰≢¹ (PE.sym ¹≡⁰)
-    noUniv¹ι¹ (Uᵣ (Uᵣ _ ¹ _ () _))
-    noUniv¹ι¹ [U]@(ne′ K D neK _) =
-      U≢ne neK (whrDet* (id (escape [U]) , Uₙ) (red D , ne neK))
-    noUniv¹ι¹ [U]@(Πᵣ′ _ _ _ _ _ _ _ D _ _ _ _ _ _) =
-      U≢Π (whrDet* (id (escape [U]) , Uₙ) (red D , Πₙ))
-    noUniv¹ι¹ {l = ι ¹} (emb emb< [U]) = noUniv¹ι¹ [U]
-    noUniv¹ι¹ {l = ∞} (emb ∞< [U]) = noUniv¹ι¹ [U]
-
-------------------------------------------------------------------------
--- Reducible counterpart of P∘tᵛ, used inside IndRectTerm where no
--- substitution is around: P is already closed under the ambient Δ.
-
-P∘tᵣ : ∀ {Δ i P rG lG t l}
-     → ([Ind] : Δ ⊩⟨ l ⟩ Ind i ^ [ ! , ι ⁰ ])
-     → ([ΠP] : Δ ⊩⟨ l ⟩ Π Ind i ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ])
-     → ([P] : Δ ⊩⟨ l ⟩ P ∷ Π Ind i ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [ΠP])
-     → ([t] : Δ ⊩⟨ l ⟩ t ∷ Ind i ^ [ ! , ι ⁰ ] / [Ind])
-     → Δ ⊩⟨ l ⟩ (P ∘ t ^ ¹) ^ [ rG , ι lG ]
-P∘tᵣ {lG = ⁰} {l = ∞} [Ind] [ΠP] [P] [t] =
-  let [U] = substSΠ₁ [ΠP] [Ind] [t]
-  in  maybeEmb (univEq [U] (appTerm PE.refl [Ind] [U] [ΠP] [P] [t]))
-P∘tᵣ {lG = ⁰} {l = ι ¹} [Ind] [ΠP] [P] [t] =
-  let [U] = substSΠ₁ [ΠP] [Ind] [t]
-  in  maybeEmb′ (<is≤ 0<1) (univEq [U] (appTerm PE.refl [Ind] [U] [ΠP] [P] [t]))
-P∘tᵣ {lG = ⁰} {l = ι ⁰} [Ind] [ΠP] [P] [t] =
-  let [U] = substSΠ₁ [ΠP] [Ind] [t]
-  in  univEq [U] (appTerm PE.refl [Ind] [U] [ΠP] [P] [t])
-P∘tᵣ {lG = ¹} [Ind] [ΠP] [P] [t] = ⊥-elim (noUniv¹ι¹ (substSΠ₁ [ΠP] [Ind] [t]))
-  where
-    noUniv¹ι¹ : ∀ {Δ r l} → Δ ⊩⟨ l ⟩ Univ r ¹ ^ [ ! , ι ¹ ] → ⊥
-    noUniv¹ι¹ (Uᵣ (Uᵣ _ ⁰ _ eq d)) =
-      let _ , ¹≡⁰ = univRed* (red d)
-      in  ⁰≢¹ (PE.sym ¹≡⁰)
-    noUniv¹ι¹ (Uᵣ (Uᵣ _ ¹ _ () _))
-    noUniv¹ι¹ [U]@(ne′ K D neK _) =
-      U≢ne neK (whrDet* (id (escape [U]) , Uₙ) (red D , ne neK))
-    noUniv¹ι¹ [U]@(Πᵣ′ _ _ _ _ _ _ _ D _ _ _ _ _ _) =
-      U≢Π (whrDet* (id (escape [U]) , Uₙ) (red D , Πₙ))
-    noUniv¹ι¹ {l = ι ¹} (emb emb< [U]) = noUniv¹ι¹ [U]
-    noUniv¹ι¹ {l = ∞} (emb ∞< [U]) = noUniv¹ι¹ [U]
-
-P∘t-congᵣ : ∀ {Δ i P P′ rG lG t t′ l}
-     → ([Ind] : Δ ⊩⟨ l ⟩ Ind i ^ [ ! , ι ⁰ ])
-     → ([ΠP] : Δ ⊩⟨ l ⟩ Π Ind i ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ])
-     → ([P] : Δ ⊩⟨ l ⟩ P ∷ Π Ind i ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [ΠP])
-     → ([P≡P′] : Δ ⊩⟨ l ⟩ P ≡ P′ ∷ Π Ind i ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [ΠP])
-     → ([t] : Δ ⊩⟨ l ⟩ t ∷ Ind i ^ [ ! , ι ⁰ ] / [Ind])
-     → ([t′] : Δ ⊩⟨ l ⟩ t′ ∷ Ind i ^ [ ! , ι ⁰ ] / [Ind])
-     → ([t≡t′] : Δ ⊩⟨ l ⟩ t ≡ t′ ∷ Ind i ^ [ ! , ι ⁰ ] / [Ind])
-     → Δ ⊩⟨ l ⟩ (P ∘ t ^ ¹) ≡ (P′ ∘ t′ ^ ¹) ^ [ rG , ι lG ] / P∘tᵣ [Ind] [ΠP] [P] [t]
-P∘t-congᵣ {lG = ⁰} {l = ∞} [Ind] [ΠP] [P] [P≡P′] [t] [t′] [t≡t′] =
-  let [U]  = substSΠ₁ [ΠP] [Ind] [t]
-      [A]₀ = univEq [U] (appTerm PE.refl [Ind] [U] [ΠP] [P] [t])
-  in  irrelevanceEq [A]₀ (maybeEmb [A]₀)
-        (univEqEq [U] [A]₀ (app-congTerm [Ind] [U] [ΠP] [P≡P′] [t] [t′] [t≡t′]))
-P∘t-congᵣ {lG = ⁰} {l = ι ¹} [Ind] [ΠP] [P] [P≡P′] [t] [t′] [t≡t′] =
-  let [U]  = substSΠ₁ [ΠP] [Ind] [t]
-      [A]₀ = univEq [U] (appTerm PE.refl [Ind] [U] [ΠP] [P] [t])
-  in  irrelevanceEq [A]₀ (maybeEmb′ (<is≤ 0<1) [A]₀)
-        (univEqEq [U] [A]₀ (app-congTerm [Ind] [U] [ΠP] [P≡P′] [t] [t′] [t≡t′]))
-P∘t-congᵣ {lG = ⁰} {l = ι ⁰} [Ind] [ΠP] [P] [P≡P′] [t] [t′] [t≡t′] =
-  let [U]  = substSΠ₁ [ΠP] [Ind] [t]
-      [A]₀ = univEq [U] (appTerm PE.refl [Ind] [U] [ΠP] [P] [t])
-  in  univEqEq [U] [A]₀ (app-congTerm [Ind] [U] [ΠP] [P≡P′] [t] [t′] [t≡t′])
-P∘t-congᵣ {lG = ¹} [Ind] [ΠP] [P] [P≡P′] [t] [t′] [t≡t′] =
-  ⊥-elim (noUniv¹ι¹ (substSΠ₁ [ΠP] [Ind] [t]))
-  where
-    noUniv¹ι¹ : ∀ {Δ r l} → Δ ⊩⟨ l ⟩ Univ r ¹ ^ [ ! , ι ¹ ] → ⊥
-    noUniv¹ι¹ (Uᵣ (Uᵣ _ ⁰ _ eq d)) =
-      let _ , ¹≡⁰ = univRed* (red d)
-      in  ⁰≢¹ (PE.sym ¹≡⁰)
-    noUniv¹ι¹ (Uᵣ (Uᵣ _ ¹ _ () _))
-    noUniv¹ι¹ [U]@(ne′ K D neK _) =
-      U≢ne neK (whrDet* (id (escape [U]) , Uₙ) (red D , ne neK))
-    noUniv¹ι¹ [U]@(Πᵣ′ _ _ _ _ _ _ _ D _ _ _ _ _ _) =
-      U≢Π (whrDet* (id (escape [U]) , Uₙ) (red D , Πₙ))
-    noUniv¹ι¹ {l = ι ¹} (emb emb< [U]) = noUniv¹ι¹ [U]
-    noUniv¹ι¹ {l = ∞} (emb ∞< [U]) = noUniv¹ι¹ [U]
 
 ------------------------------------------------------------------------
 -- Helpers shared by a future IndRectTerm / IndRectᵛ definition
@@ -268,7 +77,7 @@ escapeMethodsσ : ∀ {Γ Δ σ ind P rG lG ms l}
   → All₂ (λ m A → ∃ λ ([A] : Γ ⊩ᵛ⟨ l ⟩ A ^ [ rG , ι lG ] / [Γ])
                     → Γ ⊩ᵛ⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
          ms (indRectBranchTyList ind P rG lG)
-  → Δ ⊢All map (subst σ) ms ∷ indRectBranchTyList ind (subst σ P) rG lG ^ [ rG , ι lG ]
+  → Δ ⊢All map (subst σ) ms ∷ indRectBranchTyList ind (subst (liftSubst σ) P) rG lG ^ [ rG , ι lG ]
 escapeMethodsσ {Δ = Δ} {σ = σ} {ind = ind} {P = P} {rG = rG} {lG = lG} {ms = ms} [Γ] ⊢Δ [σ] [ms] =
   PE.subst (λ As → Δ ⊢All map (subst σ) ms ∷ As ^ [ rG , ι lG ])
            (subst-indRectBranchTyList σ ind P rG lG)
@@ -536,7 +345,7 @@ private
   -- The hypothesis telescope and the conclusion of a method type, with
   -- the recursive-index list already known to be range n.
   ihFun : Nat → Term → Nat → Nat → Term
-  ihFun n Q r ℓ = wk1^ (n + ℓ) Q ∘ var (((n - 1) - r) + ℓ) ^ ¹
+  ihFun n Q r ℓ = Q [ var (((n - 1) - r) + ℓ) ]↑^ (n + ℓ)
 
   ihGo : Nat → Term → Nat → List Nat → List Term
   ihGo n Q ℓ []ₗ = []ₗ
@@ -583,7 +392,7 @@ private
   ctrVars n = map (λ v → var (((n + n) - 1) - v)) (range n)
 
   concl : Nat → Nat → Term → Nat → Term
-  concl i j P n = wk1^ (n + n) P ∘ ctr i j (ctrVars n) ^ ¹
+  concl i j P n = P [ ctr i j (ctrVars n) ]↑^ (n + n)
 
   arity≡ : ∀ Ts → length (ctrArgsTypeList Ts) PE.≡ ctrArity Ts
   arity≡ Ts =
@@ -720,55 +529,96 @@ private
           (map-range-≡ d (λ q → f (1+ q)) xs (λ q hq → h (1+ q) (leS hq)))))
 
 private
+  -- Substitution lemmas for the pattern P [ u ]↑^ d.
+  wk1^-var : ∀ d y → wk1^ d (var y) PE.≡ var (d + y)
+  wk1^-var 0 y = PE.refl
+  wk1^-var (1+ d) y = PE.cong wk1 (wk1^-var d y)
+
+  wk1^Subst-app : ∀ d τ x → wk1^Subst d τ x PE.≡ wk1^ d (τ x)
+  wk1^Subst-app 0 τ x = PE.refl
+  wk1^Subst-app (1+ d) τ x = PE.cong wk1 (wk1^Subst-app d τ x)
+
+  wk1^Subst-var : ∀ d x → wk1^Subst d idSubst x PE.≡ var (d + x)
+  wk1^Subst-var 0 x = PE.refl
+  wk1^Subst-var (1+ d) x = PE.cong wk1 (wk1^Subst-var d x)
+
+  wk1^-subst : ∀ d τ X → wk1^ d (subst τ X) PE.≡ subst (wk1^Subst d τ) X
+  wk1^-subst 0 τ X = PE.refl
+  wk1^-subst (1+ d) τ X =
+    PE.trans (PE.cong wk1 (wk1^-subst d τ X)) (wk-subst X)
+
+  argSubst-shift : ∀ as y → argSubst as (length as + y) PE.≡ var y
+  argSubst-shift as y =
+    PE.trans (PE.sym (PE.cong (subst (argSubst as)) (wk1^-var (length as) y)))
+             (argSubst-wk as (var y))
+
+  -- Instantiating a motive pattern: a substitution which sends the n
+  -- variables above d to the identity and u to b instantiates
+  -- P [ u ]↑^ (n + d) to wk1^ d (P [ b ]).
+  subst-Pat : ∀ σ n P d u b →
+    (∀ x → σ (n + x) PE.≡ var x) →
+    subst (repeat liftSubst σ d) u PE.≡ wk1^ d b →
+    subst (repeat liftSubst σ d) (P [ u ]↑^ (n + d)) PE.≡ wk1^ d (P [ b ])
+  subst-Pat σ n P d u b hσ hu =
+    PE.trans (substCompEq P)
+      (PE.trans (substVar-to-subst aux P)
+                (PE.sym (wk1^-subst d (sgSubst b) P)))
+    where
+    aux : ∀ x → (repeat liftSubst σ d ₛ•ₛ consSubst (wk1^Subst (n + d) idSubst) u) x
+              PE.≡ wk1^Subst d (sgSubst b) x
+    aux 0 = PE.trans hu (PE.sym (wk1^Subst-app d (sgSubst b) 0))
+    aux (1+ y) =
+      PE.trans
+        (PE.cong (subst (repeat liftSubst σ d)) (wk1^Subst-var (n + d) y))
+        (PE.trans
+          (PE.cong (repeat liftSubst σ d)
+            (PE.trans (PE.cong (λ m → m + y) (plus-comm n d))
+                      (PE.sym (plus-assoc d n y))))
+          (PE.trans (substVar-lifts-≥ d σ (n + y))
+            (PE.trans (PE.cong (wk1^ d) (hσ y))
+                      (PE.sym (wk1^Subst-app d (sgSubst b) (1+ y))))))
+
+private
   -- Instantiating the hypothesis telescope: the ℓ-th hypothesis becomes
-  -- wk1^ ℓ (P ∘ aℓ ^ ¹).
+  -- wk1^ ℓ (P [ aℓ ]).
   subst-tel-inst : ∀ σ n P d (rs : List Nat) (bs : List Term) →
     length rs PE.≡ length bs →
-    subst σ (wk1^ n P) PE.≡ P →
+    (∀ x → σ (n + x) PE.≡ var x) →
     (∀ q → q << length rs →
        subst σ (var ((n - 1) - lookupDefault 0 rs q)) PE.≡ lookupDefault (var 0) bs q) →
     subst-tel σ d (ihGo n P d rs) PE.≡
-    mapwk1^ d (wkTele (map (λ b → P ∘ b ^ ¹) bs))
-  subst-tel-inst σ n P d []ₗ []ₗ len hP hv = PE.sym (mapwk1^-[] d)
-  subst-tel-inst σ n P d []ₗ (b ∷ₗ bs) () hP hv
-  subst-tel-inst σ n P d (r ∷ₗ rs) []ₗ () hP hv
-  subst-tel-inst σ n P d (r ∷ₗ rs) (b ∷ₗ bs) len hP hv =
+    mapwk1^ d (wkTele (map (λ b → P [ b ]) bs))
+  subst-tel-inst σ n P d []ₗ []ₗ len hσ hv = PE.sym (mapwk1^-[] d)
+  subst-tel-inst σ n P d []ₗ (b ∷ₗ bs) () hσ hv
+  subst-tel-inst σ n P d (r ∷ₗ rs) []ₗ () hσ hv
+  subst-tel-inst σ n P d (r ∷ₗ rs) (b ∷ₗ bs) len hσ hv =
     PE.trans
       (PE.cong₂ _∷ₗ_ headEq
-        (subst-tel-inst σ n P (1+ d) rs bs (PE.cong pred len) hP
+        (subst-tel-inst σ n P (1+ d) rs bs (PE.cong pred len) hσ
           (λ q hq → hv (1+ q) (leS hq))))
-      (PE.sym (mapwk1^-∷ d (P ∘ b ^ ¹) (map wk1 (wkTele (map (λ b → P ∘ b ^ ¹) bs)))))
+      (PE.sym (mapwk1^-∷ d (P [ b ]) (map wk1 (wkTele (map (λ b → P [ b ]) bs)))))
     where
-    headEq : subst (repeat liftSubst σ d) (ihFun n P r d) PE.≡ wk1^ d (P ∘ b ^ ¹)
+    headEq : subst (repeat liftSubst σ d) (ihFun n P r d) PE.≡ wk1^ d (P [ b ])
     headEq =
-      PE.trans
-        (PE.cong₂ (λ Q t → Q ∘ t ^ ¹)
-          (PE.trans (PE.cong (λ m → subst (repeat liftSubst σ d) (wk1^ m P))
-                             (plus-comm n d))
-            (PE.trans (PE.cong (subst (repeat liftSubst σ d)) (wk1^-plus d n P))
-              (PE.trans (subst-wk1^ d σ (wk1^ n P)) (PE.cong (wk1^ d) hP))))
-          (PE.trans (PE.cong (repeat liftSubst σ d) (plus-comm ((n - 1) - r) d))
-            (PE.trans (substVar-lifts-≥ d σ ((n - 1) - r))
-              (PE.cong (wk1^ d) (hv 0 (leS le0))))))
-        (PE.sym (wk1^-∘ d P b ¹))
+      subst-Pat σ n P d (var (((n - 1) - r) + d)) b hσ
+        (PE.trans (PE.cong (repeat liftSubst σ d) (plus-comm ((n - 1) - r) d))
+          (PE.trans (substVar-lifts-≥ d σ ((n - 1) - r))
+                    (PE.cong (wk1^ d) (hv 0 (leS le0)))))
 
   -- Instantiating the conclusion.
   subst-concl : ∀ σ i j P n (as : List Term) → n PE.≡ length as →
-    subst σ (wk1^ n P) PE.≡ P →
+    (∀ x → σ (n + x) PE.≡ var x) →
     (∀ q → q << n → subst σ (var ((n - 1) - q)) PE.≡ lookupDefault (var 0) as q) →
-    subst (repeat liftSubst σ n) (concl i j P n) PE.≡ wk1^ n (P ∘ ctr i j as ^ ¹)
-  subst-concl σ i j P n as n≡ hP hv =
-    PE.trans
-      (PE.cong₂ (λ Q t → Q ∘ t ^ ¹)
-        (PE.trans (PE.cong (subst (repeat liftSubst σ n)) (wk1^-plus n n P))
-          (PE.trans (subst-wk1^ n σ (wk1^ n P)) (PE.cong (wk1^ n) hP)))
-        (PE.trans (subst-ctr (repeat liftSubst σ n) i j (ctrVars n))
+    subst (repeat liftSubst σ n) (concl i j P n) PE.≡ wk1^ n (P [ ctr i j as ])
+  subst-concl σ i j P n as n≡ hσ hv =
+    subst-Pat σ n P n (ctr i j (ctrVars n)) (ctr i j as) hσ
+      (PE.trans (subst-ctr (repeat liftSubst σ n) i j (ctrVars n))
+        (PE.trans
           (PE.cong (ctr i j)
             (PE.trans (map-map (subst (repeat liftSubst σ n))
                                (λ v → var (((n + n) - 1) - v)) (range n))
-              varsEq))))
-      (PE.sym (PE.trans (wk1^-∘ n P (ctr i j as) ¹)
-                (PE.cong (λ t → wk1^ n P ∘ t ^ ¹) (wk1^-ctr n i j as))))
+              varsEq))
+          (PE.sym (wk1^-ctr n i j as))))
     where
     varsEq : map (λ v → subst (repeat liftSubst σ n) (var (((n + n) - 1) - v))) (range n)
              PE.≡ map (wk1^ n) as
@@ -794,7 +644,7 @@ private
   -- The method body, with all n argument binders instantiated by as.
   instBody : ∀ i j P lG n (as : List Term) → n PE.≡ length as →
     subst (argSubst as) (foldr (Πih ! lG) (concl i j P n) (ihGo n P 0 (range n)))
-    PE.≡ arrows lG (map (λ a → P ∘ a ^ ¹) as) (P ∘ ctr i j as ^ ¹)
+    PE.≡ arrows lG (map (λ a → P [ a ]) as) (P [ ctr i j as ])
   instBody i j P lG n as n≡ =
     PE.trans
       (PE.trans
@@ -803,9 +653,9 @@ private
           (PE.trans
             (PE.cong (λ m → subst (repeat liftSubst (argSubst as) m) (concl i j P n))
               (PE.trans (length-ihGo n P 0 (range n)) (length-range n)))
-            (subst-concl (argSubst as) i j P n as n≡ hP hv))
+            (subst-concl (argSubst as) i j P n as n≡ hσ hv))
           (subst-tel-inst (argSubst as) n P 0 (range n) as
-            (PE.trans (length-range n) n≡) hP
+            (PE.trans (length-range n) n≡) hσ
             (λ q hq →
               let hq′ : q << n
                   hq′ = PE.subst (λ m → q << m) (length-range n) hq
@@ -813,14 +663,13 @@ private
                                    (lookup-range n q hq′))
                           (hv q hq′)))))
       (PE.trans
-        (PE.cong (λ m → foldr (Πih ! lG) (wk1^ m (P ∘ ctr i j as ^ ¹))
-                          (wkTele (map (λ a → P ∘ a ^ ¹) as)))
-          (PE.trans n≡ (PE.sym (length-map (λ a → P ∘ a ^ ¹) as))))
-        (arrows-foldr lG (map (λ a → P ∘ a ^ ¹) as) (P ∘ ctr i j as ^ ¹)))
+        (PE.cong (λ m → foldr (Πih ! lG) (wk1^ m (P [ ctr i j as ]))
+                          (wkTele (map (λ a → P [ a ]) as)))
+          (PE.trans n≡ (PE.sym (length-map (λ a → P [ a ]) as))))
+        (arrows-foldr lG (map (λ a → P [ a ]) as) (P [ ctr i j as ])))
     where
-    hP : subst (argSubst as) (wk1^ n P) PE.≡ P
-    hP = PE.trans (PE.cong (λ m → subst (argSubst as) (wk1^ m P)) n≡)
-                  (argSubst-wk as P)
+    hσ : ∀ x → argSubst as (n + x) PE.≡ var x
+    hσ x = PE.trans (PE.cong (λ m → argSubst as (m + x)) n≡) (argSubst-shift as x)
 
     hv : ∀ q → q << n → subst (argSubst as) (var ((n - 1) - q))
                         PE.≡ lookupDefault (var 0) as q
@@ -899,9 +748,9 @@ private
     → Δ ⊩⟨ l ⟩ m ∷ indRectBranchTy i j Ts P ! lG ^ [ ! , ι lG ] / [T]
     → All₂ (λ D u → ∃ λ ([D] : Δ ⊩⟨ l ⟩ D ^ [ ! , ι lG ])
                       → Δ ⊩⟨ l ⟩ u ∷ D ^ [ ! , ι lG ] / [D])
-           (map (λ a → P ∘ a ^ ¹) args) ihs
-    → ∃ λ ([E] : Δ ⊩⟨ l ⟩ (P ∘ ctr i j args ^ ¹) ^ [ ! , ι lG ])
-        → Δ ⊩⟨ l ⟩ apps lG m (args ++ ihs) ∷ (P ∘ ctr i j args ^ ¹) ^ [ ! , ι lG ] / [E]
+           (map (λ a → P [ a ]) args) ihs
+    → ∃ λ ([E] : Δ ⊩⟨ l ⟩ (P [ ctr i j args ]) ^ [ ! , ι lG ])
+        → Δ ⊩⟨ l ⟩ apps lG m (args ++ ihs) ∷ (P [ ctr i j args ]) ^ [ ! , ι lG ] / [E]
   appsMethod {i = i} {j = j} {Ts = Ts} {P = P} {lG = lG} {m = m} {args = args} {ihs = ihs}
              [Ind] pos n≡ [args] [T] [m] [ihs] =
     let n     = ctrArity Ts
@@ -917,7 +766,7 @@ private
         [r]′  = irrelevanceTerm′ eqR PE.refl PE.refl [R] [R]′ [r]
         [E]   = proj₁ (appsIH [ihs] [R]′ [r]′)
         [e]   = proj₂ (appsIH [ihs] [R]′ [r]′)
-    in  [E] , PE.subst (λ t → _ ⊩⟨ _ ⟩ t ∷ (P ∘ ctr i j args ^ ¹) ^ [ ! , ι lG ] / [E])
+    in  [E] , PE.subst (λ t → _ ⊩⟨ _ ⟩ t ∷ (P [ ctr i j args ]) ^ [ ! , ι lG ] / [E])
                        (PE.sym (apps-++ lG m args ihs)) [e]
 
 private
@@ -1031,10 +880,10 @@ private
                          → (Δ ⊩⟨ l ⟩ u ∷ D ^ [ ! , ι lG ] / [D])
                          × (Δ ⊩⟨ l ⟩ u′ ∷ D ^ [ ! , ι lG ] / [D])
                          × (Δ ⊩⟨ l ⟩ u ≡ u′ ∷ D ^ [ ! , ι lG ] / [D]))
-           (map (λ a → P ∘ a ^ ¹) args) ihs ihs′
-    → ([E] : Δ ⊩⟨ l ⟩ (P ∘ ctr i j args ^ ¹) ^ [ ! , ι lG ])
+           (map (λ a → P [ a ]) args) ihs ihs′
+    → ([E] : Δ ⊩⟨ l ⟩ (P [ ctr i j args ]) ^ [ ! , ι lG ])
     → Δ ⊩⟨ l ⟩ apps lG m (args ++ ihs) ≡ apps lG m′ (args′ ++ ihs′)
-                  ∷ (P ∘ ctr i j args ^ ¹) ^ [ ! , ι lG ] / [E]
+                  ∷ (P [ ctr i j args ]) ^ [ ! , ι lG ] / [E]
   appsMethod-cong {i = i} {j = j} {Ts = Ts} {P = P} {lG = lG} {m = m} {m′ = m′}
                   {args = args} {args′ = args′} {ihs = ihs} {ihs′ = ihs′}
                   [Ind] pos n≡ [aa] [T] [m] [m≡m′] [ihs] [E] =
@@ -1052,10 +901,10 @@ private
         [ar≡]′ = irrelevanceEqTerm′ eqR PE.refl PE.refl [R] [R]′ [ar≡]
         [ih≡]  = appsIH-cong [ihs] [R]′ [ar≡]′ [E]
     in  PE.subst (λ x → _ ⊩⟨ _ ⟩ x ≡ apps lG m′ (args′ ++ ihs′)
-                          ∷ (P ∘ ctr i j args ^ ¹) ^ [ ! , ι lG ] / [E])
+                          ∷ (P [ ctr i j args ]) ^ [ ! , ι lG ] / [E])
           (PE.sym (apps-++ lG m args ihs))
           (PE.subst (λ y → _ ⊩⟨ _ ⟩ apps lG (apps lG m args) ihs ≡ y
-                             ∷ (P ∘ ctr i j args ^ ¹) ^ [ ! , ι lG ] / [E])
+                             ∷ (P [ ctr i j args ]) ^ [ ! , ι lG ] / [E])
              (PE.sym (apps-++ lG m′ args′ ihs′)) [ih≡])
 
 -- The motive P is a term, so its instantiation needs no context
@@ -1071,41 +920,43 @@ mutual
     (rGlG : rG PE.≡ % → lG PE.≡ ⁰)
     (⊢Δ : ⊢ Δ)
     (ind∈ : ind ∈ₗ senv)
-    ([ΠP] : Δ ⊩⟨ l ⟩ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ])
-    ([P] : Δ ⊩⟨ l ⟩ P ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [ΠP])
+    ([P∙] : Δ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩⟨ l ⟩ P ^ [ rG , ι lG ])
+    ([Pu] : ∀ {u} → Δ ⊩Ind u ∷Ind SU.SInd.name ind → Δ ⊩⟨ l ⟩ P [ u ] ^ [ rG , ι lG ])
+    ([Pu≡] : ∀ {u u′} ([u] : Δ ⊩Ind u ∷Ind SU.SInd.name ind)
+               ([u′] : Δ ⊩Ind u′ ∷Ind SU.SInd.name ind)
+             → Δ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+             → Δ ⊩⟨ l ⟩ P [ u ] ≡ P [ u′ ] ^ [ rG , ι lG ] / [Pu] [u])
     (⊢ms : Δ ⊢All ms ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ])
     ([ms] : All₂ (λ A m → ∃ λ ([A] : Δ ⊩⟨ l ⟩ A ^ [ rG , ι lG ])
                             → Δ ⊩⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [A])
                  (indRectBranchTyList ind P rG lG) ms)
     ([t] : Δ ⊩Ind t ∷Ind SU.SInd.name ind)
-    → Δ ⊩⟨ l ⟩ IndRect (SU.SInd.name ind) lG P t ms ∷ (P ∘ t ^ ¹) ^ [ rG , ι lG ]
-        / P∘tᵣ (Indᵣ (idRed:*: (univ (Indⱼ ⊢Δ)))) [ΠP] [P] [t]
-  IndRectTerm {rG = %} rGlG ⊢Δ ind∈ [ΠP] [P] ⊢ms [ms] [t] =
-    let [Ind] = Indᵣ (idRed:*: (univ (Indⱼ ⊢Δ)))
-    in  logRelIrr (P∘tᵣ [Ind] [ΠP] [P] [t])
-                  (IndRectⱼ rGlG ind∈ (escapeTerm [ΠP] [P]) (escapeTerm [Ind] [t]) ⊢ms)
-  IndRectTerm {ind = ind} {P = P} {rG = !} {lG = lG} {ms = ms}
-              rGlG ⊢Δ ind∈ [ΠP] [P] ⊢ms [ms] (Indₜ k d k≡k (ne (neNfₜ neK ⊢k k~k))) =
-    let [Ind]   = Indᵣ (idRed:*: (univ (Indⱼ ⊢Δ)))
+    → Δ ⊩⟨ l ⟩ IndRect (SU.SInd.name ind) lG P t ms ∷ P [ t ] ^ [ rG , ι lG ] / [Pu] [t]
+  IndRectTerm {ind = ind} {rG = %} {l = l} rGlG ⊢Δ ind∈ [P∙] [Pu] [Pu≡] ⊢ms [ms] [t] =
+    let [Ind] = Indᵣ {l = l} {i = SU.SInd.name ind} (idRed:*: (univ (Indⱼ ⊢Δ)))
+    in  logRelIrr ([Pu] [t])
+                  (IndRectⱼ rGlG ind∈ (escape [P∙]) (escapeTerm [Ind] [t]) ⊢ms)
+  IndRectTerm {ind = ind} {P = P} {rG = !} {lG = lG} {ms = ms} {l = l}
+              rGlG ⊢Δ ind∈ [P∙] [Pu] [Pu≡] ⊢ms [ms]
+              (Indₜ k d k≡k (ne (neNfₜ neK ⊢k k~k))) =
+    let [Ind]   = Indᵣ {l = l} {i = SU.SInd.name ind} (idRed:*: (univ (Indⱼ ⊢Δ)))
         [t]     = Indₜ k d k≡k (ne (neNfₜ neK ⊢k k~k))
-        ⊢P      = escapeTerm [ΠP] [P]
-        ⊢P≅P    = escapeTermEq [ΠP] (reflEqTerm [ΠP] [P])
+        ⊢P      = escape [P∙]
+        ⊢P≅P    = escapeEq [P∙] (reflEq [P∙])
         [k]     = neuTerm [Ind] neK ⊢k k~k
         [t≡k]   = proj₂ (redSubst*Term (redₜ d) [Ind] [k])
-        [Pt]    = P∘tᵣ [Ind] [ΠP] [P] [t]
-        [Pk]    = P∘tᵣ [Ind] [ΠP] [P] [k]
-        [Pt≡Pk] = P∘t-congᵣ [Ind] [ΠP] [P] (reflEqTerm [ΠP] [P]) [t] [k] [t≡k]
+        [Pt]    = [Pu] [t]
+        [Pk]    = [Pu] [k]
+        [Pt≡Pk] = [Pu≡] [t] [k] [t≡k]
         IndRectK = neuTerm [Pk] (IndRectₙ neK) (IndRectⱼ rGlG ind∈ ⊢P ⊢k ⊢ms)
                            (~-IndRect ind∈ ⊢P≅P k~k (reflAllEq′ ⊢ms))
         reduction = IndRect-subst* ind∈ ⊢P (redₜ d) ⊢ms [Ind] [k]
                       (λ [u] [u′] [u≡u′] →
-                         ≅-eq (escapeEq (P∘tᵣ [Ind] [ΠP] [P] [u])
-                                (P∘t-congᵣ [Ind] [ΠP] [P] (reflEqTerm [ΠP] [P])
-                                           [u] [u′] [u≡u′])))
+                         ≅-eq (escapeEq ([Pu] [u]) ([Pu≡] [u] [u′] [u≡u′])))
     in  proj₁ (redSubst*Term reduction [Pt]
                  (convTerm₂ [Pt] [Pk] [Pt≡Pk] IndRectK))
   IndRectTerm {ind = ind} {P = P} {rG = !} {lG = lG} {ms = ms}
-              rGlG ⊢Δ ind∈ [ΠP] [P] ⊢ms [ms]
+              rGlG ⊢Δ ind∈ [P∙] [Pu] [Pu≡] ⊢ms [ms]
               (Indₜ .(ctr (SU.SInd.name ind) j args) d k≡k (ctrᵣ {j} {args} ps))
     with inversion-Ctr (_⊢_:⇒*:_∷_^_.⊢u d)
   ... | ind′ , Ts , ind∈′ , name≡ , eq , ⊢args
@@ -1114,16 +965,16 @@ mutual
     let i       = SU.SInd.name ind
         [Ind]   = Indᵣ (idRed:*: (univ (Indⱼ ⊢Δ)))
         [t]     = Indₜ (ctr i j args) d k≡k (ctrᵣ ps)
-        ⊢P      = escapeTerm [ΠP] [P]
+        ⊢P      = escape [P∙]
         ⊢ctr    = _⊢_:⇒*:_∷_^_.⊢u d
         pos     = all∈ (SU.ctrArgsTypesPositive ind j Ts eq)
         n≡      = PE.sym (PE.trans (⊢All-length ⊢args)
                            (length-map emb-stype Ts))
         [k]     = Indₜ (ctr i j args) (idRedTerm:*: ⊢ctr) k≡k (ctrᵣ ps)
         [t≡k]   = proj₂ (redSubst*Term (redₜ d) [Ind] [k])
-        [Pt]    = P∘tᵣ [Ind] [ΠP] [P] [t]
-        [Pk]    = P∘tᵣ [Ind] [ΠP] [P] [k]
-        [Pt≡Pk] = P∘t-congᵣ [Ind] [ΠP] [P] (reflEqTerm [ΠP] [P]) [t] [k] [t≡k]
+        [Pt]    = [Pu] [t]
+        [Pk]    = [Pu] [k]
+        [Pt≡Pk] = [Pu≡] [t] [k] [t≡k]
         nthTy   = nth-map (λ jTs → indRectBranchTy i (proj₁ jTs) (proj₂ jTs) P ! lG)
                     (zip (range (SU.indCtrCount ind)) (SU.SInd.ctrArgsTypes ind)) j
                     (nth-zip-range (SU.SInd.ctrArgsTypes ind) j eq)
@@ -1132,15 +983,13 @@ mutual
                       (nth-length (indRectBranchTyList ind P ! lG) j nthTy))
         [Tⱼ]    = proj₁ (nthAll₂ [ms] j nthTy nthms)
         [mⱼ]    = proj₂ (nthAll₂ [ms] j nthTy nthms)
-        [ihs]   = IndRectTerms ⊢Δ ind∈ [ΠP] [P] ⊢ms [ms] ps
-        [E]     = proj₁ (appsMethod [Ind] pos n≡ ps [Tⱼ] [mⱼ] [ihs])
-        [e]     = proj₂ (appsMethod [Ind] pos n≡ ps [Tⱼ] [mⱼ] [ihs])
+        [ihs]   = IndRectTerms ⊢Δ ind∈ [P∙] [Pu] [Pu≡] ⊢ms [ms] ps
+        [E]     = proj₁ (appsMethod {j = j} {P = P} [Ind] pos n≡ ps [Tⱼ] [mⱼ] [ihs])
+        [e]     = proj₂ (appsMethod {j = j} {P = P} [Ind] pos n≡ ps [Tⱼ] [mⱼ] [ihs])
         [e]′    = irrelevanceTerm [E] [Pk] [e]
         reduction = IndRect-subst* ind∈ ⊢P (redₜ d) ⊢ms [Ind] [k]
                       (λ [u] [u′] [u≡u′] →
-                         ≅-eq (escapeEq (P∘tᵣ [Ind] [ΠP] [P] [u])
-                                (P∘t-congᵣ [Ind] [ΠP] [P] (reflEqTerm [ΠP] [P])
-                                           [u] [u′] [u≡u′])))
+                         ≅-eq (escapeEq ([Pu] [u]) ([Pu≡] [u] [u′] [u≡u′])))
                     ⇨∷* (conv* (IndRect-ctr ind∈ eq ⊢P ⊢args ⊢ms nthms
                                 ⇨ id (escapeTerm [Pk] [e]′))
                                (sym (≅-eq (escapeEq [Pt] [Pt≡Pk]))))
@@ -1151,8 +1000,12 @@ mutual
   IndRectTerms : ∀ {Δ ind P lG ms l} {args : List Term}
     (⊢Δ : ⊢ Δ)
     (ind∈ : ind ∈ₗ senv)
-    ([ΠP] : Δ ⊩⟨ l ⟩ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ])
-    ([P] : Δ ⊩⟨ l ⟩ P ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [ΠP])
+    ([P∙] : Δ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩⟨ l ⟩ P ^ [ ! , ι lG ])
+    ([Pu] : ∀ {u} → Δ ⊩Ind u ∷Ind SU.SInd.name ind → Δ ⊩⟨ l ⟩ P [ u ] ^ [ ! , ι lG ])
+    ([Pu≡] : ∀ {u u′} ([u] : Δ ⊩Ind u ∷Ind SU.SInd.name ind)
+               ([u′] : Δ ⊩Ind u′ ∷Ind SU.SInd.name ind)
+             → Δ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+             → Δ ⊩⟨ l ⟩ P [ u ] ≡ P [ u′ ] ^ [ ! , ι lG ] / [Pu] [u])
     (⊢ms : Δ ⊢All ms ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ])
     ([ms] : All₂ (λ A m → ∃ λ ([A] : Δ ⊩⟨ l ⟩ A ^ [ ! , ι lG ])
                             → Δ ⊩⟨ l ⟩ m ∷ A ^ [ ! , ι lG ] / [A])
@@ -1160,22 +1013,34 @@ mutual
     → All (λ a → Δ ⊩Ind a ∷Ind SU.SInd.name ind) args
     → All₂ (λ D u → ∃ λ ([D] : Δ ⊩⟨ l ⟩ D ^ [ ! , ι lG ])
                       → Δ ⊩⟨ l ⟩ u ∷ D ^ [ ! , ι lG ] / [D])
-           (map (λ a → P ∘ a ^ ¹) args)
+           (map (λ a → P [ a ]) args)
            (map (λ a → IndRect (SU.SInd.name ind) lG P a ms) args)
-  IndRectTerms ⊢Δ ind∈ [ΠP] [P] ⊢ms [ms] []ₐ = []ₐ
-  IndRectTerms ⊢Δ ind∈ [ΠP] [P] ⊢ms [ms] (p ∷ₐ rest) =
-    (P∘tᵣ (Indᵣ (idRed:*: (univ (Indⱼ ⊢Δ)))) [ΠP] [P] p
-      , IndRectTerm (λ ()) ⊢Δ ind∈ [ΠP] [P] ⊢ms [ms] p)
-    ∷ₐ IndRectTerms ⊢Δ ind∈ [ΠP] [P] ⊢ms [ms] rest
+  IndRectTerms ⊢Δ ind∈ [P∙] [Pu] [Pu≡] ⊢ms [ms] []ₐ = []ₐ
+  IndRectTerms ⊢Δ ind∈ [P∙] [Pu] [Pu≡] ⊢ms [ms] (p ∷ₐ rest) =
+    ([Pu] p , IndRectTerm (λ ()) ⊢Δ ind∈ [P∙] [Pu] [Pu≡] ⊢ms [ms] p)
+    ∷ₐ IndRectTerms ⊢Δ ind∈ [P∙] [Pu] [Pu≡] ⊢ms [ms] rest
 
   IndRect-congTerm : ∀ {Δ ind P P′ rG lG ms ms′ t t′ l}
     (rGlG : rG PE.≡ % → lG PE.≡ ⁰)
     (⊢Δ : ⊢ Δ)
     (ind∈ : ind ∈ₗ senv)
-    ([ΠP] : Δ ⊩⟨ l ⟩ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ])
-    ([P] : Δ ⊩⟨ l ⟩ P ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [ΠP])
-    ([P′] : Δ ⊩⟨ l ⟩ P′ ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [ΠP])
-    ([P≡P′] : Δ ⊩⟨ l ⟩ P ≡ P′ ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [ΠP])
+    ([P∙] : Δ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩⟨ l ⟩ P ^ [ rG , ι lG ])
+    ([P′∙] : Δ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩⟨ l ⟩ P′ ^ [ rG , ι lG ])
+    ([P≡P′∙] : Δ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩⟨ l ⟩ P ≡ P′ ^ [ rG , ι lG ] / [P∙])
+    ([Pu] : ∀ {u} → Δ ⊩Ind u ∷Ind SU.SInd.name ind → Δ ⊩⟨ l ⟩ P [ u ] ^ [ rG , ι lG ])
+    ([Pu≡] : ∀ {u u′} ([u] : Δ ⊩Ind u ∷Ind SU.SInd.name ind)
+               ([u′] : Δ ⊩Ind u′ ∷Ind SU.SInd.name ind)
+             → Δ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+             → Δ ⊩⟨ l ⟩ P [ u ] ≡ P [ u′ ] ^ [ rG , ι lG ] / [Pu] [u])
+    ([P′u] : ∀ {u} → Δ ⊩Ind u ∷Ind SU.SInd.name ind → Δ ⊩⟨ l ⟩ P′ [ u ] ^ [ rG , ι lG ])
+    ([P′u≡] : ∀ {u u′} ([u] : Δ ⊩Ind u ∷Ind SU.SInd.name ind)
+                ([u′] : Δ ⊩Ind u′ ∷Ind SU.SInd.name ind)
+              → Δ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+              → Δ ⊩⟨ l ⟩ P′ [ u ] ≡ P′ [ u′ ] ^ [ rG , ι lG ] / [P′u] [u])
+    ([PP′u] : ∀ {u u′} ([u] : Δ ⊩Ind u ∷Ind SU.SInd.name ind)
+                ([u′] : Δ ⊩Ind u′ ∷Ind SU.SInd.name ind)
+              → Δ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+              → Δ ⊩⟨ l ⟩ P [ u ] ≡ P′ [ u′ ] ^ [ rG , ι lG ] / [Pu] [u])
     (⊢ms : Δ ⊢All ms ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ])
     (⊢ms′ : Δ ⊢All ms′ ∷ indRectBranchTyList ind P′ rG lG ^ [ rG , ι lG ])
     (⊢ms≡ : Δ ⊢All ms ≡ ms′ ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ])
@@ -1191,47 +1056,47 @@ mutual
     ([t′] : Δ ⊩Ind t′ ∷Ind SU.SInd.name ind)
     ([t≡t′] : Δ ⊩Ind t ≡ t′ ∷Ind SU.SInd.name ind)
     → Δ ⊩⟨ l ⟩ IndRect (SU.SInd.name ind) lG P t ms ≡ IndRect (SU.SInd.name ind) lG P′ t′ ms′
-                  ∷ (P ∘ t ^ ¹) ^ [ rG , ι lG ]
-        / P∘tᵣ (Indᵣ (idRed:*: (univ (Indⱼ ⊢Δ)))) [ΠP] [P] [t]
-  IndRect-congTerm {rG = %} rGlG ⊢Δ ind∈ [ΠP] [P] [P′] [P≡P′] ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
-                   [t] [t′] [t≡t′] =
-    let [Ind]      = Indᵣ (idRed:*: (univ (Indⱼ ⊢Δ)))
-        [Pt]       = P∘tᵣ [Ind] [ΠP] [P] [t]
-        [Pt≡P′t′]  = P∘t-congᵣ [Ind] [ΠP] [P] [P≡P′] [t] [t′] [t≡t′]
+                  ∷ P [ t ] ^ [ rG , ι lG ] / [Pu] [t]
+  IndRect-congTerm {ind = ind} {rG = %} {l = l} rGlG ⊢Δ ind∈ [P∙] [P′∙] [P≡P′∙] [Pu] [Pu≡] [P′u] [P′u≡] [PP′u]
+                   ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡] [t] [t′] [t≡t′] =
+    let [Ind]      = Indᵣ {l = l} {i = SU.SInd.name ind} (idRed:*: (univ (Indⱼ ⊢Δ)))
+        [Pt]       = [Pu] [t]
+        [Pt≡P′t′]  = [PP′u] [t] [t′] [t≡t′]
     in  logRelIrrEq [Pt]
-          (IndRectⱼ rGlG ind∈ (escapeTerm [ΠP] [P]) (escapeTerm [Ind] [t]) ⊢ms)
-          (conv (IndRectⱼ rGlG ind∈ (escapeTerm [ΠP] [P′]) (escapeTerm [Ind] [t′]) ⊢ms′)
+          (IndRectⱼ rGlG ind∈ (escape [P∙]) (escapeTerm [Ind] [t]) ⊢ms)
+          (conv (IndRectⱼ rGlG ind∈ (escape [P′∙]) (escapeTerm [Ind] [t′]) ⊢ms′)
                 (sym (≅-eq (escapeEq [Pt] [Pt≡P′t′]))))
-  IndRect-congTerm {ind = ind} {P = P} {P′ = P′} {rG = !} {lG = lG} {ms = ms} {ms′ = ms′}
-                   rGlG ⊢Δ ind∈ [ΠP] [P] [P′] [P≡P′] ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
+  IndRect-congTerm {ind = ind} {P = P} {P′ = P′} {rG = !} {lG = lG} {ms = ms} {ms′ = ms′} {l = l}
+                   rGlG ⊢Δ ind∈ [P∙] [P′∙] [P≡P′∙] [Pu] [Pu≡] [P′u] [P′u≡] [PP′u]
+                   ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
                    (Indₜ k d k≡k (ne (neNfₜ neK ⊢k k~k)))
                    (Indₜ k′ d′ k′≡k′ (ne (neNfₜ neK′ ⊢k′ k′~k′)))
                    (Indₜ₌ k₁ k₁′ d₁ d₁′ k₁≡k₁′ (ne (neNfₜ₌ neK₁ neK₁′ k₁~k₁′))) =
     let k₁≡k        = whrDet*Term (redₜ d₁ , ne neK₁) (redₜ d , ne neK)
         k₁′≡k′      = whrDet*Term (redₜ d₁′ , ne neK₁′) (redₜ d′ , ne neK′)
-        [Ind]       = Indᵣ (idRed:*: (univ (Indⱼ ⊢Δ)))
+        [Ind]       = Indᵣ {l = l} {i = SU.SInd.name ind} (idRed:*: (univ (Indⱼ ⊢Δ)))
         [t]         = Indₜ k d k≡k (ne (neNfₜ neK ⊢k k~k))
         [t′]        = Indₜ k′ d′ k′≡k′ (ne (neNfₜ neK′ ⊢k′ k′~k′))
         [t≡t′]      = Indₜ₌ k₁ k₁′ d₁ d₁′ k₁≡k₁′ (ne (neNfₜ₌ neK₁ neK₁′ k₁~k₁′))
-        ⊢P          = escapeTerm [ΠP] [P]
-        ⊢P′         = escapeTerm [ΠP] [P′]
-        ⊢P≅P        = escapeTermEq [ΠP] (reflEqTerm [ΠP] [P])
-        ⊢P′≅P′      = escapeTermEq [ΠP] (reflEqTerm [ΠP] [P′])
-        ⊢P≅P′       = escapeTermEq [ΠP] [P≡P′]
+        ⊢P          = escape [P∙]
+        ⊢P′         = escape [P′∙]
+        ⊢P≅P        = escapeEq [P∙] (reflEq [P∙])
+        ⊢P′≅P′      = escapeEq [P′∙] (reflEq [P′∙])
+        ⊢P≅P′       = escapeEq [P∙] [P≡P′∙]
         [k]         = neuTerm [Ind] neK ⊢k k~k
         [k′]        = neuTerm [Ind] neK′ ⊢k′ k′~k′
         [t≡k]       = proj₂ (redSubst*Term (redₜ d) [Ind] [k])
         [t′≡k′]     = proj₂ (redSubst*Term (redₜ d′) [Ind] [k′])
         [k≡k′]      = transEqTerm [Ind] (symEqTerm [Ind] [t≡k])
                         (transEqTerm [Ind] [t≡t′] [t′≡k′])
-        [Pt]        = P∘tᵣ [Ind] [ΠP] [P] [t]
-        [Pk]        = P∘tᵣ [Ind] [ΠP] [P] [k]
-        [P′t′]      = P∘tᵣ [Ind] [ΠP] [P′] [t′]
-        [P′k′]      = P∘tᵣ [Ind] [ΠP] [P′] [k′]
-        [Pt≡Pk]     = P∘t-congᵣ [Ind] [ΠP] [P] (reflEqTerm [ΠP] [P]) [t] [k] [t≡k]
-        [P′t′≡P′k′] = P∘t-congᵣ [Ind] [ΠP] [P′] (reflEqTerm [ΠP] [P′]) [t′] [k′] [t′≡k′]
-        [Pt≡P′t′]   = P∘t-congᵣ [Ind] [ΠP] [P] [P≡P′] [t] [t′] [t≡t′]
-        [Pk≡P′k′]   = P∘t-congᵣ [Ind] [ΠP] [P] [P≡P′] [k] [k′] [k≡k′]
+        [Pt]        = [Pu] [t]
+        [Pk]        = [Pu] [k]
+        [P′t′]      = [P′u] [t′]
+        [P′k′]      = [P′u] [k′]
+        [Pt≡Pk]     = [Pu≡] [t] [k] [t≡k]
+        [P′t′≡P′k′] = [P′u≡] [t′] [k′] [t′≡k′]
+        [Pt≡P′t′]   = [PP′u] [t] [t′] [t≡t′]
+        [Pk≡P′k′]   = [PP′u] [k] [k′] [k≡k′]
         IndRectK    = neuTerm [Pk] (IndRectₙ neK) (IndRectⱼ rGlG ind∈ ⊢P ⊢k ⊢ms)
                               (~-IndRect ind∈ ⊢P≅P k~k (reflAllEq′ ⊢ms))
         IndRectK′   = neuTerm [P′k′] (IndRectₙ neK′) (IndRectⱼ rGlG ind∈ ⊢P′ ⊢k′ ⊢ms′)
@@ -1247,14 +1112,10 @@ mutual
                             ⊢ms≡))
         reduction₁  = IndRect-subst* ind∈ ⊢P (redₜ d) ⊢ms [Ind] [k]
                         (λ [u] [u′] [u≡u′] →
-                           ≅-eq (escapeEq (P∘tᵣ [Ind] [ΠP] [P] [u])
-                                  (P∘t-congᵣ [Ind] [ΠP] [P] (reflEqTerm [ΠP] [P])
-                                             [u] [u′] [u≡u′])))
+                           ≅-eq (escapeEq ([Pu] [u]) ([Pu≡] [u] [u′] [u≡u′])))
         reduction₂  = IndRect-subst* ind∈ ⊢P′ (redₜ d′) ⊢ms′ [Ind] [k′]
                         (λ [u] [u′] [u≡u′] →
-                           ≅-eq (escapeEq (P∘tᵣ [Ind] [ΠP] [P′] [u])
-                                  (P∘t-congᵣ [Ind] [ΠP] [P′] (reflEqTerm [ΠP] [P′])
-                                             [u] [u′] [u≡u′])))
+                           ≅-eq (escapeEq ([P′u] [u]) ([P′u≡] [u] [u′] [u≡u′])))
         eq₁ = proj₂ (redSubst*Term reduction₁ [Pt]
                        (convTerm₂ [Pt] [Pk] [Pt≡Pk] IndRectK))
         eq₂ = proj₂ (redSubst*Term reduction₂ [P′t′]
@@ -1263,7 +1124,8 @@ mutual
           (transEqTerm [Pt] IndRectK≡K′
             (convEqTerm₂ [Pt] [P′t′] [Pt≡P′t′] (symEqTerm [P′t′] eq₂)))
   IndRect-congTerm {ind = ind} {P = P} {P′ = P′} {rG = !} {lG = lG} {ms = ms} {ms′ = ms′}
-                   rGlG ⊢Δ ind∈ [ΠP] [P] [P′] [P≡P′] ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
+                   rGlG ⊢Δ ind∈ [P∙] [P′∙] [P≡P′∙] [Pu] [Pu≡] [P′u] [P′u≡] [PP′u]
+                   ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
                    (Indₜ .(ctr (SU.SInd.name ind) j args) d k≡k (ctrᵣ {j} {args} ps))
                    (Indₜ .(ctr (SU.SInd.name ind) j′ args′) d′ k′≡k′ (ctrᵣ {j′} {args′} ps′))
                    (Indₜ₌ .(ctr (SU.SInd.name ind) j₂ a₂) .(ctr (SU.SInd.name ind) j₂ a₂′)
@@ -1286,8 +1148,8 @@ mutual
         [t]         = Indₜ (ctr i j args) d k≡k (ctrᵣ ps)
         [t′]        = Indₜ (ctr i j args′) d′ k′≡k′ (ctrᵣ ps′)
         [t≡t′]      = Indₜ₌ (ctr i j args) (ctr i j args′) d₁ d₁′ k₁≡k₁′ (ctrᵣ aa)
-        ⊢P          = escapeTerm [ΠP] [P]
-        ⊢P′         = escapeTerm [ΠP] [P′]
+        ⊢P          = escape [P∙]
+        ⊢P′         = escape [P′∙]
         ⊢ctr        = _⊢_:⇒*:_∷_^_.⊢u d
         ⊢ctr′       = _⊢_:⇒*:_∷_^_.⊢u d′
         pos         = all∈ (SU.ctrArgsTypesPositive ind j Ts eq)
@@ -1301,13 +1163,13 @@ mutual
         [t′≡k′]     = proj₂ (redSubst*Term (redₜ d′) [Ind] [k′])
         [k≡k′]      = transEqTerm [Ind] (symEqTerm [Ind] [t≡k])
                         (transEqTerm [Ind] [t≡t′] [t′≡k′])
-        [Pt]        = P∘tᵣ [Ind] [ΠP] [P] [t]
-        [Pk]        = P∘tᵣ [Ind] [ΠP] [P] [k]
-        [P′t′]      = P∘tᵣ [Ind] [ΠP] [P′] [t′]
-        [P′k′]      = P∘tᵣ [Ind] [ΠP] [P′] [k′]
-        [Pt≡Pk]     = P∘t-congᵣ [Ind] [ΠP] [P] (reflEqTerm [ΠP] [P]) [t] [k] [t≡k]
-        [P′t′≡P′k′] = P∘t-congᵣ [Ind] [ΠP] [P′] (reflEqTerm [ΠP] [P′]) [t′] [k′] [t′≡k′]
-        [Pt≡P′t′]   = P∘t-congᵣ [Ind] [ΠP] [P] [P≡P′] [t] [t′] [t≡t′]
+        [Pt]        = [Pu] [t]
+        [Pk]        = [Pu] [k]
+        [P′t′]      = [P′u] [t′]
+        [P′k′]      = [P′u] [k′]
+        [Pt≡Pk]     = [Pu≡] [t] [k] [t≡k]
+        [P′t′≡P′k′] = [P′u≡] [t′] [k′] [t′≡k′]
+        [Pt≡P′t′]   = [PP′u] [t] [t′] [t≡t′]
         jTs         = nth-zip-range (SU.SInd.ctrArgsTypes ind) j eq
         nthTy       = nth-map (λ jTs′ → indRectBranchTy i (proj₁ jTs′) (proj₂ jTs′) P ! lG)
                         (zip (range (SU.indCtrCount ind)) (SU.SInd.ctrArgsTypes ind)) j jTs
@@ -1325,32 +1187,28 @@ mutual
         [mⱼ≡m′ⱼ]    = proj₂ (proj₂ (proj₂ mⱼ≡))
         [T′ⱼ]       = proj₁ (nthAll₂ [ms′] j nthTy′ nthms′)
         [m′ⱼ]       = proj₂ (nthAll₂ [ms′] j nthTy′ nthms′)
-        [ihs]       = IndRectTerms ⊢Δ ind∈ [ΠP] [P] ⊢ms [ms] ps
-        [ihs′]      = IndRectTerms ⊢Δ ind∈ [ΠP] [P′] ⊢ms′ [ms′] ps′
-        [ihs≡]      = IndRect-congTerms ⊢Δ ind∈ [ΠP] [P] [P′] [P≡P′] ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
-                        ps ps′ aa
-        [E]         = proj₁ (appsMethod [Ind] pos n≡ ps [Tⱼ] [mⱼ] [ihs])
+        [ihs]       = IndRectTerms ⊢Δ ind∈ [P∙] [Pu] [Pu≡] ⊢ms [ms] ps
+        [ihs′]      = IndRectTerms ⊢Δ ind∈ [P′∙] [P′u] [P′u≡] ⊢ms′ [ms′] ps′
+        [ihs≡]      = IndRect-congTerms ⊢Δ ind∈ [P∙] [P′∙] [P≡P′∙] [Pu] [Pu≡] [P′u] [P′u≡]
+                        [PP′u] ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡] ps ps′ aa
+        [E]         = proj₁ (appsMethod {j = j} {P = P} [Ind] pos n≡ ps [Tⱼ] [mⱼ] [ihs])
         [e]′        = irrelevanceTerm [E] [Pk]
-                        (proj₂ (appsMethod [Ind] pos n≡ ps [Tⱼ] [mⱼ] [ihs]))
-        [E′]        = proj₁ (appsMethod [Ind] pos n≡′ ps′ [T′ⱼ] [m′ⱼ] [ihs′])
+                        (proj₂ (appsMethod {j = j} {P = P} [Ind] pos n≡ ps [Tⱼ] [mⱼ] [ihs]))
+        [E′]        = proj₁ (appsMethod {j = j} {P = P′} [Ind] pos n≡′ ps′ [T′ⱼ] [m′ⱼ] [ihs′])
         [e′]′       = irrelevanceTerm [E′] [P′k′]
-                        (proj₂ (appsMethod [Ind] pos n≡′ ps′ [T′ⱼ] [m′ⱼ] [ihs′]))
+                        (proj₂ (appsMethod {j = j} {P = P′} [Ind] pos n≡′ ps′ [T′ⱼ] [m′ⱼ] [ihs′]))
         [e≡e′]      = convEqTerm₂ [Pt] [Pk] [Pt≡Pk]
-                        (appsMethod-cong [Ind] pos n≡ (zipArgs ps ps′ aa)
+                        (appsMethod-cong {j = j} {P = P} [Ind] pos n≡ (zipArgs ps ps′ aa)
                           [Tⱼ] [mⱼ] [mⱼ≡m′ⱼ] [ihs≡] [Pk])
         reduction₁  = IndRect-subst* ind∈ ⊢P (redₜ d) ⊢ms [Ind] [k]
                         (λ [u] [u′] [u≡u′] →
-                           ≅-eq (escapeEq (P∘tᵣ [Ind] [ΠP] [P] [u])
-                                  (P∘t-congᵣ [Ind] [ΠP] [P] (reflEqTerm [ΠP] [P])
-                                             [u] [u′] [u≡u′])))
+                           ≅-eq (escapeEq ([Pu] [u]) ([Pu≡] [u] [u′] [u≡u′])))
                       ⇨∷* (conv* (IndRect-ctr ind∈ eq ⊢P ⊢args ⊢ms nthms
                                   ⇨ id (escapeTerm [Pk] [e]′))
                                  (sym (≅-eq (escapeEq [Pt] [Pt≡Pk]))))
         reduction₂  = IndRect-subst* ind∈ ⊢P′ (redₜ d′) ⊢ms′ [Ind] [k′]
                         (λ [u] [u′] [u≡u′] →
-                           ≅-eq (escapeEq (P∘tᵣ [Ind] [ΠP] [P′] [u])
-                                  (P∘t-congᵣ [Ind] [ΠP] [P′] (reflEqTerm [ΠP] [P′])
-                                             [u] [u′] [u≡u′])))
+                           ≅-eq (escapeEq ([P′u] [u]) ([P′u≡] [u] [u′] [u≡u′])))
                       ⇨∷* (conv* (IndRect-ctr ind∈ eq′ ⊢P′ ⊢args′ ⊢ms′ nthms′
                                   ⇨ id (escapeTerm [P′k′] [e′]′))
                                  (sym (≅-eq (escapeEq [P′t′] [P′t′≡P′k′]))))
@@ -1362,19 +1220,23 @@ mutual
           (transEqTerm [Pt] [e≡e′]
             (convEqTerm₂ [Pt] [P′t′] [Pt≡P′t′] (symEqTerm [P′t′] eq₂)))
   -- Mismatching whnf shapes are impossible.
-  IndRect-congTerm {rG = !} rGlG ⊢Δ ind∈ [ΠP] [P] [P′] [P≡P′] ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
+  IndRect-congTerm {rG = !} rGlG ⊢Δ ind∈ [P∙] [P′∙] [P≡P′∙] [Pu] [Pu≡] [P′u] [P′u≡] [PP′u]
+                   ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
                    (Indₜ _ d _ (ctrᵣ _)) _
                    (Indₜ₌ _ _ d₁ _ _ (ne (neNfₜ₌ neK₁ _ _))) =
     ⊥-elim (ctr≢ne neK₁ (whrDet*Term (redₜ d , ctrₙ) (redₜ d₁ , ne neK₁)))
-  IndRect-congTerm {rG = !} rGlG ⊢Δ ind∈ [ΠP] [P] [P′] [P≡P′] ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
+  IndRect-congTerm {rG = !} rGlG ⊢Δ ind∈ [P∙] [P′∙] [P≡P′∙] [Pu] [Pu≡] [P′u] [P′u≡] [PP′u]
+                   ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
                    _ (Indₜ _ d′ _ (ctrᵣ _))
                    (Indₜ₌ _ _ _ d₁′ _ (ne (neNfₜ₌ _ neK₁′ _))) =
     ⊥-elim (ctr≢ne neK₁′ (whrDet*Term (redₜ d′ , ctrₙ) (redₜ d₁′ , ne neK₁′)))
-  IndRect-congTerm {rG = !} rGlG ⊢Δ ind∈ [ΠP] [P] [P′] [P≡P′] ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
+  IndRect-congTerm {rG = !} rGlG ⊢Δ ind∈ [P∙] [P′∙] [P≡P′∙] [Pu] [Pu≡] [P′u] [P′u≡] [PP′u]
+                   ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
                    (Indₜ _ d _ (ne (neNfₜ neK _ _))) _
                    (Indₜ₌ _ _ d₁ _ _ (ctrᵣ _)) =
     ⊥-elim (ctr≢ne neK (whrDet*Term (redₜ d₁ , ctrₙ) (redₜ d , ne neK)))
-  IndRect-congTerm {rG = !} rGlG ⊢Δ ind∈ [ΠP] [P] [P′] [P≡P′] ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
+  IndRect-congTerm {rG = !} rGlG ⊢Δ ind∈ [P∙] [P′∙] [P≡P′∙] [Pu] [Pu≡] [P′u] [P′u≡] [PP′u]
+                   ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
                    _ (Indₜ _ d′ _ (ne (neNfₜ neK′ _ _)))
                    (Indₜ₌ _ _ _ d₁′ _ (ctrᵣ _)) =
     ⊥-elim (ctr≢ne neK′ (whrDet*Term (redₜ d₁′ , ctrₙ) (redₜ d′ , ne neK′)))
@@ -1383,10 +1245,23 @@ mutual
   IndRect-congTerms : ∀ {Δ ind P P′ lG ms ms′ l} {args args′ : List Term}
     (⊢Δ : ⊢ Δ)
     (ind∈ : ind ∈ₗ senv)
-    ([ΠP] : Δ ⊩⟨ l ⟩ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ])
-    ([P] : Δ ⊩⟨ l ⟩ P ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [ΠP])
-    ([P′] : Δ ⊩⟨ l ⟩ P′ ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [ΠP])
-    ([P≡P′] : Δ ⊩⟨ l ⟩ P ≡ P′ ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [ΠP])
+    ([P∙] : Δ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩⟨ l ⟩ P ^ [ ! , ι lG ])
+    ([P′∙] : Δ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩⟨ l ⟩ P′ ^ [ ! , ι lG ])
+    ([P≡P′∙] : Δ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩⟨ l ⟩ P ≡ P′ ^ [ ! , ι lG ] / [P∙])
+    ([Pu] : ∀ {u} → Δ ⊩Ind u ∷Ind SU.SInd.name ind → Δ ⊩⟨ l ⟩ P [ u ] ^ [ ! , ι lG ])
+    ([Pu≡] : ∀ {u u′} ([u] : Δ ⊩Ind u ∷Ind SU.SInd.name ind)
+               ([u′] : Δ ⊩Ind u′ ∷Ind SU.SInd.name ind)
+             → Δ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+             → Δ ⊩⟨ l ⟩ P [ u ] ≡ P [ u′ ] ^ [ ! , ι lG ] / [Pu] [u])
+    ([P′u] : ∀ {u} → Δ ⊩Ind u ∷Ind SU.SInd.name ind → Δ ⊩⟨ l ⟩ P′ [ u ] ^ [ ! , ι lG ])
+    ([P′u≡] : ∀ {u u′} ([u] : Δ ⊩Ind u ∷Ind SU.SInd.name ind)
+                ([u′] : Δ ⊩Ind u′ ∷Ind SU.SInd.name ind)
+              → Δ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+              → Δ ⊩⟨ l ⟩ P′ [ u ] ≡ P′ [ u′ ] ^ [ ! , ι lG ] / [P′u] [u])
+    ([PP′u] : ∀ {u u′} ([u] : Δ ⊩Ind u ∷Ind SU.SInd.name ind)
+                ([u′] : Δ ⊩Ind u′ ∷Ind SU.SInd.name ind)
+              → Δ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+              → Δ ⊩⟨ l ⟩ P [ u ] ≡ P′ [ u′ ] ^ [ ! , ι lG ] / [Pu] [u])
     (⊢ms : Δ ⊢All ms ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ])
     (⊢ms′ : Δ ⊢All ms′ ∷ indRectBranchTyList ind P′ ! lG ^ [ ! , ι lG ])
     (⊢ms≡ : Δ ⊢All ms ≡ ms′ ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ])
@@ -1405,23 +1280,26 @@ mutual
                          → (Δ ⊩⟨ l ⟩ u ∷ D ^ [ ! , ι lG ] / [D])
                          × (Δ ⊩⟨ l ⟩ u′ ∷ D ^ [ ! , ι lG ] / [D])
                          × (Δ ⊩⟨ l ⟩ u ≡ u′ ∷ D ^ [ ! , ι lG ] / [D]))
-           (map (λ a → P ∘ a ^ ¹) args)
+           (map (λ a → P [ a ]) args)
            (map (λ a → IndRect (SU.SInd.name ind) lG P a ms) args)
            (map (λ a → IndRect (SU.SInd.name ind) lG P′ a ms′) args′)
-  IndRect-congTerms ⊢Δ ind∈ [ΠP] [P] [P′] [P≡P′] ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡] []ₐ []ₐ []ₐ = []ₐ
-  IndRect-congTerms ⊢Δ ind∈ [ΠP] [P] [P′] [P≡P′] ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
+  IndRect-congTerms ⊢Δ ind∈ [P∙] [P′∙] [P≡P′∙] [Pu] [Pu≡] [P′u] [P′u≡] [PP′u]
+                    ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡] []ₐ []ₐ []ₐ = []ₐ
+  IndRect-congTerms ⊢Δ ind∈ [P∙] [P′∙] [P≡P′∙] [Pu] [Pu≡] [P′u] [P′u≡] [PP′u]
+                    ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡]
                     ([a] ∷ₐ ps) ([a′] ∷ₐ ps′) ([a≡a′] ∷ₐ pps) =
-    let [Ind]    = Indᵣ (idRed:*: (univ (Indⱼ ⊢Δ)))
-        [D]      = P∘tᵣ [Ind] [ΠP] [P] [a]
-        [D′]     = P∘tᵣ [Ind] [ΠP] [P′] [a′]
-        [D≡D′]   = P∘t-congᵣ [Ind] [ΠP] [P] [P≡P′] [a] [a′] [a≡a′]
-        [u]      = IndRectTerm (λ ()) ⊢Δ ind∈ [ΠP] [P] ⊢ms (ihFst [ms≡]) [a]
+    let [D]      = [Pu] [a]
+        [D′]     = [P′u] [a′]
+        [D≡D′]   = [PP′u] [a] [a′] [a≡a′]
+        [u]      = IndRectTerm (λ ()) ⊢Δ ind∈ [P∙] [Pu] [Pu≡] ⊢ms (ihFst [ms≡]) [a]
         [u′]     = convTerm₂ [D] [D′] [D≡D′]
-                     (IndRectTerm (λ ()) ⊢Δ ind∈ [ΠP] [P′] ⊢ms′ [ms′] [a′])
-        [u≡u′]   = IndRect-congTerm (λ ()) ⊢Δ ind∈ [ΠP] [P] [P′] [P≡P′]
+                     (IndRectTerm (λ ()) ⊢Δ ind∈ [P′∙] [P′u] [P′u≡] ⊢ms′ [ms′] [a′])
+        [u≡u′]   = IndRect-congTerm (λ ()) ⊢Δ ind∈ [P∙] [P′∙] [P≡P′∙]
+                     [Pu] [Pu≡] [P′u] [P′u≡] [PP′u]
                      ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡] [a] [a′] [a≡a′]
     in  ([D] , [u] , [u′] , [u≡u′])
-        ∷ₐ IndRect-congTerms ⊢Δ ind∈ [ΠP] [P] [P′] [P≡P′] ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡] ps ps′ pps
+        ∷ₐ IndRect-congTerms ⊢Δ ind∈ [P∙] [P′∙] [P≡P′∙] [Pu] [Pu≡] [P′u] [P′u≡] [PP′u]
+             ⊢ms ⊢ms′ ⊢ms≡ [ms′] [ms≡] ps ps′ pps
 
 private
   -- Reducible methods at a substitution (reducible counterpart of escapeMethodsσ).
@@ -1434,7 +1312,7 @@ private
            ms (indRectBranchTyList ind P rG lG)
     → All₂ (λ A m → ∃ λ ([A] : Δ ⊩⟨ l ⟩ A ^ [ rG , ι lG ])
                       → Δ ⊩⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [A])
-           (indRectBranchTyList ind (subst σ P) rG lG) (map (subst σ) ms)
+           (indRectBranchTyList ind (subst (liftSubst σ) P) rG lG) (map (subst σ) ms)
   methodsσ {Δ = Δ} {σ = σ} {ind = ind} {P = P} {rG = rG} {lG = lG} {ms = ms} {l = l}
            [Γ] ⊢Δ [σ] [ms] =
     PE.subst (λ As → All₂ (λ A m → ∃ λ ([A] : Δ ⊩⟨ l ⟩ A ^ [ rG , ι lG ])
@@ -1467,7 +1345,7 @@ private
                          → (Δ ⊩⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [A])
                          × (Δ ⊩⟨ l ⟩ m′ ∷ A ^ [ rG , ι lG ] / [A])
                          × (Δ ⊩⟨ l ⟩ m ≡ m′ ∷ A ^ [ rG , ι lG ] / [A]))
-           (indRectBranchTyList ind (subst σ P) rG lG)
+           (indRectBranchTyList ind (subst (liftSubst σ) P) rG lG)
            (map (subst σ) ms) (map (subst σ′) ms)
   methodsσ≡ {Δ = Δ} {σ = σ} {σ′ = σ′} {ind = ind} {P = P} {rG = rG} {lG = lG} {ms = ms} {l = l}
             [Γ] ⊢Δ [σ] [σ′] [σ≡σ′] [ms] =
@@ -1508,7 +1386,7 @@ private
                       → Γ ⊩ᵛ⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
            ms (indRectBranchTyList ind P rG lG)
     → Δ ⊢All map (subst σ) ms ≡ map (subst σ′) ms
-        ∷ indRectBranchTyList ind (subst σ P) rG lG ^ [ rG , ι lG ]
+        ∷ indRectBranchTyList ind (subst (liftSubst σ) P) rG lG ^ [ rG , ι lG ]
   escapeMethodsσ≡ {Δ = Δ} {σ = σ} {σ′ = σ′} {ind = ind} {P = P} {rG = rG} {lG = lG} {ms = ms}
                   [Γ] ⊢Δ [σ] [σ′] [σ≡σ′] [ms] =
     PE.subst (λ As → Δ ⊢All map (subst σ) ms ≡ map (subst σ′) ms ∷ As ^ [ rG , ι lG ])
@@ -1530,69 +1408,123 @@ IndRectᵛ : ∀ {Γ ind P rG lG t ms l}
          → ([Γ] : ⊩ᵛ Γ)
          → (ind∈ : ind ∈ₗ senv)
          → ([Ind] : Γ ⊩ᵛ⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ])
-         → ([ΠP] : Γ ⊩ᵛ⟨ l ⟩ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [Γ])
-         → ([P] : Γ ⊩ᵛ⟨ l ⟩ P ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [Γ] / [ΠP])
+         → ([P] : Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ l ⟩ P ^ [ rG , ι lG ] / [Γ] ∙ [Ind])
          → ([t] : Γ ⊩ᵛ⟨ l ⟩ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
-         → ([P∘t] : Γ ⊩ᵛ⟨ l ⟩ (P ∘ t ^ ¹) ^ [ rG , ι lG ] / [Γ])
+         → ([Pt] : Γ ⊩ᵛ⟨ l ⟩ P [ t ] ^ [ rG , ι lG ] / [Γ])
          → Γ ⊢All ms ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ]
          → All₂ (λ m A → ∃ λ ([A] : Γ ⊩ᵛ⟨ l ⟩ A ^ [ rG , ι lG ] / [Γ])
                          → Γ ⊩ᵛ⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
                 ms (indRectBranchTyList ind P rG lG)
-         → Γ ⊩ᵛ⟨ l ⟩ IndRect (SU.SInd.name ind) lG P t ms ∷ (P ∘ t ^ ¹) ^ [ rG , ι lG ] / [Γ] / [P∘t]
-IndRectᵛ {ind = ind} {P = P} {rG = rG} {lG = lG} {t = t} {ms = ms} {l = l}
-         rGlG [Γ] ind∈ [Ind] [ΠP] [P] [t] [P∘t] ⊢ms [ms] {Δ = Δ} {σ = σ} ⊢Δ [σ] =
-  let [Indσ] = Indᵣ {l = l} (idRed:*: (univ (Indⱼ ⊢Δ)))
-      [σΠP]  = proj₁ ([ΠP] ⊢Δ [σ])
-      [σP]   = proj₁ ([P] ⊢Δ [σ])
-      [σt]   = irrelevanceTerm (proj₁ ([Ind] ⊢Δ [σ])) [Indσ] (proj₁ ([t] ⊢Δ [σ]))
+         → Γ ⊩ᵛ⟨ l ⟩ IndRect (SU.SInd.name ind) lG P t ms ∷ P [ t ] ^ [ rG , ι lG ] / [Γ] / [Pt]
+IndRectᵛ {Γ = Γ} {ind = ind} {P = P} {rG = rG} {lG = lG} {t = t} {ms = ms} {l = l}
+         rGlG [Γ] ind∈ [Ind] [P] [t] [Pt] ⊢ms [ms] {Δ = Δ} {σ = σ} ⊢Δ [σ] =
+  let [σt]   = ⟦t⟧ ⊢Δ [σ]
+      eqPrf  = PE.trans (singleSubstComp (subst σ t) σ P)
+                 (PE.sym (PE.trans (substCompEq P) (substConcatSingleton′ P)))
       ⊢msσ   = escapeMethodsσ {ind = ind} {P = P} [Γ] ⊢Δ [σ] [ms]
       [msσ]  = methodsσ {ind = ind} {P = P} [Γ] ⊢Δ [σ] [ms]
-      [σP∘t] = proj₁ ([P∘t] ⊢Δ [σ])
-      [res]  = irrelevanceTerm (P∘tᵣ [Indσ] [σΠP] [σP] [σt]) [σP∘t]
-                 (IndRectTerm rGlG ⊢Δ ind∈ [σΠP] [σP] ⊢msσ [msσ] [σt])
-  in  PE.subst (λ x → Δ ⊩⟨ l ⟩ x ∷ subst σ (P ∘ t ^ ¹) ^ [ rG , ι lG ] / [σP∘t])
+      [res]  = irrelevanceTerm′ eqPrf PE.refl PE.refl (Pu ⊢Δ [σ] [σt]) (proj₁ ([Pt] ⊢Δ [σ]))
+                 (IndRectTerm rGlG ⊢Δ ind∈ (P∙ ⊢Δ [σ]) (Pu ⊢Δ [σ]) (Pu≡ ⊢Δ [σ])
+                              ⊢msσ [msσ] [σt])
+  in  PE.subst (λ x → Δ ⊩⟨ l ⟩ x ∷ subst σ (P [ t ]) ^ [ rG , ι lG ] / proj₁ ([Pt] ⊢Δ [σ]))
                (PE.sym (subst-IndRect σ (SU.SInd.name ind) lG P t ms)) [res]
     , (λ {σ′} [σ′] [σ≡σ′] →
-         let [Indσ]  = Indᵣ {l = l} (idRed:*: (univ (Indⱼ ⊢Δ)))
-             [σΠP]   = proj₁ ([ΠP] ⊢Δ [σ])
-             [σ′ΠP]  = proj₁ ([ΠP] ⊢Δ [σ′])
-             [σP]    = proj₁ ([P] ⊢Δ [σ])
-             [σ′P]   = irrelevanceTerm [σ′ΠP] [σΠP] (proj₁ ([P] ⊢Δ [σ′]))
-             [σP≡]   = proj₂ ([P] ⊢Δ [σ]) [σ′] [σ≡σ′]
-             [σInd]  = proj₁ ([Ind] ⊢Δ [σ])
-             [σ′Ind] = proj₁ ([Ind] ⊢Δ [σ′])
-             [σt]    = irrelevanceTerm [σInd] [Indσ] (proj₁ ([t] ⊢Δ [σ]))
-             [σ′t]   = irrelevanceTerm [σ′Ind] [Indσ] (proj₁ ([t] ⊢Δ [σ′]))
-             [σt≡]   = irrelevanceEqTerm [σInd] [Indσ] (proj₂ ([t] ⊢Δ [σ]) [σ′] [σ≡σ′])
+         let [σt]    = ⟦t⟧ ⊢Δ [σ]
+             [σ′t]   = ⟦t⟧ ⊢Δ [σ′]
+             [σt≡]   = irrelevanceEqTerm (proj₁ ([Ind] ⊢Δ [σ]))
+                         (Indᵣ {l = l} (idRed:*: (univ (Indⱼ ⊢Δ))))
+                         (proj₂ ([t] ⊢Δ [σ]) [σ′] [σ≡σ′])
+             eqPrf   = PE.trans (singleSubstComp (subst σ t) σ P)
+                         (PE.sym (PE.trans (substCompEq P) (substConcatSingleton′ P)))
              ⊢msσ    = escapeMethodsσ {ind = ind} {P = P} [Γ] ⊢Δ [σ] [ms]
              ⊢msσ′   = escapeMethodsσ {ind = ind} {P = P} [Γ] ⊢Δ [σ′] [ms]
              ⊢msσ≡   = escapeMethodsσ≡ {ind = ind} {P = P} [Γ] ⊢Δ [σ] [σ′] [σ≡σ′] [ms]
              [msσ′]  = methodsσ {ind = ind} {P = P} [Γ] ⊢Δ [σ′] [ms]
              [msσ≡]  = methodsσ≡ {ind = ind} {P = P} [Γ] ⊢Δ [σ] [σ′] [σ≡σ′] [ms]
-             [σP∘t]  = proj₁ ([P∘t] ⊢Δ [σ])
-             [res]   = irrelevanceEqTerm (P∘tᵣ [Indσ] [σΠP] [σP] [σt]) [σP∘t]
-                         (IndRect-congTerm rGlG ⊢Δ ind∈ [σΠP] [σP] [σ′P] [σP≡]
+             [res]   = irrelevanceEqTerm′ eqPrf PE.refl PE.refl
+                         (Pu ⊢Δ [σ] [σt]) (proj₁ ([Pt] ⊢Δ [σ]))
+                         (IndRect-congTerm rGlG ⊢Δ ind∈ (P∙ ⊢Δ [σ]) (P∙ ⊢Δ [σ′])
+                            (P∙≡ ⊢Δ [σ] [σ′] [σ≡σ′])
+                            (Pu ⊢Δ [σ]) (Pu≡ ⊢Δ [σ]) (Pu ⊢Δ [σ′]) (Pu≡ ⊢Δ [σ′])
+                            (PP′u ⊢Δ [σ] [σ′] [σ≡σ′])
                             ⊢msσ ⊢msσ′ ⊢msσ≡ [msσ′] [msσ≡] [σt] [σ′t] [σt≡])
-         in  PE.subst₂ (λ x y → Δ ⊩⟨ l ⟩ x ≡ y ∷ subst σ (P ∘ t ^ ¹) ^ [ rG , ι lG ] / [σP∘t])
+         in  PE.subst₂ (λ x y → Δ ⊩⟨ l ⟩ x ≡ y ∷ subst σ (P [ t ]) ^ [ rG , ι lG ]
+                                  / proj₁ ([Pt] ⊢Δ [σ]))
                        (PE.sym (subst-IndRect σ (SU.SInd.name ind) lG P t ms))
                        (PE.sym (subst-IndRect σ′ (SU.SInd.name ind) lG P t ms)) [res])
+  where
+  -- The inductive type, the motive and its instances read off [Ind] / [P]
+  -- at an arbitrary substitution.
+  ⟦Ind⟧ : ∀ {Δ₁} (⊢Δ₁ : ⊢ Δ₁) → Δ₁ ⊩⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+  ⟦Ind⟧ ⊢Δ₁ = Indᵣ {l = l} (idRed:*: (univ (Indⱼ ⊢Δ₁)))
 
--- Type equality of motive applications (Univ bridge for IndRect-cong).
--- Avoids decompΠᵛ/app-congᵛ metas on the closed codomain Univ ! lG.
-postulate
-  P∘t-congᵛ : ∀ {Γ ind P P' rG lG t t' l}
-            → ([Γ] : ⊩ᵛ Γ)
-            → ([Ind] : Γ ⊩ᵛ⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ])
-            → ([ΠP] : Γ ⊩ᵛ⟨ l ⟩ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [Γ])
-            → ([ΠP'] : Γ ⊩ᵛ⟨ l ⟩ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [Γ])
-            → ([P] : Γ ⊩ᵛ⟨ l ⟩ P ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [Γ] / [ΠP])
-            → ([P'] : Γ ⊩ᵛ⟨ l ⟩ P' ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [Γ] / [ΠP'])
-            → ([P≡P'] : Γ ⊩ᵛ⟨ l ⟩ P ≡ P' ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [Γ] / [ΠP])
-            → ([t] : Γ ⊩ᵛ⟨ l ⟩ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
-            → ([t'] : Γ ⊩ᵛ⟨ l ⟩ t' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
-            → ([t≡t'] : Γ ⊩ᵛ⟨ l ⟩ t ≡ t' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
-            → ([P∘t] : Γ ⊩ᵛ⟨ l ⟩ (P ∘ t ^ ¹) ^ [ rG , ι lG ] / [Γ])
-            → Γ ⊩ᵛ⟨ l ⟩ (P ∘ t ^ ¹) ≡ (P' ∘ t' ^ ¹) ^ [ rG , ι lG ] / [Γ] / [P∘t]
+  ⟦t⟧ : ∀ {Δ₁ σ₁} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+      → Δ₁ ⊩Ind subst σ₁ t ∷Ind SU.SInd.name ind
+  ⟦t⟧ ⊢Δ₁ [σ₁] = irrelevanceTerm (proj₁ ([Ind] ⊢Δ₁ [σ₁])) (⟦Ind⟧ ⊢Δ₁)
+                   (proj₁ ([t] ⊢Δ₁ [σ₁]))
+
+  ⟦u⟧ : ∀ {Δ₁ σ₁ u} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+      → Δ₁ ⊩Ind u ∷Ind SU.SInd.name ind
+      → Δ₁ ⊩⟨ l ⟩ u ∷ subst σ₁ (Ind (SU.SInd.name ind)) ^ [ ! , ι ⁰ ]
+          / proj₁ ([Ind] ⊢Δ₁ [σ₁])
+  ⟦u⟧ ⊢Δ₁ [σ₁] [u] = irrelevanceTerm (⟦Ind⟧ ⊢Δ₁) (proj₁ ([Ind] ⊢Δ₁ [σ₁])) [u]
+
+  ⟦u≡⟧ : ∀ {Δ₁ σ₁ u u′} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+       → Δ₁ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+       → Δ₁ ⊩⟨ l ⟩ u ≡ u′ ∷ subst σ₁ (Ind (SU.SInd.name ind)) ^ [ ! , ι ⁰ ]
+           / proj₁ ([Ind] ⊢Δ₁ [σ₁])
+  ⟦u≡⟧ ⊢Δ₁ [σ₁] [u≡u′] = irrelevanceEqTerm (⟦Ind⟧ ⊢Δ₁) (proj₁ ([Ind] ⊢Δ₁ [σ₁])) [u≡u′]
+
+  P∙ : ∀ {Δ₁ σ₁} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+     → Δ₁ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩⟨ l ⟩ subst (liftSubst σ₁) P ^ [ rG , ι lG ]
+  P∙ ⊢Δ₁ [σ₁] = proj₁ ([P] (⊢Δ₁ ∙ escape (proj₁ ([Ind] ⊢Δ₁ [σ₁])))
+                           (liftSubstS {F = Ind (SU.SInd.name ind)} [Γ] ⊢Δ₁ [Ind] [σ₁]))
+
+  P∙≡ : ∀ {Δ₁ σ₁ σ₂} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+          ([σ₂] : Δ₁ ⊩ˢ σ₂ ∷ Γ / [Γ] / ⊢Δ₁)
+          ([σ₁≡σ₂] : Δ₁ ⊩ˢ σ₁ ≡ σ₂ ∷ Γ / [Γ] / ⊢Δ₁ / [σ₁])
+        → Δ₁ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩⟨ l ⟩
+            subst (liftSubst σ₁) P ≡ subst (liftSubst σ₂) P ^ [ rG , ι lG ] / P∙ ⊢Δ₁ [σ₁]
+  P∙≡ {σ₂ = σ₂} ⊢Δ₁ [σ₁] [σ₂] [σ₁≡σ₂] =
+    proj₂ ([P] (⊢Δ₁ ∙ escape (proj₁ ([Ind] ⊢Δ₁ [σ₁])))
+               (liftSubstS {F = Ind (SU.SInd.name ind)} [Γ] ⊢Δ₁ [Ind] [σ₁]))
+          (S.irrelevanceSubst {σ = liftSubst σ₂} (_∙_ {A = Ind (SU.SInd.name ind)} [Γ] [Ind])
+             (_∙_ {A = Ind (SU.SInd.name ind)} [Γ] [Ind])
+             (⊢Δ₁ ∙ escape (proj₁ ([Ind] ⊢Δ₁ [σ₂])))
+             (⊢Δ₁ ∙ escape (proj₁ ([Ind] ⊢Δ₁ [σ₁])))
+             (liftSubstS {F = Ind (SU.SInd.name ind)} [Γ] ⊢Δ₁ [Ind] [σ₂]))
+          (liftSubstSEq {F = Ind (SU.SInd.name ind)} [Γ] ⊢Δ₁ [Ind] [σ₁] [σ₁≡σ₂])
+
+  Pu : ∀ {Δ₁ σ₁ u} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+     → Δ₁ ⊩Ind u ∷Ind SU.SInd.name ind
+     → Δ₁ ⊩⟨ l ⟩ subst (liftSubst σ₁) P [ u ] ^ [ rG , ι lG ]
+  Pu {σ₁ = σ₁} {u = u} ⊢Δ₁ [σ₁] [u] =
+    irrelevance′ (PE.sym (singleSubstComp u σ₁ P))
+      (proj₁ ([P] ⊢Δ₁ ([σ₁] , ⟦u⟧ ⊢Δ₁ [σ₁] [u])))
+
+  PP′u : ∀ {Δ₁ σ₁ σ₂} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+           ([σ₂] : Δ₁ ⊩ˢ σ₂ ∷ Γ / [Γ] / ⊢Δ₁)
+           ([σ₁≡σ₂] : Δ₁ ⊩ˢ σ₁ ≡ σ₂ ∷ Γ / [Γ] / ⊢Δ₁ / [σ₁])
+           {u u′} ([u] : Δ₁ ⊩Ind u ∷Ind SU.SInd.name ind)
+           ([u′] : Δ₁ ⊩Ind u′ ∷Ind SU.SInd.name ind)
+         → Δ₁ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+         → Δ₁ ⊩⟨ l ⟩ subst (liftSubst σ₁) P [ u ] ≡ subst (liftSubst σ₂) P [ u′ ]
+             ^ [ rG , ι lG ] / Pu ⊢Δ₁ [σ₁] [u]
+  PP′u {σ₁ = σ₁} {σ₂ = σ₂} ⊢Δ₁ [σ₁] [σ₂] [σ₁≡σ₂] {u} {u′} [u] [u′] [u≡u′] =
+    irrelevanceEq″ (PE.sym (singleSubstComp u σ₁ P)) (PE.sym (singleSubstComp u′ σ₂ P))
+      PE.refl PE.refl
+      (proj₁ ([P] ⊢Δ₁ ([σ₁] , ⟦u⟧ ⊢Δ₁ [σ₁] [u]))) (Pu ⊢Δ₁ [σ₁] [u])
+      (proj₂ ([P] ⊢Δ₁ ([σ₁] , ⟦u⟧ ⊢Δ₁ [σ₁] [u]))
+             ([σ₂] , ⟦u⟧ ⊢Δ₁ [σ₂] [u′])
+             ([σ₁≡σ₂] , ⟦u≡⟧ ⊢Δ₁ [σ₁] [u≡u′]))
+
+  Pu≡ : ∀ {Δ₁ σ₁} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+          {u u′} ([u] : Δ₁ ⊩Ind u ∷Ind SU.SInd.name ind)
+          ([u′] : Δ₁ ⊩Ind u′ ∷Ind SU.SInd.name ind)
+        → Δ₁ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+        → Δ₁ ⊩⟨ l ⟩ subst (liftSubst σ₁) P [ u ] ≡ subst (liftSubst σ₁) P [ u′ ]
+            ^ [ rG , ι lG ] / Pu ⊢Δ₁ [σ₁] [u]
+  Pu≡ ⊢Δ₁ [σ₁] = PP′u ⊢Δ₁ [σ₁] [σ₁] (reflSubst [Γ] ⊢Δ₁ [σ₁])
 
 -- variable-arity apps make a direct clone impractical.
 postulate
@@ -1601,14 +1533,14 @@ postulate
                    → ([Γ] : ⊩ᵛ Γ)
                    → ([Ind] : Γ ⊩ᵛ⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ])
                    → ([d] : Γ ⊩ᵛ⟨ l ⟩ ctr (SU.SInd.name ind) j args ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
-                   → ([P∘d] : Γ ⊩ᵛ⟨ l ⟩ (P ∘ ctr (SU.SInd.name ind) j args ^ ¹) ^ [ rG , ι lG ] / [Γ])
+                   → ([Pd] : Γ ⊩ᵛ⟨ l ⟩ P [ ctr (SU.SInd.name ind) j args ] ^ [ rG , ι lG ] / [Γ])
                    → SU.ctrArgsTypeList ind j PE.≡ just Ts
                    → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
                    → Γ ⊢All ms ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ]
                    → nth ms j PE.≡ just m
                    → Γ ⊩ᵛ⟨ l ⟩ apps lG m
                                         (args ++ map (λ a → IndRect (SU.SInd.name ind) lG P a ms) args)
-                              ∷ (P ∘ ctr (SU.SInd.name ind) j args ^ ¹) ^ [ rG , ι lG ] / [Γ] / [P∘d]
+                              ∷ P [ ctr (SU.SInd.name ind) j args ] ^ [ rG , ι lG ] / [Γ] / [Pd]
 
 ------------------------------------------------------------------------
 -- Validity of IndRect congruence.
@@ -1618,19 +1550,17 @@ postulate
               (rGlG : rG PE.≡ % → lG PE.≡ ⁰)
               ([Γ] : ⊩ᵛ Γ)
               ([Ind] : Γ ⊩ᵛ⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ])
-              ([ΠP] : Γ ⊩ᵛ⟨ l ⟩ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [Γ])
-              ([ΠP'] : Γ ⊩ᵛ⟨ l ⟩ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [Γ])
-              ([P] : Γ ⊩ᵛ⟨ l ⟩ P ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [Γ] / [ΠP])
-              ([P'] : Γ ⊩ᵛ⟨ l ⟩ P' ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [Γ] / [ΠP'])
-              ([P≡P'] : Γ ⊩ᵛ⟨ l ⟩ P ≡ P' ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ rG lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ] / [Γ] / [ΠP])
+              ([P] : Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ l ⟩ P ^ [ rG , ι lG ] / [Γ] ∙ [Ind])
+              ([P'] : Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ l ⟩ P' ^ [ rG , ι lG ] / [Γ] ∙ [Ind])
+              ([P≡P'] : Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ l ⟩ P ≡ P' ^ [ rG , ι lG ] / [Γ] ∙ [Ind] / [P])
               ([t] : Γ ⊩ᵛ⟨ l ⟩ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
               ([t'] : Γ ⊩ᵛ⟨ l ⟩ t' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
               ([t≡t'] : Γ ⊩ᵛ⟨ l ⟩ t ≡ t' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
-              ([P∘t] : Γ ⊩ᵛ⟨ l ⟩ (P ∘ t ^ ¹) ^ [ rG , ι lG ] / [Γ])
+              ([Pt] : Γ ⊩ᵛ⟨ l ⟩ P [ t ] ^ [ rG , ι lG ] / [Γ])
               (⊢ms : Γ ⊢All ms ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ])
               (⊢ms' : Γ ⊢All ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ])
               (⊢ms≡ : Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ])
               (rG≡! : rG PE.≡ !)
-            → Γ ⊩ᵛ⟨ l ⟩ IndRect (SU.SInd.name ind) lG P t ms ≡ IndRect (SU.SInd.name ind) lG P' t' ms' ∷ (P ∘ t ^ ¹) ^ [ rG , ι lG ] / [Γ] / [P∘t]
+            → Γ ⊩ᵛ⟨ l ⟩ IndRect (SU.SInd.name ind) lG P t ms ≡ IndRect (SU.SInd.name ind) lG P' t' ms' ∷ P [ t ] ^ [ rG , ι lG ] / [Γ] / [Pt]
 
 ------------------------------------------------------------------------

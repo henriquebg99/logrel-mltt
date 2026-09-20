@@ -186,13 +186,15 @@ wkTerm {ρ = ρ} [ρ] ⊢Δ (Id-Π {rA = rA} {t = t} {u = u} <l <l' Aⱼ Bⱼ t�
         (map-wk-emb-stype ρ (Ts))
         (wkAll [ρ] ⊢Δ args∈)))
   wkTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (IndRectⱼ {ind} {P} {rG} {lG} {t} {ms} abs ind∈ ⊢P ⊢t ⊢ms) =
-    PE.subst (λ tm → Δ ⊢ tm ∷ U.wk ρ (P ∘ t ^ ¹) ^ [ rG , ι lG ])
-      (PE.sym (wk-IndRect ρ (SU.SInd.name ind) lG P t ms))
-      (IndRectⱼ abs ind∈ (wkTerm [ρ] ⊢Δ ⊢P) (wkTerm [ρ] ⊢Δ ⊢t)
-        (PE.subst
-          (λ As → Δ ⊢All map (U.wk ρ) ms ∷ As ^ [ rG , ι lG ])
-          (wk-indRectBranchTyList ρ ind P rG lG)
-          (wkAll [ρ] ⊢Δ ⊢ms)))
+    PE.subst (λ x → Δ ⊢ U.wk ρ (IndRect (SU.SInd.name ind) lG P t ms) ∷ x ^ [ rG , ι lG ])
+      (PE.sym (wk-β P))
+      (PE.subst (λ tm → Δ ⊢ tm ∷ U.wk (lift ρ) P [ U.wk ρ t ] ^ [ rG , ι lG ])
+        (PE.sym (wk-IndRect ρ (SU.SInd.name ind) lG P t ms))
+        (IndRectⱼ abs ind∈ (wk (lift [ρ]) (⊢Δ ∙ univ (Indⱼ ⊢Δ)) ⊢P) (wkTerm [ρ] ⊢Δ ⊢t)
+          (PE.subst
+            (λ As → Δ ⊢All map (U.wk ρ) ms ∷ As ^ [ rG , ι lG ])
+            (wk-indRectBranchTyList ρ ind P rG lG)
+            (wkAll [ρ] ⊢Δ ⊢ms))))
 
   wkAll : ∀ {Γ Δ As ts r ρ} → ρ ∷ Δ ⊆ Γ →
         ⊢ Δ → Γ ⊢All ts ∷ As ^ r → Δ ⊢All map (U.wk ρ) ts ∷ map (U.wk ρ) As ^ r
@@ -296,24 +298,24 @@ wkTerm {ρ = ρ} [ρ] ⊢Δ (Id-Π {rA = rA} {t = t} {u = u} <l <l' Aⱼ Bⱼ t�
                                    (wk-β-natrec _ F ! l)
                                    (wkTerm [ρ] ⊢Δ ⊢s)))
   wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (IndRect-cong {ind} {P} {P'} {lG} {t} {t'} {ms} {ms'} ind∈ P≡P' t≡t' ⊢ms) =
-    let eq = IndRect-cong ind∈ (wkEqTerm [ρ] ⊢Δ P≡P') (wkEqTerm [ρ] ⊢Δ t≡t')
+    let eq = IndRect-cong ind∈ (wkEq (lift [ρ]) (⊢Δ ∙ univ (Indⱼ ⊢Δ)) P≡P') (wkEqTerm [ρ] ⊢Δ t≡t')
                (PE.subst (λ As → Δ ⊢All map (U.wk ρ) ms ≡ map (U.wk ρ) ms' ∷ As ^ [ ! , ι lG ])
                  (wk-indRectBranchTyList ρ ind P ! lG)
                  (wkAllEq [ρ] ⊢Δ ⊢ms))
-        eq₁ = PE.subst (λ A → Δ ⊢ IndRect (SU.SInd.name ind) lG (U.wk ρ P) (U.wk ρ t) (map (U.wk ρ) ms)
-                              ≡ IndRect (SU.SInd.name ind) lG (U.wk ρ P') (U.wk ρ t') (map (U.wk ρ) ms')
+        eq₁ = PE.subst (λ A → Δ ⊢ IndRect (SU.SInd.name ind) lG (U.wk (lift ρ) P) (U.wk ρ t) (map (U.wk ρ) ms)
+                              ≡ IndRect (SU.SInd.name ind) lG (U.wk (lift ρ) P') (U.wk ρ t') (map (U.wk ρ) ms')
                               ∷ A ^ [ ! , ι lG ])
-                (PE.sym (wk-app ρ P t ¹)) eq
+                (PE.sym (wk-β P)) eq
     in PE.subst (λ lhs → Δ ⊢ lhs ≡ U.wk ρ (IndRect (SU.SInd.name ind) lG P' t' ms')
-                           ∷ U.wk ρ (P ∘ t ^ ¹) ^ [ ! , ι lG ])
+                           ∷ U.wk ρ (P [ t ]) ^ [ ! , ι lG ])
          (PE.sym (wk-IndRect ρ (SU.SInd.name ind) lG P t ms))
-         (PE.subst (λ rhs → Δ ⊢ IndRect (SU.SInd.name ind) lG (U.wk ρ P) (U.wk ρ t) (map (U.wk ρ) ms) ≡ rhs
-                              ∷ U.wk ρ (P ∘ t ^ ¹) ^ [ ! , ι lG ])
+         (PE.subst (λ rhs → Δ ⊢ IndRect (SU.SInd.name ind) lG (U.wk (lift ρ) P) (U.wk ρ t) (map (U.wk ρ) ms) ≡ rhs
+                              ∷ U.wk ρ (P [ t ]) ^ [ ! , ι lG ])
            (PE.sym (wk-IndRect ρ (SU.SInd.name ind) lG P' t' ms'))
            eq₁)
   wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (IndRect-ctr≡ {ind} {j} {P} {lG} {args} {ms} {m} {Ts} ind∈ eq ⊢P ⊢args ⊢ms nth≡) =
     let d = ctr (SU.SInd.name ind) j args
-        inner = IndRect-ctr≡ ind∈ eq (wkTerm [ρ] ⊢Δ ⊢P)
+        inner = IndRect-ctr≡ ind∈ eq (wk (lift [ρ]) (⊢Δ ∙ univ (Indⱼ ⊢Δ)) ⊢P)
              (PE.subst (λ As → Δ ⊢All map (U.wk ρ) args ∷ As ^ [ ! , ι ⁰ ])
                (map-wk-emb-stype ρ (Ts))
                (wkAll [ρ] ⊢Δ ⊢args))
@@ -322,24 +324,24 @@ wkTerm {ρ = ρ} [ρ] ⊢Δ (Id-Π {rA = rA} {t = t} {u = u} <l <l' Aⱼ Bⱼ t�
                (wkAll [ρ] ⊢Δ ⊢ms))
              (nth-map (U.wk ρ) ms j nth≡)
         inner′ = PE.subst
-          (λ d' → Δ ⊢ IndRect (SU.SInd.name ind) lG (U.wk ρ P) d' (map (U.wk ρ) ms)
+          (λ d' → Δ ⊢ IndRect (SU.SInd.name ind) lG (U.wk (lift ρ) P) d' (map (U.wk ρ) ms)
                      ≡ apps lG (U.wk ρ m)
                               (map (U.wk ρ) args ++
-                                map (λ a → IndRect (SU.SInd.name ind) lG (U.wk ρ P) a (map (U.wk ρ) ms))
+                                map (λ a → IndRect (SU.SInd.name ind) lG (U.wk (lift ρ) P) a (map (U.wk ρ) ms))
                                     (map (U.wk ρ) args))
-                     ∷ U.wk ρ P ∘ d' ^ ¹ ^ [ ! , ι lG ])
+                     ∷ U.wk (lift ρ) P [ d' ] ^ [ ! , ι lG ])
           (PE.sym (wk-ctr ρ (SU.SInd.name ind) j args))
           inner
-    in PE.subst₂ (λ lhs r → Δ ⊢ lhs ≡ r ∷ U.wk ρ (P ∘ d ^ ¹) ^ [ ! , ι lG ])
+    in PE.subst₂ (λ lhs r → Δ ⊢ lhs ≡ r ∷ U.wk ρ (P [ d ]) ^ [ ! , ι lG ])
          (PE.sym (wk-IndRect ρ (SU.SInd.name ind) lG P d ms))
          (PE.sym (wk-IndRect-ctr-rhs ρ (SU.SInd.name ind) lG P m args ms))
-         (PE.subst (λ A → Δ ⊢ IndRect (SU.SInd.name ind) lG (U.wk ρ P) (U.wk ρ d) (map (U.wk ρ) ms)
+         (PE.subst (λ A → Δ ⊢ IndRect (SU.SInd.name ind) lG (U.wk (lift ρ) P) (U.wk ρ d) (map (U.wk ρ) ms)
                             ≡ apps lG (U.wk ρ m)
                                      (map (U.wk ρ) args ++
-                                       map (λ a → IndRect (SU.SInd.name ind) lG (U.wk ρ P) a (map (U.wk ρ) ms))
+                                       map (λ a → IndRect (SU.SInd.name ind) lG (U.wk (lift ρ) P) a (map (U.wk ρ) ms))
                                            (map (U.wk ρ) args))
                             ∷ A ^ [ ! , ι lG ])
-           (PE.sym (wk-app ρ P d ¹))
+           (PE.sym (wk-β P))
            inner′)
   wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (Emptyrec-cong {A = A} {A' = A'} {e = e} {e' = e'} A≡A' ⊢e ⊢e') =
     Emptyrec-cong (wkEq [ρ] ⊢Δ A≡A') (wkTerm [ρ] ⊢Δ ⊢e) (wkTerm [ρ] ⊢Δ ⊢e')
@@ -441,20 +443,20 @@ mutual
                                     (wk-β-natrec ρ F ! l)
                                     (wkTerm [ρ] ⊢Δ ⊢s)))
   wkRedTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (IndRect-subst {ind = ind} {P = P} {lG = lG} {t = t} {t' = t'} {ms = ms} ind∈ ⊢P t⇒t' ⊢ms) =
-    PE.subst₂ (λ lhs rhs → Δ ⊢ lhs ⇒ rhs ∷ U.wk ρ (P ∘ t ^ ¹) ^ ι lG)
+    PE.subst₂ (λ lhs rhs → Δ ⊢ lhs ⇒ rhs ∷ U.wk ρ (P [ t ]) ^ ι lG)
       (PE.sym (wk-IndRect ρ (SU.SInd.name ind) lG P t ms))
       (PE.sym (wk-IndRect ρ (SU.SInd.name ind) lG P t' ms))
-      (PE.subst (λ A → Δ ⊢ IndRect (SU.SInd.name ind) lG (U.wk ρ P) (U.wk ρ t) (map (U.wk ρ) ms)
-                         ⇒ IndRect (SU.SInd.name ind) lG (U.wk ρ P) (U.wk ρ t') (map (U.wk ρ) ms)
+      (PE.subst (λ A → Δ ⊢ IndRect (SU.SInd.name ind) lG (U.wk (lift ρ) P) (U.wk ρ t) (map (U.wk ρ) ms)
+                         ⇒ IndRect (SU.SInd.name ind) lG (U.wk (lift ρ) P) (U.wk ρ t') (map (U.wk ρ) ms)
                          ∷ A ^ ι lG)
-        (PE.sym (wk-app ρ P t ¹))
-        (IndRect-subst ind∈ (wkTerm [ρ] ⊢Δ ⊢P) (wkRedTerm [ρ] ⊢Δ t⇒t')
+        (PE.sym (wk-β P))
+        (IndRect-subst ind∈ (wk (lift [ρ]) (⊢Δ ∙ univ (Indⱼ ⊢Δ)) ⊢P) (wkRedTerm [ρ] ⊢Δ t⇒t')
           (PE.subst (λ As → Δ ⊢All map (U.wk ρ) ms ∷ As ^ [ ! , ι lG ])
             (wk-indRectBranchTyList ρ ind P ! lG)
             (wkAll [ρ] ⊢Δ ⊢ms))))
   wkRedTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (IndRect-ctr {ind = ind} {j = j} {P = P} {lG = lG} {args = args} {ms = ms} {m = m} {Ts = Ts} ind∈ eq ⊢P ⊢args ⊢ms nth≡) =
     let d = ctr (SU.SInd.name ind) j args
-        inner = IndRect-ctr ind∈ eq (wkTerm [ρ] ⊢Δ ⊢P)
+        inner = IndRect-ctr ind∈ eq (wk (lift [ρ]) (⊢Δ ∙ univ (Indⱼ ⊢Δ)) ⊢P)
              (PE.subst (λ As → Δ ⊢All map (U.wk ρ) args ∷ As ^ [ ! , ι ⁰ ])
                (map-wk-emb-stype ρ (Ts))
                (wkAll [ρ] ⊢Δ ⊢args))
@@ -463,24 +465,24 @@ mutual
                (wkAll [ρ] ⊢Δ ⊢ms))
              (nth-map (U.wk ρ) ms j nth≡)
         inner′ = PE.subst
-          (λ d' → Δ ⊢ IndRect (SU.SInd.name ind) lG (U.wk ρ P) d' (map (U.wk ρ) ms)
+          (λ d' → Δ ⊢ IndRect (SU.SInd.name ind) lG (U.wk (lift ρ) P) d' (map (U.wk ρ) ms)
                      ⇒ apps lG (U.wk ρ m)
                               (map (U.wk ρ) args ++
-                                map (λ a → IndRect (SU.SInd.name ind) lG (U.wk ρ P) a (map (U.wk ρ) ms))
+                                map (λ a → IndRect (SU.SInd.name ind) lG (U.wk (lift ρ) P) a (map (U.wk ρ) ms))
                                     (map (U.wk ρ) args))
-                     ∷ U.wk ρ P ∘ d' ^ ¹ ^ ι lG)
+                     ∷ U.wk (lift ρ) P [ d' ] ^ ι lG)
           (PE.sym (wk-ctr ρ (SU.SInd.name ind) j args))
           inner
-    in PE.subst₂ (λ lhs r → Δ ⊢ lhs ⇒ r ∷ U.wk ρ (P ∘ d ^ ¹) ^ ι lG)
+    in PE.subst₂ (λ lhs r → Δ ⊢ lhs ⇒ r ∷ U.wk ρ (P [ d ]) ^ ι lG)
          (PE.sym (wk-IndRect ρ (SU.SInd.name ind) lG P d ms))
          (PE.sym (wk-IndRect-ctr-rhs ρ (SU.SInd.name ind) lG P m args ms))
-         (PE.subst (λ A → Δ ⊢ IndRect (SU.SInd.name ind) lG (U.wk ρ P) (U.wk ρ d) (map (U.wk ρ) ms)
+         (PE.subst (λ A → Δ ⊢ IndRect (SU.SInd.name ind) lG (U.wk (lift ρ) P) (U.wk ρ d) (map (U.wk ρ) ms)
                             ⇒ apps lG (U.wk ρ m)
                                      (map (U.wk ρ) args ++
-                                       map (λ a → IndRect (SU.SInd.name ind) lG (U.wk ρ P) a (map (U.wk ρ) ms))
+                                       map (λ a → IndRect (SU.SInd.name ind) lG (U.wk (lift ρ) P) a (map (U.wk ρ) ms))
                                            (map (U.wk ρ) args))
                             ∷ A ^ ι lG)
-           (PE.sym (wk-app ρ P d ¹))
+           (PE.sym (wk-β P))
            inner′)
   wkRedTerm ρ ⊢Δ  (cast-subst A B e t) = cast-subst (wkRedTerm ρ ⊢Δ A) (wkTerm ρ ⊢Δ  B) (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
   wkRedTerm {Γ} {Δ} {A} {l} {t'} {u} {ρ₁} ρ ⊢Δ  (cast-ne-subst K neK B e t) = cast-ne-subst (wkTerm ρ ⊢Δ K) (wkNeutral ρ₁ neK) (wkRedTerm ρ ⊢Δ  B) (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)

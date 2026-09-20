@@ -6,7 +6,7 @@ open import Definition.Untyped senv
 open import Definition.Typed senv equivs
 
 -- Congruence of the branch-type list under equality of the motive P.
--- The branch types only use P through applications wk1^ n P ∘ <neutral> ^ ¹
+-- The branch types only use P through instantiations P [ <neutral> ]↑^ n
 -- buried in a nested Π-chain, so transporting indRectBranchTy i j P to a
 -- convertible P' needs a genuine (large) induction.  We keep it as a
 -- postulate here, with ms/ms' in the same orientation (callers apply symAll
@@ -15,6 +15,6 @@ open import Definition.Typed senv equivs
 -- need it, and those two cannot import each other.
 postulate
   indRectBranchTyListCong : ∀ {Γ ind P P' lG ms ms'}
-    → Γ ⊢ P ≡ P' ∷ Π Ind (SI.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ [ ! , ι ¹ ]
+    → Γ ∙ Ind (SI.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P ≡ P' ^ [ ! , ι lG ]
     → Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
     → Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList ind P' ! lG ^ [ ! , ι lG ]

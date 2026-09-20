@@ -58,7 +58,7 @@ mutual
   soundness~↑! (cast-neℕ x x₁ x₂ x₃) = cast-cong (soundness~↓! x) (refl (ℕⱼ (wfTerm x₂))) (soundnessConv↑Term x₁) x₂ x₃
   soundness~↑! (cast-neΠ x x₁ x₂ x₃ x₄) = cast-cong (soundness~↓! x₁) (sym (soundnessConv↑Term x)) (soundnessConv↑Term x₂) x₃ x₄
   soundness~↑! (IndRect-cong ind∈ x x₁ x₂) =
-    IndRect-cong ind∈ (soundnessConv↑Term x) (soundness~↓! x₁) x₂
+    IndRect-cong ind∈ (soundnessConv↑ x) (soundness~↓! x₁) x₂
   soundness~↑! (cast-neInd x x₁ x₂ x₃) = cast-cong (soundness~↓! x) (refl (Indⱼ (wfTerm x₂))) (soundnessConv↑Term x₁) x₂ x₃
   soundness~↑! (cast-Ind x x₁ x₂ x₃) = let XX = sym (soundness~↓! x) in cast-cong (refl (Indⱼ (wfEqTerm XX))) XX (soundnessConv↑Term x₁) x₂ x₃
   soundness~↑! (castInd-refl x x₁) =
@@ -147,11 +147,11 @@ natrec-cong′ F=G a=b h=g k~l = ~↑! (natrec-cong F=G a=b h=g k~l)
 
 IndRect-cong′ : ∀ {Γ ind P P' t t' ms ms' lG}
              → ind ∈ₗ senv
-             → Γ ⊢ P [conv↑] P' ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ ι ¹
+             → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P [conv↑] P' ^ [ ! , ι lG ]
              → Γ ⊢ t ~ t' ↓! Ind (SU.SInd.name ind) ^ ι ⁰
              → Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
              → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ~ IndRect (SU.SInd.name ind) lG P' t' ms'
-                   ↑ (P ∘ t ^ ¹) ^ [ ! , ι lG ]
+                   ↑ (P [ t ]) ^ [ ! , ι lG ]
 IndRect-cong′ ind∈ x x₁ x₂ = ~↑! (IndRect-cong ind∈ x x₁ x₂)
 
 Emptyrec-cong′ : ∀ {Γ k l F lF G}

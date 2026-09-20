@@ -111,11 +111,11 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
 
 ~-IndRect : ∀ {ind P P' lG t t' ms ms' Γ}
          → ind ∈ₗ senv
-         → Γ ⊢ P [conv↑] P' ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ ι ¹
+         → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P [conv↑] P' ^ [ ! , ι lG ]
          → Γ ⊢ t ~ t' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
          → Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
          → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ~ IndRect (SU.SInd.name ind) lG P' t' ms'
-               ∷ (P ∘ t ^ ¹) ^ [ ! , ι lG ]
+               ∷ (P [ t ]) ^ [ ! , ι lG ]
 ~-IndRect {t = t} {t' = t'} ind∈ x (↑ A≡B (~↑! x₄)) ms =
   let _ , ⊢B = syntacticEq A≡B
       B′ , whnfB′ , D = whNorm ⊢B
@@ -123,16 +123,9 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
       B≡Ind = Ind≡A Ind≡B′ whnfB′
       k~l′ = PE.subst (λ X → _ ⊢ t ~ t' ↓! X ^ _) B≡Ind
                       ([~] _ (red D) whnfB′ x₄)
-      _ , ⊢P , _ = syntacticEqTerm (soundnessConv↑Term x)
+      ⊢P , _ = syntacticEq (soundnessConv↑ x)
       _ , ⊢t′ , _ = syntacticEqTerm (soundness~↓! k~l′)
-      ⊢P∘t = syntacticTerm (IndRectⱼ (λ eq → ⊥-elim (!≢% eq)) ind∈ ⊢P ⊢t′ (⊢msAll ms))
-  in  ↑ (refl ⊢P∘t) (IndRect-cong′ ind∈ x k~l′ ms)
-  where
-  ⊢msAll : ∀ {Δ ts ts′ As r} → Δ ⊢All ts ≡ ts′ ∷ As ^ r → Δ ⊢All ts ∷ As ^ r
-  ⊢msAll εⱼ = εⱼ
-  ⊢msAll (consⱼ t≡t′ ts≡ts′) =
-    let _ , ⊢t , _ = syntacticEqTerm t≡t′
-    in consⱼ ⊢t (⊢msAll ts≡ts′)
+  in  ↑ (refl (substType ⊢P ⊢t′)) (IndRect-cong′ ind∈ x k~l′ ms)
 
 ~-Emptyrec : ∀ {e e' F F′ Γ l}
          → Γ ⊢ F [conv↑] F′ ^ [ ! , ι l ] →

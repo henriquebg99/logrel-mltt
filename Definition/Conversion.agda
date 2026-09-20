@@ -37,11 +37,11 @@ mutual
                 → Γ ⊢ natrec lF F a₀ h k ~ natrec lF G b₀ g l ↑! F [ k ] ^ ι lF
     IndRect-cong : ∀ {ind P P' t t' ms ms' lG}
                 → ind ∈ₗ senv
-                → Γ ⊢ P [conv↑] P' ∷ Π Ind (SU.SInd.name ind) ^ ! ° ⁰ ▹ Univ ! lG ° ¹ ° ¹ ^ ! ^ ι ¹
+                → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P [conv↑] P' ^ [ ! , ι lG ]
                 → Γ ⊢ t ~ t' ↓! Ind (SU.SInd.name ind) ^ ι ⁰
                 → Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
                 → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ~ IndRect (SU.SInd.name ind) lG P' t' ms'
-                      ↑! (P ∘ t ^ ¹) ^ ι lG
+                      ↑! (P [ t ]) ^ ι lG
     Emptyrec-cong : ∀ {k l F G ll}
                   → Γ ⊢ F [conv↑] G ^ [ ! , ι ll ]
                   → Γ ⊢ k ~ l ↑% sEmpty ^ ι ⁰
