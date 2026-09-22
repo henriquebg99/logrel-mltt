@@ -164,6 +164,25 @@ ctrArgTys-replicate i Ts pos =
     map-emb-replicate (1+ n) = PE.cong (Ind i ∷ₗ_) (map-emb-replicate n)
 
 ------------------------------------------------------------------------
+-- Arithmetic of the de Bruijn indices of a method type.
+
+minus-<- : ∀ n r → r << n → ((n - 1) - r) << n
+minus-<- (1+ n) 0 (leS _) = leS (le-refl n)
+minus-<- (1+ n) (1+ r) (leS p) =
+  le-suc (PE.subst (_<< n) (PE.sym (minus-suc n r)) (minus-<- n r p))
+
+plus-minus : ∀ a b v → v <= b → ((a + b) - v) PE.≡ a + (b - v)
+plus-minus a b 0 _ = PE.refl
+plus-minus a 0 (1+ v) ()
+plus-minus a (1+ b) (1+ v) (leS h) =
+  PE.trans (PE.cong (λ m → m - (1+ v)) (plusSuc a b)) (plus-minus a b v h)
+
+varIdx : ∀ n v → v << n → (((n + n) - 1) - v) PE.≡ n + ((n - 1) - v)
+varIdx n v h =
+  PE.trans (PE.sym (minus-suc (n + n) v))
+    (PE.trans (plus-minus n n (1+ v) h) (PE.cong (_+_ n) (minus-suc n v)))
+
+------------------------------------------------------------------------
 -- Telescopes.
 -- Both phases of a method type are Π-telescopes built with foldr; the
 -- hypothesis phase is in fact a chain of non-dependent arrows.
@@ -289,10 +308,6 @@ private
   substVar-lifts-≥ 0 σ y = PE.refl
   substVar-lifts-≥ (1+ n) σ y = PE.cong wk1 (substVar-lifts-≥ n σ y)
 
-  minus-<- : ∀ n r → r << n → ((n - 1) - r) << n
-  minus-<- (1+ n) 0 (leS _) = leS (le-refl n)
-  minus-<- (1+ n) (1+ r) (leS p) =
-    le-suc (PE.subst (_<< n) (PE.sym (minus-suc n r)) (minus-<- n r p))
 
   -- The substitution instantiating the n argument binders with as.
   argSubst : List Term → Subst
@@ -335,70 +350,69 @@ private
 -- Substituting the n arguments collapses the hypothesis phase into the
 -- chain of non-dependent arrows (P ∘ a₀) ▹▹ … ▹▹ (P ∘ ctr i j as).
 
-private
-  Πarg : Relevance → Level → Term → Term → Term
-  Πarg rG lG A B = Π A ^ ! ° ⁰ ▹ B ° lG ° lG ^ rG
+Πarg : Relevance → Level → Term → Term → Term
+Πarg rG lG A B = Π A ^ ! ° ⁰ ▹ B ° lG ° lG ^ rG
 
-  Πih : Relevance → Level → Term → Term → Term
-  Πih rG lG A B = Π A ^ rG ° lG ▹ B ° lG ° lG ^ rG
+Πih : Relevance → Level → Term → Term → Term
+Πih rG lG A B = Π A ^ rG ° lG ▹ B ° lG ° lG ^ rG
 
-  -- The hypothesis telescope and the conclusion of a method type, with
-  -- the recursive-index list already known to be range n.
-  ihFun : Nat → Term → Nat → Nat → Term
-  ihFun n Q r ℓ = Q [ var (((n - 1) - r) + ℓ) ]↑^ (n + ℓ)
+-- The hypothesis telescope and the conclusion of a method type, with
+-- the recursive-index list already known to be range n.
+ihFun : Nat → Term → Nat → Nat → Term
+ihFun n Q r ℓ = Q [ var (((n - 1) - r) + ℓ) ]↑^ (n + ℓ)
 
-  ihGo : Nat → Term → Nat → List Nat → List Term
-  ihGo n Q ℓ []ₗ = []ₗ
-  ihGo n Q ℓ (r ∷ₗ rs) = ihFun n Q r ℓ ∷ₗ ihGo n Q (1+ ℓ) rs
+ihGo : Nat → Term → Nat → List Nat → List Term
+ihGo n Q ℓ []ₗ = []ₗ
+ihGo n Q ℓ (r ∷ₗ rs) = ihFun n Q r ℓ ∷ₗ ihGo n Q (1+ ℓ) rs
 
-  length-ihGo : ∀ n Q ℓ rs → length (ihGo n Q ℓ rs) PE.≡ length rs
-  length-ihGo n Q ℓ []ₗ = PE.refl
-  length-ihGo n Q ℓ (r ∷ₗ rs) = PE.cong 1+ (length-ihGo n Q (1+ ℓ) rs)
+length-ihGo : ∀ n Q ℓ rs → length (ihGo n Q ℓ rs) PE.≡ length rs
+length-ihGo n Q ℓ []ₗ = PE.refl
+length-ihGo n Q ℓ (r ∷ₗ rs) = PE.cong 1+ (length-ihGo n Q (1+ ℓ) rs)
 
-  ihGo-≡ : ∀ n Q ℓ rs →
-    ihGo n Q ℓ rs PE.≡
-    map (λ pj → ihFun n Q (proj₁ pj) (proj₂ pj))
-        (zip rs (map (_+_ ℓ) (range (length rs))))
-  ihGo-≡ n Q ℓ []ₗ = PE.refl
-  ihGo-≡ n Q ℓ (r ∷ₗ rs) =
-    let m = length rs
-        f = λ pj → ihFun n Q (proj₁ pj) (proj₂ pj)
-    in PE.trans
-         (PE.cong (ihFun n Q r ℓ ∷ₗ_) (ihGo-≡ n Q (1+ ℓ) rs))
-         (PE.sym
+ihGo-≡ : ∀ n Q ℓ rs →
+  ihGo n Q ℓ rs PE.≡
+  map (λ pj → ihFun n Q (proj₁ pj) (proj₂ pj))
+      (zip rs (map (_+_ ℓ) (range (length rs))))
+ihGo-≡ n Q ℓ []ₗ = PE.refl
+ihGo-≡ n Q ℓ (r ∷ₗ rs) =
+  let m = length rs
+      f = λ pj → ihFun n Q (proj₁ pj) (proj₂ pj)
+  in PE.trans
+       (PE.cong (ihFun n Q r ℓ ∷ₗ_) (ihGo-≡ n Q (1+ ℓ) rs))
+       (PE.sym
+         (PE.trans
+           (PE.cong (λ ns → map f (zip (r ∷ₗ rs) (map (_+_ ℓ) ns))) (range-suc m))
            (PE.trans
-             (PE.cong (λ ns → map f (zip (r ∷ₗ rs) (map (_+_ ℓ) ns))) (range-suc m))
-             (PE.trans
-               (PE.cong (λ ℓ′ → f (r , ℓ′) ∷ₗ
-                                map f (zip rs (map (_+_ ℓ) (map 1+ (range m)))))
-                        (plusZero ℓ))
-               (PE.cong (λ ys → f (r , ℓ) ∷ₗ map f (zip rs ys))
-                 (PE.trans (map-map (_+_ ℓ) 1+ (range m))
-                   (map-cong (range m) (λ x → plusSuc ℓ x)))))))
+             (PE.cong (λ ℓ′ → f (r , ℓ′) ∷ₗ
+                              map f (zip rs (map (_+_ ℓ) (map 1+ (range m)))))
+                      (plusZero ℓ))
+             (PE.cong (λ ys → f (r , ℓ) ∷ₗ map f (zip rs ys))
+               (PE.trans (map-map (_+_ ℓ) 1+ (range m))
+                 (map-cong (range m) (λ x → plusSuc ℓ x)))))))
 
-  ihGo-range : ∀ n Q rs →
-    ihGo n Q 0 rs PE.≡
-    map (λ pj → ihFun n Q (proj₁ pj) (proj₂ pj)) (zip rs (range (length rs)))
-  ihGo-range n Q rs =
-    PE.trans (ihGo-≡ n Q 0 rs)
-      (PE.cong (λ ns → map (λ pj → ihFun n Q (proj₁ pj) (proj₂ pj)) (zip rs ns))
-        (map-+0 (range (length rs))))
-    where
-    map-+0 : ∀ xs → map (_+_ 0) xs PE.≡ xs
-    map-+0 []ₗ = PE.refl
-    map-+0 (x ∷ₗ xs) = PE.cong (x ∷ₗ_) (map-+0 xs)
+ihGo-range : ∀ n Q rs →
+  ihGo n Q 0 rs PE.≡
+  map (λ pj → ihFun n Q (proj₁ pj) (proj₂ pj)) (zip rs (range (length rs)))
+ihGo-range n Q rs =
+  PE.trans (ihGo-≡ n Q 0 rs)
+    (PE.cong (λ ns → map (λ pj → ihFun n Q (proj₁ pj) (proj₂ pj)) (zip rs ns))
+      (map-+0 (range (length rs))))
+  where
+  map-+0 : ∀ xs → map (_+_ 0) xs PE.≡ xs
+  map-+0 []ₗ = PE.refl
+  map-+0 (x ∷ₗ xs) = PE.cong (x ∷ₗ_) (map-+0 xs)
 
-  ctrVars : Nat → List Term
-  ctrVars n = map (λ v → var (((n + n) - 1) - v)) (range n)
+ctrVars : Nat → List Term
+ctrVars n = map (λ v → var (((n + n) - 1) - v)) (range n)
 
-  concl : Nat → Nat → Term → Nat → Term
-  concl i j P n = P [ ctr i j (ctrVars n) ]↑^ (n + n)
+concl : Nat → Nat → Term → Nat → Term
+concl i j P n = P [ ctr i j (ctrVars n) ]↑^ (n + n)
 
-  arity≡ : ∀ Ts → length (ctrArgsTypeList Ts) PE.≡ ctrArity Ts
-  arity≡ Ts =
-    PE.trans (length-map (λ p → (emb_oterm_term (proj₁ p) , proj₂ p))
-                         (O.ctrArgsTypeList Ts))
-             (length-map (λ T → (O.emb-stype-oterm T , 0)) Ts)
+arity≡ : ∀ Ts → length (ctrArgsTypeList Ts) PE.≡ ctrArity Ts
+arity≡ Ts =
+  PE.trans (length-map (λ p → (emb_oterm_term (proj₁ p) , proj₂ p))
+                       (O.ctrArgsTypeList Ts))
+           (length-map (λ T → (O.emb-stype-oterm T , 0)) Ts)
 
 -- Method types are argument telescopes over constructor-arity many copies
 -- of Ind i, followed by exactly as many induction hypotheses.
@@ -489,16 +503,7 @@ private
       (PE.trans (wk-ctr (step id) i j (map (wk1^ n) ts))
         (PE.cong (ctr i j) (map-map wk1 (wk1^ n) ts)))
 
-  plus-minus : ∀ a b v → v <= b → ((a + b) - v) PE.≡ a + (b - v)
-  plus-minus a b 0 _ = PE.refl
-  plus-minus a 0 (1+ v) ()
-  plus-minus a (1+ b) (1+ v) (leS h) =
-    PE.trans (PE.cong (λ m → m - (1+ v)) (plusSuc a b)) (plus-minus a b v h)
 
-  varIdx : ∀ n v → v << n → (((n + n) - 1) - v) PE.≡ n + ((n - 1) - v)
-  varIdx n v h =
-    PE.trans (PE.sym (minus-suc (n + n) v))
-      (PE.trans (plus-minus n n (1+ v) h) (PE.cong (_+_ n) (minus-suc n v)))
 
   lookupDefault-map : ∀ {A B : Set} (f : A → B) (d : A) (e : B) xs q →
     q << length xs → lookupDefault e (map f xs) q PE.≡ f (lookupDefault d xs q)
@@ -1526,21 +1531,188 @@ IndRectᵛ {Γ = Γ} {ind = ind} {P = P} {rG = rG} {lG = lG} {t = t} {ms = ms} {
             ^ [ rG , ι lG ] / Pu ⊢Δ₁ [σ₁] [u]
   Pu≡ ⊢Δ₁ [σ₁] = PP′u ⊢Δ₁ [σ₁] [σ₁] (reflSubst [Γ] ⊢Δ₁ [σ₁])
 
--- variable-arity apps make a direct clone impractical.
-postulate
-  IndRect-ctr-rhsᵛ : ∀ {Γ ind j P rG lG args ms m Ts l}
-                   → (rGlG : rG PE.≡ % → lG PE.≡ ⁰)
-                   → ([Γ] : ⊩ᵛ Γ)
-                   → ([Ind] : Γ ⊩ᵛ⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ])
-                   → ([d] : Γ ⊩ᵛ⟨ l ⟩ ctr (SU.SInd.name ind) j args ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
-                   → ([Pd] : Γ ⊩ᵛ⟨ l ⟩ P [ ctr (SU.SInd.name ind) j args ] ^ [ rG , ι lG ] / [Γ])
-                   → SU.ctrArgsTypeList ind j PE.≡ just Ts
-                   → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
-                   → Γ ⊢All ms ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ]
-                   → nth ms j PE.≡ just m
-                   → Γ ⊩ᵛ⟨ l ⟩ apps lG m
-                                        (args ++ map (λ a → IndRect (SU.SInd.name ind) lG P a ms) args)
-                              ∷ P [ ctr (SU.SInd.name ind) j args ] ^ [ rG , ι lG ] / [Γ] / [Pd]
+-- Validity of the reduct of IndRect on a constructor: the j-th method applied
+-- to the constructor arguments and to their induction hypotheses.
+IndRect-ctr-rhsᵛ : ∀ {Γ ind j P lG args ms m Ts l}
+                 → ([Γ] : ⊩ᵛ Γ)
+                 → (ind∈ : ind ∈ₗ senv)
+                 → ([Ind] : Γ ⊩ᵛ⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ])
+                 → ([P] : Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ l ⟩ P ^ [ ! , ι lG ] / [Γ] ∙ [Ind])
+                 → ([args] : All (λ a → Γ ⊩ᵛ⟨ l ⟩ a ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind]) args)
+                 → ([Pd] : Γ ⊩ᵛ⟨ l ⟩ P [ ctr (SU.SInd.name ind) j args ] ^ [ ! , ι lG ] / [Γ])
+                 → SU.ctrArgsTypeList ind j PE.≡ just Ts
+                 → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+                 → Γ ⊢All ms ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
+                 → All₂ (λ m A → ∃ λ ([A] : Γ ⊩ᵛ⟨ l ⟩ A ^ [ ! , ι lG ] / [Γ])
+                                 → Γ ⊩ᵛ⟨ l ⟩ m ∷ A ^ [ ! , ι lG ] / [Γ] / [A])
+                        ms (indRectBranchTyList ind P ! lG)
+                 → nth ms j PE.≡ just m
+                 → Γ ⊩ᵛ⟨ l ⟩ apps lG m
+                                      (args ++ map (λ a → IndRect (SU.SInd.name ind) lG P a ms) args)
+                            ∷ P [ ctr (SU.SInd.name ind) j args ] ^ [ ! , ι lG ] / [Γ] / [Pd]
+IndRect-ctr-rhsᵛ {Γ = Γ} {ind = ind} {j = j} {P = P} {lG = lG} {args = args} {ms = ms}
+                 {m = m} {Ts = Ts} {l = l}
+                 [Γ] ind∈ [Ind] [P] [args] [Pd] eq ⊢args ⊢ms [ms] nth≡ {Δ = Δ} {σ = σ} ⊢Δ [σ] =
+  let i      = SU.SInd.name ind
+      pos    = all∈ (SU.ctrArgsTypesPositive ind j Ts eq)
+      n≡     = PE.sym (PE.trans (length-map (subst σ) args)
+                        (PE.trans (⊢All-length ⊢args) (length-map emb-stype Ts)))
+      psσ    = ⟦args⟧ ⊢Δ [σ] [args]
+      ⊢msσ   = escapeMethodsσ {ind = ind} {P = P} [Γ] ⊢Δ [σ] [ms]
+      [msσ]  = methodsσ {ind = ind} {P = P} [Γ] ⊢Δ [σ] [ms]
+      nthTy  = nth-map (λ jTs → indRectBranchTy i (proj₁ jTs) (proj₂ jTs)
+                                  (subst (liftSubst σ) P) ! lG)
+                 (zip (range (SU.indCtrCount ind)) (SU.SInd.ctrArgsTypes ind)) j
+                 (nth-zip-range (SU.SInd.ctrArgsTypes ind) j eq)
+      nthmσ  = nth-map (subst σ) ms j nth≡
+      [Tⱼ]   = proj₁ (nthAll₂ [msσ] j nthTy nthmσ)
+      [mⱼ]   = proj₂ (nthAll₂ [msσ] j nthTy nthmσ)
+      [ihs]  = IndRectTerms ⊢Δ ind∈ (P∙ ⊢Δ [σ]) (Pu ⊢Δ [σ]) (Pu≡ ⊢Δ [σ]) ⊢msσ [msσ] psσ
+      [E]    = proj₁ (appsMethod {j = j} {P = subst (liftSubst σ) P}
+                        (⟦Ind⟧ ⊢Δ) pos n≡ psσ [Tⱼ] [mⱼ] [ihs])
+      [e]    = proj₂ (appsMethod {j = j} {P = subst (liftSubst σ) P}
+                        (⟦Ind⟧ ⊢Δ) pos n≡ psσ [Tⱼ] [mⱼ] [ihs])
+      [res]  = irrelevanceTerm′ (eqPrf σ) PE.refl PE.refl [E] (proj₁ ([Pd] ⊢Δ [σ])) [e]
+  in  PE.subst (λ x → Δ ⊩⟨ l ⟩ x ∷ subst σ (P [ ctr i j args ]) ^ [ ! , ι lG ]
+                        / proj₁ ([Pd] ⊢Δ [σ]))
+               (PE.sym (subst-IndRect-ctr-rhs σ i lG P m args ms)) [res]
+    , (λ {σ′} [σ′] [σ≡σ′] →
+         let i      = SU.SInd.name ind
+             pos    = all∈ (SU.ctrArgsTypesPositive ind j Ts eq)
+             n≡     = PE.sym (PE.trans (length-map (subst σ) args)
+                               (PE.trans (⊢All-length ⊢args) (length-map emb-stype Ts)))
+             psσ    = ⟦args⟧ ⊢Δ [σ] [args]
+             psσ′   = ⟦args⟧ ⊢Δ [σ′] [args]
+             aaσ≡   = ⟦args≡⟧ ⊢Δ [σ] [σ′] [σ≡σ′] [args]
+             ⊢msσ   = escapeMethodsσ {ind = ind} {P = P} [Γ] ⊢Δ [σ] [ms]
+             ⊢msσ′  = escapeMethodsσ {ind = ind} {P = P} [Γ] ⊢Δ [σ′] [ms]
+             ⊢msσ≡  = escapeMethodsσ≡ {ind = ind} {P = P} [Γ] ⊢Δ [σ] [σ′] [σ≡σ′] [ms]
+             [msσ]  = methodsσ {ind = ind} {P = P} [Γ] ⊢Δ [σ] [ms]
+             [msσ′] = methodsσ {ind = ind} {P = P} [Γ] ⊢Δ [σ′] [ms]
+             [msσ≡] = methodsσ≡ {ind = ind} {P = P} [Γ] ⊢Δ [σ] [σ′] [σ≡σ′] [ms]
+             nthTy  = nth-map (λ jTs → indRectBranchTy i (proj₁ jTs) (proj₂ jTs)
+                                         (subst (liftSubst σ) P) ! lG)
+                        (zip (range (SU.indCtrCount ind)) (SU.SInd.ctrArgsTypes ind)) j
+                        (nth-zip-range (SU.SInd.ctrArgsTypes ind) j eq)
+             nthmσ  = nth-map (subst σ) ms j nth≡
+             nthmσ′ = nth-map (subst σ′) ms j nth≡
+             mⱼ≡    = nthAll₃ [msσ≡] j nthTy nthmσ nthmσ′
+             [Tⱼ]   = proj₁ mⱼ≡
+             [mⱼ]   = proj₁ (proj₂ mⱼ≡)
+             [mⱼ≡]  = proj₂ (proj₂ (proj₂ mⱼ≡))
+             [ihs]  = IndRectTerms ⊢Δ ind∈ (P∙ ⊢Δ [σ]) (Pu ⊢Δ [σ]) (Pu≡ ⊢Δ [σ]) ⊢msσ [msσ] psσ
+             [ihs≡] = IndRect-congTerms ⊢Δ ind∈ (P∙ ⊢Δ [σ]) (P∙ ⊢Δ [σ′])
+                        (P∙≡ ⊢Δ [σ] [σ′] [σ≡σ′]) (Pu ⊢Δ [σ]) (Pu≡ ⊢Δ [σ])
+                        (Pu ⊢Δ [σ′]) (Pu≡ ⊢Δ [σ′]) (PP′u ⊢Δ [σ] [σ′] [σ≡σ′])
+                        ⊢msσ ⊢msσ′ ⊢msσ≡ [msσ′] [msσ≡] psσ psσ′ aaσ≡
+             [E]    = proj₁ (appsMethod {j = j} {P = subst (liftSubst σ) P}
+                               (⟦Ind⟧ ⊢Δ) pos n≡ psσ [Tⱼ] [mⱼ] [ihs])
+             [res]  = irrelevanceEqTerm′ (eqPrf σ) PE.refl PE.refl [E] (proj₁ ([Pd] ⊢Δ [σ]))
+                        (appsMethod-cong {j = j} {P = subst (liftSubst σ) P}
+                          (⟦Ind⟧ ⊢Δ) pos n≡ (zipArgs psσ psσ′ aaσ≡)
+                          [Tⱼ] [mⱼ] [mⱼ≡] [ihs≡] [E])
+         in  PE.subst₂ (λ x y → Δ ⊩⟨ l ⟩ x ≡ y ∷ subst σ (P [ ctr i j args ]) ^ [ ! , ι lG ]
+                                  / proj₁ ([Pd] ⊢Δ [σ]))
+                       (PE.sym (subst-IndRect-ctr-rhs σ i lG P m args ms))
+                       (PE.sym (subst-IndRect-ctr-rhs σ′ i lG P m args ms)) [res])
+  where
+  -- The inductive type, the constructor arguments and the motive read off
+  -- [Ind] / [args] / [P] at an arbitrary substitution (as in IndRectᵛ).
+  ⟦Ind⟧ : ∀ {Δ₁} (⊢Δ₁ : ⊢ Δ₁) → Δ₁ ⊩⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+  ⟦Ind⟧ ⊢Δ₁ = Indᵣ {l = l} (idRed:*: (univ (Indⱼ ⊢Δ₁)))
+
+  ⟦u⟧ : ∀ {Δ₁ σ₁ u} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+      → Δ₁ ⊩Ind u ∷Ind SU.SInd.name ind
+      → Δ₁ ⊩⟨ l ⟩ u ∷ subst σ₁ (Ind (SU.SInd.name ind)) ^ [ ! , ι ⁰ ]
+          / proj₁ ([Ind] ⊢Δ₁ [σ₁])
+  ⟦u⟧ ⊢Δ₁ [σ₁] [u] = irrelevanceTerm (⟦Ind⟧ ⊢Δ₁) (proj₁ ([Ind] ⊢Δ₁ [σ₁])) [u]
+
+  ⟦u≡⟧ : ∀ {Δ₁ σ₁ u u′} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+       → Δ₁ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+       → Δ₁ ⊩⟨ l ⟩ u ≡ u′ ∷ subst σ₁ (Ind (SU.SInd.name ind)) ^ [ ! , ι ⁰ ]
+           / proj₁ ([Ind] ⊢Δ₁ [σ₁])
+  ⟦u≡⟧ ⊢Δ₁ [σ₁] [u≡u′] = irrelevanceEqTerm (⟦Ind⟧ ⊢Δ₁) (proj₁ ([Ind] ⊢Δ₁ [σ₁])) [u≡u′]
+
+  ⟦args⟧ : ∀ {Δ₁ σ₁ as} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+         → All (λ a → Γ ⊩ᵛ⟨ l ⟩ a ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind]) as
+         → All (λ a → Δ₁ ⊩Ind a ∷Ind SU.SInd.name ind) (map (subst σ₁) as)
+  ⟦args⟧ ⊢Δ₁ [σ₁] []ₐ = []ₐ
+  ⟦args⟧ ⊢Δ₁ [σ₁] ([a] ∷ₐ ps) =
+    irrelevanceTerm (proj₁ ([Ind] ⊢Δ₁ [σ₁])) (⟦Ind⟧ ⊢Δ₁) (proj₁ ([a] ⊢Δ₁ [σ₁]))
+    ∷ₐ ⟦args⟧ ⊢Δ₁ [σ₁] ps
+
+  ⟦args≡⟧ : ∀ {Δ₁ σ₁ σ₂ as} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+              ([σ₂] : Δ₁ ⊩ˢ σ₂ ∷ Γ / [Γ] / ⊢Δ₁)
+              ([σ₁≡σ₂] : Δ₁ ⊩ˢ σ₁ ≡ σ₂ ∷ Γ / [Γ] / ⊢Δ₁ / [σ₁])
+          → All (λ a → Γ ⊩ᵛ⟨ l ⟩ a ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind]) as
+          → All₂ (λ a a′ → Δ₁ ⊩Ind a ≡ a′ ∷Ind SU.SInd.name ind)
+                 (map (subst σ₁) as) (map (subst σ₂) as)
+  ⟦args≡⟧ ⊢Δ₁ [σ₁] [σ₂] [σ₁≡σ₂] []ₐ = []ₐ
+  ⟦args≡⟧ ⊢Δ₁ [σ₁] [σ₂] [σ₁≡σ₂] ([a] ∷ₐ ps) =
+    irrelevanceEqTerm (proj₁ ([Ind] ⊢Δ₁ [σ₁])) (⟦Ind⟧ ⊢Δ₁)
+      (proj₂ ([a] ⊢Δ₁ [σ₁]) [σ₂] [σ₁≡σ₂])
+    ∷ₐ ⟦args≡⟧ ⊢Δ₁ [σ₁] [σ₂] [σ₁≡σ₂] ps
+
+  P∙ : ∀ {Δ₁ σ₁} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+     → Δ₁ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩⟨ l ⟩ subst (liftSubst σ₁) P ^ [ ! , ι lG ]
+  P∙ ⊢Δ₁ [σ₁] = proj₁ ([P] (⊢Δ₁ ∙ escape (proj₁ ([Ind] ⊢Δ₁ [σ₁])))
+                           (liftSubstS {F = Ind (SU.SInd.name ind)} [Γ] ⊢Δ₁ [Ind] [σ₁]))
+
+  P∙≡ : ∀ {Δ₁ σ₁ σ₂} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+          ([σ₂] : Δ₁ ⊩ˢ σ₂ ∷ Γ / [Γ] / ⊢Δ₁)
+          ([σ₁≡σ₂] : Δ₁ ⊩ˢ σ₁ ≡ σ₂ ∷ Γ / [Γ] / ⊢Δ₁ / [σ₁])
+        → Δ₁ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩⟨ l ⟩
+            subst (liftSubst σ₁) P ≡ subst (liftSubst σ₂) P ^ [ ! , ι lG ] / P∙ ⊢Δ₁ [σ₁]
+  P∙≡ {σ₂ = σ₂} ⊢Δ₁ [σ₁] [σ₂] [σ₁≡σ₂] =
+    proj₂ ([P] (⊢Δ₁ ∙ escape (proj₁ ([Ind] ⊢Δ₁ [σ₁])))
+               (liftSubstS {F = Ind (SU.SInd.name ind)} [Γ] ⊢Δ₁ [Ind] [σ₁]))
+          (S.irrelevanceSubst {σ = liftSubst σ₂} (_∙_ {A = Ind (SU.SInd.name ind)} [Γ] [Ind])
+             (_∙_ {A = Ind (SU.SInd.name ind)} [Γ] [Ind])
+             (⊢Δ₁ ∙ escape (proj₁ ([Ind] ⊢Δ₁ [σ₂])))
+             (⊢Δ₁ ∙ escape (proj₁ ([Ind] ⊢Δ₁ [σ₁])))
+             (liftSubstS {F = Ind (SU.SInd.name ind)} [Γ] ⊢Δ₁ [Ind] [σ₂]))
+          (liftSubstSEq {F = Ind (SU.SInd.name ind)} [Γ] ⊢Δ₁ [Ind] [σ₁] [σ₁≡σ₂])
+
+  Pu : ∀ {Δ₁ σ₁ u} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+     → Δ₁ ⊩Ind u ∷Ind SU.SInd.name ind
+     → Δ₁ ⊩⟨ l ⟩ subst (liftSubst σ₁) P [ u ] ^ [ ! , ι lG ]
+  Pu {σ₁ = σ₁} {u = u} ⊢Δ₁ [σ₁] [u] =
+    irrelevance′ (PE.sym (singleSubstComp u σ₁ P))
+      (proj₁ ([P] ⊢Δ₁ ([σ₁] , ⟦u⟧ ⊢Δ₁ [σ₁] [u])))
+
+  PP′u : ∀ {Δ₁ σ₁ σ₂} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+           ([σ₂] : Δ₁ ⊩ˢ σ₂ ∷ Γ / [Γ] / ⊢Δ₁)
+           ([σ₁≡σ₂] : Δ₁ ⊩ˢ σ₁ ≡ σ₂ ∷ Γ / [Γ] / ⊢Δ₁ / [σ₁])
+           {u u′} ([u] : Δ₁ ⊩Ind u ∷Ind SU.SInd.name ind)
+           ([u′] : Δ₁ ⊩Ind u′ ∷Ind SU.SInd.name ind)
+         → Δ₁ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+         → Δ₁ ⊩⟨ l ⟩ subst (liftSubst σ₁) P [ u ] ≡ subst (liftSubst σ₂) P [ u′ ]
+             ^ [ ! , ι lG ] / Pu ⊢Δ₁ [σ₁] [u]
+  PP′u {σ₁ = σ₁} {σ₂ = σ₂} ⊢Δ₁ [σ₁] [σ₂] [σ₁≡σ₂] {u} {u′} [u] [u′] [u≡u′] =
+    irrelevanceEq″ (PE.sym (singleSubstComp u σ₁ P)) (PE.sym (singleSubstComp u′ σ₂ P))
+      PE.refl PE.refl
+      (proj₁ ([P] ⊢Δ₁ ([σ₁] , ⟦u⟧ ⊢Δ₁ [σ₁] [u]))) (Pu ⊢Δ₁ [σ₁] [u])
+      (proj₂ ([P] ⊢Δ₁ ([σ₁] , ⟦u⟧ ⊢Δ₁ [σ₁] [u]))
+             ([σ₂] , ⟦u⟧ ⊢Δ₁ [σ₂] [u′])
+             ([σ₁≡σ₂] , ⟦u≡⟧ ⊢Δ₁ [σ₁] [u≡u′]))
+
+  Pu≡ : ∀ {Δ₁ σ₁} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+          {u u′} ([u] : Δ₁ ⊩Ind u ∷Ind SU.SInd.name ind)
+          ([u′] : Δ₁ ⊩Ind u′ ∷Ind SU.SInd.name ind)
+        → Δ₁ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+        → Δ₁ ⊩⟨ l ⟩ subst (liftSubst σ₁) P [ u ] ≡ subst (liftSubst σ₁) P [ u′ ]
+            ^ [ ! , ι lG ] / Pu ⊢Δ₁ [σ₁] [u]
+  Pu≡ ⊢Δ₁ [σ₁] = PP′u ⊢Δ₁ [σ₁] [σ₁] (reflSubst [Γ] ⊢Δ₁ [σ₁])
+
+  -- The instance of the motive at the constructor, before and after
+  -- pushing the substitution inside.
+  eqPrf : ∀ σ₁ → subst (liftSubst σ₁) P [ ctr (SU.SInd.name ind) j (map (subst σ₁) args) ]
+                 PE.≡ subst σ₁ (P [ ctr (SU.SInd.name ind) j args ])
+  eqPrf σ₁ =
+    PE.trans (PE.cong (λ t′ → subst (liftSubst σ₁) P [ t′ ])
+                      (PE.sym (subst-ctr σ₁ (SU.SInd.name ind) j args)))
+      (PE.trans (singleSubstComp (subst σ₁ (ctr (SU.SInd.name ind) j args)) σ₁ P)
+                (PE.sym (PE.trans (substCompEq P) (substConcatSingleton′ P))))
 
 ------------------------------------------------------------------------
 -- Validity of IndRect congruence.

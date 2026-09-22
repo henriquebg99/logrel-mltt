@@ -17,7 +17,7 @@ open import Definition.Typed.Consequences.Substitution senv swf equivs
 open import Definition.Typed.Consequences.SucCong senv swf equivs
 open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
 open import Definition.Typed.Consequences.RelevanceUnicity senv swf equivs
-open import Definition.Typed.IndRectCong senv equivs using (indRectBranchTyListCong)
+open import Definition.Typed.Consequences.IndRectCong senv swf equivs using (indRectBranchTyListCong)
 open import Tools.Product
 open import Tools.List using (All₂; []ₐ; _∷ₐ_; length; All₂-length)
 import Tools.PropositionalEquality as PE
@@ -71,8 +71,8 @@ mutual
     in  _ , substTypeEq (soundnessConv↑ x) (soundness~↓! x₁)
     ,   IndRect-cong ind∈ (symConv↑ (Γ≡Δ ∙ (refl (univ (Indⱼ ⊢Γ)))) x)
                      (PE.subst (λ A → _ ⊢ _ ~ _ ↓! A ^ _) B≡Ind t'~t)
-                     (symAll (indRectBranchTyListCong {ind = ind} P≡P'
-                                                       (stabilityAll≡ Γ≡Δ x₂)))
+                     (symAll (indRectBranchTyListCong ind∈ P≡P'
+                                                (stabilityAll≡ Γ≡Δ x₂)))
   sym~↑! Γ≡Δ (Emptyrec-cong x t~u) =
     let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
         u~t = sym~↑% Γ≡Δ t~u

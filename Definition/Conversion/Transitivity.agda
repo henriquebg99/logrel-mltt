@@ -14,7 +14,7 @@ open import Definition.Conversion.ConvSize senv equivs
 open import Definition.Conversion.ConversionProp senv swf equivs
 open import Definition.Conversion.StabilityProp senv swf equivs
 open import Definition.Conversion.Inversion senv swf equivs
-open import Definition.Typed.IndRectCong senv equivs using (indRectBranchTyListCong)
+open import Definition.Typed.Consequences.IndRectCong senv swf equivs using (indRectBranchTyListCong)
 open import Definition.Conversion.Whnf senv swf equivs
 open import Definition.Conversion.TransitivityHelper
 open import Definition.Typed.Consequences.Syntactic senv swf equivs
@@ -170,8 +170,8 @@ abstract
                            (PE.subst (λ X → Γ ⊢ _⊢_~_↓!_^_.A t~t'' ⇒* X ^ [ ! , ι ⁰ ])
                                      (Ind≡A Ind≡C wC) (_⊢_~_↓!_^_.D t~t''))
                            Indₙ (_⊢_~_↓!_^_.k~l t~t'')
-              ms≡ms'' = transAll x₂ (indRectBranchTyListCong (sym (soundnessConv↑ x))
-                                                             (stabilityAll≡ (symConEq Γ≡Δ) y₂))
+              ms≡ms'' = transAll x₂ (indRectBranchTyListCong ind∈ (sym (soundnessConv↑ x))
+                                                                  (stabilityAll≡ (symConEq Γ≡Δ) y₂))
               Pt≡P't' = substTypeEq (soundnessConv↑ x) (soundness~↓! x₁)
           in  _ , IndRect-cong ind∈ P<>P'' t~tInd ms≡ms'' ,
               refl (proj₁ (syntacticEq Pt≡P't')) , Pt≡P't' ,
@@ -272,8 +272,8 @@ abstract
                            (PE.subst (λ X → Γ ⊢ _⊢_~_↓!_^_.A t~t'' ⇒* X ^ [ ! , ι ⁰ ])
                                      (Ind≡A Ind≡C wC) (_⊢_~_↓!_^_.D t~t''))
                            Indₙ (_⊢_~_↓!_^_.k~l t~t'')
-              ms≡ms'' = transAll x₂ (indRectBranchTyListCong (sym (soundnessConv↑ x))
-                                                             (stabilityAll≡ (symConEq Γ≡Δ) y₂))
+              ms≡ms'' = transAll x₂ (indRectBranchTyListCong ind∈ (sym (soundnessConv↑ x))
+                                                                  (stabilityAll≡ (symConEq Γ≡Δ) y₂))
               Pt≡P't' = substTypeEq (soundnessConv↑ x) (soundness~↓! x₁)
           in  _ , IndRect-cong ind∈ P<>P'' t~tInd ms≡ms'' ,
               refl (proj₁ (syntacticEq Pt≡P't')) , Pt≡P't' ,
@@ -973,33 +973,33 @@ abstract
     transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (Ind-refl x₄) with ne~↓! x₃
     transConv↓Term Γ≡Δ A≡B el (ne-ins x x₁ x₂ x₃) (Ind-refl x₄) | _ , _ , ()
     transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (Ind-refl x₄) = ⊥-elim (WF.U≢Ind! (sym A≡B))
-    transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (ctr-cong _ _ _ _) _ with ne~↓! x
-    transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (ctr-cong _ _ _ _) _ | _ , _ , ()
+    transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (ctr-cong _ _ _ _ _) _ with ne~↓! x
+    transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (ctr-cong _ _ _ _ _) _ | _ , _ , ()
 
     transConv↓Term {n = 1+ n} {v = v} {Γ = Γ} {Δ = Δ} {l' = l'} Γ≡Δ A≡B el
-                   (ctr-cong {i = i} {j = j} {args = args} {args' = args'} ⊢Γ j< len ps) e' (leS fuel) =
+                   (ctr-cong {i = i} {j = j} {args = args} {args' = args'} ⊢Γ ind∈ argsTypeEq len ps) e' (leS fuel) =
       let wB , _ , _ = whnfConv↓Term e'
           B≡Ind = Ind≡A A≡B wB
           e'B = PE.subst (λ B' → Δ ⊢ ctr i j args' [conv↓] v ∷ B' ^ l') B≡Ind e'
           e'Ind = PE.subst (λ l'' → Δ ⊢ ctr i j args' [conv↓] v ∷ Ind i ^ l'') (PE.sym el) e'B
           sizeEq = PE.trans (sizeSubst-gen (λ l'' → Δ ⊢ ctr i j args' [conv↓] v ∷ Ind i ^ l'') sizeConv↓Term e'B (PE.sym el))
                              (sizeSubst-gen (λ B' → Δ ⊢ ctr i j args' [conv↓] v ∷ B' ^ l') sizeConv↓Term e' B≡Ind)
-          fuelInd = PE.subst (λ s → (sizeConv↓Term (ctr-cong ⊢Γ j< len ps) + s) <= n) (PE.sym sizeEq) fuel
+          fuelInd = PE.subst (λ s → (sizeConv↓Term (ctr-cong ⊢Γ ind∈ argsTypeEq len ps) + s) <= n) (PE.sym sizeEq) fuel
           e'' , sz = go e'Ind PE.refl fuelInd
-      in e'' , PE.subst (λ s → sizeConv↓Term e'' <= (sizeConv↓Term (ctr-cong ⊢Γ j< len ps) + s)) sizeEq sz
+      in e'' , PE.subst (λ s → sizeConv↓Term e'' <= (sizeConv↓Term (ctr-cong ⊢Γ ind∈ argsTypeEq len ps) + s)) sizeEq sz
       where
       go : ∀ {t u} (e2 : Δ ⊢ t [conv↓] u ∷ Ind i ^ ι ⁰)
          → t PE.≡ ctr i j args'
-         → (sizeConv↓Term (ctr-cong ⊢Γ j< len ps) + sizeConv↓Term e2) <= n
+         → (sizeConv↓Term (ctr-cong ⊢Γ ind∈ argsTypeEq len ps) + sizeConv↓Term e2) <= n
          → ∃ λ (e'' : Γ ⊢ ctr i j args [conv↓] u ∷ Ind i ^ ι ⁰)
-             → (sizeConv↓Term e'' <= (sizeConv↓Term (ctr-cong ⊢Γ j< len ps) + sizeConv↓Term e2))
+             → (sizeConv↓Term e'' <= (sizeConv↓Term (ctr-cong ⊢Γ ind∈ argsTypeEq len ps) + sizeConv↓Term e2))
       go (ne-ins _ _ _ x) eq _ = ⊥-elim (Ctr≢ne (proj₁ (proj₂ (ne~↓! x))) (PE.sym eq))
       go (Ind-ins x) eq _ = ⊥-elim (Ctr≢ne (proj₁ (proj₂ (ne~↓! x))) (PE.sym eq))
-      go (ctr-cong {args = args2} {args' = args2'} ⊢Γ' j<' len' qs) eq fuel2
+      go (ctr-cong {args = args2} {args' = args2'} ⊢Γ' ind∈' argsTypeEq' len' qs) eq fuel2
         with ctr-PE-injectivity eq
       ... | PE.refl , PE.refl , PE.refl =
         let rs , sizeRs = transAll ps qs (le-refl _) (le-refl _)
-        in  ctr-cong ⊢Γ j< len rs , <=-trans (leS sizeRs) (<=-help-rigid1 {a = sizeConv↑TermAll ps} {b = sizeConv↑TermAll qs})
+        in  ctr-cong ⊢Γ ind∈ argsTypeEq len rs , <=-trans (leS sizeRs) (<=-help-rigid1 {a = sizeConv↑TermAll ps} {b = sizeConv↑TermAll qs})
         where
         transAll : ∀ {as as' as''}
                  → (ps' : All₂ (λ a a' → Γ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) as as')

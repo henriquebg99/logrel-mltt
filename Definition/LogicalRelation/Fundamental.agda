@@ -55,7 +55,7 @@ import Tools.PropositionalEquality as PE
 open import Tools.Empty using (⊥; ⊥-elim)
 import Definition.SUntyped as SU
 open import Definition.LogicalRelation.EquivRed senv equivs
-open import Definition.Typed.IndRectCong senv equivs using (indRectBranchTyListCong)
+open import Definition.Typed.IndRectCong senv swf equivs using (indRectBranchTyListCong)
   -- Fundamental theorem for contexts.
 valid : ∀ {Γ} → ⊢ Γ → ⊩ᵛ Γ
 fundamental : ∀ {Γ A rA} (⊢A : Γ ⊢ A ^ rA) → Σ (⊩ᵛ Γ) (λ [Γ] → Γ ⊩ᵛ⟨ ∞ ⟩ A ^ rA / [Γ])
@@ -100,6 +100,14 @@ substAll-ctrArgs : ∀ {Γ Δ σ Ts args}
                  → ([σ] : Δ ⊩ˢ σ ∷ Γ / [Γ] / ⊢Δ)
                  → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
                  → Δ ⊢All map (subst σ) args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+
+-- Substituted type equalities are well-formed (clone of substitutionEq, which
+-- lives in a module that imports this one).
+subTypeEq : ∀ {Γ Δ σ A B rA}
+          → (⊢Δ : ⊢ Δ)
+          → Δ ⊢ˢ σ ∷ Γ
+          → Γ ⊢ A ≡ B ^ rA
+          → Δ ⊢ subst σ A ^ rA × Δ ⊢ subst σ A ≡ subst σ B ^ rA
 
 -- Substitution of well-typed IndRect method lists.
 substAll-indRectBranch : ∀ {Γ Δ σ ind P rG lG ms}
@@ -650,7 +658,8 @@ abstract
         ⊢ms' = msRight ⊢ms≡
         [ms] = fundamentalAllMethods {ind = ind} {P = P} {rG = !} {lG = lG} {ms = ms} [Γ]′ ⊢ms
         -- ⊢ms' is under P (Typed IndRect-cong); transport it to P' for the RHS.
-        ⊢ms'P' = msRight (indRectBranchTyListCong {ind = ind} P≡P' ⊢ms≡)
+        ⊢ms'P' = msRight (indRectBranchTyListCong ind∈ P≡P'
+                            (λ d ⊢Δ [σ] ⊢u → subTypeEq ⊢Δ ([σ] , ⊢u) P≡P') ⊢ms≡)
         [ms'] = fundamentalAllMethods {ind = ind} {P = P'} {rG = !} {lG = lG} {ms = ms'} [Γ]′ ⊢ms'P'
     in  [Γ]′
     ,   modelsTermEq [Pt]
@@ -688,10 +697,10 @@ abstract
         [Pd] = substS {F = Ind i} {G = P} {t = ctr i j args} [Γ] [Ind] [P]′ [d]
         rhs = apps lG m
                      (args ++ map (λ a → IndRect i lG P a ms) args)
-        [rhs] = IndRect-ctr-rhsᵛ {ind = ind} {j = j} {P = P} {rG = !} {lG = lG}
+        [ms]ᵥ = fundamentalAllMethods {ind = ind} {P = P} {rG = !} {lG = lG} {ms = ms} [Γ] ⊢ms
+        [rhs] = IndRect-ctr-rhsᵛ {ind = ind} {j = j} {P = P} {lG = lG}
                                  {args = args} {ms = ms} {Ts = Ts} {l = ∞}
-                                 (λ abs → ⊥-elim (!≢% abs))
-                                 [Γ] [Ind] [d] [Pd] eq ⊢args ⊢ms nth≡
+                                 [Γ] ind∈ [Ind] [P]′ [args]ᵥ [Pd] eq ⊢args ⊢ms [ms]ᵥ nth≡
         [lhs] , [redEq] =
           redSubstTermᵛ {A = P [ ctr i j args ]}
                         {t = IndRect i lG P (ctr i j args) ms}
@@ -1201,6 +1210,16 @@ fundamentalSubst (⊢Γ ∙ ⊢A) ⊢Δ ([tailσ] , [headσ]) =
       [idt]  = proj₁ ([t] (soundContext [Δ]) (idSubstS [Δ]))
   in  [Γ] ∙ [A] , ([tailσ]′
   ,   irrelevanceTerm″ (subst-id _) PE.refl PE.refl (subst-id _) [idA] [idA]′ [idt])
+
+subTypeEq ⊢Δ [σ] A≡B =
+  let [Γ]   = proj₁ (fundamentalEq A≡B)
+      [A]   = proj₁ (proj₂ (fundamentalEq A≡B))
+      [A≡B] = proj₂ (proj₂ (proj₂ (fundamentalEq A≡B)))
+      [Γ]₁  = proj₁ (fundamentalSubst (wfEq A≡B) ⊢Δ [σ])
+      [σ]ᵛ  = proj₂ (fundamentalSubst (wfEq A≡B) ⊢Δ [σ])
+      [σ]′  = S.irrelevanceSubst [Γ]₁ [Γ] ⊢Δ ⊢Δ [σ]ᵛ
+      [Aσ]  = proj₁ ([A] ⊢Δ [σ]′)
+  in  escape [Aσ] , ≅-eq (escapeEq [Aσ] ([A≡B] ⊢Δ [σ]′))
 
 -- Fundamental theorem for substitution equality.
 fundamentalSubstEq : ∀ {Γ Δ σ σ′} (⊢Γ : ⊢ Γ) (⊢Δ : ⊢ Δ)
