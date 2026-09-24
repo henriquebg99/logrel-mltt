@@ -5,19 +5,20 @@ open import Definition.Untyped senv
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv equivs
 open import Definition.Conversion senv equivs
-open import Definition.Conversion.Stability senv swf equivs
-open import Definition.Conversion.Soundness senv swf equivs
+open import Definition.Conversion.Stability senv swf equivs hiding (contextConvSubst; stabilityEq)
+open import Definition.Conversion.Soundness senv swf equivs hiding (soundnessConv↑; soundness~↓!)
 open import Definition.Conversion.Conversion senv swf equivs
 open import Definition.Conversion.Whnf senv swf equivs
 open import Definition.Conversion.ConvSize senv equivs
 open import Definition.Conversion.ConversionProp senv swf equivs
 open import Definition.Conversion.Symmetry senv swf equivs
+open Opaque
 open import Definition.Typed.Consequences.Syntactic senv swf equivs
-open import Definition.Typed.Consequences.Equality senv swf equivs
+open import Definition.Typed.Consequences.Equality senv swf equivs hiding (ℕ≡A; Ind≡A; U≡A-whnf; Π≡A)
 open import Definition.Typed.Consequences.Reduction senv swf equivs
 open import Definition.Typed.Consequences.Injectivity senv swf equivs
-open import Definition.Typed.Consequences.Substitution senv swf equivs
-open import Definition.Typed.Consequences.SucCong senv swf equivs
+open import Definition.Typed.Consequences.Substitution senv swf equivs hiding (substTypeEq)
+open import Definition.Typed.Consequences.SucCong senv swf equivs hiding (sucCong)
 open import Tools.Product
 open import Tools.List using (All₂; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
@@ -59,7 +60,9 @@ mutual
         a = size-symConv↑ (Γ≡Δ ∙ (refl (univ (ℕⱼ ⊢Γ)))) x
         b : sizeConv↑Term (convConvTerm (symConv↑Term Γ≡Δ x₁) F[0]≡G[0]) PE.≡ sizeConv↑Term x₁
         b = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₁)) (size-symConv↑Term Γ≡Δ x₁)
+        c : sizeConv↑Term (convConvTerm (symConv↑Term Γ≡Δ x₂) (sucCong F≡G)) PE.≡ sizeConv↑Term x₂
         c = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₂)) (size-symConv↑Term Γ≡Δ x₂)
+        d : size~↓! (PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) B≡ℕ u~t) PE.≡ size~↓! t~u
         d = PE.trans (size-subst B≡ℕ u~t) (size-sym~↓! Γ≡Δ t~u)
     in PE.cong₄ (λ X Y Z T → 1 + X + Y + Z + T) a b c d
   size-sym~↑! Γ≡Δ (Emptyrec-cong x t~u) =

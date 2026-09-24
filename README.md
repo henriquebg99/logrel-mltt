@@ -96,3 +96,5 @@ The main culprits are the following:
 - Conversion.DecidableLemmas (long)
 - Conversion.DecView (very long)
 - Conversion.Decidable (very long)
+
+Tip: passing +RTS -M8G -A256m to agda might improve speed (more memory)

@@ -977,7 +977,7 @@ abstract
     transConv↓Term Γ≡Δ A≡B el (Ind-ins x) (ctr-cong _ _ _ _ _) _ | _ , _ , ()
 
     transConv↓Term {n = 1+ n} {v = v} {Γ = Γ} {Δ = Δ} {l' = l'} Γ≡Δ A≡B el
-                   (ctr-cong {i = i} {j = j} {args = args} {args' = args'} ⊢Γ ind∈ argsTypeEq len ps) e' (leS fuel) =
+                   (ctr-cong {ind = ind} {j = j} {args = args} {args' = args'} ⊢Γ ind∈ argsTypeEq len ps) e' (leS fuel) =
       let wB , _ , _ = whnfConv↓Term e'
           B≡Ind = Ind≡A A≡B wB
           e'B = PE.subst (λ B' → Δ ⊢ ctr i j args' [conv↓] v ∷ B' ^ l') B≡Ind e'
@@ -988,7 +988,8 @@ abstract
           e'' , sz = go e'Ind PE.refl fuelInd
       in e'' , PE.subst (λ s → sizeConv↓Term e'' <= (sizeConv↓Term (ctr-cong ⊢Γ ind∈ argsTypeEq len ps) + s)) sizeEq sz
       where
-      go : ∀ {t u} (e2 : Δ ⊢ t [conv↓] u ∷ Ind i ^ ι ⁰)
+      i = SI.SInd.name ind
+      go : ∀ {i' t u} (e2 : Δ ⊢ t [conv↓] u ∷ Ind i' ^ ι ⁰)
          → t PE.≡ ctr i j args'
          → (sizeConv↓Term (ctr-cong ⊢Γ ind∈ argsTypeEq len ps) + sizeConv↓Term e2) <= n
          → ∃ λ (e'' : Γ ⊢ ctr i j args [conv↓] u ∷ Ind i ^ ι ⁰)
@@ -997,7 +998,8 @@ abstract
       go (Ind-ins x) eq _ = ⊥-elim (Ctr≢ne (proj₁ (proj₂ (ne~↓! x))) (PE.sym eq))
       go (ctr-cong {args = args2} {args' = args2'} ⊢Γ' ind∈' argsTypeEq' len' qs) eq fuel2
         with ctr-PE-injectivity eq
-      ... | PE.refl , PE.refl , PE.refl =
+      ... | name≡ , PE.refl , PE.refl with SI.name-inj senv (proj₁ swf) ind∈' ind∈ name≡
+      ... | PE.refl =
         let rs , sizeRs = transAll ps qs (le-refl _) (le-refl _)
         in  ctr-cong ⊢Γ ind∈ argsTypeEq len rs , <=-trans (leS sizeRs) (<=-help-rigid1 {a = sizeConv↑TermAll ps} {b = sizeConv↑TermAll qs})
         where

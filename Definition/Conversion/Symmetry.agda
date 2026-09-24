@@ -5,22 +5,84 @@ open import Definition.Untyped senv
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv equivs
 open import Definition.Conversion senv equivs
-open import Definition.Conversion.Stability senv swf equivs
-open import Definition.Conversion.Soundness senv swf equivs
+open import Definition.Conversion.Stability senv swf equivs hiding (contextConvSubst; stabilityEq)
+open import Definition.Conversion.Soundness senv swf equivs hiding (soundnessConv↑; soundness~↓!)
 open import Definition.Conversion.Conversion senv swf equivs
 open import Definition.Conversion.Whnf senv swf equivs
 open import Definition.Typed.Consequences.Syntactic senv swf equivs
-open import Definition.Typed.Consequences.Equality senv swf equivs
+open import Definition.Typed.Consequences.Equality senv swf equivs hiding (ℕ≡A; Ind≡A; U≡A-whnf; Π≡A)
 open import Definition.Typed.Consequences.Reduction senv swf equivs
 open import Definition.Typed.Consequences.Injectivity senv swf equivs
-open import Definition.Typed.Consequences.Substitution senv swf equivs
-open import Definition.Typed.Consequences.SucCong senv swf equivs
+open import Definition.Typed.Consequences.Substitution senv swf equivs hiding (substTypeEq)
+open import Definition.Typed.Consequences.SucCong senv swf equivs hiding (sucCong)
 open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
 open import Definition.Typed.Consequences.RelevanceUnicity senv swf equivs
 open import Definition.Typed.Consequences.IndRectCong senv swf equivs using (indRectBranchTyListCong)
 open import Tools.Product
 open import Tools.List using (All₂; []ₐ; _∷ₐ_; length; All₂-length)
 import Tools.PropositionalEquality as PE
+import Definition.Typed.Consequences.Equality senv swf equivs as Eq
+import Definition.Typed.Consequences.Substitution senv swf equivs as Sub
+import Definition.Typed.Consequences.SucCong senv swf equivs as Suc
+import Definition.Conversion.Stability senv swf equivs as Stab
+import Definition.Conversion.Soundness senv swf equivs as Sound
+
+module Opaque where
+  -- Opaque versions of lemmas used here and in Definition.Conversion.SymmetrySize.
+  -- First, the lemmas of Definition.Typed.Consequences.Equality.
+  -- They are proved via the fundamental theorem (reducibleEq), so when Agda has
+  -- to evaluate them (e.g. under PE.subst inside a size computation, as in
+  -- Definition.Conversion.SymmetrySize) it symbolically runs the whole logical
+  -- relation. Their computational content is never needed, so we hide it.
+  abstract
+    ℕ≡A : ∀ {A Γ}
+        → Γ ⊢ ℕ ≡ A ^ [ ! , ι ⁰ ]
+        → Whnf A
+        → A PE.≡ ℕ
+    ℕ≡A = Eq.ℕ≡A
+
+    Ind≡A : ∀ {A Γ i}
+        → Γ ⊢ Ind i ≡ A ^ [ ! , ι ⁰ ]
+        → Whnf A
+        → A PE.≡ Ind i
+    Ind≡A = Eq.Ind≡A
+
+    U≡A-whnf : ∀ {A rU Γ lU nlU }
+        → Γ ⊢ Univ rU lU ≡ A ^ [ ! , nlU ]
+        → Whnf A
+        → A PE.≡ Univ rU lU
+    U≡A-whnf = Eq.U≡A-whnf
+
+    Π≡A : ∀ {A F G rF lF lG lΠ Γ}
+        → Γ ⊢ Π F ^ rF ° lF ▹ G ° lG ° lΠ ^ ! ≡ A ^ [ ! ,  ι lΠ ]
+        → Whnf A
+        → ∃₂ λ H E → A PE.≡ Π H ^ rF ° lF ▹ E ° lG ° lΠ ^ !
+    Π≡A = Eq.Π≡A
+
+    -- Same idea for the typing-derivation lemmas used by Definition.Conversion.Symmetry.
+    contextConvSubst : ∀ {Γ Δ} → ⊢ Γ ≡ Δ → ⊢ Γ × ⊢ Δ × Δ ⊢ˢ idSubst ∷ Γ
+    contextConvSubst = Stab.contextConvSubst
+
+    stabilityEq : ∀ {A B rA Γ Δ} → ⊢ Γ ≡ Δ → Γ ⊢ A ≡ B ^ rA → Δ ⊢ A ≡ B ^ rA
+    stabilityEq = Stab.stabilityEq
+
+    soundnessConv↑ : ∀ {A B rA Γ} → Γ ⊢ A [conv↑] B ^ rA → Γ ⊢ A ≡ B ^ rA
+    soundnessConv↑ = Sound.soundnessConv↑
+
+    soundness~↓! : ∀ {k l A lA Γ} → Γ ⊢ k ~ l ↓! A ^ lA → Γ ⊢ k ≡ l ∷ A ^ [ ! , lA ]
+    soundness~↓! = Sound.soundness~↓!
+
+    substTypeEq : ∀ {t u F rF G E rG Γ} → Γ ∙ F ^ rF ⊢ G ≡ E ^ rG
+                → Γ ⊢ t ≡ u ∷ F ^ rF
+                → Γ ⊢ G [ t ] ≡ E [ u ] ^ rG
+    substTypeEq = Sub.substTypeEq
+
+    sucCong : ∀ {F G lF Γ} → Γ ∙ ℕ ^ [ ! , ι ⁰ ] ⊢ F ≡ G ^ [ ! , ι lF ]
+            → Γ ⊢ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° lF ▹▹ F [ suc (var 0) ]↑ ° lF ° lF ^ !) ° lF ° lF ^ !
+                ≡ Π ℕ ^ ! ° ⁰ ▹ (G ^ ! ° lF ▹▹ G [ suc (var 0) ]↑ ° lF ° lF ^ !) ° lF ° lF ^ ! ^ [ ! , ι lF ]
+    sucCong = Suc.sucCong
+open Opaque
+
 -- Pointwise symmetry of the list equality.
 symAll : ∀ {Γ ts ts' As l} → Γ ⊢All ts ≡ ts' ∷ As ^ [ ! , l ] → Γ ⊢All ts' ≡ ts ∷ As ^ [ ! , l ]
 symAll εⱼ = εⱼ

@@ -4,29 +4,29 @@ import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.LogicalRelation.Substitution.Introductions.Castlemmas (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
-open EqRelSet {{...}}
+open EqRelSet eqrel
 open import Definition.Untyped senv
 open import Definition.Untyped.Properties senv
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv equivs
 import Definition.Typed.Weakening senv equivs as Twk
 open import Definition.Typed.RedSteps senv equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Irrelevance senv equivs
-open import Definition.LogicalRelation.Properties senv equivs
-open import Definition.LogicalRelation.Application senv equivs
-open import Definition.LogicalRelation.Substitution senv equivs
-import Definition.LogicalRelation.Weakening senv equivs as Lwk
-open import Definition.LogicalRelation.Substitution.Properties senv equivs
-import Definition.LogicalRelation.Substitution.Irrelevance senv equivs as S
-open import Definition.LogicalRelation.Substitution.Reflexivity senv equivs
-open import Definition.LogicalRelation.Substitution.Weakening senv equivs
+open import Definition.LogicalRelation senv equivs {{eqrel}}
+open import Definition.LogicalRelation.Irrelevance senv equivs {{eqrel}}
+open import Definition.LogicalRelation.Properties senv equivs {{eqrel}}
+open import Definition.LogicalRelation.Application senv equivs {{eqrel}}
+open import Definition.LogicalRelation.Substitution senv equivs {{eqrel}}
+import Definition.LogicalRelation.Weakening senv equivs {{eqrel}} as Lwk
+open import Definition.LogicalRelation.Substitution.Properties senv equivs {{eqrel}}
+import Definition.LogicalRelation.Substitution.Irrelevance senv equivs {{eqrel}} as S
+open import Definition.LogicalRelation.Substitution.Reflexivity senv equivs {{eqrel}}
+open import Definition.LogicalRelation.Substitution.Weakening senv equivs {{eqrel}}
 -- open import Definition.LogicalRelation.Substitution.Introductions.Nat
-open import Definition.LogicalRelation.Substitution.Introductions.Empty senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Empty senv equivs {{eqrel}}
 -- open import Definition.LogicalRelation.Substitution.Introductions.Pi
 -- open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst
-open import Definition.LogicalRelation.Substitution.Introductions.Universe senv equivs
-open import Definition.LogicalRelation.Substitution.MaybeEmbed senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Universe senv equivs {{eqrel}}
+open import Definition.LogicalRelation.Substitution.MaybeEmbed senv equivs {{eqrel}}
 open import Tools.Product
 open import Tools.Empty
 import Tools.Unit as TU
