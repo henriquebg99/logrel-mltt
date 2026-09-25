@@ -34,6 +34,46 @@ open import Tools.Sum using (_⊎_ ; inj₁ ; inj₂)
 open import Tools.Empty
 import Tools.PropositionalEquality as PE
 
+-- At a neutral type the only [conv↓] rule is ne-ins.  Matching on this view
+-- (instead of nesting ne-ins inside cast-refl/cast-refl') spares the coverage
+-- checker from refuting every other [conv↓] rule in every clause, which it does
+-- by an expensive emptiness search.
+private
+  data NeIns {Γ t u A ll} : Γ ⊢ t [conv↓] u ∷ A ^ ι ll → Set where
+    isNeIns : ∀ {M} (⊢t : Γ ⊢ t ∷ A ^ [ ! , ι ll ]) (⊢u : Γ ⊢ u ∷ A ^ [ ! , ι ll ])
+              (neA : Neutral A) (t~u : Γ ⊢ t ~ u ↓! M ^ ι ll)
+            → NeIns (ne-ins ⊢t ⊢u neA t~u)
+
+  neIns : ∀ {Γ t u A ll} → Neutral A → (c : Γ ⊢ t [conv↓] u ∷ A ^ ι ll) → NeIns c
+  neIns _ (ne-ins ⊢t ⊢u neA t~u) = isNeIns ⊢t ⊢u neA t~u
+  neIns () (ne _)
+  neIns () (ℕ-refl _)
+  neIns () (Empty-refl _)
+  neIns () (Ind-refl _)
+  neIns () (Π-cong _ _ _ _ _ _ _ _ _)
+  neIns () (Id-cong _ _ _)
+  neIns () (ℕ-ins _)
+  neIns () (Ind-ins _)
+  neIns () (zero-refl _)
+  neIns () (suc-cong _)
+  neIns () (η-eq _ _ _ _ _ _ _ _)
+  neIns () (ctr-cong _ _ _ _ _)
+
+  neˡ : ∀ {Γ t u A l} → Γ ⊢ t ~ u ↓! A ^ l → Neutral t
+  neˡ t~u = proj₁ (proj₂ (ne~↓! t~u))
+
+  neʳ : ∀ {Γ t u A l} → Γ ⊢ t ~ u ↓! A ^ l → Neutral u
+  neʳ t~u = proj₂ (proj₂ (ne~↓! t~u))
+
+  ¬neℕ : Neutral ℕ → ⊥
+  ¬neℕ ()
+
+  ¬neΠ : ∀ {F r lF G lG l r'} → Neutral (Π F ^ r ° lF ▹ G ° lG ° l ^ r') → ⊥
+  ¬neΠ ()
+
+  ¬neInd : ∀ {i} → Neutral (Ind i) → ⊥
+  ¬neInd ()
+
 abstract
   mutual
   
@@ -178,7 +218,8 @@ abstract
               leS (<=-trans (<=-cong-+ sizeP<>P'' sizet~t'')
                             (<=-help-3-abcd {a = sizeConv↑ x} {b = sizeConv↑ y} {c = size~↓! x₁} {d = size~↓! y₁}))
   
-        go (cast-refl' A~B (ne-ins x' x₁' x₂' ([~] K D whK u~v)) x₄) PE.refl (leS e) =
+        go (cast-refl' A~B c x₄) PE.refl (leS e) with neIns (proj₂ (proj₂ (ne~↓! A~B))) c
+        ... | isNeIns x' x₁' x₂' ([~] K D whK u~v) =
           let net , neu = ne~↑! (IndRect-cong ind∈ x x₁ x₂)
               t≡u = soundness~↑! (IndRect-cong ind∈ x x₁ x₂)
               _ , neB , neA = ne~↓! A~B
@@ -388,13 +429,9 @@ abstract
          refl (proj₁ (syntacticEq Π≡Π)) , Π≡Π ,
          leS (<=-trans (<=-cong-+3 sizeA~A (<=-trans (≡-to-<= (stabilitySizeConv↑Term (symConEq Γ≡Δ) B~B)) sizeB~B) sizeu~u) (<=-help-id-cong'' {a = sizeConv↑Term x}))
   
-    -- ctr is not neutral, so a ctr-cong under a cast-refl'/cast-refl cannot be the
-    -- middle term of a neutral equality.  These clauses only exist so that the
-    -- coverage checker never has to split a ctr-cong against a fixed ctr spine.
-    trans~↑! PE.refl Γ≡Δ t~u (cast-refl' A~B (ctr-cong x₅ x₆ x₇ x₈ x₉) x₄) e with ne~↑! t~u
-    ... | _ , ()
-  
-    trans~↑! {n = 1+ n} PE.refl Γ≡Δ t~u (cast-refl' A~B (ne-ins x' x₁' x₂' ([~] K D whK u~v)) x₄) (leS e) =
+    trans~↑! {n = 1+ n} PE.refl Γ≡Δ t~u (cast-refl' A~B c x₄) (leS e)
+      with neIns (proj₂ (proj₂ (ne~↓! A~B))) c
+    ... | isNeIns x' x₁' x₂' ([~] K D whK u~v) =
       let net , neu = ne~↑! t~u
           t≡u = soundness~↑! t~u
           _ , neB , neA = ne~↓! A~B
@@ -410,10 +447,9 @@ abstract
         <=-trans (<=-cong-+ (leS (≡-to-<= (stabilitySize~↓! (symConEq Γ≡Δ) A~B))) (leS (leS sizet~v')))
                  <=-help-2-2 
   
-    trans~↑! PE.refl Γ≡Δ (cast-refl A~B (ctr-cong x₅ x₆ x₇ x₈ x₉) x₄) u~v e with ne~↑! u~v
-    ... | () , _
-  
-    trans~↑! {n = 1+ n} PE.refl Γ≡Δ (cast-refl A~B (ne-ins x' x₁' x₂' ([~] K D whK t~u)) x₄) u~v (leS e) =
+    trans~↑! {n = 1+ n} PE.refl Γ≡Δ (cast-refl A~B c x₄) u~v (leS e)
+      with neIns (proj₁ (proj₂ (ne~↓! A~B))) c
+    ... | isNeIns x' x₁' x₂' ([~] K D whK t~u) =
       let neu , nev = ne~↑! u~v
           u≡v = soundness~↑! u~v
           _ , neA , neB = ne~↓! A~B
@@ -527,7 +563,9 @@ abstract
                   (leS (leS (<=-trans (<=-cong-+ (<=-trans sizeB~A' (<=-cong-+ (<=inv-suc sizeB~A) (le-refl _))) sizet~v)
                        (<=inv-suc (<=-help-3-abcde {b = size~↓! B~A} {c = size~↓! x₅})))))
   
-    trans~↑! {n = 1+ n} el Γ≡Δ (cast-refl' x (ne-ins x₃ x₁₀ x₁₁ ([~] A D whnfB t~u)) x₄) (cast-refl x₅ (ne-ins x₈ x₁₃ x₁₄ ([~] A' D' whnfB' u~v)) x₉) (leS e) =
+    trans~↑! {n = 1+ n} el Γ≡Δ (cast-refl' x c x₄) (cast-refl x₅ c' x₉) (leS e)
+      with neIns (proj₂ (proj₂ (ne~↓! x))) c | neIns (proj₁ (proj₂ (ne~↓! x₅))) c'
+    ... | isNeIns x₃ x₁₀ x₁₁ ([~] A D whnfB t~u) | isNeIns x₈ x₁₃ x₁₄ ([~] A' D' whnfB' u~v) =
       let X , t~v , A≡X , X≡B , sizet~v = trans~↑! {n = n} PE.refl Γ≡Δ t~u u~v (<<-trans (<=-help-22-rem {a = size~↓! x} {c = 1+ (size~↓! x₅)}) e)
           _ , neu = ne~↑! t~u
           _ , _ , ⊢u = syntacticEqTerm (soundness~↑! t~u)
@@ -641,6 +679,141 @@ abstract
           sizeΠ~Π' = <=-trans (≡-to-<= (stabilitySizeConv↑Term (symConEq Γ≡Δ) Π~Π)) sizeΠ~Π
       in _ , cast-neΠ (stabilityConv↑Term (symConEq Γ≡Δ) Π~Π) XY' t~t x₄ (stabilityTerm (symConEq Γ≡Δ) x₁₀) , refl (univ (proj₁ (proj₂ (syntacticEqTerm Π≡Π)))) , univ Π≡Π ,
         leS (<=-trans (<=-cong-+3 sizeΠ~Π' sizeXY' sizet~t) (<=-help-id-cong'- {a = sizeConv↑Term x₁} {b = sizeConv↑Term x₆}))
+  
+    -- Impossible pairs: the two derivations disagree on the head of a type in
+    -- the middle cast, which would force a ↓! endpoint to be ℕ, Π or Ind even
+    -- though ↓! only relates neutrals.  Written out because letting the
+    -- coverage checker find them costs an emptiness search per pair.
+    trans~↑! _ _ (cast-cong f _ _ _ _) (castℕ-refl _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-cong _ f _ _ _) (cast-neℕ _ _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-cong f _ _ _ _) (cast-ℕ _ _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-cong _ f _ _ _) (cast-neΠ _ _ _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-cong f _ _ _ _) (cast-Π _ _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-cong _ f _ _ _) (cast-Πℕ _ _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-cong f _ _ _ _) (cast-ℕΠ _ _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-cong f _ _ _ _) (cast-ΠΠ%! _ _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-cong f _ _ _ _) (cast-ΠΠ!% _ _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-cong _ f _ _ _) (cast-neInd _ _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-cong f _ _ _ _) (cast-Ind _ _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-cong f _ _ _ _) (castInd-refl _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-cong f _ _ _ _) (cast-IndΠ _ _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-cong _ f _ _ _) (cast-ΠInd _ _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-cong _ f _ _ _) (cast-Indℕ _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-cong f _ _ _ _) (cast-ℕInd _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-cong f _ _ _ _) (cast-IndInd _ _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-refl' f _ _) (castℕ-refl _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-neℕ _ _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-ℕ _ _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-neΠ _ _ _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-Π _ _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-Πℕ _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-ℕΠ _ _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-ΠΠ%! _ _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-ΠΠ!% _ _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-neInd _ _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-Ind _ _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-refl' f _ _) (castInd-refl _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-IndΠ _ _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-ΠInd _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-Indℕ _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-ℕInd _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-refl' f _ _) (cast-IndInd _ _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (castℕ-refl' _ _) (cast-cong f _ _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (castℕ-refl' _ _) (cast-refl f _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (castℕ-refl' _ _) (cast-neℕ f _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (castℕ-refl' _ _) (cast-ℕ f _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-neℕ _ _ _ _) (cast-cong _ f _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-neℕ _ _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-neℕ f _ _ _) (castℕ-refl _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-neℕ f _ _ _) (cast-ℕ _ _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-neℕ f _ _ _) (cast-Π _ _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-neℕ f _ _ _) (cast-Πℕ _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-neℕ f _ _ _) (cast-Ind _ _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-neℕ f _ _ _) (cast-Indℕ _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-ℕ _ _ _ _) (cast-cong f _ _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-ℕ _ _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-ℕ f _ _ _) (castℕ-refl _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-ℕ f _ _ _) (cast-neℕ _ _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-ℕ f _ _ _) (cast-neΠ _ _ _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-ℕ f _ _ _) (cast-ℕΠ _ _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-ℕ f _ _ _) (cast-neInd _ _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-ℕ f _ _ _) (cast-ℕInd _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-neΠ _ _ _ _ _) (cast-cong _ f _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-neΠ _ _ _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-neΠ _ f _ _ _) (cast-ℕ _ _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-neΠ _ f _ _ _) (cast-Π _ _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-neΠ _ f _ _ _) (cast-ℕΠ _ _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-neΠ _ f _ _ _) (cast-ΠΠ%! _ _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-neΠ _ f _ _ _) (cast-ΠΠ!% _ _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-neΠ _ f _ _ _) (cast-Ind _ _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-neΠ _ f _ _ _) (cast-IndΠ _ _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-Π _ _ _ _ _) (cast-cong f _ _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-Π _ _ _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-Π _ f _ _ _) (cast-neℕ _ _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-Π _ f _ _ _) (cast-neΠ _ _ _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-Π _ f _ _ _) (cast-Πℕ _ _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-Π _ f _ _ _) (cast-ΠΠ%! _ _ _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-Π _ f _ _ _) (cast-ΠΠ!% _ _ _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-Π _ f _ _ _) (cast-neInd _ _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-Π _ f _ _ _) (cast-ΠInd _ _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-Πℕ _ _ _ _) (cast-cong f _ _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-Πℕ _ _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-Πℕ _ _ _ _) (cast-neℕ f _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-Πℕ _ _ _ _) (cast-Π _ f _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-ℕΠ _ _ _ _) (cast-cong f _ _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-ℕΠ _ _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-ℕΠ _ _ _ _) (cast-ℕ f _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-ℕΠ _ _ _ _) (cast-neΠ _ f _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-ΠΠ%! _ _ _ _ _) (cast-cong f _ _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-ΠΠ%! _ _ _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-ΠΠ%! _ _ _ _ _) (cast-neΠ _ f _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-ΠΠ%! _ _ _ _ _) (cast-Π _ f _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-ΠΠ!% _ _ _ _ _) (cast-cong f _ _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-ΠΠ!% _ _ _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-ΠΠ!% _ _ _ _ _) (cast-neΠ _ f _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-ΠΠ!% _ _ _ _ _) (cast-Π _ f _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-neInd _ _ _ _) (cast-cong _ f _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-neInd _ _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-neInd f _ _ _) (cast-ℕ _ _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-neInd f _ _ _) (cast-Π _ _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-neInd f _ _ _) (cast-Ind _ _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-neInd f _ _ _) (castInd-refl _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-neInd f _ _ _) (cast-ΠInd _ _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-neInd f _ _ _) (cast-ℕInd _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-neInd f _ _ _) (cast-IndInd _ _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-Ind _ _ _ _) (cast-cong f _ _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-Ind _ _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-Ind f _ _ _) (cast-neℕ _ _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-Ind f _ _ _) (cast-neΠ _ _ _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-Ind f _ _ _) (cast-neInd _ _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-Ind f _ _ _) (castInd-refl _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-Ind f _ _ _) (cast-IndΠ _ _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-Ind f _ _ _) (cast-Indℕ _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-Ind f _ _ _) (cast-IndInd _ _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (castInd-refl' _ _) (cast-cong f _ _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (castInd-refl' _ _) (cast-refl f _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (castInd-refl' _ _) (cast-neInd f _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (castInd-refl' _ _) (cast-Ind f _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-IndΠ _ _ _ _) (cast-cong f _ _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-IndΠ _ _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-IndΠ _ _ _ _) (cast-neΠ _ f _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-IndΠ _ _ _ _) (cast-Ind f _ _ _) _ = ⊥-elim (¬neΠ (neʳ f))
+    trans~↑! _ _ (cast-ΠInd _ _ _ _) (cast-cong f _ _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-ΠInd _ _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-ΠInd _ _ _ _) (cast-Π _ f _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-ΠInd _ _ _ _) (cast-neInd f _ _ _) _ = ⊥-elim (¬neΠ (neˡ f))
+    trans~↑! _ _ (cast-Indℕ _ _ _) (cast-cong f _ _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-Indℕ _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-Indℕ _ _ _) (cast-neℕ f _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-Indℕ _ _ _) (cast-Ind f _ _ _) _ = ⊥-elim (¬neℕ (neʳ f))
+    trans~↑! _ _ (cast-ℕInd _ _ _) (cast-cong f _ _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-ℕInd _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-ℕInd _ _ _) (cast-ℕ f _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
+    trans~↑! _ _ (cast-ℕInd _ _ _) (cast-neInd f _ _ _) _ = ⊥-elim (¬neℕ (neˡ f))
+    trans~↑! _ _ (cast-IndInd _ _ _ _) (cast-cong f _ _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-IndInd _ _ _ _) (cast-refl f _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-IndInd _ _ _ _) (cast-neInd f _ _ _) _ = ⊥-elim (¬neInd (neˡ f))
+    trans~↑! _ _ (cast-IndInd _ _ _ _) (cast-Ind f _ _ _) _ = ⊥-elim (¬neInd (neʳ f))
   
     -- trans~↑! = {!!}
   
@@ -988,6 +1161,7 @@ abstract
           e'' , sz = go e'Ind PE.refl fuelInd
       in e'' , PE.subst (λ s → sizeConv↓Term e'' <= (sizeConv↓Term (ctr-cong ⊢Γ ind∈ argsTypeEq len ps) + s)) sizeEq sz
       where
+      i : Nat
       i = SI.SInd.name ind
       go : ∀ {i' t u} (e2 : Δ ⊢ t [conv↓] u ∷ Ind i' ^ ι ⁰)
          → t PE.≡ ctr i j args'

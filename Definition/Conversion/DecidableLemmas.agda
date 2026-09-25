@@ -92,8 +92,9 @@ abstract
               → (dectu : Dec (∃ λ U → ∃ λ lA → Γ ⊢ t ~ u ↑! U ^ lA))
               → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
               → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+              → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
               → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ A B e t ~ u ↑! U ^ lA)
-  cast-refl-dec neA neB ⊢A ⊢tA ⊢e (yes (_ , _ , A~B)) (yes (_ , _ , p)) _ _ =
+  cast-refl-dec neA neB ⊢A ⊢tA ⊢e (yes (_ , _ , A~B)) (yes (_ , _ , p)) _ _ _ =
     let _ , neA , _ = ne~↓! A~B
         var≡t = soundness~↑! p
         ⊢K , ⊢t , ⊢u = syntacticEqTerm var≡t
@@ -104,7 +105,7 @@ abstract
                                                (PE.subst (λ X → _ ⊢ _ ≡ _ ^ [ ! , X ]) el eA))
                                        neA ([~] _ (red (univ:⇒*: dd)) whnfD (PE.subst (λ X → _ ⊢ _ ~ _ ↑! _ ^  X) el p)))
                                                                          ⊢e)
-  cast-refl-dec neA neB ⊢A _ ⊢e (yes (_ , _ , A~B)) (no ¬p) noeqNe noeqℕ =
+  cast-refl-dec neA neB ⊢A _ ⊢e (yes (_ , _ , A~B)) (no ¬p) noeqNe noeqℕ noeqInd =
     no (λ { (_ , _ , cast-cong x x₁ x₂ x₃ x₄) → ⊥-elim (let _ , _ , neA' = ne~↓! x
                                                             _ , neB' , _ = ne~↓! x₁
                                                         in noeqNe neA' neB' PE.refl) ;
@@ -114,15 +115,17 @@ abstract
                                                       in var~t) ;
             (_ , _ , cast-refl' x x₁ x₂) → ⊥-elim (let _ , neB' , neA' = ne~↓! x
                                                    in noeqNe neA' neB' PE.refl) ;
-            (_ , _ , castℕ-refl' x x₁) → ⊥-elim (noeqℕ PE.refl) })
-  cast-refl-dec neA neB ⊢A _ ⊢e (no ¬AB) _ noeqNe noeqℕ =
+            (_ , _ , castℕ-refl' x x₁) → ⊥-elim (noeqℕ PE.refl) ;
+            (_ , _ , castInd-refl' x x₁) → ⊥-elim (noeqInd PE.refl) })
+  cast-refl-dec neA neB ⊢A _ ⊢e (no ¬AB) _ noeqNe noeqℕ noeqInd =
     no (λ { (_ , _ , cast-cong x x₁ x₂ x₃ x₄) → ⊥-elim (let _ , _ , neA' = ne~↓! x
                                                             _ , neB' , _ = ne~↓! x₁
                                                         in noeqNe neA' neB' PE.refl) ;
             (_ , _ , cast-refl x x₁ x₂) → ¬AB (_ , _ , x) ;
             (_ , _ , cast-refl' x x₁ x₂) → ⊥-elim (let _ , neB' , neA' = ne~↓! x
                                                    in noeqNe neA' neB' PE.refl) ;
-            (_ , _ , castℕ-refl' x x₁) → ⊥-elim (noeqℕ PE.refl) })
+            (_ , _ , castℕ-refl' x x₁) → ⊥-elim (noeqℕ PE.refl) ;
+            (_ , _ , castInd-refl' x x₁) → ⊥-elim (noeqInd PE.refl) })
 
 abstract
   cast-refl'-dec : ∀ {Γ A B t e u}
@@ -135,8 +138,9 @@ abstract
                  → (dectu : Dec (∃ λ U → ∃ λ lA → Γ ⊢ u ~ t ↑! U ^ lA))
                  → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
                  → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+                 → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
                  → Dec (∃ λ U → ∃ λ lA → Γ ⊢ u ~ cast ⁰ A B e t ↑! U ^ lA)
-  cast-refl'-dec neA neB ⊢B ⊢tA ⊢e (yes (_ , _ , B~A)) (yes (_ , _ , p)) _ _ =
+  cast-refl'-dec neA neB ⊢B ⊢tA ⊢e (yes (_ , _ , B~A)) (yes (_ , _ , p)) _ _ _ =
     let _ , _ , neA = ne~↓! B~A
         var≡t = soundness~↑! p
         ⊢K , ⊢u , ⊢t  = syntacticEqTerm var≡t
@@ -148,7 +152,7 @@ abstract
                                         ⊢tA
                                         neA ([~] _ (red (univ:⇒*: dd)) whnfD (PE.subst (λ X → _ ⊢ _ ~ _ ↑! _ ^  X) el p)))
                                         ⊢e)
-  cast-refl'-dec neA neB _ _ ⊢e (yes (_ , _ , A~B)) (no ¬p) noeqNe noeqℕ =
+  cast-refl'-dec neA neB _ _ ⊢e (yes (_ , _ , A~B)) (no ¬p) noeqNe noeqℕ noeqInd =
     no (λ { (_ , _ , cast-cong x x₁ x₂ x₃ x₄) → ⊥-elim (let _ , neA' , _ = ne~↓! x
                                                             _ , _ , neB' = ne~↓! x₁
                                                         in noeqNe neA' neB' PE.refl) ;
@@ -158,15 +162,17 @@ abstract
                                                        in var~t) ;
             (_ , _ , cast-refl x x₁ x₂) → ⊥-elim (let _ , neA' , neB' = ne~↓! x
                                                   in noeqNe neA' neB' PE.refl) ;
-            (_ , _ , castℕ-refl x x₁) → ⊥-elim (noeqℕ PE.refl) })
-  cast-refl'-dec neA neB _ _ ⊢e (no ¬AB) _ noeqNe noeqℕ =
+            (_ , _ , castℕ-refl x x₁) → ⊥-elim (noeqℕ PE.refl) ;
+            (_ , _ , castInd-refl x x₁) → ⊥-elim (noeqInd PE.refl) })
+  cast-refl'-dec neA neB _ _ ⊢e (no ¬AB) _ noeqNe noeqℕ noeqInd =
     no (λ { (_ , _ , cast-cong x x₁ x₂ x₃ x₄) → ⊥-elim (let _ , neA' , _ = ne~↓! x
                                                             _ , _ , neB' = ne~↓! x₁
                                                         in noeqNe neA' neB' PE.refl) ;
             (_ , _ , cast-refl' x x₁ x₂) → ¬AB (_ , _ , x) ;
             (_ , _ , cast-refl x x₁ x₂) → ⊥-elim (let _ , neA' , neB' = ne~↓! x
                                                   in noeqNe neA' neB' PE.refl) ;
-            (_ , _ , castℕ-refl x x₁) → ⊥-elim (noeqℕ PE.refl) })
+            (_ , _ , castℕ-refl x x₁) → ⊥-elim (noeqℕ PE.refl) ;
+            (_ , _ , castInd-refl x x₁) → ⊥-elim (noeqInd PE.refl) })
 
 abstract
   cast-cast-≡ : ∀ {Γ A A' B B' t t' e e' X lX}
@@ -190,15 +196,16 @@ abstract
               → (dectu : Dec (∃ λ U → ∃ λ lA → Γ ⊢ t ~ u ↑! U ^ lA))
               → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
               → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+              → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
               → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ ℕ ℕ e t ~ u ↑! U ^ lA)
-  castℕℕ-refl-dec x ⊢e (yes (_ , _ , p)) _ _ =
+  castℕℕ-refl-dec x ⊢e (yes (_ , _ , p)) _ _ _ =
     let var≡t = soundness~↑! p
         ⊢K , ⊢t , ⊢u = syntacticEqTerm var≡t
         el , eA = type-uniq ⊢t x
         _ , whnfD , dd = whNormTerm (un-univ (PE.subst (λ X →  _ ⊢ _ ^ [ ! , X ]) el ⊢K))
         eA' = ℕ≡A (trans (sym (PE.subst (λ X →  _ ⊢ _ ≡  _ ^ [ ! , X ]) el eA)) (subset* (univ⇒* (redₜ dd)))) whnfD
     in yes ( _ , _ , castℕ-refl ([~] _ (univ⇒* (PE.subst (λ X → _ ⊢ _ ⇒* X ∷ Univ ! ⁰ ^ ι ¹) eA' (redₜ dd))) ℕₙ (PE.subst (λ X → _ ⊢ _ ~ _ ↑! _ ^  X) el p)) ⊢e)
-  castℕℕ-refl-dec t~t' ⊢e (no ¬p) noeqNe noeqℕ =
+  castℕℕ-refl-dec t~t' ⊢e (no ¬p) noeqNe noeqℕ noeqInd =
     no (λ { (_ , _ , cast-cong x x₁ x₂ x₃ x₄) → ⊥-elim (let _ , _ , neA' = ne~↓! x
                                                             _ , neB' , _ = ne~↓! x₁
                                                         in noeqNe neA' neB' PE.refl) ;
@@ -206,7 +213,8 @@ abstract
             (_ , _ , cast-refl' x x₁ x₂) → ⊥-elim (let _ , neB' , neA' = ne~↓! x
                                                    in noeqNe neA' neB' PE.refl) ;
             (_ , _ , castℕ-refl ([~] A D whnfB k~l) x₁) → ¬p (_ , _ , k~l) ;
-            (_ , _ , castℕ-refl' x x₁) → ⊥-elim (noeqℕ PE.refl) })
+            (_ , _ , castℕ-refl' x x₁) → ⊥-elim (noeqℕ PE.refl) ;
+            (_ , _ , castInd-refl' x x₁) → ⊥-elim (noeqInd PE.refl) })
 
   castℕℕ-refl'-dec : ∀ {Γ t e u}
                  → Γ ⊢ t ∷ ℕ ^ [ ! , ι ⁰ ]
@@ -214,15 +222,16 @@ abstract
                  → (dectu : Dec (∃ λ U → ∃ λ lA → Γ ⊢ u ~ t ↑! U ^ lA))
                  → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
                  → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+                 → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
                  → Dec (∃ λ U → ∃ λ lA → Γ ⊢ u ~ cast ⁰ ℕ ℕ e t ↑! U ^ lA)
-  castℕℕ-refl'-dec x ⊢e (yes (_ , _ , p)) _ _ =
+  castℕℕ-refl'-dec x ⊢e (yes (_ , _ , p)) _ _ _ =
     let var≡t = soundness~↑! p
         ⊢K , ⊢u , ⊢t = syntacticEqTerm var≡t
         el , eA = type-uniq ⊢t x
         _ , whnfD , dd = whNormTerm (un-univ (PE.subst (λ X →  _ ⊢ _ ^ [ ! , X ]) el ⊢K))
         eA' = ℕ≡A (trans (sym (PE.subst (λ X →  _ ⊢ _ ≡  _ ^ [ ! , X ]) el eA)) (subset* (univ⇒* (redₜ dd)))) whnfD
     in yes ( _ , _ , castℕ-refl' ([~] _ (univ⇒* (PE.subst (λ X → _ ⊢ _ ⇒* X ∷ Univ ! ⁰ ^ ι ¹) eA' (redₜ dd))) ℕₙ (PE.subst (λ X → _ ⊢ _ ~ _ ↑! _ ^  X) el p)) ⊢e)
-  castℕℕ-refl'-dec t~t' ⊢e (no ¬p) noeqNe noeqℕ =
+  castℕℕ-refl'-dec t~t' ⊢e (no ¬p) noeqNe noeqℕ noeqInd =
     no (λ { (_ , _ , cast-cong x x₁ x₂ x₃ x₄) → ⊥-elim (let _ , neA' , _ = ne~↓! x
                                                             _ , _ , neB' = ne~↓! x₁
                                                         in noeqNe neA' neB' PE.refl) ;
@@ -230,7 +239,8 @@ abstract
             (_ , _ , cast-refl x x₁ x₂) → ⊥-elim (let _ , neA' , neB' = ne~↓! x
                                                   in noeqNe neA' neB' PE.refl) ;
             (_ , _ , castℕ-refl' ([~] A D whnfB k~l) x₁) → ¬p (_ , _ , k~l) ;
-            (_ , _ , castℕ-refl x x₁) → ⊥-elim (noeqℕ PE.refl) })
+            (_ , _ , castℕ-refl x x₁) → ⊥-elim (noeqℕ PE.refl) ;
+            (_ , _ , castInd-refl x x₁) → ⊥-elim (noeqInd PE.refl) })
 
 abstract
   castℕ-refl-dec : ∀ {Γ A t e u}
@@ -238,9 +248,11 @@ abstract
               → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
               → (noeqNeℕ : ∀ {A' t' e'} → Neutral A' → u PE.≡ cast ⁰ ℕ A' e' t' → ⊥)
               → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+              → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
               → Dec (∃ λ U → ∃ λ lA → Γ ⊢ u ~ cast ⁰ ℕ A e t ↑! U ^ lA)
-  castℕ-refl-dec _ noeqNe noeqNeℕ noeqℕ = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neA , neB = ne~↓! x in noeqNe neA neB PE.refl ;
+  castℕ-refl-dec _ noeqNe noeqNeℕ noeqℕ noeqInd = no (λ { (_ , _ , cast-refl x x₁ x₂) → let _ , neA , neB = ne~↓! x in noeqNe neA neB PE.refl ;
                                                   (_ , _ , castℕ-refl x x₁) → noeqℕ PE.refl ;
+                                                  (_ , _ , castInd-refl x x₁) → noeqInd PE.refl ;
                                                   (_ , _ , cast-ℕ x x₁ x₂ x₃) → let _ , _ , neA = ne~↓! x in noeqNeℕ neA PE.refl } )
 
   castℕ-refl'-dec : ∀ {Γ A t e u}
@@ -248,9 +260,11 @@ abstract
               → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
               → (noeqNeℕ : ∀ {A' t' e'} → Neutral A' → u PE.≡ cast ⁰ ℕ A' e' t' → ⊥)
               → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+              → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
               → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ ℕ A e t ~ u ↑! U ^ lA)
-  castℕ-refl'-dec _ noeqNe noeqNeℕ noeqℕ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neB , neA = ne~↓! x in noeqNe neA neB PE.refl ;
+  castℕ-refl'-dec _ noeqNe noeqNeℕ noeqℕ noeqInd = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neB , neA = ne~↓! x in noeqNe neA neB PE.refl ;
                                                    (_ , _ , castℕ-refl' x x₁) → noeqℕ PE.refl ;
+                                                   (_ , _ , castInd-refl' x x₁) → noeqInd PE.refl ;
                                                    (_ , _ , cast-ℕ x x₁ x₂ x₃) → let _ , neA , _ = ne~↓! x in noeqNeℕ neA PE.refl } )
 
   castneℕ-refl'-dec : ∀ {Γ A t e u}
@@ -258,9 +272,11 @@ abstract
               → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
               → (noeqNeℕ : ∀ {A' t' e'} → Neutral A' → u PE.≡ cast ⁰ A' ℕ e' t' → ⊥)
               → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+              → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
               → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ A ℕ e t ~ u ↑! U ^ lA)
-  castneℕ-refl'-dec _ noeqNe noeqNeℕ noeqℕ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neB , neA = ne~↓! x in noeqNe neA neB PE.refl ;
+  castneℕ-refl'-dec _ noeqNe noeqNeℕ noeqℕ noeqInd = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neB , neA = ne~↓! x in noeqNe neA neB PE.refl ;
                                                    (_ , _ , castℕ-refl' x x₁) → noeqℕ PE.refl ;
+                                                   (_ , _ , castInd-refl' x x₁) → noeqInd PE.refl ;
                                                    (_ , _ , cast-neℕ x x₁ x₂ x₃) → let _ , _ , neA = ne~↓! x in noeqNeℕ neA PE.refl } )
 
   castneΠ-refl'-dec : ∀ {Γ A X Y rX t e u}
@@ -268,9 +284,11 @@ abstract
               → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
               → (noeqNeΠ : ∀ {A' X' Y' rX' t' e'} → Neutral A' → u PE.≡ cast ⁰ A' (Π X' ^ rX' ° ⁰ ▹ Y' ° ⁰ ° ⁰ ^ ! ) e' t' → ⊥)
               → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+              → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
               → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ A (Π X ^ rX ° ⁰ ▹ Y ° ⁰ ° ⁰ ^ ! ) e t ~ u ↑! U ^ lA)
-  castneΠ-refl'-dec _ noeqNe noeqNeΠ noeqℕ = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neB , neA = ne~↓! x in noeqNe neA neB PE.refl ;
+  castneΠ-refl'-dec _ noeqNe noeqNeΠ noeqℕ noeqInd = no (λ { (_ , _ , cast-refl' x x₁ x₂) → let _ , neB , neA = ne~↓! x in noeqNe neA neB PE.refl ;
                                                     (_ , _ , castℕ-refl' x x₁) → noeqℕ PE.refl ;
+                                                    (_ , _ , castInd-refl' x x₁) → noeqInd PE.refl ;
                                                     (_ , _ , cast-neΠ x x₁ x₂ x₃ x₄) → let _ , _ , neA = ne~↓! x₁ in noeqNeΠ neA PE.refl } )
 
 abstract
@@ -283,13 +301,14 @@ abstract
                  → (dectu : Dec (∃ λ U → ∃ λ lA → Γ ⊢ u ~ t ↑! U ^ lA))
                  → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
                  → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+                 → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
                  → Dec (∃ λ U → ∃ λ lA → Γ ⊢ u ~ cast ⁰ A B e t ↑! U ^ lA)
-  cast-refl'-dec~ A B t ⊢e decAB dectu noeqNe noeqℕ =
+  cast-refl'-dec~ A B t ⊢e decAB dectu noeqNe noeqℕ noeqInd =
     let _ , neA , _ = ne~↓! A
         _ , neB , _ = ne~↓! B
         _ , ⊢B , _ = syntacticEqTerm (soundness~↓! B)
         _ , ⊢t , _ = syntacticEqTerm (soundnessConv↓Term t)
-    in cast-refl'-dec neA neB ⊢B ⊢t ⊢e decAB dectu noeqNe noeqℕ
+    in cast-refl'-dec neA neB ⊢B ⊢t ⊢e decAB dectu noeqNe noeqℕ noeqInd
 
   cast-refl-dec~ : ∀ {Γ A A' B B' t t' e u}
                  → Γ ⊢ A ~ A' ↓! U ⁰ ^ next ⁰
@@ -300,45 +319,50 @@ abstract
                  → (dectu : Dec (∃ λ U → ∃ λ lA → Γ ⊢ t ~ u ↑! U ^ lA))
                  → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
                  → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+                 → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
                  → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ A B e t ~ u ↑! U ^ lA)
-  cast-refl-dec~ A B t ⊢e decAB dectu noeqNe noeqℕ =
+  cast-refl-dec~ A B t ⊢e decAB dectu noeqNe noeqℕ noeqInd =
     let _ , neA , _ = ne~↓! A
         _ , neB , _ = ne~↓! B
         _ , ⊢A , _ = syntacticEqTerm (soundness~↓! A)
         _ , ⊢t , _ = syntacticEqTerm (soundnessConv↓Term t)
-    in cast-refl-dec neA neB ⊢A ⊢t ⊢e decAB dectu noeqNe noeqℕ
+    in cast-refl-dec neA neB ⊢A ⊢t ⊢e decAB dectu noeqNe noeqℕ noeqInd
 
   castℕ-refl-dec~ : ∀ {Γ A A' t e u}
               → Γ ⊢ A' ~ A ↓! U ⁰ ^ next ⁰
               → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
               → (noeqNeℕ : ∀ {A' t' e'} → Neutral A' → u PE.≡ cast ⁰ ℕ A' e' t' → ⊥)
               → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+              → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
               → Dec (∃ λ U → ∃ λ lA → Γ ⊢ u ~ cast ⁰ ℕ A e t ↑! U ^ lA)
-  castℕ-refl-dec~ A noeqNe noeqNeℕ noeqℕ = let _ , _ , neA = ne~↓! A in castℕ-refl-dec neA noeqNe noeqNeℕ noeqℕ
+  castℕ-refl-dec~ A noeqNe noeqNeℕ noeqℕ noeqInd = let _ , _ , neA = ne~↓! A in castℕ-refl-dec neA noeqNe noeqNeℕ noeqℕ noeqInd
 
   castℕ-refl'-dec~ : ∀ {Γ A A' t e u}
               → Γ ⊢ A' ~ A ↓! U ⁰ ^ next ⁰
               → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
               → (noeqNeℕ : ∀ {A' t' e'} → Neutral A' → u PE.≡ cast ⁰ ℕ A' e' t' → ⊥)
               → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+              → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
               → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ ℕ A e t ~ u ↑! U ^ lA)
-  castℕ-refl'-dec~ A noeqNe noeqNeℕ noeqℕ = let _ , _ , neA = ne~↓! A in castℕ-refl'-dec neA noeqNe noeqNeℕ noeqℕ
+  castℕ-refl'-dec~ A noeqNe noeqNeℕ noeqℕ noeqInd = let _ , _ , neA = ne~↓! A in castℕ-refl'-dec neA noeqNe noeqNeℕ noeqℕ noeqInd
 
   castneℕ-refl'-dec~ : ∀ {Γ A A' t e u}
               → Γ ⊢ A ~ A' ↓! U ⁰ ^ next ⁰
               → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
               → (noeqNeℕ : ∀ {A' t' e'} → Neutral A' → u PE.≡ cast ⁰ A' ℕ e' t' → ⊥)
               → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+              → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
               → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ A ℕ e t ~ u ↑! U ^ lA)
-  castneℕ-refl'-dec~ A noeqNe noeqNeℕ noeqℕ = let _ , neA , _ = ne~↓! A in castneℕ-refl'-dec neA noeqNe noeqNeℕ noeqℕ
+  castneℕ-refl'-dec~ A noeqNe noeqNeℕ noeqℕ noeqInd = let _ , neA , _ = ne~↓! A in castneℕ-refl'-dec neA noeqNe noeqNeℕ noeqℕ noeqInd
 
   castneΠ-refl'-dec~ : ∀ {Γ A A' X Y rX t e u}
               → Γ ⊢ A ~ A' ↓! U ⁰ ^ next ⁰
               → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
               → (noeqNeΠ : ∀ {A' X' Y' rX' t' e'} → Neutral A' → u PE.≡ cast ⁰ A' (Π X' ^ rX' ° ⁰ ▹ Y' ° ⁰ ° ⁰ ^ ! ) e' t' → ⊥)
               → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+              → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
               → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ A (Π X ^ rX ° ⁰ ▹ Y ° ⁰ ° ⁰ ^ ! ) e t ~ u ↑! U ^ lA)
-  castneΠ-refl'-dec~ A noeqNe noeqNeΠ noeqℕ = let _ , neA , _ = ne~↓! A in castneΠ-refl'-dec neA noeqNe noeqNeΠ noeqℕ
+  castneΠ-refl'-dec~ A noeqNe noeqNeΠ noeqℕ noeqInd = let _ , neA , _ = ne~↓! A in castneΠ-refl'-dec neA noeqNe noeqNeΠ noeqℕ noeqInd
 
   castℕℕ-refl-dec~ : ∀ {Γ t t' e u}
               → Γ ⊢ t ~ t' ↓! ℕ ^ ι ⁰
@@ -346,8 +370,9 @@ abstract
               → (dectu : Dec (∃ λ U → ∃ λ lA → Γ ⊢ t ~ u ↑! U ^ lA))
               → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
               → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+              → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
               → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ ℕ ℕ e t ~ u ↑! U ^ lA)
-  castℕℕ-refl-dec~ X ⊢e dectu noeqNe noeqℕ = let _ , x , _ = syntacticEqTerm (soundness~↓! X) in castℕℕ-refl-dec x ⊢e dectu noeqNe noeqℕ
+  castℕℕ-refl-dec~ X ⊢e dectu noeqNe noeqℕ noeqInd = let _ , x , _ = syntacticEqTerm (soundness~↓! X) in castℕℕ-refl-dec x ⊢e dectu noeqNe noeqℕ noeqInd
 
   castℕℕ-refl'-dec~ : ∀ {Γ t t' e u}
               → Γ ⊢ t ~ t' ↓! ℕ ^ ι ⁰
@@ -355,8 +380,9 @@ abstract
               → (dectu : Dec (∃ λ U → ∃ λ lA → Γ ⊢ u ~ t ↑! U ^ lA))
               → (noeqNe : ∀ {A' B' t' e'} → Neutral A' → Neutral B' → u PE.≡ cast ⁰ A' B' e' t' → ⊥)
               → (noeqℕ : ∀ {t' e'} → u PE.≡ cast ⁰ ℕ ℕ e' t' → ⊥)
+              → (noeqInd : ∀ {i t' e'} → u PE.≡ cast ⁰ (Ind i) (Ind i) e' t' → ⊥)
               → Dec (∃ λ U → ∃ λ lA → Γ ⊢ u ~ cast ⁰ ℕ ℕ e t ↑! U ^ lA)
-  castℕℕ-refl'-dec~ X ⊢e dectu noeqNe noeqℕ = let _ , x , _ = syntacticEqTerm (soundness~↓! X) in castℕℕ-refl'-dec x ⊢e dectu noeqNe noeqℕ
+  castℕℕ-refl'-dec~ X ⊢e dectu noeqNe noeqℕ noeqInd = let _ , x , _ = syntacticEqTerm (soundness~↓! X) in castℕℕ-refl'-dec x ⊢e dectu noeqNe noeqℕ noeqInd
 
 abstract
 

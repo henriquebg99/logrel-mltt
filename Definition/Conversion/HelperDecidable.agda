@@ -57,6 +57,9 @@ neutralconvTerm~↑! neA (ne-ins x x₁ x₂ ([~] A D whnfB k~l)) = _ , k~l
 noNeℕ : Neutral ℕ → ⊥
 noNeℕ ()
 
+noNeInd : ∀ {i} → Neutral (Ind i) → ⊥
+noNeInd ()
+
 noNe0 : Neutral zero → ⊥
 noNe0 ()
 
