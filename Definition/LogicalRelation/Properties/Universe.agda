@@ -6,8 +6,8 @@ module Definition.LogicalRelation.Properties.Universe (senv : SI.SEnv) (equivs :
 open import Definition.Typed.EqualityRelation senv equivs
 import Definition.Typed.Weakening senv equivs as Twk
 open EqRelSet {{...}}
-open import Definition.Untyped senv
-open import Definition.Untyped.Properties senv
+open import Definition.Untyped senv equivs
+open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs
 open import Definition.LogicalRelation senv equivs

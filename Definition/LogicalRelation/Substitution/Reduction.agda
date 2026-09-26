@@ -5,7 +5,7 @@ import Definition.Equiv as E
 module Definition.LogicalRelation.Substitution.Reduction (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped senv
+open import Definition.Untyped senv equivs
 open import Definition.LogicalRelation.Properties senv equivs
 open import Definition.LogicalRelation.Substitution senv equivs
 open import Tools.Product

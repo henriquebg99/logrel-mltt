@@ -5,7 +5,7 @@ import Definition.Equiv as E
 module Definition.LogicalRelation.Properties.Neutral (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped senv as U
+open import Definition.Untyped senv equivs as U
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv equivs
 open import Definition.Typed.Weakening senv equivs as TW

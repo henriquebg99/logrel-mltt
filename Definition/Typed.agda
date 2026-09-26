@@ -1,7 +1,7 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed (senv : SI.SEnv) (equivs : E.Equivs senv) where
-open import Definition.Untyped senv
+open import Definition.Untyped senv equivs
 open import Tools.Nat using (Nat; _<<_)
 open import Tools.Product
 open import Tools.Empty
@@ -11,6 +11,7 @@ import Tools.PropositionalEquality as PE
 open import Tools.Maybe using (just)
 import Definition.SUntyped as SU
 import Definition.OUntyped senv as OU
+import Definition.Equiv senv as Eq
 infixl 30 _∙_
 infix 30 Πⱼ_▹_▹_▹_
 
@@ -136,7 +137,10 @@ mutual
            → Γ ⊢ t ∷ A ^ r
            → Γ ⊢ A ≡ B ^ r
            → Γ ⊢ t ∷ B ^ r
-    equiv-eqⱼ : ⊢ Γ → Γ ⊢ equiv-eq ∷ Id (U ⁰) ℕ ℕ ^ [ % , ι ⁰ ]
+    equiv-eqⱼ : ∀ {n e}
+              → ⊢ Γ
+              → (nth equivs n PE.≡ just e)
+              → Γ ⊢ equiv-eq n ∷ Id (U ⁰) (Ind (E.Equiv.indA e)) (Ind (E.Equiv.indB e)) ^ [ % , ι ⁰ ]
 
   -- Well-typed lists of terms
   data _⊢All_∷_^_ (Γ : Con Term) : List Term → List Term → TypeInfo → Set where
@@ -315,6 +319,16 @@ mutual
                → Γ ⊢ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e (ctr (SU.SInd.name ind) j args)
                    ≡ ctr (SU.SInd.name ind) j (map (λ a → cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e a) args)
                    ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+    -- There is an equivalence between A and B iff they have the same
+    -- representative; cast then computes to its forward function.
+    cast-equiv : ∀ {A B e t}
+               → (H : reprInd A PE.≡ reprInd B)
+               → Γ ⊢ e ∷ Id (U ⁰) (Ind A) (Ind B) ^ [ % , ι ⁰ ]
+               → Γ ⊢ t ∷ Ind A ^ [ ! , ι ⁰ ]
+               → Γ ⊢ cast ⁰ (Ind A) (Ind B) e t
+                   ≡ emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs A B H)) ∘ t ^ ⁰
+                   ∷ Ind B ^ [ ! , ι ⁰ ]
+
 mutual
   data _⊢_⇒_∷_^_ (Γ : Con Term) : Term → Term → Term → TypeLevel → Set where
     conv         : ∀ {A B l t u}
@@ -459,6 +473,16 @@ mutual
                → Γ ⊢ cast ⁰ K L e t
                    ⇒ cast ⁰ K L e u
                    ∷ L ^ ι ⁰
+    -- A cast between distinct inductives with the same representative
+    -- computes to the forward function of the equivalence between them.
+    cast-equiv : ∀ {A B e t}
+               → A PE.≢ B
+               → (H : reprInd A PE.≡ reprInd B)
+               → Γ ⊢ e ∷ Id (U ⁰) (Ind A) (Ind B) ^ [ % , ι ⁰ ]
+               → Γ ⊢ t ∷ Ind A ^ [ ! , ι ⁰ ]
+               → Γ ⊢ cast ⁰ (Ind A) (Ind B) e t
+                   ⇒ emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs A B H)) ∘ t ^ ⁰
+                   ∷ Ind B ^ ι ⁰
     
   -- Type reduction
   data _⊢_⇒_^_ (Γ : Con Term) : Term → Term → TypeInfo → Set where

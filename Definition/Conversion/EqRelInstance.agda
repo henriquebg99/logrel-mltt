@@ -1,8 +1,8 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.EqRelInstance (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
-open import Definition.Untyped senv
-open import Definition.Untyped.Properties senv using (wkSingleSubstId)
+open import Definition.Untyped senv equivs
+open import Definition.Untyped.Properties senv equivs using (wkSingleSubstId)
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv equivs
 open import Definition.Typed.Weakening senv equivs using (_∷_⊆_; wkEq; step; id)
@@ -397,7 +397,7 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
 ~-castℕInd Y ⊢e ⊢e' = ↑ (refl (univ (Indⱼ (wfTerm ⊢e)))) (~↑! (cast-ℕInd Y ⊢e ⊢e'))
 
 ~-castIndInd≢ : ∀ {i j} {e e' t t' : Term} {Γ : Con Term} →
-    i PE.≢ j →
+    reprInd i PE.≢ reprInd j →
     Γ ⊢ t [genconv↑] t' ∷ Ind i ^ [ ! , ι ⁰ ] →
     Γ ⊢ e ∷ Id (U ⁰) (Ind i) (Ind j) ^ [ % , ι ⁰ ] →
     Γ ⊢ e' ∷ Id (U ⁰) (Ind i) (Ind j) ^ [ % , ι ⁰ ] →

@@ -1,7 +1,7 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.EqualityRelation (senv : SI.SEnv) (equivs : E.Equivs senv) where
-open import Definition.Untyped senv
+open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs using (_∷_⊆_)
 import Tools.PropositionalEquality as PE
@@ -329,7 +329,7 @@ record EqRelSet : Set₁ where
              → Γ ⊢ cast ⁰ ℕ (Ind i) e t ~ cast ⁰ ℕ (Ind i) e' t' ∷ Ind i ^ [ ! , ι ⁰ ]
 
     ~-castIndInd≢ : ∀ {i j e e' t t' Γ}
-             → i PE.≢ j
+             → reprInd i PE.≢ reprInd j
              → Γ ⊢ t ≅ t' ∷ Ind i ^ [ ! , ι ⁰ ]
              → Γ ⊢ e ∷ (Id (U ⁰) (Ind i) (Ind j)) ^ [ % , ι ⁰ ]
              → Γ ⊢ e' ∷ (Id (U ⁰) (Ind i) (Ind j)) ^ [ % , ι ⁰ ]

@@ -1,7 +1,7 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.Reduction (senv : SI.SEnv) (equivs : E.Equivs senv) where
-open import Definition.Untyped senv
+open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv equivs
 -- Weak head expansion of type equality

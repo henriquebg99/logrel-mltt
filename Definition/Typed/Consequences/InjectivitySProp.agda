@@ -1,9 +1,9 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.Consequences.InjectivitySProp (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
-open import Definition.Untyped senv hiding (wk)
-import Definition.Untyped senv as U
-open import Definition.Untyped.Properties senv
+open import Definition.Untyped senv equivs hiding (wk)
+import Definition.Untyped senv equivs as U
+open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs
 open import Definition.Typed.Properties senv equivs

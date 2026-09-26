@@ -8,10 +8,9 @@ open import Definition.LogicalRelation.ShapeView senv equivs
 open import Definition.LogicalRelation.Substitution.Introductions.EquivEq senv equivs
 open import Definition.LogicalRelation.Substitution.Introductions.Ind senv equivs
 open import Definition.LogicalRelation.Substitution.Introductions.IndRect senv swf equivs
-open import Definition.Typed.Weakening senv equivs using (subst-emb-fwd; subst-emb-bwd)
 open EqRelSet {{...}}
-open import Definition.Untyped senv
-open import Definition.Untyped.Properties senv
+open import Definition.Untyped senv equivs
+open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs 
 open import Definition.Typed.Properties senv equivs
 open import Definition.LogicalRelation senv equivs
@@ -56,6 +55,7 @@ open import Tools.Empty using (⊥; ⊥-elim)
 import Definition.SUntyped as SU
 open import Definition.LogicalRelation.EquivRed senv equivs
 open import Definition.Typed.IndRectCong senv swf equivs using (indRectBranchTyListCong)
+import Definition.Equiv senv as Eq
   -- Fundamental theorem for contexts.
 valid : ∀ {Γ} → ⊢ Γ → ⊩ᵛ Γ
 fundamental : ∀ {Γ A rA} (⊢A : Γ ⊢ A ^ rA) → Σ (⊩ᵛ Γ) (λ [Γ] → Γ ⊩ᵛ⟨ ∞ ⟩ A ^ rA / [Γ])
@@ -117,6 +117,21 @@ substAll-indRectBranch : ∀ {Γ Δ σ ind P rG lG ms}
                        → Γ ⊢All ms ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ]
                        → Δ ⊢All map (subst σ) ms ∷ indRectBranchTyList ind (subst (liftSubst σ) P) rG lG ^ [ rG , ι lG ]
 
+
+-- Validity of cast along an equivalence. For A ≢ B the left-hand side reduces
+-- to the right-hand side (reduction rule cast-equiv), but proving it still
+-- needs substitution lemmas for [emb_oterm_term]. For A ≡ B the cast
+-- reduces by cast-Ind-ctr/cast-Ind-cong instead, and the rule then requires
+-- bwd ∘ fwd of the representative equivalence to be the identity.
+postulate
+  cast-equivᵛ : ∀ {Γ A B e t}
+              → (H : reprInd A PE.≡ reprInd B)
+              → Γ ⊢ e ∷ Id (U ⁰) (Ind A) (Ind B) ^ [ % , ι ⁰ ]
+              → Γ ⊢ t ∷ Ind A ^ [ ! , ι ⁰ ]
+              → ∃ λ ([Γ] : ⊩ᵛ Γ)
+              → [ Γ ⊩ᵛ⟨ ∞ ⟩ cast ⁰ (Ind A) (Ind B) e t
+                    ≡ emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs A B H)) ∘ t ^ ⁰
+                    ∷ Ind B ^ [ ! , ι ⁰ ] / [Γ] ]
 
 abstract
   valid ε = ε
@@ -319,12 +334,13 @@ abstract
     let [Id] = Idᵛ {A = A} {t = t} {u = t } [Γ] [A] [t] [t]
     in [Γ] , [Id] , Idreflᵛ {Γ} {A} {l} {t} [Γ] [A] [t]
 
-  fundamentalTerm (equiv-eqⱼ ⊢Γ) =
+  fundamentalTerm (equiv-eqⱼ {e = e} ⊢Γ eq) =
     let [Γ] = valid ⊢Γ
         [U0] = maybeEmbᵛ {A = U ⁰} [Γ] (Uᵛ emb< [Γ])
-        [ℕ]  = maybeEmbTermᵛ {A = U ⁰} {t = ℕ} [Γ] [U0] (ℕᵗᵛ [Γ])
-        [Id] = Idᵛ {A = U ⁰} {t = ℕ} {u = ℕ} [Γ] [U0] [ℕ] [ℕ]
-    in [Γ] , [Id] , equivEqᵛ [Γ]
+        [A]  = maybeEmbTermᵛ {A = U ⁰} {t = Ind (E.Equiv.indA e)} [Γ] [U0] (Indᵗᵛ [Γ])
+        [B]  = maybeEmbTermᵛ {A = U ⁰} {t = Ind (E.Equiv.indB e)} [Γ] [U0] (Indᵗᵛ [Γ])
+        [Id] = Idᵛ {A = U ⁰} {t = Ind (E.Equiv.indA e)} {u = Ind (E.Equiv.indB e)} [Γ] [U0] [A] [B]
+    in [Γ] , [Id] , equivEqᵛ [Γ] eq
 
   fundamentalTerm (transpⱼ {A} {l} {P} {t} {s} {u} {e} ⊢A ⊢P ⊢t ⊢s ⊢u ⊢e)
     with fundamental ⊢A | fundamental ⊢P  | fundamentalTerm ⊢t | fundamentalTerm ⊢s | fundamentalTerm ⊢u | fundamentalTerm ⊢e
@@ -1011,6 +1027,7 @@ abstract
                           (cast-congᵗᵛ {A} {A'} {B} {B'} {t} {t'} {e} {e'} [Γ]₂ [UA]′ [UB]′ [A]ₜ′ [A']ₜ′ [B]ₜ′ [B']ₜ′ [A≡A']ₜ′ [B≡B']ₜ′ [A]′ [A']′ [B]′ [B']′ [t]ₜ′ [t'A]ₜ [t≡t']ₜ′
                                        [IdAB]′ [e]ₜ′ [IdAB']′ [e']ₜ′)
 
+  fundamentalTermEq (cast-equiv H ⊢e ⊢t) = cast-equivᵛ H ⊢e ⊢t
   fundamentalTermEq (cast-ℕ-0 {e} ⊢e) with fundamentalTerm ⊢e
   ... | [Γ] , [Id] , [e]ₜ =
     let ⊢eΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([Id] {Δ} {σ} ⊢Δ [σ])) (proj₁ ([e]ₜ {Δ} {σ} ⊢Δ [σ]))

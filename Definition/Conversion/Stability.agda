@@ -1,8 +1,8 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.Stability (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
-open import Definition.Untyped senv
-open import Definition.Untyped.Properties senv
+open import Definition.Untyped senv equivs
+open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs
 open import Definition.Conversion senv equivs
@@ -121,6 +121,7 @@ stabilityRedTerm Γ≡Δ (cast-Ind-ctr ind∈ eq x x₁) = cast-Ind-ctr ind∈ e
 stabilityRedTerm Γ≡Δ (cast-Ind-cong x X) = cast-Ind-cong (stabilityTerm Γ≡Δ x) (stabilityRedTerm Γ≡Δ X)
 stabilityRedTerm Γ≡Δ (cast-ne-subst x₁ x₂ x₃ x₄ x₅) = cast-ne-subst (stabilityTerm Γ≡Δ x₁) x₂ (stabilityRedTerm Γ≡Δ x₃) (stabilityTerm Γ≡Δ x₄) (stabilityTerm Γ≡Δ x₅)
 stabilityRedTerm Γ≡Δ (cast-ne-cong x₁ x₂ x₃ x₄ x₅ x₆) = cast-ne-cong (stabilityTerm Γ≡Δ x₁) x₂ (stabilityTerm Γ≡Δ x₃) x₄ (stabilityTerm Γ≡Δ x₅) (stabilityRedTerm Γ≡Δ x₆)
+stabilityRedTerm Γ≡Δ (cast-equiv A≢B H ⊢e ⊢t) = cast-equiv A≢B H (stabilityTerm Γ≡Δ ⊢e) (stabilityTerm Γ≡Δ ⊢t)
 
 -- Stability of type reductions.
 stabilityRed : ∀ {A B r Γ Δ} → ⊢ Γ ≡ Δ → Γ ⊢ A ⇒ B ^ r → Δ ⊢ A ⇒ B ^ r

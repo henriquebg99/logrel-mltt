@@ -1,8 +1,8 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.Consequences.TypeUnicity (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
-open import Definition.Untyped senv hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
-open import Definition.Untyped.Properties senv using (subst-Univ-either)
+open import Definition.Untyped senv equivs hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
+open import Definition.Untyped.Properties senv equivs using (subst-Univ-either)
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv equivs
 open import Definition.Typed.Weakening senv equivs
@@ -125,8 +125,8 @@ type-uniq (natrecⱼ _ x X X₁ X₂) (natrecⱼ _ y Y Y₁ Y₂) =
     let _ , U≡U = type-uniq (un-univ x) (un-univ y)
         er , _ = Uinjectivity U≡U
     in PE.refl , refl (substitution x (singleSubst X₂) (wfTerm X) ) 
-type-uniq (equiv-eqⱼ x) (equiv-eqⱼ x₁) =
-    PE.refl , refl (syntacticTerm (equiv-eqⱼ x))
+type-uniq (equiv-eqⱼ x eq) (equiv-eqⱼ x₁ eq₁) with PE.trans (PE.sym eq) eq₁
+... | PE.refl = PE.refl , refl (syntacticTerm (equiv-eqⱼ x eq))
 type-uniq (Emptyrecⱼ x X) (Emptyrecⱼ y Y) =
     let _ , U≡U = type-uniq (un-univ x) (un-univ y)
         er , _ = Uinjectivity U≡U

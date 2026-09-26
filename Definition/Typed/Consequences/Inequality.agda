@@ -1,7 +1,7 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.Consequences.Inequality (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
-open import Definition.Untyped senv hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
+open import Definition.Untyped senv equivs hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv equivs
 open import Definition.Typed.EqRelInstance senv equivs

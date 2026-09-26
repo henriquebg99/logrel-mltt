@@ -2,7 +2,7 @@ import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.Consequences.SucCong (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Typed.EqRelInstance senv equivs
-open import Definition.Untyped senv
+open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs
 open import Definition.Typed.Properties senv equivs

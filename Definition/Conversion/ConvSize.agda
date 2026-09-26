@@ -3,7 +3,7 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.ConvSize (senv : SI.SEnv) (equivs : E.Equivs senv) where
-open import Definition.Untyped senv
+open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
 open import Tools.Nat
 open import Tools.Product

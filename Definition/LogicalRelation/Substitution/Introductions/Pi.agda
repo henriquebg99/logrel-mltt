@@ -6,8 +6,8 @@ module Definition.LogicalRelation.Substitution.Introductions.Pi (senv : SI.SEnv)
 open import Definition.Typed.EqualityRelation senv equivs
 import Definition.Typed.Weakening senv equivs as Twk
 open EqRelSet {{...}}
-open import Definition.Untyped senv as U hiding (wk)
-open import Definition.Untyped.Properties senv
+open import Definition.Untyped senv equivs as U hiding (wk)
+open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs using (_∷_⊆_ ; _•ₜ_)
 open import Definition.Typed.Properties senv equivs

@@ -5,8 +5,8 @@ import Definition.Equiv as E
 module Definition.Typed.IndRectCong (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 
-open import Definition.Untyped senv
-open import Definition.Untyped.Properties senv
+open import Definition.Untyped senv equivs
+open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv equivs
 open import Definition.Typed.Weakening senv equivs

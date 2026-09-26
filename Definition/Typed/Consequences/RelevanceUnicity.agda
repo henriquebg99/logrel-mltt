@@ -2,8 +2,8 @@ import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.Consequences.RelevanceUnicity (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Typed.EqRelInstance senv equivs
-open import Definition.Untyped senv hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
-open import Definition.Untyped.Properties senv using (subst-Univ-either)
+open import Definition.Untyped senv equivs hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
+open import Definition.Untyped.Properties senv equivs using (subst-Univ-either)
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv equivs
 open import Definition.Typed.Weakening senv equivs
@@ -204,7 +204,7 @@ relevance-uniq ⊢t@(Ctrⱼ _ _ _ _) ⊢u = relevance-uniq-map-spine ⊢t ⊢u
 relevance-uniq (natrecⱼ _ x X X₁ X₂) (natrecⱼ _ y Y Y₁ Y₂) = relevance-uniq X₁ Y₁
 relevance-uniq (Emptyrecⱼ x X) (Emptyrecⱼ y Y) = let er , el = relevance-unicity x y in er
 relevance-uniq ⊢t@(IndRectⱼ _ _ _ _ _) ⊢u = relevance-uniq-map-spine ⊢t ⊢u
-relevance-uniq (equiv-eqⱼ x) (equiv-eqⱼ x₁) = PE.refl
+relevance-uniq (equiv-eqⱼ x _) (equiv-eqⱼ x₁ _) = PE.refl
 relevance-uniq (Idreflⱼ X) (Idreflⱼ Y) =
     PE.refl 
 relevance-uniq (transpⱼ x x₁ X X₁ X₂ X₃) (transpⱼ x₂ x₃ Y Y₁ Y₂ Y₃) =

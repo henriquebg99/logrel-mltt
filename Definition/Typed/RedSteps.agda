@@ -1,7 +1,7 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.RedSteps (senv : SI.SEnv) (equivs : E.Equivs senv) where
-open import Definition.Untyped senv
+open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
 open import Tools.Empty using (⊥; ⊥-elim)
 -- Concatenation of type reduction closures

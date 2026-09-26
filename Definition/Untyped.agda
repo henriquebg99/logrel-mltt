@@ -1,7 +1,8 @@
 -- Raw terms, weakening (renaming) and substitution.
 
 import Definition.SUntyped as SI
-module Definition.Untyped (senv : SI.SEnv) where
+import Definition.Equiv as E
+module Definition.Untyped (senv : SI.SEnv) (equivs : E.Equivs senv) where
 
 open import Tools.Nat
 open import Tools.Product
@@ -11,6 +12,7 @@ open import Tools.Nullary using (yes; no)
 import Tools.PropositionalEquality as PE
 open import Definition.Sort public
 import Definition.OUntyped senv as O
+import Definition.Equiv senv as Eq
 import Definition.SUntyped as SU
 OTerm = O.Term
 OKind = O.Kind
@@ -43,7 +45,7 @@ data Kind : Set where
   Castreflkind : Kind
   Fstkind : Kind
   Sndkind : Kind
-  Equivkind : Kind -- Equivalence witness
+  Equivkind : Nat → Kind -- Equivalence witness
   Ctrkind : Nat → Nat → Kind -- index of inductive type, index of constructor
   IndRectkind : Nat → Level → Kind -- inductive eliminator (motive level)
 
@@ -142,8 +144,8 @@ castrefl : (A t : Term) → Term
 castrefl A t = gen Castreflkind (⟦ 0 , A ⟧ ∷ ⟦ 0 , t ⟧ ∷ [])
 
 -- Equivalence witness
-equiv-eq : Term
-equiv-eq = gen Equivkind []
+equiv-eq : Nat → Term
+equiv-eq i = gen (Equivkind i) []
 
 -- inductive type
 Ind : Nat → Term
@@ -254,6 +256,10 @@ Univ-PE-injectivity PE.refl = PE.refl , PE.refl
 -- either it has a variable in head position that blocks reduction.
 -- either it is of the form Emptyrec (or terms that should reduce to emptyrec, such as incompatible casts)
 
+-- Representative of an inductive with respect to the equivalences
+reprInd : Nat → Nat
+reprInd i = proj₁ (Eq.repr equivs i)
+
 data Neutral : Term → Set where
   var     : ∀ n                     → Neutral (var n)
   ∘ₙ      : ∀ {k u l}     → Neutral k → Neutral (k ∘ u ^ l)
@@ -269,7 +275,9 @@ data Neutral : Term → Set where
   castnIndₙ : ∀ {l i B e t} → Neutral B → Neutral (cast l B (Ind i) e t)
   castIndₙ : ∀ {l i B e t} → Neutral B → Neutral (cast l (Ind i) B e t)
   castIndIndₙ : ∀ {l i e t} → Neutral t → Neutral (cast l (Ind i) (Ind i) e t)
-  castIndInd≢ₙ : ∀ {l i j e t} → i PE.≢ j → Neutral (cast l (Ind i) (Ind j) e t)
+  -- Inductives with different representatives are not related by an
+  -- equivalence, so a cast between them is stuck.
+  castIndInd≢ₙ : ∀ {l i j e t} → reprInd i PE.≢ reprInd j → Neutral (cast l (Ind i) (Ind j) e t)
   castIndΠₙ : ∀ {l i A rA r B e t} → Neutral (cast l (Ind i) (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) e t)
   castΠIndₙ : ∀ {l i A rA r B e t} → Neutral (cast l (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) (Ind i) e t)
   castIndℕₙ : ∀ {l i e t} → Neutral (cast l (Ind i) ℕ e t)

@@ -5,8 +5,8 @@ import Definition.Equiv as E
 module Definition.LogicalRelation.Substitution.ProofIrrelevance (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
-open import Definition.Untyped senv as U hiding (wk)
-open import Definition.Untyped.Properties senv using (wkSingleSubstId)
+open import Definition.Untyped senv equivs as U hiding (wk)
+open import Definition.Untyped.Properties senv equivs using (wkSingleSubstId)
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs
 open import Definition.Typed.Properties senv equivs

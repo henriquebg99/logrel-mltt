@@ -6,6 +6,7 @@ open import Tools.Maybe
 open import Tools.Inequality using (Bool; true; false; eqb; if_then_else_)
 open import Tools.Product
 open import Tools.Empty
+open import Tools.Unit
 open import Tools.PropositionalEquality
 
 -- Simple types
@@ -20,9 +21,8 @@ indNotInType i (Arrow A B) = indNotInType i A × indNotInType i B
 
 -- TODO explain why we rule out arrows
 isPositive : Nat → Type → Set
-isPositive ind (Ind ind′)  = ind ≡ ind′
+isPositive ind (Ind _)  = ⊤
 isPositive ind (Arrow _ _) = ⊥
-
 
 -- The description of an inductive type.  The levels of inductive types are
 -- always zero, so they are not recorded.

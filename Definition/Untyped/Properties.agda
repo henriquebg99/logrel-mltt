@@ -1,8 +1,9 @@
 -- Laws for weakenings and substitutions.
 
 import Definition.SUntyped as SI
-module Definition.Untyped.Properties (senv : SI.SEnv) where
-open import Definition.Untyped senv
+import Definition.Equiv as E
+module Definition.Untyped.Properties (senv : SI.SEnv) (equivs : E.Equivs senv) where
+open import Definition.Untyped senv equivs
 open import Tools.Nat
 open import Tools.List
 open import Tools.Inequality using (filter; filter-∈ₗ)

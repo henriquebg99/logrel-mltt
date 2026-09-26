@@ -6,7 +6,7 @@ module Definition.LogicalRelation.Substitution.Introductions.Ind (senv : SI.SEnv
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 
-open import Definition.Untyped senv
+open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv equivs
 open import Definition.LogicalRelation senv equivs

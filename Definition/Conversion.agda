@@ -3,7 +3,7 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion (senv : SI.SEnv) (equivs : E.Equivs senv) where
-open import Definition.Untyped senv
+open import Definition.Untyped senv equivs
 import Definition.SUntyped as SU
 open import Definition.Typed senv equivs
 open import Tools.Nat
@@ -168,7 +168,7 @@ mutual
                → Γ ⊢ e' ∷ (Id (U ⁰) ℕ (Ind i)) ^ [ % , ι ⁰ ]
                → Γ ⊢ cast ⁰ ℕ (Ind i) e t ~ cast ⁰ ℕ (Ind i) e' t' ↑! (Ind i) ^ ι ⁰
     cast-IndInd : ∀ {i j t t' e e'}
-               → i PE.≢ j
+               → reprInd i PE.≢ reprInd j
                → Γ ⊢ t [conv↑] t' ∷ (Ind i) ^ ι ⁰
                → Γ ⊢ e ∷ (Id (U ⁰) (Ind i) (Ind j)) ^ [ % , ι ⁰ ]
                → Γ ⊢ e' ∷ (Id (U ⁰) (Ind i) (Ind j)) ^ [ % , ι ⁰ ]

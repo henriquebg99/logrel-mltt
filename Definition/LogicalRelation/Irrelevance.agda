@@ -6,7 +6,7 @@ module Definition.LogicalRelation.Irrelevance (senv : SI.SEnv) (equivs : E.Equiv
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 open import Tools.Empty using (⊥; ⊥-elim)
-open import Definition.Untyped senv
+open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv equivs
 open import Definition.LogicalRelation senv equivs

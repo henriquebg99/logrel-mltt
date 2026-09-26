@@ -6,8 +6,8 @@ module Definition.LogicalRelation.Substitution.Introductions.IndRect (senv : SI.
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 
-open import Definition.Untyped senv
-open import Definition.Untyped.Properties senv
+open import Definition.Untyped senv equivs
+open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv equivs
 open import Definition.Typed.RedSteps senv equivs

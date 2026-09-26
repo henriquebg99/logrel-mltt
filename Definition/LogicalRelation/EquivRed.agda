@@ -11,7 +11,7 @@ import Definition.Equiv senv as Eq
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 
-open import Definition.Untyped senv hiding (wk)
+open import Definition.Untyped senv equivs hiding (wk)
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv equivs
 open import Definition.Typed.RedSteps senv equivs
@@ -27,39 +27,44 @@ open import Tools.List using (_∈ₗ_)
 open import Tools.Empty using (⊥-elim)
 import Tools.PropositionalEquality as PE
 
-Πℕℕ : ∀ {Γ} → (⊢Γ : ⊢ Γ) →
-  Γ ⊩⟨ ι ⁰ ⟩ Π ℕ ^ ! ° ⁰ ▹ ℕ ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ]
-Πℕℕ {Γ} ⊢Γ =
-  let Dℕ = idRed:*: (univ (ℕⱼ ⊢Γ))
-      [ℕ] = ℕᵣ Dℕ
-      ⊢ℕ = univ (ℕⱼ ⊢Γ)
-      ⊢Γℕ = _∙_ ⊢Γ ⊢ℕ
-      ⊢G = univ (ℕⱼ ⊢Γℕ)
-      ⊢Π = Πⱼ (λ _ → ≡is≤ PE.refl , ≡is≤ PE.refl) ▹ (λ abs → ⊥-elim (!≢% abs)) ▹ (ℕⱼ ⊢Γ) ▹ (ℕⱼ ⊢Γℕ)
+ΠIndInd : ∀ {Γ} i j → (⊢Γ : ⊢ Γ) →
+  Γ ⊩⟨ ι ⁰ ⟩ Π Ind i ^ ! ° ⁰ ▹ Ind j ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ]
+ΠIndInd {Γ} i j ⊢Γ =
+  let ⊢Ind = univ (Indⱼ ⊢Γ)
+      [Ind] = Indᵣ (idRed:*: ⊢Ind)
+      ⊢ΓInd = _∙_ ⊢Γ ⊢Ind
+      ⊢G = univ (Indⱼ ⊢ΓInd)
+      ⊢Π = Πⱼ (λ _ → ≡is≤ PE.refl , ≡is≤ PE.refl) ▹ (λ abs → ⊥-elim (!≢% abs)) ▹ (Indⱼ ⊢Γ) ▹ (Indⱼ ⊢ΓInd)
       [G] : ∀ {ρ Δ a} → ([ρ] : ρ ∷ Δ ⊆ Γ) → (⊢Δ : ⊢ Δ)
-          → ([a] : Δ ⊩⟨ ι ⁰ ⟩ a ∷ ℕ ^ [ ! , ι ⁰ ] / Lwk.wk [ρ] ⊢Δ [ℕ])
-          → Δ ⊩⟨ ι ⁰ ⟩ ℕ ^ [ ! , ι ⁰ ]
-      [G] [ρ] ⊢Δ [a] = ℕᵣ (idRed:*: (univ (ℕⱼ ⊢Δ)))
+          → ([a] : Δ ⊩⟨ ι ⁰ ⟩ a ∷ Ind i ^ [ ! , ι ⁰ ] / Lwk.wk [ρ] ⊢Δ [Ind])
+          → Δ ⊩⟨ ι ⁰ ⟩ Ind j ^ [ ! , ι ⁰ ]
+      [G] [ρ] ⊢Δ [a] = Indᵣ (idRed:*: (univ (Indⱼ ⊢Δ)))
       G-ext : ∀ {ρ Δ a b}
             → ([ρ] : ρ ∷ Δ ⊆ Γ) → (⊢Δ : ⊢ Δ)
-            → ([a] : Δ ⊩⟨ ι ⁰ ⟩ a ∷ ℕ ^ [ ! , ι ⁰ ] / Lwk.wk [ρ] ⊢Δ [ℕ])
-            → ([b] : Δ ⊩⟨ ι ⁰ ⟩ b ∷ ℕ ^ [ ! , ι ⁰ ] / Lwk.wk [ρ] ⊢Δ [ℕ])
-            → ([a≡b] : Δ ⊩⟨ ι ⁰ ⟩ a ≡ b ∷ ℕ ^ [ ! , ι ⁰ ] / Lwk.wk [ρ] ⊢Δ [ℕ])
-            → Δ ⊩⟨ ι ⁰ ⟩ ℕ ≡ ℕ ^ [ ! , ι ⁰ ] / [G] [ρ] ⊢Δ [a]
+            → ([a] : Δ ⊩⟨ ι ⁰ ⟩ a ∷ Ind i ^ [ ! , ι ⁰ ] / Lwk.wk [ρ] ⊢Δ [Ind])
+            → ([b] : Δ ⊩⟨ ι ⁰ ⟩ b ∷ Ind i ^ [ ! , ι ⁰ ] / Lwk.wk [ρ] ⊢Δ [Ind])
+            → ([a≡b] : Δ ⊩⟨ ι ⁰ ⟩ a ≡ b ∷ Ind i ^ [ ! , ι ⁰ ] / Lwk.wk [ρ] ⊢Δ [Ind])
+            → Δ ⊩⟨ ι ⁰ ⟩ Ind j ≡ Ind j ^ [ ! , ι ⁰ ] / [G] [ρ] ⊢Δ [a]
       G-ext [ρ] ⊢Δ [a] [b] [a≡b] = reflEq ([G] [ρ] ⊢Δ [a])
-  in Πᵣ′ ! ⁰ ⁰ (≡is≤ PE.refl) (≡is≤ PE.refl) ℕ ℕ (idRed:*: (univ ⊢Π)) ⊢ℕ ⊢G
-       (≅-univ (≅ₜ-Π-cong (λ _ → ≡is≤ PE.refl , ≡is≤ PE.refl) (λ abs → ⊥-elim (!≢% abs)) ⊢ℕ
-                 (≅ₜ-ℕrefl ⊢Γ) (≅ₜ-ℕrefl ⊢Γℕ)))
-       (λ [ρ] ⊢Δ → Lwk.wk [ρ] ⊢Δ [ℕ])
+  in Πᵣ′ ! ⁰ ⁰ (≡is≤ PE.refl) (≡is≤ PE.refl) (Ind i) (Ind j) (idRed:*: (univ ⊢Π)) ⊢Ind ⊢G
+       (≅-univ (≅ₜ-Π-cong (λ _ → ≡is≤ PE.refl , ≡is≤ PE.refl) (λ abs → ⊥-elim (!≢% abs)) ⊢Ind
+                 (≅ₜ-Indrefl ⊢Γ) (≅ₜ-Indrefl ⊢ΓInd)))
+       (λ [ρ] ⊢Δ → Lwk.wk [ρ] ⊢Δ [Ind])
        [G] G-ext
 
+-- The functions of every equivalence of [equivs] are reducible
 record EquivRed : Set₁ where
   field
     [fwd] : ∀ {Γ equiv} (⊢Γ : ⊢ Γ) → equiv ∈ₗ equivs
-          → let [Π] = Πℕℕ ⊢Γ
-            in Γ ⊩⟨ ι ⁰ ⟩ emb_oterm_term (Eq.Equiv.fwd equiv)
-                 ∷ Π ℕ ^ ! ° ⁰ ▹ ℕ ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / [Π]
+          → let [Π] = ΠIndInd (Eq.Equiv.indA equiv) (Eq.Equiv.indB equiv) ⊢Γ
+            in Γ ⊩⟨ ι ⁰ ⟩ emb_oterm_term (Eq.fwdₒ equiv)
+                 ∷ Π Ind (Eq.Equiv.indA equiv) ^ ! ° ⁰ ▹ Ind (Eq.Equiv.indB equiv) ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / [Π]
     [bwd] : ∀ {Γ equiv} (⊢Γ : ⊢ Γ) → equiv ∈ₗ equivs
-          → let [Π] = Πℕℕ ⊢Γ
-            in Γ ⊩⟨ ι ⁰ ⟩ emb_oterm_term (Eq.Equiv.bwd equiv)
-                 ∷ Π ℕ ^ ! ° ⁰ ▹ ℕ ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / [Π]
+          → let [Π] = ΠIndInd (Eq.Equiv.indB equiv) (Eq.Equiv.indA equiv) ⊢Γ
+            in Γ ⊩⟨ ι ⁰ ⟩ emb_oterm_term (Eq.bwdₒ equiv)
+                 ∷ Π Ind (Eq.Equiv.indB equiv) ^ ! ° ⁰ ▹ Ind (Eq.Equiv.indA equiv) ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / [Π]
+    -- The forward function of the equivalence between two inductives with the
+    -- same representative (a composite of the equivalences of [equivs])
+    [repr-fwd] : ∀ {Γ i j} (⊢Γ : ⊢ Γ) (H : reprInd i PE.≡ reprInd j)
+               → Γ ⊩⟨ ι ⁰ ⟩ emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs i j H))
+                   ∷ Π Ind i ^ ! ° ⁰ ▹ Ind j ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / ΠIndInd i j ⊢Γ
