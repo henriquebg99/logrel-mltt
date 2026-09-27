@@ -1,7 +1,7 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.Consequences.IndRectCong (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
-open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Typed.EqRelInstance senv swf equivs
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Consequences.Syntactic senv swf equivs

@@ -2,22 +2,23 @@ import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Properties.Transitivity (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+module Definition.LogicalRelation.Properties.Transitivity (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 open import Definition.Untyped senv equivs
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Typed.Weakening senv equivs renaming (wk to TWwk)
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Properties.Escape senv equivs
-open import Definition.LogicalRelation.ShapeView senv equivs
-open import Definition.LogicalRelation.Irrelevance senv equivs
-open import Definition.LogicalRelation.Properties.Conversion senv equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Properties.Escape senv swf equivs
+open import Definition.LogicalRelation.ShapeView senv swf equivs
+open import Definition.LogicalRelation.Irrelevance senv swf equivs
+open import Definition.LogicalRelation.Properties.Conversion senv swf equivs
 open import Tools.Product
 open import Tools.Empty
-open import Tools.List using (All₂; []ₐ; _∷ₐ_)
+open import Tools.List using (All₂; All₃; []ₐ; _∷ₐ_)
+import Definition.SUntyped as SU
 import Tools.PropositionalEquality as PE
 mutual
   -- Helper function for transitivity of type equality using shape views.
@@ -195,25 +196,28 @@ mutual
                       → [Inductive]-prop Γ i k k″
   transInductive-prop (ne [k≡k′]) (ne [k′≡k″]) =
     ne (transEqTermNe [k≡k′] [k′≡k″])
-  transInductive-prop (ne (neNfₜ₌ _ neM _)) (ctrᵣ _) =
+  transInductive-prop (ne (neNfₜ₌ _ neM _)) (ctrᵣ _ _ _ _) =
     ⊥-elim (Ctr≢ne neM PE.refl)
-  transInductive-prop {Γ} {i} (ctrᵣ {j = j} {args = args} {args' = mids} ps) q =
+  transInductive-prop {Γ} {i} (ctrᵣ {j = j} {args = args} {args' = mids} ind∈ name≡ eq ps) q =
     go q PE.refl
     where
     go : ∀ {n n′} → [Inductive]-prop Γ i n n′
        → n PE.≡ ctr i j mids
        → [Inductive]-prop Γ i (ctr i j args) n′
     go (ne (neNfₜ₌ neK _ _)) eq = ⊥-elim (Ctr≢ne neK (PE.sym eq))
-    go (ctrᵣ qs) eq with ctr-PE-injectivity eq
-    ... | PE.refl , PE.refl , PE.refl = ctrᵣ (transAll₂Ind ps qs)
+    go (ctrᵣ ind∈′ name≡′ eq′ qs) e with ctr-PE-injectivity e
+    ... | PE.refl , PE.refl , PE.refl
+      with SU.name-inj senv (proj₁ swf) ind∈ ind∈′ (PE.trans name≡ (PE.sym name≡′))
+    ... | PE.refl with PE.trans (PE.sym eq) eq′
+    ... | PE.refl = ctrᵣ ind∈ name≡ eq (transAll₂Ind ps qs)
 
-  transAll₂Ind : ∀ {Γ i args args' args″}
-               → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args args'
-               → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args' args″
-               → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args args″
+  transAll₂Ind : ∀ {Γ args args' args″ As}
+               → All₃ (λ a a' A → ∃ λ k → A PE.≡ Ind k × Γ ⊩Ind a ≡ a' ∷Ind k) args args' As
+               → All₃ (λ a a' A → ∃ λ k → A PE.≡ Ind k × Γ ⊩Ind a ≡ a' ∷Ind k) args' args″ As
+               → All₃ (λ a a' A → ∃ λ k → A PE.≡ Ind k × Γ ⊩Ind a ≡ a' ∷Ind k) args args″ As
   transAll₂Ind []ₐ []ₐ = []ₐ
-  transAll₂Ind (p ∷ₐ ps) (q ∷ₐ qs) =
-    transEqTermInd p q ∷ₐ transAll₂Ind ps qs
+  transAll₂Ind ((k , PE.refl , p) ∷ₐ ps) ((.k , PE.refl , q) ∷ₐ qs) =
+    (k , PE.refl , transEqTermInd p q) ∷ₐ transAll₂Ind ps qs
 
 -- Empty
 transEmpty-prop : ∀ {Γ k k′ k″}

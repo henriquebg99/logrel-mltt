@@ -1,9 +1,9 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.Reduction (senv : SI.SEnv) (equivs : E.Equivs senv) where
+module Definition.Typed.Reduction (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 -- Weak head expansion of type equality
 reduction : ∀ {A A′ B B′ r Γ}
           → Γ ⊢ A ⇒* A′ ^ r

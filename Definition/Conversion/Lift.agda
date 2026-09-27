@@ -5,15 +5,15 @@ open import Definition.Untyped senv equivs
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs
-open import Definition.Typed.Properties senv equivs
-open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Typed.Properties senv swf equivs
+open import Definition.Typed.EqRelInstance senv swf equivs
 open import Definition.Conversion senv equivs
 open import Definition.Conversion.Whnf senv swf equivs
 open import Definition.Conversion.Soundness senv swf equivs
-open import Definition.Conversion.Reduction senv equivs
+open import Definition.Conversion.Reduction senv swf equivs
 open import Definition.Conversion.Weakening senv equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Properties senv equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Properties senv swf equivs
 open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
 open import Definition.Typed.Consequences.Syntactic senv swf equivs
 open import Definition.Typed.Consequences.Reduction senv swf equivs

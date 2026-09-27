@@ -6,8 +6,8 @@ import Definition.Untyped senv equivs as U
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs
-open import Definition.Typed.Properties senv equivs
-open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Typed.Properties senv swf equivs
+open import Definition.Typed.EqRelInstance senv swf equivs
 open import Definition.Typed.Consequences.Syntactic senv swf equivs
 open import Definition.Conversion senv equivs
 -- open import Definition.Conversion.Decidable

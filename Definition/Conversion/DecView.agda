@@ -4,7 +4,7 @@ module Definition.Conversion.DecView (senv : SI.SEnv) (swf : SI.swfenv senv) (eq
 open import Definition.Untyped senv equivs
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs as T
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Conversion senv equivs
 open import Definition.Conversion.Whnf senv swf equivs
 open import Definition.Conversion.Soundness senv swf equivs

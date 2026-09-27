@@ -38,13 +38,11 @@ mutual
         nt , nt' = whnfConv↓TermNe nA x₁
     in nt , castₙ nA nB nt'
   ne~↑! (castℕ-refl' x x₁) = let _ , nt , nu = ne~↓! x in nt , castℕℕₙ nu
-  ne~↑! (castInd-refl' x x₁) = let _ , nt , nu = ne~↓! x in nt , castIndIndₙ nu
   ne~↑! (cast-neℕ x x₁ x₂ x₃) = let _ , nA , nB = ne~↓! x in castnℕₙ nA , castnℕₙ nB
   ne~↑! (cast-neΠ x x₁ x₂ x₃ x₄) = let _ , nA , nB = ne~↓! x₁ in castnΠₙ nA , castnΠₙ nB
   ne~↑! (IndRect-cong _ x x₁ x₂) = let _ , nt , nu = ne~↓! x₁ in IndRectₙ nt , IndRectₙ nu
   ne~↑! (cast-neInd x x₁ x₂ x₃) = let _ , nA , nB = ne~↓! x in castnIndₙ nA , castnIndₙ nB
   ne~↑! (cast-Ind x x₁ x₂ x₃) = let _ , nA' , nA = ne~↓! x in castIndₙ nA , castIndₙ nA'
-  ne~↑! (castInd-refl x x₁) = let _ , nt , nu = ne~↓! x in castIndIndₙ nt , nu
   ne~↑! (cast-IndΠ x x₁ x₂ x₃) = castIndΠₙ , castIndΠₙ
   ne~↑! (cast-ΠInd x x₁ x₂ x₃) = castΠIndₙ , castΠIndₙ
   ne~↑! (cast-Indℕ x x₁ x₂) = castIndℕₙ , castIndℕₙ
@@ -76,8 +74,8 @@ mutual
   whnfConv↓Term (zero-refl x) = ℕₙ , zeroₙ , zeroₙ
   whnfConv↓Term (suc-cong x) = ℕₙ , sucₙ , sucₙ
   whnfConv↓Term (η-eq _ _ x x₁ x₂ y y₁ x₃) = Πₙ , functionWhnf y , functionWhnf y₁
-  whnfConv↓Term (Ind-refl x) = Uₙ , Indₙ , Indₙ
-  whnfConv↓Term (ctr-cong _ _ _ _ x) = Indₙ , ctrₙ , ctrₙ
+  whnfConv↓Term (Ind-refl x _) = Uₙ , Indₙ , Indₙ
+  whnfConv↓Term (ctr-cong _ _ _ x) = Indₙ , ctrₙ , ctrₙ
   
   -- Extraction of WHNF from algorithmic equality of types in WHNF.
   whnfConv↓ : ∀ {A B rA Γ}

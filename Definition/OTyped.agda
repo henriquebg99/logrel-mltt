@@ -97,7 +97,7 @@ mutual
            → Γ       ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (G ^ rG ° lG ▹▹ G [ suc (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ [ rG , ι lG ]
            → Γ       ⊢ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
            → Γ       ⊢ natrec lG G z s n ∷ G [ n ] ^ [ rG , ι lG ]
-    Indⱼ    : ∀ {n} → ⊢ Γ → Γ ⊢ Ind n ∷ U ⁰ ^ [ ! , ι ¹ ]
+    Indⱼ    : ∀ {ind} → ⊢ Γ → ind ∈ₗ senv → Γ ⊢ Ind (SU.SInd.name ind) ∷ U ⁰ ^ [ ! , ι ¹ ]
     Ctrⱼ    : ∀ {ind j args Ts}
            → ⊢ Γ
            → ind ∈ₗ senv
@@ -277,15 +277,13 @@ mutual
                → Γ ⊢ cast ⁰ ℕ ℕ e (suc n)
                    ≡ suc (cast ⁰ ℕ ℕ e n)
                    ∷ ℕ ^ [ ! , ι ⁰ ]
-    cast-Ind-ctr : ∀ {ind j e args Ts}
+    cast-Ind-ctr : ∀ {ind e t}
                → ind ∈ₗ senv
-               → SU.ctrArgsTypeList ind j PE.≡ just Ts
                → Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ]
-               → Γ ⊢All args ∷ map emb-stype-oterm Ts ^ [ ! , ι ⁰ ]
-               → Γ ⊢ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e (ctr (SU.SInd.name ind) j args)
-                   ≡ ctr (SU.SInd.name ind) j (map (λ a → cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e a) args)
-                   ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
-
+               → Γ ⊢ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+               → Γ ⊢ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e t
+                   ≡ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+    
 mutual
   data _⊢_⇒_∷_^_ (Γ : Con Term) : Term → Term → Term → TypeLevel → Set where
     conv         : ∀ {A B l t u}
@@ -391,14 +389,14 @@ mutual
                → Γ ⊢ cast ⁰ K L e t
                    ⇒ cast ⁰ K L e u
                    ∷ L ^ ι ⁰
-    cast-Ind-ctr : ∀ {ind j e args Ts}
-               → ind ∈ₗ senv
-               → SU.ctrArgsTypeList ind j PE.≡ just Ts
-               → Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ]
-               → Γ ⊢All args ∷ map emb-stype-oterm Ts ^ [ ! , ι ⁰ ]
-               → Γ ⊢ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e (ctr (SU.SInd.name ind) j args)
-                   ⇒ ctr (SU.SInd.name ind) j (map (λ a → cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e a) args)
-                   ∷ Ind (SU.SInd.name ind) ^ ι ⁰
+
+    cast-Ind-ctr : ∀ {ind e t}
+            → ind ∈ₗ senv
+            → Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ]
+            → Γ ⊢ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+            → Γ ⊢ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e t
+                ⇒ t ∷ Ind (SU.SInd.name ind) ^ ι ⁰
+
 
   -- Type reduction
   data _⊢_⇒_^_ (Γ : Con Term) : Term → Term → TypeInfo → Set where
@@ -492,11 +490,12 @@ Ugenⱼ {l = ¹} ⊢Γ = Uⱼ ⊢Γ
 
 -- embedding of simple terms into OTerm preserves typing
 
-emb-stype-oterm-has-type : ∀ (A : SU.Type) {Γ} → ⊢ Γ → Γ ⊢ emb-stype-oterm A ∷ U ⁰ ^ [ ! , next ⁰ ]
-emb-stype-oterm-has-type (SU.Ind n) ⊢Γ = Indⱼ ⊢Γ
-emb-stype-oterm-has-type (SU.Arrow A B) ⊢Γ =
-  Πⱼ (λ _ → ⁰min ⁰ , ⁰min ⁰) ▹ (λ ()) ▹ (emb-stype-oterm-has-type A ⊢Γ)
-     ▹ (emb-stype-oterm-has-type B (⊢Γ ∙ univ (emb-stype-oterm-has-type A ⊢Γ)))
+emb-stype-oterm-has-type : ∀ (A : SU.Type) {Γ} → SU.indsInSEnv senv A → ⊢ Γ → Γ ⊢ emb-stype-oterm A ∷ U ⁰ ^ [ ! , next ⁰ ]
+emb-stype-oterm-has-type (SU.Ind n) n∈ ⊢Γ with ∈ₗ-map-inv SU.SInd.name senv n n∈
+... | ind , PE.refl , ind∈ = Indⱼ ⊢Γ ind∈
+emb-stype-oterm-has-type (SU.Arrow A B) (A∈ , B∈) ⊢Γ =
+  Πⱼ (λ _ → ⁰min ⁰ , ⁰min ⁰) ▹ (λ ()) ▹ (emb-stype-oterm-has-type A A∈ ⊢Γ)
+     ▹ (emb-stype-oterm-has-type B B∈ (⊢Γ ∙ univ (emb-stype-oterm-has-type A A∈ ⊢Γ)))
 
 -- Embedded simple types are closed
 mutual
@@ -541,6 +540,7 @@ emb-scon Δ = ε ∙ˢ Δ
 
 -- Simple terms typed in [Δ] are typed in any well-formed context extended by [Δ]
 emb-sterm-oterm-preserves-typing′ : ∀ {Γ Δ t A} → ⊢ Γ
+  → TL.All (SU.indsInSEnv senv) Δ
   → Δ ST.⊢ t ∷ A
   → (Γ ∙ˢ Δ) ⊢ emb-sterm-oterm t ∷ emb-stype-oterm A ^ [ ! , ι ⁰ ]
 emb-sterm-oterm-preserves-typing′ {Γ₀} ⊢Γ₀ = go
@@ -548,9 +548,21 @@ emb-sterm-oterm-preserves-typing′ {Γ₀} ⊢Γ₀ = go
   Π⁰ : Term → Term → Term
   Π⁰ A B = Π A ^ ! ° ⁰ ▹ B ° ⁰ ° ⁰ ^ !
 
-  emb-scon-wf : ∀ Γ → ⊢ (Γ₀ ∙ˢ Γ)
-  emb-scon-wf TL.[] = ⊢Γ₀
-  emb-scon-wf (A TL.∷ Γ) = emb-scon-wf Γ ∙ univ (emb-stype-oterm-has-type A (emb-scon-wf Γ))
+  emb-scon-wf : ∀ Γ → TL.All (SU.indsInSEnv senv) Γ → ⊢ (Γ₀ ∙ˢ Γ)
+  emb-scon-wf TL.[] TL.[]ₐ = ⊢Γ₀
+  emb-scon-wf (A TL.∷ Γ) (A∈ TL.∷ₐ Γ∈) = emb-scon-wf Γ Γ∈ ∙ univ (emb-stype-oterm-has-type A A∈ (emb-scon-wf Γ Γ∈))
+
+  -- The types of simple terms in a declared context are declared
+  st-var-inds : ∀ {x A Γ} → TL.All (SU.indsInSEnv senv) Γ → x ST.∷ A ∈ Γ → SU.indsInSEnv senv A
+  st-var-inds (A∈ TL.∷ₐ _) ST.here = A∈
+  st-var-inds (_ TL.∷ₐ Γ∈) (ST.there h) = st-var-inds Γ∈ h
+
+  st-type-inds : ∀ {Γ t A} → TL.All (SU.indsInSEnv senv) Γ → Γ ST.⊢ t ∷ A → SU.indsInSEnv senv A
+  st-type-inds Γ∈ (ST.varⱼ h) = st-var-inds Γ∈ h
+  st-type-inds Γ∈ (ST.appⱼ f∈ _) = proj₂ (st-type-inds Γ∈ f∈)
+  st-type-inds Γ∈ (ST.lamⱼ A∈ t∈) = A∈ , st-type-inds (A∈ TL.∷ₐ Γ∈) t∈
+  st-type-inds Γ∈ (ST.ctrⱼ ind∈ _ _ _) = TL.∈ₗ-map SU.SInd.name ind∈
+  st-type-inds Γ∈ (ST.indRectⱼ _ P∈ _ _) = P∈
 
   emb-stype-wk1n-id : ∀ A n → repeat wk1 (emb-stype-oterm A) n PE.≡ emb-stype-oterm A
   emb-stype-wk1n-id A 0 = PE.refl
@@ -566,14 +578,14 @@ emb-sterm-oterm-preserves-typing′ {Γ₀} ⊢Γ₀ = go
   emb-st-var∈ ST.here = here
   emb-st-var∈ (ST.there h) = there (emb-st-var∈ h)
 
-  emb-st-wkTy≡ : ∀ {Γ A} d → ⊢ ((Γ₀ ∙ˢ Γ))
+  emb-st-wkTy≡ : ∀ {Γ A} d → SU.indsInSEnv senv A → ⊢ ((Γ₀ ∙ˢ Γ))
     → (Γ₀ ∙ˢ Γ) ⊢ repeat wk1 (emb-stype-oterm A) d ≡ emb-stype-oterm A ^ [ ! , ι ⁰ ]
-  emb-st-wkTy≡ {Γ} {A} d ⊢Γ =
+  emb-st-wkTy≡ {Γ} {A} d A∈ ⊢Γ =
     PE.subst (λ (embTy : Term) → (Γ₀ ∙ˢ Γ) ⊢ repeat wk1 (emb-stype-oterm A) d ≡ embTy ^ [ ! , ι ⁰ ])
             (emb-stype-wk1n-id A d)
             (refl (PE.subst (λ (embTy : Term) → (Γ₀ ∙ˢ Γ) ⊢ embTy ^ [ ! , ι ⁰ ])
                            (PE.sym (emb-stype-wk1n-id A d))
-                           (univ (emb-stype-oterm-has-type A ⊢Γ))))
+                           (univ (emb-stype-oterm-has-type A A∈ ⊢Γ))))
 
   _∙∙_ : Con Term → List Term → Con Term
   Γ ∙∙ TL.[] = Γ
@@ -597,12 +609,6 @@ emb-sterm-oterm-preserves-typing′ {Γ₀} ⊢Γ₀ = go
       (repeat-wk1-comm (length As) A)
       (there* As (there h))
 
-  ⊢∙∙-stypes : ∀ {Γ} As → ⊢ Γ → ⊢ (Γ ∙∙ map emb-stype-oterm As)
-  ⊢∙∙-stypes TL.[] ⊢Γ = ⊢Γ
-  ⊢∙∙-stypes {Γ} (A TL.∷ As) ⊢Γ =
-    ⊢∙∙-stypes {Γ = Γ ∙ emb-stype-oterm A ^ [ ! , ι ⁰ ]} As
-      (⊢Γ ∙ univ (emb-stype-oterm-has-type A ⊢Γ))
-
   wk1^-Pλ : ∀ n i P →
     wk1^ n (lam (Ind i) ▹ wk1 (emb-stype-oterm P) ^ ¹) PE.≡
     lam (Ind i) ▹ wk1 (emb-stype-oterm P) ^ ¹
@@ -613,136 +619,6 @@ emb-sterm-oterm-preserves-typing′ {Γ₀} ⊢Γ₀ = go
         (PE.trans (PE.cong (wk (lift (step id))) (emb-stype-wk-id P (step id)))
           (PE.trans (emb-stype-wk-id P (lift (step id)))
             (PE.sym (emb-stype-wk-id P (step id))))))
-
-  β-const-P : ∀ {Γ} i P a →
-    ⊢ Γ →
-    Γ ⊢ a ∷ Ind i ^ [ ! , ι ⁰ ] →
-    Γ ⊢ (lam (Ind i) ▹ wk1 (emb-stype-oterm P) ^ ¹) ∘ a ^ ¹
-        ≡ emb-stype-oterm P ∷ U ⁰ ^ [ ! , next ⁰ ]
-  β-const-P {Γ} i P a ⊢Γ ⊢a =
-    let ⊢Ind = univ (Indⱼ ⊢Γ)
-        ⊢Pemb∙ = emb-stype-oterm-has-type P (⊢Γ ∙ ⊢Ind)
-        ⊢wk1Pemb =
-          PE.subst (λ u → Γ ∙ Ind i ^ [ ! , ι ⁰ ] ⊢ u ∷ U ⁰ ^ [ ! , next ⁰ ])
-            (PE.sym (emb-stype-wk-id P (step id)))
-            ⊢Pemb∙
-        βeq = β-red (⁰min ¹) (≡is≤ PE.refl) ⊢Ind ⊢wk1Pemb ⊢a
-    in  PE.subst
-          (λ T → Γ ⊢ (lam (Ind i) ▹ wk1 (emb-stype-oterm P) ^ ¹) ∘ a ^ ¹
-                    ≡ T ∷ U ⁰ ^ [ ! , next ⁰ ])
-          (PE.trans (PE.cong (λ u → u [ a ]) (emb-stype-wk-id P (step id)))
-            (emb-stype-subst-id P (sgSubst a)))
-          βeq
-
-  data TysEq (Γ : Con Term) : List Term → List Term → TypeInfo → Set where
-    ε : ∀ {r} → TysEq Γ TL.[] TL.[] r
-    cons : ∀ {A B As Bs r}
-        → Γ ⊢ A ≡ B ^ r
-        → TysEq Γ As Bs r
-        → TysEq Γ (A TL.∷ As) (B TL.∷ Bs) r
-
-  convAll : ∀ {Γ ts As Bs r}
-    → Γ ⊢All ts ∷ As ^ r
-    → TysEq Γ As Bs r
-    → Γ ⊢All ts ∷ Bs ^ r
-  convAll εⱼ ε = εⱼ
-  convAll (consⱼ ⊢t ⊢ts) (cons A≡B As≡Bs) = consⱼ (conv ⊢t A≡B) (convAll ⊢ts As≡Bs)
-
-  ⊢All-ctor-vars : ∀ {Γ} As k P →
-    ⊢ ((Γ ∙∙ map emb-stype-oterm As) ∙∙ replicate k (emb-stype-oterm P)) →
-    ((Γ ∙∙ map emb-stype-oterm As) ∙∙ replicate k (emb-stype-oterm P))
-      ⊢All map (λ j → var (((k + length As) - 1) - j)) (range (length As))
-          ∷ map emb-stype-oterm As ^ [ ! , ι ⁰ ]
-  ⊢All-ctor-vars {Γ} TL.[] k P ⊢Γ' = εⱼ
-  ⊢All-ctor-vars {Γ} (A TL.∷ As) k P ⊢Γ' =
-    PE.subst
-      (λ ts → ((Γ ∙∙ map emb-stype-oterm (A TL.∷ As)) ∙∙ Ihs)
-                ⊢All ts ∷ (emb-stype-oterm A TL.∷ map emb-stype-oterm As) ^ [ ! , ι ⁰ ])
-      (PE.sym (ctor-vars-cons k A As))
-      (consⱼ
-        (conv (var ⊢Γ' ∈A)
-              (PE.subst (λ T → ((Γ ∙∙ map emb-stype-oterm (A TL.∷ As)) ∙∙ Ihs)
-                                 ⊢ T ≡ emb-stype-oterm A ^ [ ! , ι ⁰ ])
-                (PE.sym (emb-stype-wk1n-nested A (length (map emb-stype-oterm As)) k))
-                (refl (univ (emb-stype-oterm-has-type A ⊢Γ')))))
-        (⊢All-ctor-vars {Γ = Γ ∙ emb-stype-oterm A ^ [ ! , ι ⁰ ]} As k P ⊢Γ'))
-    where
-    Ihs = replicate k (emb-stype-oterm P)
-    emb-stype-wk1n-nested : ∀ A n m →
-      repeat wk1 (repeat wk1 (wk1 (emb-stype-oterm A)) n) m PE.≡ emb-stype-oterm A
-    emb-stype-wk1n-nested A n m =
-      PE.trans
-        (PE.cong (λ t → repeat wk1 t m)
-          (PE.trans (PE.cong (λ t → repeat wk1 t n) (emb-stype-wk-id A (step id)))
-            (emb-stype-wk1n-id A n)))
-        (emb-stype-wk1n-id A m)
-    ∈A : (k + length As) ∷ repeat wk1 (repeat wk1 (wk1 (emb-stype-oterm A))
-           (length (map emb-stype-oterm As))) k ^ [ ! , ι ⁰ ]
-           ∈ ((Γ ∙∙ map emb-stype-oterm (A TL.∷ As)) ∙∙ Ihs)
-    ∈A = PE.subst (λ n → (k + n) ∷ repeat wk1 (repeat wk1 (wk1 (emb-stype-oterm A))
-                           (length (map emb-stype-oterm As))) k ^ [ ! , ι ⁰ ]
-                           ∈ ((Γ ∙∙ map emb-stype-oterm (A TL.∷ As)) ∙∙ Ihs))
-           (length-map emb-stype-oterm As)
-           (PE.subst (λ ℓ → (ℓ + length (map emb-stype-oterm As)) ∷
-                              repeat wk1 (repeat wk1 (wk1 (emb-stype-oterm A))
-                                (length (map emb-stype-oterm As))) ℓ ^ [ ! , ι ⁰ ]
-                              ∈ ((Γ ∙∙ map emb-stype-oterm (A TL.∷ As)) ∙∙ Ihs))
-             (length-replicate k (emb-stype-oterm P))
-             (there* Ihs
-               (PE.subst (λ n → n ∷ repeat wk1 (wk1 (emb-stype-oterm A))
-                                    (length (map emb-stype-oterm As)) ^ _
-                                  ∈ (_ ∙∙ map emb-stype-oterm As))
-                 (plusZero (length (map emb-stype-oterm As)))
-                 (there* (map emb-stype-oterm As) here))))
-    ctor-vars-cons : ∀ {A} (k : Nat) (a : A) (as : List A) →
-      map (λ j → var (((k + length (a TL.∷ as)) - 1) - j)) (range (length (a TL.∷ as)))
-      PE.≡ var (k + length as) TL.∷
-           map (λ j → var (((k + length as) - 1) - j)) (range (length as))
-    ctor-vars-cons k a as =
-      let n' = length as
-          f : Nat → Term
-          f j = var (((k + 1+ n') - 1) - j)
-          g : Nat → Term
-          g j = var ((k + n') - j)
-          h : Nat → Term
-          h j = var (((k + n') - 1) - j)
-          sucₙ : Nat → Nat
-          sucₙ n = 1+ n
-          step₁ : map f (range (1+ n')) PE.≡ map g (range (1+ n'))
-          step₁ = PE.cong (λ m → map (λ j → var ((m - 1) - j)) (range (1+ n')))
-                    (plusSuc k n')
-          step₂ : map g (range (1+ n')) PE.≡ g 0 TL.∷ map g (map sucₙ (range n'))
-          step₂ = PE.cong (map g) (range-suc n')
-          step₃ : map g (map sucₙ (range n')) PE.≡ map h (range n')
-          step₃ = PE.trans (map-map g sucₙ (range n'))
-                    (map-cong (range n') (λ j → PE.cong var (minus-suc (k + n') j)))
-      in PE.trans step₁ (PE.trans step₂ (PE.cong (var (k + n') TL.∷_) step₃))
-
-  ⊢-ctr : ∀ {Γ} ind j Ss k P → ind ∈ₗ senv → SU.ctrArgsTypeList ind j PE.≡ just Ss →
-    let n = length (ctrArgsTypeList Ss)
-        Γ' = (Γ ∙∙ map emb-stype-oterm Ss) ∙∙ replicate k (emb-stype-oterm P)
-    in ⊢ Γ' →
-       Γ' ⊢ ctr (SU.SInd.name ind) j (map (λ j → var (((k + n) - 1) - j)) (range n))
-         ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
-  ⊢-ctr {Γ} ind j Ss k P ind∈ eq ⊢Γ' =
-    let Γ' = (Γ ∙∙ map emb-stype-oterm Ss) ∙∙ replicate k (emb-stype-oterm P)
-    in  Ctrⱼ ⊢Γ' ind∈ eq (PE.subst
-          (λ n → Γ' ⊢All map (λ j → var (((k + n) - 1) - j)) (range n)
-                       ∷ map emb-stype-oterm Ss ^ [ ! , ι ⁰ ])
-          (PE.sym (length-map (λ T → (emb-stype-oterm T , 0)) Ss))
-          (⊢All-ctor-vars Ss k P ⊢Γ'))
-
-  foldr-Π⁰-stypes-≡∷ : ∀ {Γ} As C D →
-    ⊢ Γ →
-    (Γ ∙∙ map emb-stype-oterm As) ⊢ C ≡ D ∷ U ⁰ ^ [ ! , next ⁰ ] →
-    Γ ⊢ foldr Π⁰ C (map emb-stype-oterm As) ≡ foldr Π⁰ D (map emb-stype-oterm As) ∷ U ⁰ ^ [ ! , next ⁰ ]
-  foldr-Π⁰-stypes-≡∷ {Γ} TL.[] C D ⊢Γ C≡D = C≡D
-  foldr-Π⁰-stypes-≡∷ {Γ} (A TL.∷ As) C D ⊢Γ C≡D =
-    Π-cong (λ _ → ⁰min ⁰ , ⁰min ⁰) (λ ())
-      (univ (emb-stype-oterm-has-type A ⊢Γ))
-      (refl (emb-stype-oterm-has-type A ⊢Γ))
-      (foldr-Π⁰-stypes-≡∷ {Γ = Γ ∙ emb-stype-oterm A ^ [ ! , ι ⁰ ]} As C D
-        (⊢Γ ∙ univ (emb-stype-oterm-has-type A ⊢Γ)) C≡D)
 
   length-ctrRecIndices : ∀ i Ss →
     length (ctrRecIndices i Ss) PE.≡ SU.recCountList i Ss
@@ -778,16 +654,10 @@ emb-sterm-oterm-preserves-typing′ {Γ₀} ⊢Γ₀ = go
                        (zip (range (length Ts)) Ts)))
           (length-filter-rec i Ts)
 
-  method≡branch : ∀ {Γ} ind P j Ss → ind ∈ₗ senv → SU.ctrArgsTypeList ind j PE.≡ just Ss → ⊢ Γ →
-    Γ ⊢ emb-stype-oterm (SU.indRectBranchTy (SU.SInd.name ind) Ss P)
-      ≡ indRectBranchTy (SU.SInd.name ind) j Ss (wk1 (emb-stype-oterm P)) ! ⁰
-      ^ [ ! , ι ⁰ ]
-  method≡branch {Γ} ind P j Ss ind∈ ctr≡ ⊢Γ =
-    PE.subst
-      (λ B → Γ ⊢ emb-stype-oterm (SU.indRectBranchTy (SU.SInd.name ind) Ss P) ≡ B ^ [ ! , ι ⁰ ])
-      eq
-      (refl (univ (emb-stype-oterm-has-type
-                    (SU.indRectBranchTy (SU.SInd.name ind) Ss P) ⊢Γ)))
+  method≡branch : ∀ ind P j Ss → ind ∈ₗ senv → SU.ctrArgsTypeList ind j PE.≡ just Ss →
+    emb-stype-oterm (SU.indRectBranchTy (SU.SInd.name ind) Ss P)
+      PE.≡ indRectBranchTy (SU.SInd.name ind) j Ss (wk1 (emb-stype-oterm P)) ! ⁰
+  method≡branch ind P j Ss ind∈ ctr≡ = eq
     where
     as = Ss
     Pemb = emb-stype-oterm P
@@ -859,82 +729,85 @@ emb-sterm-oterm-preserves-typing′ {Γ₀} ⊢Γ₀ = go
              (PE.trans (PE.cong (λ B → foldr Π⁰ B (map emb-stype-oterm as)) inner≡)
                (PE.sym rhs≡)))
 
-  emb-indRectBranchTyList-stype : ∀ {Γ} ind P → ind ∈ₗ senv → ⊢ Γ →
-    TysEq Γ (map emb-stype-oterm (SU.indRectBranchTypeList ind P))
-            (indRectBranchTyList ind (wk1 (emb-stype-oterm P)) ! ⁰)
-            ([ ! , ι ⁰ ])
-  emb-indRectBranchTyList-stype {Γ} ind P ind∈ ⊢Γ =
-    PE.subst₂ (λ As Bs → TysEq Γ As Bs ([ ! , ι ⁰ ]))
-      (PE.sym (PE.trans
+  emb-indRectBranchTyList-stype : ∀ ind P → ind ∈ₗ senv →
+    map emb-stype-oterm (SU.indRectBranchTypeList ind P)
+      PE.≡ indRectBranchTyList ind (wk1 (emb-stype-oterm P)) ! ⁰
+  emb-indRectBranchTyList-stype ind P ind∈ =
+    PE.trans
+      (PE.trans
         (map-map emb-stype-oterm (λ Ts → SU.indRectBranchTy (SU.SInd.name ind) Ts P) Tss)
-        (TL.map-zip-range (λ Ts → emb-stype-oterm (SU.indRectBranchTy (SU.SInd.name ind) Ts P)) Tss)))
-      PE.refl
-      (map-≡tys ctrs
+        (TL.map-zip-range (λ Ts → emb-stype-oterm (SU.indRectBranchTy (SU.SInd.name ind) Ts P)) Tss))
+      (map-≡ ctrs
         (λ jTs jTs∈ → method≡branch ind P (proj₁ jTs) (proj₂ jTs) ind∈
-                        (TL.zip-range-nth Tss jTs jTs∈) ⊢Γ))
+                        (TL.zip-range-nth Tss jTs jTs∈)))
     where
     Tss = SU.SInd.ctrArgsTypes ind
     ctrs = zip (range (SU.indCtrCount ind)) Tss
-    map-≡tys : ∀ {Γ r} {A : Set} {f g : A → Term} ns →
-      (∀ j → j TL.∈ₗ ns → Γ ⊢ f j ≡ g j ^ r) →
-      TysEq Γ (map f ns) (map g ns) r
-    map-≡tys TL.[] _ = ε
-    map-≡tys (n TL.∷ ns) h =
-      cons (h n TL.hereₗ) (map-≡tys ns (λ j j∈ → h j (TL.thereₗ j∈)))
+    map-≡ : ∀ {A : Set} {f g : A → Term} ns →
+      (∀ j → j TL.∈ₗ ns → f j PE.≡ g j) →
+      map f ns PE.≡ map g ns
+    map-≡ TL.[] _ = PE.refl
+    map-≡ (n TL.∷ ns) h =
+      PE.cong₂ TL._∷_ (h n TL.hereₗ) (map-≡ ns (λ j j∈ → h j (TL.thereₗ j∈)))
 
   mutual
     go-all : ∀ {Γ args As}
+      → TL.All (SU.indsInSEnv senv) Γ
       → Γ ST.⊢All args ∷ As
       → (Γ₀ ∙ˢ Γ) ⊢All (emb-sterm-oterm-all args) ∷ map emb-stype-oterm As ^ [ ! , ι ⁰ ]
-    go-all ST.εⱼ = εⱼ
-    go-all (ST.consⱼ t∈ ts∈) = consⱼ (go t∈) (go-all ts∈)
+    go-all Γ∈ ST.εⱼ = εⱼ
+    go-all Γ∈ (ST.consⱼ t∈ ts∈) = consⱼ (go Γ∈ t∈) (go-all Γ∈ ts∈)
 
     go : ∀ {Γ t A}
+      → TL.All (SU.indsInSEnv senv) Γ
       → Γ ST.⊢ t ∷ A
       → (Γ₀ ∙ˢ Γ) ⊢ emb-sterm-oterm t ∷ emb-stype-oterm A ^ [ ! , ι ⁰ ]
-    go (ST.varⱼ h) =
-      conv (var (emb-scon-wf _) (emb-st-var∈ h))
-           (emb-st-wkTy≡ (emb-st-var-wk-depth h) (emb-scon-wf _))
-    go (ST.appⱼ {A = A} {B = B} f∈ a∈) =
+    go Γ∈ (ST.varⱼ h) =
+      conv (var (emb-scon-wf _ Γ∈) (emb-st-var∈ h))
+           (emb-st-wkTy≡ (emb-st-var-wk-depth h) (st-var-inds Γ∈ h) (emb-scon-wf _ Γ∈))
+    go Γ∈ (ST.appⱼ {A = A} {B = B} f∈ a∈) =
+      let A∈ , B∈ = st-type-inds Γ∈ f∈ in
       conv (_▹_▹_▹_∘ⱼ_ {F = emb-stype-oterm A} {G = emb-stype-oterm B}
               {lG = ⁰} {r = !} {lΠ = ⁰}
               (λ ())
-              (emb-stype-oterm-has-type A (emb-scon-wf _))
-              (emb-stype-oterm-has-type B (emb-scon-wf _ ∙ univ (emb-stype-oterm-has-type A (emb-scon-wf _))))
-              (go f∈)
-              (go a∈))
+              (emb-stype-oterm-has-type A A∈ (emb-scon-wf _ Γ∈))
+              (emb-stype-oterm-has-type B B∈ (emb-scon-wf _ Γ∈ ∙ univ (emb-stype-oterm-has-type A A∈ (emb-scon-wf _ Γ∈))))
+              (go Γ∈ f∈)
+              (go Γ∈ a∈))
            (PE.subst (λ (embTy : Term) → (Γ₀ ∙ˢ _) ⊢ emb-stype-oterm B [ emb-sterm-oterm _ ] ≡ embTy ^ [ ! , ι ⁰ ])
                      (emb-stype-subst-id B (sgSubst (emb-sterm-oterm _)))
                      (refl (PE.subst (λ (embTy : Term) → (Γ₀ ∙ˢ _) ⊢ embTy ^ [ ! , ι ⁰ ])
                                     (PE.sym (emb-stype-subst-id B (sgSubst (emb-sterm-oterm _))))
-                                    (univ (emb-stype-oterm-has-type B (emb-scon-wf _))))))
-    go (ST.lamⱼ {A = A} t∈) =
+                                    (univ (emb-stype-oterm-has-type B B∈ (emb-scon-wf _ Γ∈))))))
+    go Γ∈ (ST.lamⱼ {A = A} A∈ t∈) =
       lamⱼ (λ _ → ⁰min ⁰ , ⁰min ⁰) (λ ())
-        (univ (emb-stype-oterm-has-type A (emb-scon-wf _)))
-        (go t∈)
-    go (ST.ctrⱼ {ind} {j} ind∈ eq _ args∈) =
-      Ctrⱼ (emb-scon-wf _) ind∈ eq (go-all args∈)
-    go {Γ} (ST.indRectⱼ {ind} {P} {t} {ms} ind∈ _ t∈ ms∈) =
-      let ⊢Γ = emb-scon-wf Γ
-          ⊢Ind = univ (Indⱼ ⊢Γ)
+        (univ (emb-stype-oterm-has-type A A∈ (emb-scon-wf _ Γ∈)))
+        (go (A∈ TL.∷ₐ Γ∈) t∈)
+    go Γ∈ (ST.ctrⱼ {ind} {j} ind∈ eq _ args∈) =
+      Ctrⱼ (emb-scon-wf _ Γ∈) ind∈ eq (go-all Γ∈ args∈)
+    go {Γ} Γ∈ (ST.indRectⱼ {ind} {P} {t} {ms} ind∈ P∈ t∈ ms∈) =
+      let ⊢Γ = emb-scon-wf Γ Γ∈
+          ⊢Ind = univ (Indⱼ ⊢Γ ind∈)
           ⊢ΓInd = ⊢Γ ∙ ⊢Ind
           Pemb = emb-stype-oterm P
-          ⊢Pemb∙ = emb-stype-oterm-has-type P ⊢ΓInd
+          ⊢Pemb∙ = emb-stype-oterm-has-type P P∈ ⊢ΓInd
           ⊢wk1Pemb =
             PE.subst (λ u → (Γ₀ ∙ˢ Γ) ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ u ∷ U ⁰ ^ [ ! , next ⁰ ])
               (PE.sym (emb-stype-wk-id P (step id)))
               ⊢Pemb∙
-          ⊢t = go t∈
-          ⊢ms = convAll (go-all ms∈) (emb-indRectBranchTyList-stype ind P ind∈ ⊢Γ)
+          ⊢t = go Γ∈ t∈
+          ⊢ms = PE.subst (λ As → (Γ₀ ∙ˢ Γ) ⊢All emb-sterm-oterm-all ms ∷ As ^ [ ! , ι ⁰ ])
+                  (emb-indRectBranchTyList-stype ind P ind∈) (go-all Γ∈ ms∈)
           ⊢elim = IndRectⱼ (λ ()) ind∈ (univ ⊢wk1Pemb) ⊢t ⊢ms
           Pty≡ = PE.trans (PE.cong (λ u → u [ emb-sterm-oterm t ]) (emb-stype-wk-id P (step id)))
                    (emb-stype-subst-id P (sgSubst (emb-sterm-oterm t)))
           Pty≡ty = PE.subst (λ T → (Γ₀ ∙ˢ Γ) ⊢ T ≡ Pemb ^ [ ! , ι ⁰ ])
                      (PE.sym Pty≡)
-                     (refl (univ (emb-stype-oterm-has-type P ⊢Γ)))
+                     (refl (univ (emb-stype-oterm-has-type P P∈ ⊢Γ)))
       in  conv ⊢elim Pty≡ty
 
 emb-sterm-oterm-preserves-typing : ∀ {Γ t A}
+  → TL.All (SU.indsInSEnv senv) Γ
   → Γ ST.⊢ t ∷ A
   → emb-scon Γ ⊢ emb-sterm-oterm t ∷ emb-stype-oterm A ^ [ ! , ι ⁰ ]
 emb-sterm-oterm-preserves-typing = emb-sterm-oterm-preserves-typing′ ε

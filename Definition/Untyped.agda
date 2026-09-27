@@ -7,7 +7,7 @@ module Definition.Untyped (senv : SI.SEnv) (equivs : E.Equivs senv) where
 open import Tools.Nat
 open import Tools.Product
 open import Tools.List
-open import Tools.Inequality using (filter)
+open import Tools.Inequality using (filter; true; false)
 open import Tools.Nullary using (yes; no)
 import Tools.PropositionalEquality as PE
 open import Definition.Sort public
@@ -258,7 +258,7 @@ Univ-PE-injectivity PE.refl = PE.refl , PE.refl
 
 -- Representative of an inductive with respect to the equivalences
 reprInd : Nat → Nat
-reprInd i = proj₁ (Eq.repr equivs i)
+reprInd i = Eq.repr equivs i
 
 data Neutral : Term → Set where
   var     : ∀ n                     → Neutral (var n)
@@ -274,7 +274,6 @@ data Neutral : Term → Set where
   castΠℕₙ : ∀ {l A rA r B e t} → Neutral (cast l (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) ℕ e t)
   castnIndₙ : ∀ {l i B e t} → Neutral B → Neutral (cast l B (Ind i) e t)
   castIndₙ : ∀ {l i B e t} → Neutral B → Neutral (cast l (Ind i) B e t)
-  castIndIndₙ : ∀ {l i e t} → Neutral t → Neutral (cast l (Ind i) (Ind i) e t)
   -- Inductives with different representatives are not related by an
   -- equivalence, so a cast between them is stuck.
   castIndInd≢ₙ : ∀ {l i j e t} → reprInd i PE.≢ reprInd j → Neutral (cast l (Ind i) (Ind j) e t)
@@ -584,7 +583,6 @@ wkNeutral ρ (castΠₙ A) = castΠₙ (wkNeutral ρ A)
 wkNeutral ρ (castℕℕₙ t) = castℕℕₙ (wkNeutral ρ t)
 wkNeutral ρ (castnIndₙ A) = castnIndₙ (wkNeutral ρ A)
 wkNeutral ρ (castIndₙ A) = castIndₙ (wkNeutral ρ A)
-wkNeutral ρ (castIndIndₙ t) = castIndIndₙ (wkNeutral ρ t)
 wkNeutral ρ (castIndInd≢ₙ p) = castIndInd≢ₙ p
 wkNeutral ρ castℕΠₙ = castℕΠₙ
 wkNeutral ρ castΠℕₙ = castΠℕₙ
@@ -811,26 +809,45 @@ apps-∷≢Univ : ∀ l t u us {r} → apps l t (u ∷ us) PE.≢ Univ r ¹
 apps-∷≢Univ l t u [] ()
 apps-∷≢Univ l t u (u′ ∷ us) eq = apps-∷≢Univ l (t ∘ u ^ l) u′ us eq
 
+-- Recursive constructor arguments only (left-to-right).
+ctrRecArgs : Nat → List SU.Type → List Term → List Term
+ctrRecArgs ind Ss args =
+  map proj₁
+    (filter (λ aT → SU.ctrArgIsRecursive ind (proj₂ aT))
+      (zip args Ss))
+
+map-ctrRecArgs : ∀ (f : Term → Term) ind Ss args →
+  map f (ctrRecArgs ind Ss args) PE.≡ ctrRecArgs ind Ss (map f args)
+map-ctrRecArgs f ind Ss [] = PE.refl
+map-ctrRecArgs f ind [] (a ∷ args) = PE.refl
+map-ctrRecArgs f ind (S ∷ Ss) (a ∷ args) with SU.ctrArgIsRecursive ind S
+... | true  = PE.cong (f a ∷_) (map-ctrRecArgs f ind Ss args)
+... | false = map-ctrRecArgs f ind Ss args
+
 -- wk of IndRect β redex RHS
-wk-IndRect-ctr-rhs : ∀ ρ i lG P m args ms →
-  let rhs = apps lG m (args ++ map (λ a → IndRect i lG P a ms) args)
+wk-IndRect-ctr-rhs : ∀ ρ i Ts lG P m args ms →
+  let rhs = apps lG m (args ++ map (λ a → IndRect i lG P a ms) (ctrRecArgs i Ts args))
   in wk ρ rhs PE.≡
      apps lG (wk ρ m)
               (map (wk ρ) args ++
                 map (λ a → IndRect i lG (wk (lift ρ) P) a (map (wk ρ) ms))
-                    (map (wk ρ) args))
-wk-IndRect-ctr-rhs ρ i lG P m args ms =
+                    (ctrRecArgs i Ts (map (wk ρ) args)))
+wk-IndRect-ctr-rhs ρ i Ts lG P m args ms =
   PE.trans (wk-apps ρ lG m
-              (args ++ map (λ a → IndRect i lG P a ms) args))
+              (args ++ map (λ a → IndRect i lG P a ms) recs))
        (PE.cong₂ (apps lG)
          PE.refl
-         (PE.trans (map-++ (wk ρ) args (map (λ a → IndRect i lG P a ms) args))
+         (PE.trans (map-++ (wk ρ) args (map (λ a → IndRect i lG P a ms) recs))
            (PE.cong₂ _++_ PE.refl
-             (PE.trans (map-map (wk ρ) (λ a → IndRect i lG P a ms) args)
-               (PE.trans (map-cong args (λ a → wk-IndRect ρ i lG P a ms))
-                 (PE.sym (map-map (λ a → IndRect i lG (wk (lift ρ) P) a (map (wk ρ) ms))
-                                  (wk ρ) args)))))))
+             (PE.trans (map-map (wk ρ) (λ a → IndRect i lG P a ms) recs)
+               (PE.trans (map-cong recs (λ a → wk-IndRect ρ i lG P a ms))
+                 (PE.trans (PE.sym (map-map (λ a → IndRect i lG (wk (lift ρ) P) a (map (wk ρ) ms))
+                                            (wk ρ) recs))
+                           (PE.cong (map (λ a → IndRect i lG (wk (lift ρ) P) a (map (wk ρ) ms)))
+                                    (map-ctrRecArgs (wk ρ) i Ts args))))))))
   where
+    recs = ctrRecArgs i Ts args
+
     wk-apps : ∀ ρ l t us →
       wk ρ (apps l t us) PE.≡ apps l (wk ρ t) (map (wk ρ) us)
     wk-apps ρ l t [] = PE.refl
@@ -856,25 +873,29 @@ subst-ctr σ i j ts =
     (PE.trans (substGen-map0 σ ts)
               (PE.sym (map-map (λ t → ⟦ 0 , t ⟧) (subst σ) ts)))
 
-subst-IndRect-ctr-rhs : ∀ σ i lG P m args ms →
-  let rhs = apps lG m (args ++ map (λ a → IndRect i lG P a ms) args)
+subst-IndRect-ctr-rhs : ∀ σ i Ts lG P m args ms →
+  let rhs = apps lG m (args ++ map (λ a → IndRect i lG P a ms) (ctrRecArgs i Ts args))
   in subst σ rhs PE.≡
      apps lG (subst σ m)
               (map (subst σ) args ++
                 map (λ a → IndRect i lG (subst (liftSubst σ) P) a (map (subst σ) ms))
-                    (map (subst σ) args))
-subst-IndRect-ctr-rhs σ i lG P m args ms =
+                    (ctrRecArgs i Ts (map (subst σ) args)))
+subst-IndRect-ctr-rhs σ i Ts lG P m args ms =
   PE.trans (subst-apps σ lG m
-              (args ++ map (λ a → IndRect i lG P a ms) args))
+              (args ++ map (λ a → IndRect i lG P a ms) recs))
        (PE.cong₂ (apps lG)
          PE.refl
-         (PE.trans (map-++ (subst σ) args (map (λ a → IndRect i lG P a ms) args))
+         (PE.trans (map-++ (subst σ) args (map (λ a → IndRect i lG P a ms) recs))
            (PE.cong₂ _++_ PE.refl
-             (PE.trans (map-map (subst σ) (λ a → IndRect i lG P a ms) args)
-               (PE.trans (map-cong args (λ a → subst-IndRect σ i lG P a ms))
-                 (PE.sym (map-map (λ a → IndRect i lG (subst (liftSubst σ) P) a (map (subst σ) ms))
-                                  (subst σ) args)))))))
+             (PE.trans (map-map (subst σ) (λ a → IndRect i lG P a ms) recs)
+               (PE.trans (map-cong recs (λ a → subst-IndRect σ i lG P a ms))
+                 (PE.trans (PE.sym (map-map (λ a → IndRect i lG (subst (liftSubst σ) P) a (map (subst σ) ms))
+                                            (subst σ) recs))
+                           (PE.cong (map (λ a → IndRect i lG (subst (liftSubst σ) P) a (map (subst σ) ms)))
+                                    (map-ctrRecArgs (subst σ) i Ts args))))))))
   where
+    recs = ctrRecArgs i Ts args
+
     subst-apps : ∀ σ l t us →
       subst σ (apps l t us) PE.≡ apps l (subst σ t) (map (subst σ) us)
     subst-apps σ l t [] = PE.refl

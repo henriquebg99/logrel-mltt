@@ -4,8 +4,8 @@ module Definition.Conversion.FullReduction (senv : SI.SEnv) (swf : SI.swfenv sen
 open import Definition.Untyped senv equivs as U hiding (wk)
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
-open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Typed.Properties senv swf equivs
+open import Definition.Typed.EqRelInstance senv swf equivs
 open import Definition.Typed.Weakening senv equivs
 open import Definition.Conversion senv equivs
 open import Definition.Conversion.Whnf senv swf equivs
@@ -16,10 +16,10 @@ open import Definition.Typed.Consequences.Injectivity senv swf equivs
 open import Definition.Typed.Consequences.Syntactic senv swf equivs
 open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
 open import Definition.Typed.Consequences.Equality senv swf equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Properties.Escape senv equivs
-open import Definition.LogicalRelation.Irrelevance senv equivs
-open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Properties.Escape senv swf equivs
+open import Definition.LogicalRelation.Irrelevance senv swf equivs
+open import Definition.LogicalRelation.ShapeView senv swf equivs
 open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
 open import Definition.Typed.Consequences.RelevanceUnicity senv swf equivs
 open import Tools.Empty using (⊥; ⊥-elim)

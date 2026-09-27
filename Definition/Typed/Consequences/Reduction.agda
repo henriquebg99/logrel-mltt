@@ -3,10 +3,10 @@ import Definition.Equiv as E
 module Definition.Typed.Consequences.Reduction (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
-open import Definition.Typed.EqRelInstance senv equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
+open import Definition.Typed.EqRelInstance senv swf equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Properties senv swf equivs
 open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
 import Tools.PropositionalEquality as PE
 open import Tools.Product

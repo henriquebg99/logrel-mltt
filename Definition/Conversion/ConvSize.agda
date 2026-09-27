@@ -9,7 +9,7 @@ open import Tools.Nat
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 open import Definition.Conversion senv equivs
-open import Tools.List using (All₂; []ₐ; _∷ₐ_)
+open import Tools.List using (All₃; []ₐ; _∷ₐ_)
 mutual
   -- Neutral equality.
   size~↑! : ∀ {t u A Γ l} → Γ ⊢ t ~ u ↑! A ^ l → Nat
@@ -34,8 +34,6 @@ mutual
   size~↑! (IndRect-cong _ x x₁ x₂) = 1 + sizeConv↑ x + size~↓! x₁
   size~↑! (cast-neInd x x₁ x₂ x₃) = 1 + size~↓! x + sizeConv↑Term x₁
   size~↑! (cast-Ind x x₁ x₂ x₃) = 1 + size~↓! x + sizeConv↑Term x₁
-  size~↑! (castInd-refl x x₁) = 1 + size~↓! x
-  size~↑! (castInd-refl' x x₁) = 1 + size~↓! x
   size~↑! (cast-IndΠ x x₁ x₂ x₃) = 1 + sizeConv↑Term x + sizeConv↑Term x₁
   size~↑! (cast-ΠInd x x₁ x₂ x₃) = 1 + sizeConv↑Term x + sizeConv↑Term x₁
   size~↑! (cast-Indℕ x x₁ x₂) = 1 + sizeConv↑Term x
@@ -72,10 +70,10 @@ mutual
   sizeConv↓Term (zero-refl x) = 1
   sizeConv↓Term (suc-cong x) = 1 + sizeConv↑Term x
   sizeConv↓Term (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) = 1 + sizeConv↑Term x₇
-  sizeConv↓Term (Ind-refl x) = 1
-  sizeConv↓Term (ctr-cong x x₁ x₂ x₃ x₄) = 1 + sizeConv↑TermAll x₄
+  sizeConv↓Term (Ind-refl x _) = 1
+  sizeConv↓Term (ctr-cong x x₁ x₂ x₃) = 1 + sizeConv↑TermAll x₃
 
-  sizeConv↑TermAll : ∀ {i args args' Γ} → All₂ (λ a a' → Γ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) args args' → Nat
+  sizeConv↑TermAll : ∀ {As args args' Γ} → All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' As → Nat
   sizeConv↑TermAll []ₐ = 0
   sizeConv↑TermAll (p ∷ₐ ps) = sizeConv↑Term p + sizeConv↑TermAll ps
 

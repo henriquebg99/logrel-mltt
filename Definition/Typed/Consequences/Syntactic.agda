@@ -3,11 +3,11 @@ import Definition.Equiv as E
 module Definition.Typed.Consequences.Syntactic (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
-open import Definition.Typed.EqRelInstance senv equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Substitution senv equivs
-open import Definition.LogicalRelation.Substitution.Escape senv equivs
+open import Definition.Typed.Properties senv swf equivs
+open import Definition.Typed.EqRelInstance senv swf equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Substitution senv swf equivs
+open import Definition.LogicalRelation.Substitution.Escape senv swf equivs
 open import Definition.LogicalRelation.Fundamental senv swf equivs
 open import Definition.Typed.Consequences.Injectivity senv swf equivs
 open import Tools.Product

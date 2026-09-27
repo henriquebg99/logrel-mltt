@@ -8,7 +8,7 @@ import Definition.SUntyped as SU
 open import Definition.Typed senv equivs
 open import Tools.Nat
 open import Tools.Product
-open import Tools.List using (List; All₂; length; _∈ₗ_)
+open import Tools.List using (List; All₂; All₃; length; map; _∈ₗ_)
 open import Tools.Maybe using (just)
 import Tools.PropositionalEquality as PE
 infix 10 _⊢_~_↑_^_
@@ -137,14 +137,6 @@ mutual
                → Γ ⊢ e ∷ (Id (U ⁰) (Ind i) A) ^ [ % , ι ⁰ ]
                → Γ ⊢ e' ∷ (Id (U ⁰) (Ind i) A') ^ [ % , ι ⁰ ]
                → Γ ⊢ cast ⁰ (Ind i) A e t ~ cast ⁰ (Ind i) A' e' t' ↑! A ^ ι ⁰
-    castInd-refl : ∀ {i t u e}
-               → Γ ⊢ t ~ u ↓! (Ind i) ^ ι ⁰
-               → Γ ⊢ e ∷ (Id (U ⁰) (Ind i) (Ind i)) ^ [ % , ι ⁰ ]
-               → Γ ⊢ cast ⁰ (Ind i) (Ind i) e t ~ u ↑! (Ind i) ^ ι ⁰
-    castInd-refl' : ∀ {i t u e}
-               → Γ ⊢ t ~ u ↓! (Ind i) ^ ι ⁰
-               → Γ ⊢ e ∷ (Id (U ⁰) (Ind i) (Ind i)) ^ [ % , ι ⁰ ]
-               → Γ ⊢ t ~ cast ⁰ (Ind i) (Ind i) e u ↑! (Ind i) ^ ι ⁰
     cast-IndΠ : ∀ {i A rA P A' P' t t' e e'}
                → Γ ⊢ Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰  ^ ! [conv↑] Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰  ^ ! ∷ U ⁰ ^ ι ¹
                → Γ ⊢ t [conv↑] t' ∷ (Ind i) ^ ι ⁰
@@ -173,6 +165,9 @@ mutual
                → Γ ⊢ e ∷ (Id (U ⁰) (Ind i) (Ind j)) ^ [ % , ι ⁰ ]
                → Γ ⊢ e' ∷ (Id (U ⁰) (Ind i) (Ind j)) ^ [ % , ι ⁰ ]
                → Γ ⊢ cast ⁰ (Ind i) (Ind j) e t ~ cast ⁰ (Ind i) (Ind j) e' t' ↑! (Ind j) ^ ι ⁰
+    -- we do not need algorithmic equality between cast (Ind A) (Ind B) _ t and t when reprInd A = reprInd B 
+    -- because algorithmic equality is used after reduction, and reduction always reduces cast (Ind A) (Ind B) _ t 
+    -- when they share same repr
 
   record _⊢_~_↑%_^_ (Γ : Con Term) (k l A : Term) (ll : TypeLevel) : Set where
     inductive
@@ -240,7 +235,7 @@ mutual
                 → Γ ⊢ K [conv↓] L ∷ Univ r lU ^ l
     ℕ-refl    : ⊢ Γ → Γ ⊢ ℕ [conv↓] ℕ ∷ U ⁰ ^ next ⁰
     Empty-refl : ⊢ Γ → Γ ⊢ sEmpty [conv↓] sEmpty ∷ SProp ^ next ⁰
-    Ind-refl : ∀ {i} → ⊢ Γ → Γ ⊢ Ind i [conv↓] Ind i ∷ U ⁰ ^ next ⁰
+    Ind-refl : ∀ {i} → ⊢ Γ → i ∈ₗ SU.indNames senv → Γ ⊢ Ind i [conv↓] Ind i ∷ U ⁰ ^ next ⁰
     Π-cong    : ∀ {F G H E rF rH rΠ lF lH lG lE lΠ ll}
               → ll PE.≡ next lΠ
               → rF PE.≡ rH -- needed for K issues
@@ -287,8 +282,7 @@ mutual
               → ⊢ Γ
               → ind ∈ₗ senv
               → SU.ctrArgsTypeList ind j PE.≡ just Ts
-              → length args PE.≡ length Ts
-              → All₂ (λ a a' → Γ ⊢ a [conv↑] a' ∷ Ind (SU.SInd.name ind) ^ ι ⁰) args args'
+              → All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' (map emb-stype Ts)
               → Γ ⊢ ctr (SU.SInd.name ind) j args [conv↓] ctr (SU.SInd.name ind) j args'
                     ∷ Ind (SU.SInd.name ind) ^ ι ⁰
 

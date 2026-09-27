@@ -2,35 +2,35 @@ import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution.Introductions.CastRefl (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+module Definition.LogicalRelation.Substitution.Introductions.CastRefl (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 open import Definition.Untyped senv equivs
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 import Definition.Typed.Weakening senv equivs as Twk
 open import Definition.Typed.RedSteps senv equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Irrelevance senv equivs
-open import Definition.LogicalRelation.Properties senv equivs
-open import Definition.LogicalRelation.Application senv equivs
-open import Definition.LogicalRelation.Substitution senv equivs
-import Definition.LogicalRelation.Weakening senv equivs as Lwk
-open import Definition.LogicalRelation.Substitution.Properties senv equivs
-import Definition.LogicalRelation.Substitution.Irrelevance senv equivs as S
-open import Definition.LogicalRelation.Substitution.Reflexivity senv equivs
-open import Definition.LogicalRelation.Substitution.Weakening senv equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Irrelevance senv swf equivs
+open import Definition.LogicalRelation.Properties senv swf equivs
+open import Definition.LogicalRelation.Application senv swf equivs
+open import Definition.LogicalRelation.Substitution senv swf equivs
+import Definition.LogicalRelation.Weakening senv swf equivs as Lwk
+open import Definition.LogicalRelation.Substitution.Properties senv swf equivs
+import Definition.LogicalRelation.Substitution.Irrelevance senv swf equivs as S
+open import Definition.LogicalRelation.Substitution.Reflexivity senv swf equivs
+open import Definition.LogicalRelation.Substitution.Weakening senv swf equivs
 -- open import Definition.LogicalRelation.Substitution.Introductions.Nat
-open import Definition.LogicalRelation.Substitution.Introductions.Empty senv equivs
-open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Empty senv swf equivs
+open import Definition.LogicalRelation.ShapeView senv swf equivs
 -- open import Definition.LogicalRelation.Substitution.Introductions.Pi
 -- open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst
-open import Definition.LogicalRelation.Substitution.Introductions.Universe senv equivs
-open import Definition.LogicalRelation.Substitution.MaybeEmbed senv equivs
-open import Definition.LogicalRelation.Substitution.Introductions.Castlemmas senv equivs
-open import Definition.LogicalRelation.Substitution.Introductions.Cast senv equivs
-open import Definition.LogicalRelation.Substitution.Introductions.Ind senv equivs using (≅AllInd)
+open import Definition.LogicalRelation.Substitution.Introductions.Universe senv swf equivs
+open import Definition.LogicalRelation.Substitution.MaybeEmbed senv swf equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Castlemmas senv swf equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Cast senv swf equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Ind senv swf equivs using (≅AllInd)
 open import Tools.Product
 open import Tools.Empty using (⊥; ⊥-elim)
 open import Tools.List using (All; All₂; []ₐ; _∷ₐ_; map; length; length-map)
@@ -77,6 +77,7 @@ import Definition.SUntyped as SU
                                                                   (conv:⇒*: (CastRed*Termℕℕ ⊢eℕℕ d) (sym (subset* DB)))))
                    (conv:⇒*: d (sym (subset* DB))) (~-conv (~-castℕ-refl k≡k ⊢k ⊢eℕℕ ) (sym (subset* DB)))
 
+-- A cast between the same inductive type reduces to the term itself.
 [castrefl]Ind : ∀ {A B t e i Γ}
              (⊢Γ : ⊢ Γ)
              ([A] : Γ ⊩Ind A ^ i)
@@ -86,43 +87,8 @@ import Definition.SUntyped as SU
              ([t] : Γ ⊩⟨ ι ⁰ ⟩ t ∷ A ^ [ ! , ι ⁰ ] / Indᵣ [A])
              (⊢e : Γ ⊢ e ∷ Id (U ⁰) A B ^ [ % , ι ⁰ ])
              → Γ ⊩⟨ ι ⁰ ⟩ cast ⁰ A B e t ≡ t ∷ B ^ [ ! , ι ⁰ ] / Indᵣ [B]
-[castrefl]Ind {e = e} {i = i} {Γ = Γ} ⊢Γ [[ ⊢A , ⊢IndA , DA ]] [[ ⊢B , ⊢IndB , DB ]] [A≡B] ⊢t
-  (Indₜ .(ctr i j args) d n≡n (ctrᵣ {j} {args} ps)) ⊢e =
-  let ⊢eII = conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B))) (un-univ≡ (subset* DA)) (un-univ≡ (subset* DB))))
-      ind , Ts , ind∈ , name≡ , eq , ⊢args = inversion-Ctr (_⊢_:⇒*:_∷_^_.⊢u d)
-      castEq = castAllEq ps
-      lens = PE.trans (length-map (λ a → cast ⁰ (Ind i) (Ind i) e a) args)
-               (PE.trans (⊢All-length ⊢args) (length-map emb-stype Ts))
-  in Indₜ₌ (ctr i j (map (λ a → cast ⁰ (Ind i) (Ind i) e a) args)) (ctr i j args)
-           (conv:⇒*: (transTerm:⇒:* (CastRed*Term ⊢B ⊢e ⊢t (un-univ:⇒*: [[ ⊢A , ⊢IndA , DA ]]))
-                              (transTerm:⇒:* (CastRed*TermInd (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B))) (un-univ≡ (subset* DA))
-                                                             (refl (un-univ ⊢B))))) (conv ⊢t (subset* DA)) [[ ⊢B , ⊢IndB , DB ]])
-                                             (conv:⇒*: (transTerm:⇒:* (CastRed*TermIndInd ⊢eII d)
-                                             (CastRed*TermIndctr′ ind∈ name≡ eq ⊢eII ⊢args)) (sym (subset* DB))))) (subset* DB))
-           d (≅-ctr-cong′ ⊢Γ ind∈ name≡ eq lens (≅AllInd ⊢Γ castEq)) (ctrᵣ castEq)
-  where
-    castAllEq : ∀ {ts} → All (λ a → Γ ⊩Ind a ∷Ind i) ts
-              → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i)
-                     (map (λ a → cast ⁰ (Ind i) (Ind i) e a) ts) ts
-    castAllEq []ₐ = []ₐ
-    castAllEq (p ∷ₐ rest) =
-      ([castrefl]Ind ⊢Γ (idRed:*: ⊢IndA) (idRed:*: ⊢IndA) (reflEq {l = ι ⁰} (Indᵣ (idRed:*: ⊢IndA)))
-                     (escapeTerm {l = ι ⁰} (Indᵣ (idRed:*: ⊢IndA)) p) p
-                     (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B))) (un-univ≡ (subset* DA)) (un-univ≡ (subset* DB))))))
-      ∷ₐ castAllEq rest
-
-    ⊢All-length : ∀ {Γ ts As r} → Γ ⊢All ts ∷ As ^ r → length ts PE.≡ length As
-    ⊢All-length εⱼ = PE.refl
-    ⊢All-length (consⱼ _ rest) = PE.cong 1+ (⊢All-length rest)
-[castrefl]Ind {i = i} ⊢Γ [[ ⊢A , ⊢IndA , DA ]] [[ ⊢B , ⊢IndB , DB ]] [A≡B] ⊢t
-  (Indₜ n d n≡n (ne (neNfₜ neK ⊢k k≡k))) ⊢e =
-  let ⊢eII = conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B))) (un-univ≡ (subset* DA)) (un-univ≡ (subset* DB))))
-  in neuEqTerm:⇒*: {l = ι ⁰} (Indᵣ [[ ⊢B , ⊢IndB , DB ]]) (castIndIndₙ neK) neK
-                   (transTerm:⇒:* (CastRed*Term ⊢B ⊢e ⊢t (un-univ:⇒*: [[ ⊢A , ⊢IndA , DA ]]))
-                              (transTerm:⇒:* (CastRed*TermInd (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wf ⊢B))) (un-univ≡ (subset* DA))
-                                                             (refl (un-univ ⊢B))))) (conv ⊢t (subset* DA)) [[ ⊢B , ⊢IndB , DB ]])
-                                             (conv:⇒*: (CastRed*TermIndInd ⊢eII d) (sym (subset* DB)))))
-                   (conv:⇒*: d (sym (subset* DB))) (~-conv (~-castInd-refl k≡k ⊢k ⊢eII ) (sym (subset* DB)))
+[castrefl]Ind ⊢Γ [A] [B] [A≡B] ⊢t [t] ⊢e =
+  proj₂ (redSubst*Term⁰ ([cast]Ind [A] [B] [t] ⊢e) (Indᵣ [B]) [t])
 
 [castrefl]Ne : ∀ {A B Γ}
          (⊢Γ : ⊢ Γ)

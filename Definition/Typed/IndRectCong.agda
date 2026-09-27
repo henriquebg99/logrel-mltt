@@ -8,16 +8,17 @@ open import Definition.Typed.EqualityRelation senv equivs
 open import Definition.Untyped senv equivs
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Typed.Weakening senv equivs
 open import Definition.LogicalRelation.Substitution.Introductions.IndRect senv swf equivs
-  using (ctrArity; branchTy-nf; Πarg; Πih; ihFun; ihGo; ctrVars; concl; minus-<-; varIdx)
+  using (ctrArity; branchTy-nf; Πarg; Πih; ihFun; ihGo; ctrVars; concl; varIdx; rec-Ind)
 open import Tools.Nat
 open import Tools.Product
-open import Tools.List using (List; All; []ₐ; _∷ₐ_; map; length; length-range; replicate; range; zip; foldr;
-                              _∈ₗ_; ∈ₗ-range; all∈; zip-range-nth)
+open import Tools.List using (List; All; []ₐ; _∷ₐ_; map; length; length-range; range; range-suc; zip; foldr;
+                              _∈ₗ_; ∈ₗ-map; ∈ₗ-range; all∈; zip-range-nth)
   renaming ([] to []ₗ; _∷_ to _∷ₗ_)
 open import Tools.Maybe using (just)
+open import Tools.Inequality using (true; false; filter)
 open import Tools.Empty using (⊥; ⊥-elim)
 import Tools.PropositionalEquality as PE
 import Definition.SUntyped as SU
@@ -40,19 +41,22 @@ MotiveCong i Γ P P′ lG =
   → Δ ⊢ P [ u ]↑^ d ^ [ ! , ι lG ] × Δ ⊢ P [ u ]↑^ d ≡ P′ [ u ]↑^ d ^ [ ! , ι lG ]
 
 private
-  -- [Γ] extended by [m] copies of [Ind i], grown on the left so that it
+  -- The argument types of a constructor are inductive types, by positivity.
+  ⊢embT : ∀ {i Δ} T → SU.isPositive i T → SU.indsInSEnv senv T → ⊢ Δ
+        → Δ ⊢ emb-stype T ∷ U ⁰ ^ [ ! , ι ¹ ]
+  ⊢embT (SU.Ind k) _ k∈ ⊢Δ = Indⱼ′ ⊢Δ k∈
+  ⊢embT (SU.Arrow _ _) () _ _
+
+  -- [Γ] extended by the argument types [Ts], grown on the left so that it
   -- follows the recursion of the telescopes below.
-  ext : Nat → Con Term → Nat → Con Term
-  ext i Γ 0 = Γ
-  ext i Γ (1+ m) = ext i (Γ ∙ Ind i ^ [ ! , ι ⁰ ]) m
+  ext : Con Term → List SU.Type → Con Term
+  ext Γ []ₗ = Γ
+  ext Γ (T ∷ₗ Ts) = ext (Γ ∙ emb-stype T ^ [ ! , ι ⁰ ]) Ts
 
-  ext-snoc : ∀ i Γ m → ext i Γ (1+ m) PE.≡ ext i Γ m ∙ Ind i ^ [ ! , ι ⁰ ]
-  ext-snoc i Γ 0 = PE.refl
-  ext-snoc i Γ (1+ m) = ext-snoc i (Γ ∙ Ind i ^ [ ! , ι ⁰ ]) m
-
-  ⊢ext : ∀ i {Γ} m → ⊢ Γ → ⊢ ext i Γ m
-  ⊢ext i 0 ⊢Γ = ⊢Γ
-  ⊢ext i (1+ m) ⊢Γ = ⊢ext i m (⊢Γ ∙ univ (Indⱼ ⊢Γ))
+  ⊢ext : ∀ {i Γ} Ts → All (SU.isPositive i) Ts → All (SU.indsInSEnv senv) Ts
+       → ⊢ Γ → ⊢ ext Γ Ts
+  ⊢ext []ₗ []ₐ []ₐ ⊢Γ = ⊢Γ
+  ⊢ext {i} (T ∷ₗ Ts) (p ∷ₐ ps) (q ∷ₐ qs) ⊢Γ = ⊢ext {i} Ts ps qs (⊢Γ ∙ univ (⊢embT {i} T p q ⊢Γ))
 
   -- Weakening of a well-formed substitution by one type (clone of wk1Subst′,
   -- which lives in a module that imports this one).
@@ -71,83 +75,151 @@ private
     wk1Subst″ ⊢Γ ⊢Γ ⊢A (idSubst″ ⊢Γ)
     , PE.subst (λ X → Γ ∙ A ^ rA ⊢ _ ∷ X ^ rA) (wk1-tailId A) (var (⊢Γ ∙ ⊢A) here)
 
-  ext-subst : ∀ i {Γ} m → (⊢Γ : ⊢ Γ) → ext i Γ m ⊢ˢ wk1^Subst m idSubst ∷ Γ
-  ext-subst i 0 ⊢Γ = idSubst″ ⊢Γ
-  ext-subst i {Γ} (1+ m) ⊢Γ =
-    PE.subst (λ Δ → Δ ⊢ˢ wk1Subst (wk1^Subst m idSubst) ∷ Γ) (PE.sym (ext-snoc i Γ m))
-             (wk1Subst″ ⊢Γ (⊢ext i m ⊢Γ) (univ (Indⱼ (⊢ext i m ⊢Γ))) (ext-subst i m ⊢Γ))
+  ext-subst : ∀ {i Γ₀ Γ} Ts d → All (SU.isPositive i) Ts → All (SU.indsInSEnv senv) Ts
+            → ⊢ Γ₀ → ⊢ Γ → Γ ⊢ˢ wk1^Subst d idSubst ∷ Γ₀
+            → ext Γ Ts ⊢ˢ wk1^Subst (length Ts + d) idSubst ∷ Γ₀
+  ext-subst []ₗ d []ₐ []ₐ ⊢Γ₀ ⊢Γ [σ] = [σ]
+  ext-subst {i} {Γ₀} {Γ} (T ∷ₗ Ts) d (p ∷ₐ ps) (q ∷ₐ qs) ⊢Γ₀ ⊢Γ [σ] =
+    let ⊢T = univ (⊢embT {i} T p q ⊢Γ)
+    in  PE.subst (λ e → ext (Γ ∙ emb-stype T ^ [ ! , ι ⁰ ]) Ts ⊢ˢ wk1^Subst e idSubst ∷ Γ₀)
+                 (plusSuc (length Ts) d)
+                 (ext-subst {i} Ts (1+ d) ps qs ⊢Γ₀ (⊢Γ ∙ ⊢T) (wk1Subst″ ⊢Γ₀ ⊢Γ ⊢T [σ]))
 
-  ext-var : ∀ i {Γ} m x → x << m → ⊢ Γ → ext i Γ m ⊢ var x ∷ Ind i ^ [ ! , ι ⁰ ]
-  ext-var i 0 x () ⊢Γ
-  ext-var i {Γ} (1+ m) x h ⊢Γ =
-    PE.subst (λ Δ → Δ ⊢ var x ∷ Ind i ^ [ ! , ι ⁰ ]) (PE.sym (ext-snoc i Γ m)) (go x h)
-    where
-    ⊢Δ∙ = ⊢ext i m ⊢Γ ∙ univ (Indⱼ (⊢ext i m ⊢Γ))
+  -- A variable of [Γ], seen in the extension.
+  ext-wkVar : ∀ {i Γ} Ts x T → All (SU.isPositive i) Ts → All (SU.indsInSEnv senv) Ts → ⊢ Γ
+            → Γ ⊢ var x ∷ emb-stype T ^ [ ! , ι ⁰ ]
+            → ext Γ Ts ⊢ var (length Ts + x) ∷ emb-stype T ^ [ ! , ι ⁰ ]
+  ext-wkVar []ₗ x T []ₐ []ₐ ⊢Γ ⊢x = ⊢x
+  ext-wkVar {i} {Γ} (S ∷ₗ Ts) x T (p ∷ₐ ps) (q ∷ₐ qs) ⊢Γ ⊢x =
+    let ⊢Γ∙ = ⊢Γ ∙ univ (⊢embT {i} S p q ⊢Γ)
+    in  PE.subst (λ y → ext (Γ ∙ emb-stype S ^ [ ! , ι ⁰ ]) Ts ⊢ var y ∷ emb-stype T ^ [ ! , ι ⁰ ])
+                 (plusSuc (length Ts) x)
+                 (ext-wkVar {i} Ts (1+ x) T ps qs ⊢Γ∙
+                    (PE.subst (λ A → Γ ∙ emb-stype S ^ [ ! , ι ⁰ ] ⊢ var (1+ x) ∷ A ^ [ ! , ι ⁰ ]) (wk-emb-stype (step id) T)
+                              (wkTerm (step id) ⊢Γ∙ ⊢x)))
 
-    go : ∀ x → x << 1+ m → ext i Γ m ∙ Ind i ^ [ ! , ι ⁰ ] ⊢ var x ∷ Ind i ^ [ ! , ι ⁰ ]
-    go 0 h′ = var ⊢Δ∙ here
-    go (1+ x) (leS h′) = wkTerm (step id) ⊢Δ∙ (ext-var i m x h′ ⊢Γ)
+  -- The arguments of the constructor, as the variables of the extension.
+  ext-vars : ∀ {i Γ} Ts → All (SU.isPositive i) Ts → All (SU.indsInSEnv senv) Ts → ⊢ Γ
+           → ext Γ Ts ⊢All map (λ v → var ((length Ts - 1) - v)) (range (length Ts))
+                        ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+  ext-vars []ₗ []ₐ []ₐ ⊢Γ = εⱼ
+  ext-vars {i} {Γ} (T ∷ₗ Ts) (p ∷ₐ ps) (q ∷ₐ qs) ⊢Γ =
+    let m = length Ts
+        ⊢Γ∙ = ⊢Γ ∙ univ (⊢embT {i} T p q ⊢Γ)
+        Δ = ext (Γ ∙ emb-stype T ^ [ ! , ι ⁰ ]) Ts
+    in  PE.subst (λ ts → Δ ⊢All ts ∷ map emb-stype (T ∷ₗ Ts) ^ [ ! , ι ⁰ ])
+          (PE.sym (PE.trans (PE.cong (map (λ v → var (m - v))) (range-suc m))
+                            (PE.cong (var m ∷ₗ_)
+                              (PE.trans (map-map (λ v → var (m - v)) 1+ (range m))
+                                        (map-cong (range m) (λ v → PE.cong var (minus-suc m v)))))))
+          (consⱼ (PE.subst (λ y → Δ ⊢ var y ∷ emb-stype T ^ [ ! , ι ⁰ ]) (plusZero m)
+                   (ext-wkVar {i} Ts 0 T ps qs ⊢Γ∙
+                     (PE.subst (λ A → Γ ∙ emb-stype T ^ [ ! , ι ⁰ ] ⊢ var 0 ∷ A ^ [ ! , ι ⁰ ]) (wk-emb-stype (step id) T)
+                               (var ⊢Γ∙ here))))
+                 (ext-vars {i} Ts ps qs ⊢Γ∙))
 
-  -- The arguments of the constructor, as variables.
-  ctrVarsⱼ : ∀ {i Δ} n (Ts : List SU.Type) → All (SU.isPositive i) Ts
-           → (∀ v → v << n → Δ ⊢ var (((n + n) - 1) - v) ∷ Ind i ^ [ ! , ι ⁰ ])
-           → (vs : List Nat) → All (λ v → v << n) vs → length vs PE.≡ length Ts
-           → Δ ⊢All map (λ v → var (((n + n) - 1) - v)) vs ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
-  ctrVarsⱼ n []ₗ []ₐ f []ₗ []ₐ eq = εⱼ
-  ctrVarsⱼ n []ₗ []ₐ f (_ ∷ₗ _) _ ()
-  ctrVarsⱼ n (SU.Arrow _ _ ∷ₗ _) (() ∷ₐ _) f vs hs eq
-  ctrVarsⱼ n (SU.Ind _ ∷ₗ Ts) (PE.refl ∷ₐ ps) f (v ∷ₗ vs) (h ∷ₐ hs) eq =
-    consⱼ (f v h) (ctrVarsⱼ n Ts ps f vs hs (PE.cong pred eq))
-  ctrVarsⱼ n (_ ∷ₗ _) _ f []ₗ []ₐ ()
+  -- Weakening of the arguments by one hypothesis.
+  wkArgsⱼ : ∀ {Δ A rA} ℓ n (vs : List Nat) Ss → ⊢ Δ ∙ A ^ rA
+          → Δ ⊢All map (λ v → var (((n - 1) - v) + ℓ)) vs ∷ map emb-stype Ss ^ [ ! , ι ⁰ ]
+          → Δ ∙ A ^ rA ⊢All map (λ v → var (((n - 1) - v) + 1+ ℓ)) vs
+                          ∷ map emb-stype Ss ^ [ ! , ι ⁰ ]
+  wkArgsⱼ ℓ n []ₗ []ₗ ⊢Δ∙ εⱼ = εⱼ
+  wkArgsⱼ ℓ n []ₗ (S ∷ₗ Ss) ⊢Δ∙ ()
+  wkArgsⱼ ℓ n (v ∷ₗ vs) []ₗ ⊢Δ∙ ()
+  wkArgsⱼ {Δ} {A} {rA} ℓ n (v ∷ₗ vs) (S ∷ₗ Ss) ⊢Δ∙ (consⱼ ⊢v ⊢vs) =
+    consⱼ (PE.subst₂ (λ y B → Δ ∙ A ^ rA ⊢ var y ∷ B ^ [ ! , ι ⁰ ])
+                     (PE.sym (plusSuc ((n - 1) - v) ℓ)) (wk-emb-stype (step id) S)
+                     (wkTerm (step id) ⊢Δ∙ ⊢v))
+          (wkArgsⱼ ℓ n vs Ss ⊢Δ∙ ⊢vs)
+
+  wkRecⱼ : ∀ {Δ A rA i} ℓ n (rs : List Nat) → ⊢ Δ ∙ A ^ rA
+         → All (λ r → Δ ⊢ var (((n - 1) - r) + ℓ) ∷ Ind i ^ [ ! , ι ⁰ ]) rs
+         → All (λ r → Δ ∙ A ^ rA ⊢ var (((n - 1) - r) + 1+ ℓ) ∷ Ind i ^ [ ! , ι ⁰ ]) rs
+  wkRecⱼ ℓ n []ₗ ⊢Δ∙ []ₐ = []ₐ
+  wkRecⱼ {Δ} {A} {rA} {i} ℓ n (r ∷ₗ rs) ⊢Δ∙ (⊢r ∷ₐ ⊢rs) =
+    PE.subst (λ y → Δ ∙ A ^ rA ⊢ var y ∷ Ind i ^ [ ! , ι ⁰ ]) (PE.sym (plusSuc ((n - 1) - r) ℓ))
+             (wkTerm (step id) ⊢Δ∙ ⊢r)
+    ∷ₐ wkRecⱼ ℓ n rs ⊢Δ∙ ⊢rs
+
+  -- The recursive arguments are at the inductive type being eliminated.
+  recArgsⱼ : ∀ {Δ i} (f : Nat → Term) (vs : List Nat) Ss
+           → Δ ⊢All map f vs ∷ map emb-stype Ss ^ [ ! , ι ⁰ ]
+           → All (λ r → Δ ⊢ f r ∷ Ind i ^ [ ! , ι ⁰ ])
+                 (map proj₁ (filter (λ vS → SU.ctrArgIsRecursive i (proj₂ vS)) (zip vs Ss)))
+  recArgsⱼ f []ₗ []ₗ εⱼ = []ₐ
+  recArgsⱼ f []ₗ (S ∷ₗ Ss) ()
+  recArgsⱼ f (v ∷ₗ vs) []ₗ ()
+  recArgsⱼ {i = i} f (v ∷ₗ vs) (S ∷ₗ Ss) (consⱼ ⊢v ⊢vs)
+    with SU.ctrArgIsRecursive i S in e
+  ... | false = recArgsⱼ f vs Ss ⊢vs
+  ... | true with rec-Ind i S e
+  ...   | PE.refl = ⊢v ∷ₐ recArgsⱼ f vs Ss ⊢vs
+
+  map-range-cong : ∀ {A : Set} (f g : Nat → A) n → (∀ v → v << n → f v PE.≡ g v)
+                 → map f (range n) PE.≡ map g (range n)
+  map-range-cong f g 0 eq = PE.refl
+  map-range-cong f g (1+ n) eq =
+    PE.trans (PE.cong (map f) (range-suc n))
+      (PE.trans (PE.cong₂ _∷ₗ_ (eq 0 (leS le0))
+                  (PE.trans (map-map f 1+ (range n))
+                    (PE.trans (map-range-cong (λ v → f (1+ v)) (λ v → g (1+ v)) n
+                                              (λ v h → eq (1+ v) (leS h)))
+                              (PE.sym (map-map g 1+ (range n))))))
+                (PE.sym (PE.cong (map g) (range-suc n))))
 
   -- The telescope of the induction hypotheses.
-  teleIh : ∀ {Γ Δ P P′ lG Ss} ind j n ℓ (rs : List Nat)
+  teleIh : ∀ {Γ Δ P P′ lG} ind j Ts ℓ (rs : List Nat)
          → ind ∈ₗ senv
-         → SU.ctrArgsTypeList ind j PE.≡ just Ss
-         → All (SU.isPositive (SU.SInd.name ind)) Ss
-         → n PE.≡ length Ss
-         → ℓ + length rs PE.≡ n
-         → All (λ r → r << n) rs
+         → SU.ctrArgsTypeList ind j PE.≡ just Ts
+         → ℓ + length rs PE.≡ length (ctrRecIndices (SU.SInd.name ind) Ts)
          → ⊢ Γ → ⊢ Δ
-         → Δ ⊢ˢ wk1^Subst (n + ℓ) idSubst ∷ Γ
-         → (∀ x → x << n → Δ ⊢ var (x + ℓ) ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ])
+         → Δ ⊢ˢ wk1^Subst (ctrArity Ts + ℓ) idSubst ∷ Γ
+         → Δ ⊢All map (λ v → var (((ctrArity Ts - 1) - v) + ℓ)) (range (ctrArity Ts))
+                   ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+         → All (λ r → Δ ⊢ var (((ctrArity Ts - 1) - r) + ℓ) ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]) rs
          → MotiveCong (SU.SInd.name ind) Γ P P′ lG
-         → Δ ⊢ foldr (Πih ! lG) (concl (SU.SInd.name ind) j P n) (ihGo n P ℓ rs)
-             ≡ foldr (Πih ! lG) (concl (SU.SInd.name ind) j P′ n) (ihGo n P′ ℓ rs)
+         → Δ ⊢ foldr (Πih ! lG) (concl (SU.SInd.name ind) j P (ctrArity Ts) (length (ctrRecIndices (SU.SInd.name ind) Ts)))
+                     (ihGo (ctrArity Ts) P ℓ rs)
+             ≡ foldr (Πih ! lG) (concl (SU.SInd.name ind) j P′ (ctrArity Ts) (length (ctrRecIndices (SU.SInd.name ind) Ts)))
+                     (ihGo (ctrArity Ts) P′ ℓ rs)
              ∷ Univ ! lG ^ [ ! , next lG ]
-  teleIh {Ss = Ss} ind j n ℓ []ₗ ind∈ eqTs pos len eq []ₐ ⊢Γ ⊢Δ [σ] allv motiveCong
+  teleIh {Γ} {Δ} ind j Ts ℓ []ₗ ind∈ eqTs eq ⊢Γ ⊢Δ [σ] ⊢args []ₐ motiveCong
     with PE.trans (PE.sym (plusZero ℓ)) eq
   ... | PE.refl =
-    un-univ≡ (proj₂ (motiveCong (n + n) ⊢Δ [σ]
-                (Ctrⱼ ⊢Δ ind∈ eqTs
-                  (ctrVarsⱼ n Ss pos
-                    (λ v h → PE.subst (λ y → _ ⊢ var y ∷ _ ^ [ ! , ι ⁰ ])
-                                      (PE.trans (plus-comm (((n - 1) - v)) n) (PE.sym (varIdx n v h)))
-                                      (allv ((n - 1) - v) (minus-<- n v h)))
-                    (range n) (all∈ (∈ₗ-range n)) (PE.trans (length-range n) len)))))
-  teleIh {Γ} {Δ} {P} {lG = lG} ind j n ℓ (r ∷ₗ rs) ind∈ eqTs pos len eq (h ∷ₐ hs) ⊢Γ ⊢Δ [σ] allv motiveCong =
-    let ⊢ih , ihEq = motiveCong (n + ℓ) ⊢Δ [σ] (allv ((n - 1) - r) (minus-<- n r h))
+    let n = ctrArity Ts
+    in  un-univ≡ (proj₂ (motiveCong (ℓ + n) ⊢Δ
+          (PE.subst (λ d → Δ ⊢ˢ wk1^Subst d idSubst ∷ Γ) (plus-comm n ℓ) [σ])
+          (Ctrⱼ ⊢Δ ind∈ eqTs
+            (PE.subst (λ ts → Δ ⊢All ts ∷ map emb-stype Ts ^ [ ! , ι ⁰ ])
+              (map-range-cong _ _ n
+                (λ v h → PE.cong var (PE.trans (plus-comm ((n - 1) - v) ℓ) (PE.sym (varIdx ℓ n v h)))))
+              ⊢args))))
+  teleIh {Γ} {Δ} {P} {lG = lG} ind j Ts ℓ (r ∷ₗ rs) ind∈ eqTs eq ⊢Γ ⊢Δ [σ] ⊢args (⊢r ∷ₐ ⊢rs) motiveCong =
+    let n = ctrArity Ts
+        ⊢ih , ihEq = motiveCong (n + ℓ) ⊢Δ [σ] ⊢r
         ⊢Δ∙ = ⊢Δ ∙ ⊢ih
     in  Π-cong (λ x → (≡is≤ PE.refl) , (≡is≤ PE.refl)) (λ abs → ⊥-elim (!≢% abs)) ⊢ih (un-univ≡ ihEq)
-          (teleIh ind j n (1+ ℓ) rs ind∈ eqTs pos len
-                  (PE.trans (PE.sym (plusSuc ℓ (length rs))) eq) hs ⊢Γ ⊢Δ∙
+          (teleIh ind j Ts (1+ ℓ) rs ind∈ eqTs
+                  (PE.trans (PE.sym (plusSuc ℓ (length rs))) eq) ⊢Γ ⊢Δ∙
                   (PE.subst (λ d → Δ ∙ ihFun n P r ℓ ^ [ ! , ι lG ] ⊢ˢ wk1^Subst d idSubst ∷ Γ)
                             (PE.sym (plusSuc n ℓ))
                             (wk1Subst″ ⊢Γ ⊢Δ ⊢ih [σ]))
-                  (λ x hx → PE.subst (λ y → _ ⊢ var y ∷ _ ^ [ ! , ι ⁰ ]) (PE.sym (plusSuc x ℓ))
-                                     (wkTerm (step id) ⊢Δ∙ (allv x hx)))
+                  (wkArgsⱼ ℓ n (range n) Ts ⊢Δ∙ ⊢args)
+                  (wkRecⱼ ℓ n rs ⊢Δ∙ ⊢rs)
                   motiveCong)
 
   -- The telescope of the arguments of the constructor.
-  teleArg : ∀ {i Γ lG Z Z′} m
+  teleArg : ∀ {i Γ lG Z Z′} Ts
+          → All (SU.isPositive i) Ts → All (SU.indsInSEnv senv) Ts
           → ⊢ Γ
-          → ext i Γ m ⊢ Z ≡ Z′ ∷ Univ ! lG ^ [ ! , next lG ]
-          → Γ ⊢ foldr (Πarg ! lG) Z (replicate m (Ind i))
-              ≡ foldr (Πarg ! lG) Z′ (replicate m (Ind i)) ∷ Univ ! lG ^ [ ! , next lG ]
-  teleArg 0 ⊢Γ eq = eq
-  teleArg {lG = lG} (1+ m) ⊢Γ eq =
-    Π-cong (λ x → (⁰min lG) , (≡is≤ PE.refl)) (λ abs → ⊥-elim (!≢% abs))
-           (univ (Indⱼ ⊢Γ)) (refl (Indⱼ ⊢Γ)) (teleArg m (⊢Γ ∙ univ (Indⱼ ⊢Γ)) eq)
+          → ext Γ Ts ⊢ Z ≡ Z′ ∷ Univ ! lG ^ [ ! , next lG ]
+          → Γ ⊢ foldr (Πarg ! lG) Z (map emb-stype Ts)
+              ≡ foldr (Πarg ! lG) Z′ (map emb-stype Ts) ∷ Univ ! lG ^ [ ! , next lG ]
+  teleArg []ₗ []ₐ []ₐ ⊢Γ eq = eq
+  teleArg {i} {lG = lG} (T ∷ₗ Ts) (p ∷ₐ ps) (q ∷ₐ qs) ⊢Γ eq =
+    let ⊢T = ⊢embT {i} T p q ⊢Γ
+    in  Π-cong (λ x → (⁰min lG) , (≡is≤ PE.refl)) (λ abs → ⊥-elim (!≢% abs))
+               (univ ⊢T) (refl ⊢T) (teleArg {i} Ts ps qs (⊢Γ ∙ univ ⊢T) eq)
 
 indRectBranchTyCong : ∀ {Γ P P′ lG Ss} ind j
                     → ind ∈ₗ senv
@@ -160,16 +232,18 @@ indRectBranchTyCong ind j ind∈ eqTs P≡P′ motiveCong with wfEq P≡P′
 indRectBranchTyCong {Γ} {P} {P′} {lG} {Ss} ind j ind∈ eqTs P≡P′ motiveCong | ⊢Γ ∙ ⊢Ind =
   let i = SU.SInd.name ind
       pos = all∈ (SU.ctrArgsTypesPositive ind j Ss eqTs)
+      inds = ctrArgInds ind∈ eqTs
       n = ctrArity Ss
+      ⊢args = PE.subst (λ ts → ext Γ Ss ⊢All ts ∷ map emb-stype Ss ^ [ ! , ι ⁰ ])
+                       (map-cong (range n) (λ v → PE.cong var (PE.sym (plusZero ((n - 1) - v)))))
+                       (ext-vars {i} Ss pos inds ⊢Γ)
   in  PE.subst₂ (λ A B → Γ ⊢ A ≡ B ^ [ ! , ι lG ])
-        (PE.sym (branchTy-nf i j Ss P ! lG pos)) (PE.sym (branchTy-nf i j Ss P′ ! lG pos))
-        (univ (teleArg n ⊢Γ
-          (teleIh ind j n 0 (range n) ind∈ eqTs pos PE.refl (length-range n)
-                  (all∈ (∈ₗ-range n)) ⊢Γ (⊢ext i n ⊢Γ)
-                  (PE.subst (λ d → ext i Γ n ⊢ˢ wk1^Subst d idSubst ∷ Γ) (PE.sym (plusZero n))
-                            (ext-subst i n ⊢Γ))
-                  (λ x hx → PE.subst (λ y → ext i Γ n ⊢ var y ∷ Ind i ^ [ ! , ι ⁰ ])
-                                     (PE.sym (plusZero x)) (ext-var i n x hx ⊢Γ))
+        (PE.sym (branchTy-nf i j Ss P ! lG)) (PE.sym (branchTy-nf i j Ss P′ ! lG))
+        (univ (teleArg {i} Ss pos inds ⊢Γ
+          (teleIh ind j Ss 0 (ctrRecIndices i Ss) ind∈ eqTs PE.refl ⊢Γ (⊢ext {i} Ss pos inds ⊢Γ)
+                  (ext-subst {i} Ss 0 pos inds ⊢Γ ⊢Γ (idSubst″ ⊢Γ))
+                  ⊢args
+                  (recArgsⱼ {i = i} (λ v → var (((n - 1) - v) + 0)) (range n) Ss ⊢args)
                   motiveCong)))
 
 private

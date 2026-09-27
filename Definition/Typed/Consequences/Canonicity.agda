@@ -4,11 +4,11 @@ module Definition.Typed.Consequences.Canonicity (senv : SI.SEnv) (swf : SI.swfen
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs
-open import Definition.Typed.Properties senv equivs
-open import Definition.Typed.EqRelInstance senv equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Irrelevance senv equivs
-open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.Typed.Properties senv swf equivs
+open import Definition.Typed.EqRelInstance senv swf equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Irrelevance senv swf equivs
+open import Definition.LogicalRelation.ShapeView senv swf equivs
 open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
 open import Tools.Empty
 open import Tools.Nat
@@ -66,7 +66,6 @@ noNe consistency (castⱼ [A] [A]₁ [A]₂ [A]₃) (castnℕₙ neT) = noNe con
 noNe consistency (castⱼ [A] [A]₁ [A]₂ [A]₃) (castnΠₙ neT) = noNe consistency [A] neT
 noNe consistency (castⱼ [A] [A]₁ [A]₂ [A]₃) (castnIndₙ neT) = noNe consistency [A] neT
 noNe consistency (castⱼ [A] [A]₁ [A]₂ [A]₃) (castIndₙ neT) = noNe consistency [A]₁ neT
-noNe consistency (castⱼ [A] [A]₁ [A]₂ [A]₃) (castIndIndₙ neT) = noNe consistency [A]₃ neT
 noNe consistency (conv ⊢t x) (var n) = noNe consistency ⊢t (var n)
 noNe consistency (conv ⊢t x) (∘ₙ neT) = noNe consistency ⊢t (∘ₙ neT)
 noNe consistency (conv ⊢t x) (natrecₙ neT) = noNe consistency ⊢t (natrecₙ neT)
@@ -79,7 +78,6 @@ noNe consistency (conv ⊢t x) (castnℕₙ neT) = noNe consistency ⊢t (castn�
 noNe consistency (conv ⊢t x) (castnΠₙ neT) = noNe consistency ⊢t (castnΠₙ neT)
 noNe consistency (conv ⊢t x) (castnIndₙ neT) = noNe consistency ⊢t (castnIndₙ neT)
 noNe consistency (conv ⊢t x) (castIndₙ neT) = noNe consistency ⊢t (castIndₙ neT)
-noNe consistency (conv ⊢t x) (castIndIndₙ neT) = noNe consistency ⊢t (castIndIndₙ neT)
 noNe consistency (conv ⊢t x) castℕΠₙ = noNe consistency ⊢t castℕΠₙ
 noNe consistency (conv ⊢t x) castΠℕₙ = noNe consistency ⊢t castΠℕₙ
 noNe consistency (conv ⊢t x) castIndΠₙ = noNe consistency ⊢t castIndΠₙ

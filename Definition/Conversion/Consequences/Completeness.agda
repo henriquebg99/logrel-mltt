@@ -4,12 +4,12 @@ module Definition.Conversion.Consequences.Completeness (senv : SI.SEnv) (swf : S
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Conversion senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Conversion.EqRelInstance senv swf equivs
 open import Definition.Conversion.Inversion senv swf equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Substitution senv equivs
-open import Definition.LogicalRelation.Substitution.Escape senv equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Substitution senv swf equivs
+open import Definition.LogicalRelation.Substitution.Escape senv swf equivs
 open import Definition.LogicalRelation.Fundamental senv swf equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE

@@ -2,16 +2,16 @@ import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution.Introductions.Nat (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+module Definition.LogicalRelation.Substitution.Introductions.Nat (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Properties senv equivs
-open import Definition.LogicalRelation.Substitution senv equivs
-open import Definition.LogicalRelation.Substitution.Introductions.Universe senv equivs
+open import Definition.Typed.Properties senv swf equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Properties senv swf equivs
+open import Definition.LogicalRelation.Substitution senv swf equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Universe senv swf equivs
 open import Tools.Product
 -- Validity of the natural number type.
 ℕᵛ : ∀ {Γ l} ([Γ] : ⊩ᵛ Γ) → Γ ⊩ᵛ⟨ l ⟩ ℕ ^ [ ! , ι ⁰ ] / [Γ]

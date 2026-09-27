@@ -8,7 +8,7 @@ open import Definition.Typed senv equivs
 open import Tools.Nat
 open import Tools.Product
 import Tools.PropositionalEquality as PE
-open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation senv swf equivs
 open import Definition.Conversion senv equivs
 open import Definition.ConversionGen senv equivs
 open import Definition.Conversion.Lift senv swf equivs
@@ -23,10 +23,10 @@ open import Definition.Typed.Consequences.TypeUnicity senv swf equivs
 open import Definition.Typed.Consequences.Injectivity senv swf equivs
 open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
 open import Definition.Typed.Consequences.Inequality senv swf equivs as I
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Conversion.Symmetry senv swf equivs
 open import Definition.Conversion.Stability senv swf equivs
-open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Typed.EqRelInstance senv swf equivs
 open import Tools.Empty
 notIdU : ∀ {Γ A t u l} → Γ ⊢ Id A t u ^ [ ! , l ] → ⊥
 notIdU (univ x) =

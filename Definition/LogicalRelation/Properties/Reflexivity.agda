@@ -2,14 +2,14 @@ import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Properties.Reflexivity (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+module Definition.LogicalRelation.Properties.Reflexivity (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation senv swf equivs
 open import Tools.Product
 open import Tools.Empty
-open import Tools.List using (All; All₂; []ₐ; _∷ₐ_)
+open import Tools.List using (All; All₂; All₃; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
 -- Reflexivity of reducible types.
 reflEq : ∀ {l Γ A r} ([A] : Γ ⊩⟨ l ⟩ A ^ r) → Γ ⊩⟨ l ⟩ A ≡ A ^ r / [A]
@@ -43,15 +43,15 @@ mutual
   reflInductive-prop : ∀ {Γ i n}
                    → Inductive-prop Γ i n
                    → [Inductive]-prop Γ i n n
-  reflInductive-prop (ctrᵣ ps) = ctrᵣ (reflAllInd ps)
+  reflInductive-prop (ctrᵣ ind∈ name≡ eq ps) = ctrᵣ ind∈ name≡ eq (reflAllInd ps)
   reflInductive-prop (ne (neNfₜ neK ⊢k k≡k)) = ne (neNfₜ₌ neK neK k≡k)
 
-  reflAllInd : ∀ {Γ i args}
-             → All (λ a → Γ ⊩Ind a ∷Ind i) args
-             → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args args
+  reflAllInd : ∀ {Γ args As}
+             → All₂ (λ a A → ∃ λ k → A PE.≡ Ind k × Γ ⊩Ind a ∷Ind k) args As
+             → All₃ (λ a a' A → ∃ λ k → A PE.≡ Ind k × Γ ⊩Ind a ≡ a' ∷Ind k) args args As
   reflAllInd []ₐ = []ₐ
-  reflAllInd (Indₜ n d t≡t prop ∷ₐ ps) =
-    Indₜ₌ n n d d t≡t (reflInductive-prop prop) ∷ₐ reflAllInd ps
+  reflAllInd ((k , A≡ , Indₜ n d t≡t prop) ∷ₐ ps) =
+    (k , A≡ , Indₜ₌ n n d d t≡t (reflInductive-prop prop)) ∷ₐ reflAllInd ps
 
 reflEmpty-prop : ∀ {Γ n}
                  → Empty-prop Γ n

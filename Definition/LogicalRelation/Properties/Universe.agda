@@ -2,7 +2,7 @@ import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Properties.Universe (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+module Definition.LogicalRelation.Properties.Universe (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 import Definition.Typed.Weakening senv equivs as Twk
 open EqRelSet {{...}}
@@ -10,15 +10,15 @@ open import Definition.Untyped senv equivs
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Weakening senv equivs as Lwk
-open import Definition.LogicalRelation.ShapeView senv equivs
-open import Definition.LogicalRelation.Irrelevance senv equivs as Irr
-open import Definition.Typed.Properties senv equivs
-open import Definition.LogicalRelation.Properties.MaybeEmb senv equivs
-open import Definition.LogicalRelation.Properties.Escape senv equivs
-open import Definition.LogicalRelation.Properties.Reduction senv equivs
-open import Definition.LogicalRelation.Properties.Conversion senv equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Weakening senv swf equivs as Lwk
+open import Definition.LogicalRelation.ShapeView senv swf equivs
+open import Definition.LogicalRelation.Irrelevance senv swf equivs as Irr
+open import Definition.Typed.Properties senv swf equivs
+open import Definition.LogicalRelation.Properties.MaybeEmb senv swf equivs
+open import Definition.LogicalRelation.Properties.Escape senv swf equivs
+open import Definition.LogicalRelation.Properties.Reduction senv swf equivs
+open import Definition.LogicalRelation.Properties.Conversion senv swf equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 open import Tools.Empty using (⊥; ⊥-elim)
@@ -176,7 +176,7 @@ un-univEq : ∀ {l Γ A r }
                 [U] = Ugen (wf (escape [A]))
             in Γ ⊩⟨ next l ⟩ A ∷ Univ r l ^ [ ! , next l ] / [U]
 un-univEq {⁰} {Γ} {A} {.!} (ℕᵣ [[ ⊢A , ⊢ℕ , D ]] ) = Uₜ ℕ (un-univ:⇒*: [[ ⊢A , ⊢ℕ , D ]]) ℕₙ (≅ₜ-ℕrefl (wf ⊢A)) (λ [ρ] ⊢Δ → Lwk.wk [ρ] ⊢Δ (ℕᵣ [[ ⊢A , ⊢ℕ , D ]] ))
-un-univEq {⁰} {Γ} {A} {.!} (Indᵣ {i = i} [[ ⊢A , ⊢Ind , D ]] ) = Uₜ (Ind i) (un-univ:⇒*: [[ ⊢A , ⊢Ind , D ]]) Indₙ (≅ₜ-Indrefl (wf ⊢A)) (λ [ρ] ⊢Δ → Lwk.wk [ρ] ⊢Δ (Indᵣ [[ ⊢A , ⊢Ind , D ]] ))
+un-univEq {⁰} {Γ} {A} {.!} (Indᵣ {i = i} [[ ⊢A , ⊢Ind , D ]] ) = Uₜ (Ind i) (un-univ:⇒*: [[ ⊢A , ⊢Ind , D ]]) Indₙ (≅ₜ-Indrefl (wf ⊢A) (Ind-nameᵗ ⊢Ind)) (λ [ρ] ⊢Δ → Lwk.wk [ρ] ⊢Δ (Indᵣ [[ ⊢A , ⊢Ind , D ]] ))
 un-univEq {⁰} {Γ} {A} {.%} (Emptyᵣ [[ ⊢A , ⊢Empty , D ]]) = Uₜ (Empty ⁰) (un-univ:⇒*: [[ ⊢A , ⊢Empty , D ]]) Emptyₙ (≅ₜ-Emptyrefl (wf ⊢A))
                                                                                 (λ [ρ] ⊢Δ → Lwk.wk [ρ] ⊢Δ (Emptyᵣ [[ ⊢A , ⊢Empty , D ]] ))
 un-univEq {⁰} {Γ} {A} {r} (ne′ K D neK K≡K) = Uₜ K (un-univ:⇒*: D) (ne neK) (~-to-≅ₜ K≡K) (λ [ρ] ⊢Δ → Lwk.wk [ρ] ⊢Δ (ne′ K D neK K≡K))
@@ -211,7 +211,7 @@ un-univEqEq-Shape {⁰} {Γ} {A} {B} {.!} _ _ (Indᵥ {i = i} [[ ⊢A , ⊢Ind ,
   let [A] = Indᵣ [[ ⊢A , ⊢Ind , D ]]
       [B] = Indᵣ [[ redFirst* [A≡B] , ⊢Ind , [A≡B] ]]
   in Uₜ₌ (un-univEq [A]) (irrelevanceTerm {l = next ⁰} (Ugen (wf (escape [B]))) (Ugen (wf (escape [A]))) (un-univEq [B]))
-         (≅ₜ-Indrefl (wf ⊢A)) λ [ρ] ⊢Δ → Lwk.wkEq [ρ] ⊢Δ [A] [A≡B]
+         (≅ₜ-Indrefl (wf ⊢A) (Ind-nameᵗ ⊢Ind)) λ [ρ] ⊢Δ → Lwk.wkEq [ρ] ⊢Δ [A] [A≡B]
 un-univEqEq-Shape {⁰} {Γ} {A} {B} {.%} _ _ (Emptyᵥ [[ ⊢A , ⊢Empty , D ]] EmptyB) [A≡B] =
   let [A] = Emptyᵣ [[ ⊢A , ⊢Empty , D ]]
       [B] = Emptyᵣ [[ redFirst* [A≡B] , ⊢Empty , [A≡B] ]]

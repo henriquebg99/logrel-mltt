@@ -4,10 +4,10 @@ module Definition.Conversion.EqRelInstance (senv : SI.SEnv) (swf : SI.swfenv sen
 open import Definition.Untyped senv equivs
 open import Definition.Untyped.Properties senv equivs using (wkSingleSubstId)
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Typed.Weakening senv equivs using (_∷_⊆_; wkEq; step; id)
 open import Definition.Conversion senv equivs
-open import Definition.Conversion.Reduction senv equivs
+open import Definition.Conversion.Reduction senv swf equivs
 open import Definition.Conversion.Universe senv swf equivs
 open import Definition.Conversion.Stability senv swf equivs
 open import Definition.Conversion.Soundness senv swf equivs
@@ -182,19 +182,20 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
      in ↑ (refl (univ (ℕⱼ (wf ⊢B')))) (~↑! (cast-neℕ t~t′ t<>u ⊢e ⊢e'))
 
 ~-castneInd : ∀ {i} {A A' e e' t t' : Term} {Γ : Con Term} →
+    i ∈ₗ SI.indNames senv →
     Γ ⊢ A ~ A' ∷ U ⁰ ^ [ ! , next ⁰ ] →
     Γ ⊢ t [genconv↑] t' ∷ A ^ [ ! , ι ⁰ ] →
     Γ ⊢ e ∷ Id (U ⁰) A (Ind i) ^ [ % , ι ⁰ ] →
     Γ ⊢ e' ∷ Id (U ⁰) A' (Ind i) ^ [ % , ι ⁰ ] →
     Γ ⊢ cast ⁰ A (Ind i) e t ~ cast ⁰ A' (Ind i) e' t' ∷ Ind i ^ [ ! , ι ⁰ ]
-~-castneInd (↑ A≡B (~↑! x)) t<>u ⊢e ⊢e' =
+~-castneInd i∈ (↑ A≡B (~↑! x)) t<>u ⊢e ⊢e' =
      let _ , ⊢B' = syntacticEq A≡B
          B′ , whnfB′ , D = whNorm ⊢B'
          U≡B′ = trans A≡B (subset* (red D))
          B≡U = U≡A-whnf U≡B′ whnfB′
          t~t′ = PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) B≡U
                       ([~] _ (red D) whnfB′ x)
-     in ↑ (refl (univ (Indⱼ (wf ⊢B')))) (~↑! (cast-neInd t~t′ t<>u ⊢e ⊢e'))
+     in ↑ (refl (univ (Indⱼ′ (wf ⊢B') i∈))) (~↑! (cast-neInd t~t′ t<>u ⊢e ⊢e'))
 
 ~-castneΠ : ∀ {A A' P P' B B' : Term} {rB : Relevance} {e e' t t' : Term}
     {Γ : Con Term} →
@@ -249,17 +250,6 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
      in ↑ (refl (univ (ℕⱼ (wfTerm ⊢t))))
           (~↑! (castℕ-refl (~atℕ (conv ⊢t (sym T≡U)) (_ , _ , [~] _ (red Dt) whnfBt t<>u)) ⊢e))
 
-~-castInd-refl : ∀ {i} {e t u : Term} {Γ : Con Term} →
-    Γ ⊢ t ~ u ∷ Ind i ^ [ ! , ι ⁰ ] →
-    Γ ⊢ t ∷ Ind i ^ [ ! , ι ⁰ ] →
-    Γ ⊢ e ∷ Id (U ⁰) (Ind i) (Ind i) ^ [ % , ι ⁰ ] →
-    Γ ⊢ cast ⁰ (Ind i) (Ind i) e t ~ u ∷ Ind i ^ [ ! , ι ⁰ ]
-~-castInd-refl (↑ T≡U (~↑! t<>u)) ⊢t ⊢e =
-     let ⊢Bt , ⊢t , ⊢u = syntacticEqTerm (soundness~↑! t<>u)
-         Bt , whnfBt , Dt = whNorm ⊢Bt
-     in ↑ (refl (univ (Indⱼ (wfTerm ⊢t))))
-          (~↑! (castInd-refl (~atInd (conv ⊢t (sym T≡U)) (_ , _ , [~] _ (red Dt) whnfBt t<>u)) ⊢e))
-
 ~-castℕ : ∀ {B B' e e' t t' : Term} {Γ : Con Term} →
     ⊢ Γ →
     Γ ⊢ B ~ B' ∷ U ⁰ ^ [ ! , next ⁰ ] →
@@ -285,12 +275,13 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
 
 ~-castInd : ∀ {i} {B B' e e' t t' : Term} {Γ : Con Term} →
     ⊢ Γ →
+    i ∈ₗ SI.indNames senv →
     Γ ⊢ B ~ B' ∷ U ⁰ ^ [ ! , next ⁰ ] →
     Γ ⊢ t [genconv↑] t' ∷ Ind i ^ [ ! , ι ⁰ ] →
     Γ ⊢ e ∷ Id (U ⁰) (Ind i) B ^ [ % , ι ⁰ ] →
     Γ ⊢ e' ∷ Id (U ⁰) (Ind i) B' ^ [ % , ι ⁰ ] →
     Γ ⊢ cast ⁰ (Ind i) B e t ~ cast ⁰ (Ind i) B' e' t' ∷ B ^ [ ! , ι ⁰ ]
-~-castInd ⊢Γ (↑ A≡B (~↑! x)) X ⊢e ⊢e' =
+~-castInd ⊢Γ _ (↑ A≡B (~↑! x)) X ⊢e ⊢e' =
      let _ , ⊢B' = syntacticEq A≡B
          B′ , whnfB′ , D = whNorm ⊢B'
          U≡B′ = trans A≡B (subset* (red D))
@@ -344,6 +335,7 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
 
 ~-castIndΠ : ∀ {i} {A A' : Term} {rA : Relevance} {P P' e e' t t' : Term}
     {Γ : Con Term} →
+    i ∈ₗ SI.indNames senv →
     Γ ⊢ A ∷ Univ rA ⁰ ^ [ ! , next ⁰ ] →
     (Γ ∙ A ^ [ rA , ι ⁰ ]) ⊢ P ∷ U ⁰ ^ [ ! , next ⁰ ] →
     Γ ⊢ Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ ! [genconv↑] Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ ! ∷ U ⁰ ^ [ ! , next ⁰ ] →
@@ -353,7 +345,7 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
     Γ ⊢ cast ⁰ (Ind i) (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) e t ~
     cast ⁰ (Ind i) (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !) e' t' ∷
     Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ]
-~-castIndΠ ⊢A ⊢P X Y ⊢e ⊢e' = ↑ (refl (univ (Πⱼ (λ x → ≡is≤ PE.refl , ≡is≤ PE.refl) ▹ (λ x → ⊥-elim (!≢% x)) ▹ ⊢A ▹ ⊢P))) (~↑! (cast-IndΠ X Y ⊢e ⊢e'))
+~-castIndΠ _ ⊢A ⊢P X Y ⊢e ⊢e' = ↑ (refl (univ (Πⱼ (λ x → ≡is≤ PE.refl , ≡is≤ PE.refl) ▹ (λ x → ⊥-elim (!≢% x)) ▹ ⊢A ▹ ⊢P))) (~↑! (cast-IndΠ X Y ⊢e ⊢e'))
 
 ~-castΠℕ : ∀ {A A' : Term} {rA : Relevance} {P P' e e' t t' : Term}
     {Γ : Con Term} →
@@ -370,6 +362,7 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
 
 ~-castΠInd : ∀ {i} {A A' : Term} {rA : Relevance} {P P' e e' t t' : Term}
     {Γ : Con Term} →
+    i ∈ₗ SI.indNames senv →
     Γ ⊢ A ∷ Univ rA ⁰ ^ [ ! , next ⁰ ] →
     (Γ ∙ A ^ [ rA , ι ⁰ ]) ⊢ P ∷ U ⁰ ^ [ ! , next ⁰ ] →
     Γ ⊢ Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ ! [genconv↑] Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !
@@ -380,29 +373,33 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
     [ % , ι ⁰ ] →
     Γ ⊢ cast ⁰ (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) (Ind i) e t ~
     cast ⁰ (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !) (Ind i) e' t' ∷ Ind i ^ [ ! , ι ⁰ ]
-~-castΠInd ⊢A ⊢P X Y ⊢e ⊢e' = ↑ (refl (univ (Indⱼ (wfTerm ⊢A)))) (~↑! (cast-ΠInd (symConv↑Term (reflConEq (wfTerm ⊢e)) X) Y ⊢e ⊢e'))
+~-castΠInd i∈ ⊢A ⊢P X Y ⊢e ⊢e' = ↑ (refl (univ (Indⱼ′ (wfTerm ⊢A) i∈))) (~↑! (cast-ΠInd (symConv↑Term (reflConEq (wfTerm ⊢e)) X) Y ⊢e ⊢e'))
 
 ~-castIndℕ : ∀ {i} {e e' t t' : Term} {Γ : Con Term} →
+    i ∈ₗ SI.indNames senv →
     Γ ⊢ t [genconv↑] t' ∷ Ind i ^ [ ! , ι ⁰ ] →
     Γ ⊢ e ∷ Id (U ⁰) (Ind i) ℕ ^ [ % , ι ⁰ ] →
     Γ ⊢ e' ∷ Id (U ⁰) (Ind i) ℕ ^ [ % , ι ⁰ ] →
     Γ ⊢ cast ⁰ (Ind i) ℕ e t ~ cast ⁰ (Ind i) ℕ e' t' ∷ ℕ ^ [ ! , ι ⁰ ]
-~-castIndℕ Y ⊢e ⊢e' = ↑ (refl (univ (ℕⱼ (wfTerm ⊢e)))) (~↑! (cast-Indℕ Y ⊢e ⊢e'))
+~-castIndℕ _ Y ⊢e ⊢e' = ↑ (refl (univ (ℕⱼ (wfTerm ⊢e)))) (~↑! (cast-Indℕ Y ⊢e ⊢e'))
 
 ~-castℕInd : ∀ {i} {e e' t t' : Term} {Γ : Con Term} →
+    i ∈ₗ SI.indNames senv →
     Γ ⊢ t [genconv↑] t' ∷ ℕ ^ [ ! , ι ⁰ ] →
     Γ ⊢ e ∷ Id (U ⁰) ℕ (Ind i) ^ [ % , ι ⁰ ] →
     Γ ⊢ e' ∷ Id (U ⁰) ℕ (Ind i) ^ [ % , ι ⁰ ] →
     Γ ⊢ cast ⁰ ℕ (Ind i) e t ~ cast ⁰ ℕ (Ind i) e' t' ∷ Ind i ^ [ ! , ι ⁰ ]
-~-castℕInd Y ⊢e ⊢e' = ↑ (refl (univ (Indⱼ (wfTerm ⊢e)))) (~↑! (cast-ℕInd Y ⊢e ⊢e'))
+~-castℕInd i∈ Y ⊢e ⊢e' = ↑ (refl (univ (Indⱼ′ (wfTerm ⊢e) i∈))) (~↑! (cast-ℕInd Y ⊢e ⊢e'))
 
 ~-castIndInd≢ : ∀ {i j} {e e' t t' : Term} {Γ : Con Term} →
+    i ∈ₗ SI.indNames senv →
+    j ∈ₗ SI.indNames senv →
     reprInd i PE.≢ reprInd j →
     Γ ⊢ t [genconv↑] t' ∷ Ind i ^ [ ! , ι ⁰ ] →
     Γ ⊢ e ∷ Id (U ⁰) (Ind i) (Ind j) ^ [ % , ι ⁰ ] →
     Γ ⊢ e' ∷ Id (U ⁰) (Ind i) (Ind j) ^ [ % , ι ⁰ ] →
     Γ ⊢ cast ⁰ (Ind i) (Ind j) e t ~ cast ⁰ (Ind i) (Ind j) e' t' ∷ Ind j ^ [ ! , ι ⁰ ]
-~-castIndInd≢ i≢j Y ⊢e ⊢e' = ↑ (refl (univ (Indⱼ (wfTerm ⊢e)))) (~↑! (cast-IndInd i≢j Y ⊢e ⊢e'))
+~-castIndInd≢ _ j∈ i≢j Y ⊢e ⊢e' = ↑ (refl (univ (Indⱼ′ (wfTerm ⊢e) j∈))) (~↑! (cast-IndInd i≢j Y ⊢e ⊢e'))
 
 ~-castΠΠ%! : ∀ {A A' P P' B B' Q Q' e e' t t' : Term} {Γ : Con Term} →
     Γ ⊢ A ∷ Univ % ⁰ ^ [ ! , next ⁰ ] →
@@ -530,17 +527,17 @@ eqRelInstance = eqRel _⊢_[conv↑]_^_ _⊢_[genconv↑]_∷_^_ _⊢_~_∷_^_
                       reductionConv↑ reductionConv↑Term
                       (liftConv ∘ᶠ (U-refl PE.refl)) ( liftConvTerm ∘ᶠ  (U-refl PE.refl))
                       (liftConvTerm ∘ᶠ ℕ-refl)
-                      (liftConvTerm ∘ᶠ Ind-refl)
+                      (λ ⊢Γ i∈ → liftConvTerm (Ind-refl ⊢Γ i∈))
                       (liftConvTerm ∘ᶠ Empty-refl)
                       Πₜ-cong
                       (liftConvTerm ∘ᶠ zero-refl)
                       (liftConvTerm ∘ᶠ suc-cong)
-                      (λ ⊢Γ ind∈ eq len args → liftConvTerm (ctr-cong ⊢Γ ind∈ eq len args))
+                      (λ ⊢Γ ind∈ eq args → liftConvTerm (ctr-cong ⊢Γ ind∈ eq args))
                       (λ l< l<' x x₁ x₂ x₃ x₄ x₅ → liftConvTerm (η-eq l< l<' x x₁ x₂ x₃ x₄ x₅))
                       ~-var ~-app ~-natrec ~-IndRect ~-Emptyrec
                       (λ x x₁ x₂ → liftConvTerm (Id-cong x x₁ x₂))
                       ~-castcong ~-castneℕ ~-castneInd ~-castneΠ
-                      ~-cast-refl ~-castℕ-refl ~-castInd-refl
+                      ~-cast-refl ~-castℕ-refl
                       ~-castℕ ~-castInd ~-castΠ
                       ~-castℕΠ ~-castIndΠ ~-castΠℕ ~-castΠInd
                       ~-castIndℕ ~-castℕInd ~-castIndInd≢

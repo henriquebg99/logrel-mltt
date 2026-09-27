@@ -1,9 +1,9 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Conversion.Reduction (senv : SI.SEnv) (equivs : E.Equivs senv) where
+module Definition.Conversion.Reduction (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Conversion senv equivs
 -- Weak head expansion of algorithmic equality of types.
 reductionConv↑ : ∀ {A A′ B B′ r Γ}

@@ -40,6 +40,7 @@ mutual
           → Γ ⊢ a ∷ A
           → Γ ⊢ app f a ∷ B
     lamⱼ  : ∀ {A B t}
+          → indsInSEnv senv A
           → (A ∙ Γ) ⊢ t ∷ B
           → Γ ⊢ lam A t ∷ Arrow A B
     ctrⱼ  : ∀ {ind j args Ts}

@@ -7,9 +7,9 @@ open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Substitution senv equivs
-open import Definition.LogicalRelation.Substitution.Reducibility senv equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Substitution senv swf equivs
+open import Definition.LogicalRelation.Substitution.Reducibility senv swf equivs
 open import Definition.LogicalRelation.Fundamental senv swf equivs
 open import Tools.Product
 -- Well-formed types are reducible.

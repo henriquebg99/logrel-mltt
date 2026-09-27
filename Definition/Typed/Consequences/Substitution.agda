@@ -4,14 +4,14 @@ module Definition.Typed.Consequences.Substitution (senv : SI.SEnv) (swf : SI.swf
 open import Definition.Untyped senv equivs
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
-open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Typed.Properties senv swf equivs
+open import Definition.Typed.EqRelInstance senv swf equivs
 open import Definition.Typed.Weakening senv equivs
 open import Definition.Typed.Consequences.Syntactic senv swf equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Properties senv equivs
-open import Definition.LogicalRelation.Substitution senv equivs
-open import Definition.LogicalRelation.Substitution.Irrelevance senv equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Properties senv swf equivs
+open import Definition.LogicalRelation.Substitution senv swf equivs
+open import Definition.LogicalRelation.Substitution.Irrelevance senv swf equivs
 open import Definition.LogicalRelation.Fundamental senv swf equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE

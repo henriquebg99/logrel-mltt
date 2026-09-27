@@ -4,7 +4,7 @@ module Definition.Conversion.StabilityProp (senv : SI.SEnv) (swf : SI.swfenv sen
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.RedSteps senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Conversion senv equivs
 open import Definition.Conversion.Stability senv swf equivs
 open import Definition.Conversion.Conversion senv swf equivs
@@ -15,7 +15,7 @@ open import Definition.Typed.Consequences.Injectivity senv swf equivs
 open import Definition.Typed.Consequences.Equality senv swf equivs
 open import Definition.Typed.Consequences.Reduction senv swf equivs
 open import Tools.Product
-open import Tools.List using (All₂; []ₐ; _∷ₐ_)
+open import Tools.List using (All₃; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
 open import Tools.Nat as Nat
 plus0 : ∀ {n : Nat} → (n + 0) PE.≡ n
@@ -88,8 +88,6 @@ mutual
   stabilitySize~↑! Γ≡Δ (cast-Ind x x₁ x₂ x₃) = PE.cong₂ (λ a b → 1+ (a + b))
              (stabilitySize~↓! Γ≡Δ x)
              (stabilitySizeConv↑Term Γ≡Δ x₁)
-  stabilitySize~↑! Γ≡Δ (castInd-refl x x₁) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
-  stabilitySize~↑! Γ≡Δ (castInd-refl' x x₁) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
   stabilitySize~↑! Γ≡Δ (cast-IndΠ a x x₁ x₂) = PE.cong₂ (λ a b → 1+ (a + b)) (stabilitySizeConv↑Term Γ≡Δ a) (stabilitySizeConv↑Term Γ≡Δ x)
   stabilitySize~↑! Γ≡Δ (cast-ΠInd a x x₁ x₂) = PE.cong₂ (λ a b → 1+ (a + b)) (stabilitySizeConv↑Term Γ≡Δ a) (stabilitySizeConv↑Term Γ≡Δ x)
   stabilitySize~↑! Γ≡Δ (cast-Indℕ x x₁ x₂) = PE.cong 1+ (stabilitySizeConv↑Term Γ≡Δ x)
@@ -122,20 +120,20 @@ mutual
              (stabilitySizeConv↑Term Γ≡Δ x₂)
   stabilitySizeConv↓Term Γ≡Δ (ℕ-ins x) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
   stabilitySizeConv↓Term Γ≡Δ (Ind-ins x) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
-  stabilitySizeConv↓Term Γ≡Δ (Ind-refl x) = PE.refl
+  stabilitySizeConv↓Term Γ≡Δ (Ind-refl x _) = PE.refl
   stabilitySizeConv↓Term Γ≡Δ (ne-ins x x₁ x₂ x₃) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x₃)
   stabilitySizeConv↓Term Γ≡Δ (zero-refl x) = PE.refl
   stabilitySizeConv↓Term Γ≡Δ (suc-cong x) = PE.cong 1+ (stabilitySizeConv↑Term Γ≡Δ x)
   stabilitySizeConv↓Term Γ≡Δ (η-eq l< l<' F x x₁ y y₁ t<>u) = PE.cong 1+ (stabilitySizeConv↑Term _ t<>u)
-  stabilitySizeConv↓Term Γ≡Δ (ctr-cong x x₁ x₂ x₃ x₄) = PE.cong 1+ (stabilityAll₂Size Γ≡Δ x₄)
+  stabilitySizeConv↓Term Γ≡Δ (ctr-cong x x₁ x₂ x₃) = PE.cong 1+ (stabilityAll₃Size Γ≡Δ x₃)
     where
-    stabilityAll₂Size : ∀ {args args' i Γ Δ}
+    stabilityAll₃Size : ∀ {args args' As Γ Δ}
                        → (Γ≡Δ : ⊢ Γ ≡ Δ)
-                       → (ps : All₂ (λ a a' → Γ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) args args')
-                       → sizeConv↑TermAll (All₂-stab Γ≡Δ ps) PE.≡ sizeConv↑TermAll ps
-    stabilityAll₂Size Γ≡Δ []ₐ = PE.refl
-    stabilityAll₂Size Γ≡Δ (p ∷ₐ ps) =
-      PE.cong₂ _+_ (stabilitySizeConv↑Term Γ≡Δ p) (stabilityAll₂Size Γ≡Δ ps)
+                       → (ps : All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' As)
+                       → sizeConv↑TermAll (All₃-stab Γ≡Δ ps) PE.≡ sizeConv↑TermAll ps
+    stabilityAll₃Size Γ≡Δ []ₐ = PE.refl
+    stabilityAll₃Size Γ≡Δ (p ∷ₐ ps) =
+      PE.cong₂ _+_ (stabilitySizeConv↑Term Γ≡Δ p) (stabilityAll₃Size Γ≡Δ ps)
 
   stabilitySizeConv↓ : ∀ {k l Γ Δ lA}
               → (Γ≡Δ : ⊢ Γ ≡ Δ)

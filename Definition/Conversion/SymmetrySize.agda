@@ -3,7 +3,7 @@ import Definition.Equiv as E
 module Definition.Conversion.SymmetrySize (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Conversion senv equivs
 open import Definition.Conversion.Stability senv swf equivs hiding (contextConvSubst; stabilityEq)
 open import Definition.Conversion.Soundness senv swf equivs hiding (soundnessConv↑; soundness~↓!)
@@ -20,7 +20,7 @@ open import Definition.Typed.Consequences.Injectivity senv swf equivs
 open import Definition.Typed.Consequences.Substitution senv swf equivs hiding (substTypeEq)
 open import Definition.Typed.Consequences.SucCong senv swf equivs hiding (sucCong)
 open import Tools.Product
-open import Tools.List using (All₂; []ₐ; _∷ₐ_)
+open import Tools.List using (All₃; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
 open import Tools.Nat
 size-subst : ∀ {t u A B Γ r} (A≡B : A PE.≡ B) (t~u : Γ ⊢ t ~ u ↓! A ^ r)
@@ -101,18 +101,6 @@ mutual
         B , whnfB , N≡B , u~t = sym~↓! Γ≡Δ x
         B≡ℕ = ℕ≡A N≡B whnfB
         a = PE.trans (size-subst B≡ℕ u~t) (size-sym~↓! Γ≡Δ x)
-    in PE.cong (λ X → 1 + X) a
-  size-sym~↑! Γ≡Δ (castInd-refl x x₁) =
-    let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-        B , whnfB , N≡B , u~t = sym~↓! Γ≡Δ x
-        B≡Ind = Ind≡A N≡B whnfB
-        a = PE.trans (size-subst B≡Ind u~t) (size-sym~↓! Γ≡Δ x)
-    in PE.cong (λ X → 1 + X) a
-  size-sym~↑! Γ≡Δ (castInd-refl' x x₁) =
-    let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-        B , whnfB , N≡B , u~t = sym~↓! Γ≡Δ x
-        B≡Ind = Ind≡A N≡B whnfB
-        a = PE.trans (size-subst B≡Ind u~t) (size-sym~↓! Γ≡Δ x)
     in PE.cong (λ X → 1 + X) a
   size-sym~↑! Γ≡Δ (cast-refl' x x₁ x₂) =
     let A≡A = soundness~↓! x
@@ -202,11 +190,11 @@ mutual
   size-sym~↑! Γ≡Δ (cast-ΠΠ!% x x₁ x₂ x₃ x₄) =
     let a = PE.trans (convConv↑TermSize _ _ (symConv↑Term Γ≡Δ x₂)) (size-symConv↑Term Γ≡Δ x₂)
     in PE.cong₃ (λ X Y Z → 1 + X + Y + Z) (size-symConv↑Term Γ≡Δ x) (size-symConv↑Term Γ≡Δ x₁) a
-  size-sym~↑! Γ≡Δ (IndRect-cong _ x x₁ x₂) =
+  size-sym~↑! Γ≡Δ (IndRect-cong ind∈ x x₁ x₂) =
     let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
         B , whnfB , Ind≡B , t'~t = sym~↓! Γ≡Δ x₁
         B≡Ind = Ind≡A Ind≡B whnfB
-        a = size-symConv↑ (Γ≡Δ ∙ (refl (univ (Indⱼ ⊢Γ)))) x
+        a = size-symConv↑ (Γ≡Δ ∙ (refl (univ (Indⱼ ⊢Γ ind∈)))) x
         b = PE.trans (size-subst B≡Ind t'~t) (size-sym~↓! Γ≡Δ x₁)
     in PE.cong₂ (λ X Y → 1 + X + Y) a b
 
@@ -256,16 +244,16 @@ mutual
     let B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
     in PE.cong (λ X → 1 + X) (size-sym~↓! Γ≡Δ t~u)
   size-symConv↓Term Γ≡Δ (zero-refl x) = PE.refl
-  size-symConv↓Term Γ≡Δ (Ind-refl x) = PE.refl
-  size-symConv↓Term Γ≡Δ (ctr-cong x x₁ x₂ x₃ x₄) = PE.cong 1+ (symAll₂Size Γ≡Δ x₄)
+  size-symConv↓Term Γ≡Δ (Ind-refl x _) = PE.refl
+  size-symConv↓Term Γ≡Δ (ctr-cong x x₁ x₂ x₃) = PE.cong 1+ (symAll₃Size Γ≡Δ x₃)
     where
-    symAll₂Size : ∀ {args args' i Γ Δ}
+    symAll₃Size : ∀ {args args' As Γ Δ}
                 → (Γ≡Δ : ⊢ Γ ≡ Δ)
-                → (ps : All₂ (λ a a' → Γ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) args args')
-                → sizeConv↑TermAll (symAll₂ Γ≡Δ ps) PE.≡ sizeConv↑TermAll ps
-    symAll₂Size Γ≡Δ []ₐ = PE.refl
-    symAll₂Size Γ≡Δ (p ∷ₐ ps) =
-      PE.cong₂ _+_ (size-symConv↑Term Γ≡Δ p) (symAll₂Size Γ≡Δ ps)
+                → (ps : All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' As)
+                → sizeConv↑TermAll (symAll₃ Γ≡Δ ps) PE.≡ sizeConv↑TermAll ps
+    symAll₃Size Γ≡Δ []ₐ = PE.refl
+    symAll₃Size Γ≡Δ (p ∷ₐ ps) =
+      PE.cong₂ _+_ (size-symConv↑Term Γ≡Δ p) (symAll₃Size Γ≡Δ ps)
   size-symConv↓Term Γ≡Δ (suc-cong x) = PE.cong (λ X → 1 + X) (size-symConv↑Term Γ≡Δ x)
   size-symConv↓Term Γ≡Δ (η-eq l< l<' x x₁ x₂ y y₁ t<>u) =
     PE.cong (λ X → 1 + X) (size-symConv↑Term (Γ≡Δ ∙ refl x) t<>u)

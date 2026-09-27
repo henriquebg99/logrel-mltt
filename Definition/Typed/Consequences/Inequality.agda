@@ -3,11 +3,11 @@ import Definition.Equiv as E
 module Definition.Typed.Consequences.Inequality (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Untyped senv equivs hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
-open import Definition.Typed.EqRelInstance senv equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Irrelevance senv equivs
-open import Definition.LogicalRelation.ShapeView senv equivs
+open import Definition.Typed.Properties senv swf equivs
+open import Definition.Typed.EqRelInstance senv swf equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Irrelevance senv swf equivs
+open import Definition.LogicalRelation.ShapeView senv swf equivs
 open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
 open import Definition.Typed.Consequences.Syntactic senv swf equivs
 open import Definition.Typed.Consequences.Inversion senv swf equivs

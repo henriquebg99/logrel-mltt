@@ -3,8 +3,8 @@ import Definition.Equiv as E
 module Definition.Typed.Consequences.Decidable (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
-open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Typed.Properties senv swf equivs
+open import Definition.Typed.EqRelInstance senv swf equivs
 open import Definition.Conversion senv equivs
 open import Definition.Conversion.Stability senv swf equivs
 open import Definition.Conversion.Soundness senv swf equivs

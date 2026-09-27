@@ -1,16 +1,17 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.Soundness (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
-open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Typed.EqRelInstance senv swf equivs
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Conversion senv equivs
 open import Definition.Conversion.Whnf senv swf equivs
 open import Definition.Typed.Consequences.Syntactic senv swf equivs
 open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
+open import Definition.Typed.Consequences.Inversion senv swf equivs using (Ind∈Idˡ; Ind∈Idʳ)
 open import Tools.Product
-open import Tools.List using (All₂; []ₐ; _∷ₐ_; _∈ₗ_)
+open import Tools.List using (All₃; []ₐ; _∷ₐ_; _∈ₗ_)
 import Definition.SUntyped as SU
 import Tools.PropositionalEquality as PE
 
@@ -51,25 +52,17 @@ mutual
     let t≡u = soundness~↓! x
         _ , ⊢t , ⊢u = syntacticEqTerm t≡u
     in trans t≡u (sym (cast-refl (refl (ℕⱼ (wfTerm ⊢t))) x₁ ⊢u))
-  soundness~↑! (castInd-refl' x x₁) =
-    let t≡u = soundness~↓! x
-        _ , ⊢t , ⊢u = syntacticEqTerm t≡u
-    in trans t≡u (sym (cast-refl (refl (Indⱼ (wfTerm ⊢t))) x₁ ⊢u))
   soundness~↑! (cast-neℕ x x₁ x₂ x₃) = cast-cong (soundness~↓! x) (refl (ℕⱼ (wfTerm x₂))) (soundnessConv↑Term x₁) x₂ x₃
   soundness~↑! (cast-neΠ x x₁ x₂ x₃ x₄) = cast-cong (soundness~↓! x₁) (sym (soundnessConv↑Term x)) (soundnessConv↑Term x₂) x₃ x₄
   soundness~↑! (IndRect-cong ind∈ x x₁ x₂) =
     IndRect-cong ind∈ (soundnessConv↑ x) (soundness~↓! x₁) x₂
-  soundness~↑! (cast-neInd x x₁ x₂ x₃) = cast-cong (soundness~↓! x) (refl (Indⱼ (wfTerm x₂))) (soundnessConv↑Term x₁) x₂ x₃
-  soundness~↑! (cast-Ind x x₁ x₂ x₃) = let XX = sym (soundness~↓! x) in cast-cong (refl (Indⱼ (wfEqTerm XX))) XX (soundnessConv↑Term x₁) x₂ x₃
-  soundness~↑! (castInd-refl x x₁) =
-    let t≡u = soundness~↓! x
-        _ , ⊢t , _ = syntacticEqTerm t≡u
-    in trans (cast-refl (refl (Indⱼ (wfTerm ⊢t))) x₁ ⊢t) t≡u
-  soundness~↑! (cast-IndΠ x x₁ x₂ x₃) = let XX = (soundnessConv↑Term x) in cast-cong (refl (Indⱼ (wfEqTerm XX))) XX (soundnessConv↑Term x₁) x₂ x₃
-  soundness~↑! (cast-ΠInd x x₁ x₂ x₃) = let XX = (sym (soundnessConv↑Term x)) in cast-cong XX (refl (Indⱼ (wfEqTerm XX))) (soundnessConv↑Term x₁) x₂ x₃
-  soundness~↑! (cast-Indℕ x x₁ x₂) = let XX = soundnessConv↑Term x in cast-cong (refl (Indⱼ (wfEqTerm XX))) (refl (ℕⱼ (wfEqTerm XX))) (soundnessConv↑Term x) x₁ x₂
-  soundness~↑! (cast-ℕInd x x₁ x₂) = let XX = soundnessConv↑Term x in cast-cong (refl (ℕⱼ (wfEqTerm XX))) (refl (Indⱼ (wfEqTerm XX))) (soundnessConv↑Term x) x₁ x₂
-  soundness~↑! (cast-IndInd x x₁ x₂ x₃) = let XX = soundnessConv↑Term x₁ in cast-cong (refl (Indⱼ (wfEqTerm XX))) (refl (Indⱼ (wfEqTerm XX))) (soundnessConv↑Term x₁) x₂ x₃
+  soundness~↑! (cast-neInd x x₁ x₂ x₃) = cast-cong (soundness~↓! x) (refl (Indⱼ′ (wfTerm x₂) (Ind∈Idʳ x₂))) (soundnessConv↑Term x₁) x₂ x₃
+  soundness~↑! (cast-Ind x x₁ x₂ x₃) = let XX = sym (soundness~↓! x) in cast-cong (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idˡ x₂))) XX (soundnessConv↑Term x₁) x₂ x₃
+  soundness~↑! (cast-IndΠ x x₁ x₂ x₃) = let XX = (soundnessConv↑Term x) in cast-cong (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idˡ x₂))) XX (soundnessConv↑Term x₁) x₂ x₃
+  soundness~↑! (cast-ΠInd x x₁ x₂ x₃) = let XX = (sym (soundnessConv↑Term x)) in cast-cong XX (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idʳ x₂))) (soundnessConv↑Term x₁) x₂ x₃
+  soundness~↑! (cast-Indℕ x x₁ x₂) = let XX = soundnessConv↑Term x in cast-cong (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idˡ x₁))) (refl (ℕⱼ (wfEqTerm XX))) (soundnessConv↑Term x) x₁ x₂
+  soundness~↑! (cast-ℕInd x x₁ x₂) = let XX = soundnessConv↑Term x in cast-cong (refl (ℕⱼ (wfEqTerm XX))) (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idʳ x₁))) (soundnessConv↑Term x) x₁ x₂
+  soundness~↑! (cast-IndInd x x₁ x₂ x₃) = let XX = soundnessConv↑Term x₁ in cast-cong (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idˡ x₂))) (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idʳ x₂))) (soundnessConv↑Term x₁) x₂ x₃
   
   soundness~↑% : ∀ {k l A lA Γ} → Γ ⊢ k ~ l ↑% A ^ lA  →  Γ ⊢ k ∷ A ^ [ % , lA ] × Γ ⊢ l ∷ A ^ [ % , lA ] × Γ ⊢ k ≡ l ∷ A ^ [ % , lA ]
   soundness~↑% (%~↑ ⊢k ⊢l) =  ⊢k , ⊢l , proof-irrelevance ⊢k ⊢l
@@ -111,8 +104,8 @@ mutual
     Id-cong (soundnessConv↑Term A) (soundnessConv↑Term c) (soundnessConv↑Term c₁)
   soundnessConv↓Term (ℕ-ins x) = soundness~↓! x
   soundnessConv↓Term (Ind-ins x) = soundness~↓! x
-  soundnessConv↓Term (Ind-refl ⊢Γ) = refl (Indⱼ ⊢Γ)
-  soundnessConv↓Term (ctr-cong ⊢Γ ind∈ eq len h) = ctr-cong ⊢Γ ind∈ eq len (All₂-sound h)
+  soundnessConv↓Term (Ind-refl ⊢Γ i∈) = refl (Indⱼ′ ⊢Γ i∈)
+  soundnessConv↓Term (ctr-cong ⊢Γ ind∈ eq h) = ctr-cong ⊢Γ ind∈ eq (All₃-sound h)
   -- soundnessConv↓Term (Empty-ins x) = soundness~↓% x
   soundnessConv↓Term (ne-ins t u x x₁) =
     let whnfM , neA , neB = ne~↓! x₁
@@ -125,11 +118,11 @@ mutual
   soundnessConv↓Term (η-eq l< l<' F x x₁ y y₁ c) = η-eq l< l<' F x x₁ (soundnessConv↑Term c)
   soundnessConv↓Term (U-refl PE.refl ⊢Γ) = refl (univ 0<1 ⊢Γ)
 
-  All₂-sound : ∀ {Γ args args' i} →
-    All₂ (λ a a' → Γ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) args args' →
-    All₂ (λ a a' → Γ ⊢ a ≡ a' ∷ Ind i ^ [ ! , ι ⁰ ]) args args'
-  All₂-sound []ₐ = []ₐ
-  All₂-sound (p ∷ₐ ps) = soundnessConv↑Term p ∷ₐ All₂-sound ps
+  All₃-sound : ∀ {Γ args args' As} →
+    All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' As →
+    All₃ (λ a a' A → Γ ⊢ a ≡ a' ∷ A ^ [ ! , ι ⁰ ]) args args' As
+  All₃-sound []ₐ = []ₐ
+  All₃-sound (p ∷ₐ ps) = soundnessConv↑Term p ∷ₐ All₃-sound ps
 
 app-cong′ : ∀ {Γ k l t v F rF lF G lG lΠ}
           → Γ ⊢ k ~ l ↓! Π F ^ rF ° lF ▹ G ° lG ° lΠ ^ ! ^ ι lΠ

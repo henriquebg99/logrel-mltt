@@ -2,35 +2,35 @@ import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution.Introductions.Snd (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+module Definition.LogicalRelation.Substitution.Introductions.Snd (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 open import Definition.Untyped senv equivs as U hiding (wk)
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Typed.Weakening senv equivs as T hiding (wk; wkTerm; wkEqTerm)
 open import Definition.Typed.RedSteps senv equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.ShapeView senv equivs
-open import Definition.LogicalRelation.Irrelevance senv equivs
-open import Definition.LogicalRelation.Weakening senv equivs
-open import Definition.LogicalRelation.Properties senv equivs
-open import Definition.LogicalRelation.Application senv equivs
-open import Definition.LogicalRelation.Substitution senv equivs
-open import Definition.LogicalRelation.Substitution.Properties senv equivs
-open import Definition.LogicalRelation.Substitution.Reflexivity senv equivs
-open import Definition.LogicalRelation.Substitution.Introductions.Fst senv equivs
-open import Definition.LogicalRelation.Substitution.Introductions.Id senv equivs
-open import Definition.LogicalRelation.Substitution.Introductions.Pi senv equivs
-open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst senv equivs
-open import Definition.LogicalRelation.Substitution.Introductions.Cast senv equivs
-open import Definition.LogicalRelation.Substitution.MaybeEmbed senv equivs
-open import Definition.LogicalRelation.Substitution.Introductions.Universe senv equivs
-open import Definition.LogicalRelation.Substitution.Weakening senv equivs
-open import Definition.LogicalRelation.Substitution.Introductions.Transp senv equivs
-open import Definition.LogicalRelation.Fundamental.Variable senv equivs
-open import Definition.LogicalRelation.Substitution.Irrelevance senv equivs as S
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.ShapeView senv swf equivs
+open import Definition.LogicalRelation.Irrelevance senv swf equivs
+open import Definition.LogicalRelation.Weakening senv swf equivs
+open import Definition.LogicalRelation.Properties senv swf equivs
+open import Definition.LogicalRelation.Application senv swf equivs
+open import Definition.LogicalRelation.Substitution senv swf equivs
+open import Definition.LogicalRelation.Substitution.Properties senv swf equivs
+open import Definition.LogicalRelation.Substitution.Reflexivity senv swf equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Fst senv swf equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Id senv swf equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Pi senv swf equivs
+open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst senv swf equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Cast senv swf equivs
+open import Definition.LogicalRelation.Substitution.MaybeEmbed senv swf equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Universe senv swf equivs
+open import Definition.LogicalRelation.Substitution.Weakening senv swf equivs
+open import Definition.LogicalRelation.Substitution.Introductions.Transp senv swf equivs
+open import Definition.LogicalRelation.Fundamental.Variable senv swf equivs
+open import Definition.LogicalRelation.Substitution.Irrelevance senv swf equivs as S
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 lemma1 : ∀ {σ rA} A A' B e →

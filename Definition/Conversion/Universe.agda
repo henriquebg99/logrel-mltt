@@ -3,10 +3,10 @@ import Definition.Equiv as E
 module Definition.Conversion.Universe (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Typed.RedSteps senv equivs
 open import Definition.Conversion senv equivs
-open import Definition.Conversion.Reduction senv equivs
+open import Definition.Conversion.Reduction senv swf equivs
 open import Definition.Conversion.Lift senv swf equivs
 import Tools.PropositionalEquality as PE
 -- Algorithmic equality of terms in WHNF of type U are equal as types.

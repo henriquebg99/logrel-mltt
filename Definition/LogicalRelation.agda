@@ -2,16 +2,17 @@ import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+module Definition.LogicalRelation (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 open import Definition.Untyped senv equivs as U
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs
-open import Definition.Typed.Reduction senv equivs
+open import Definition.Typed.Reduction senv swf equivs
 open import Tools.Nat
 open import Tools.Product
-open import Tools.List using (List; All; All₂)
+open import Tools.List using (List; All; All₂; All₃; _∈ₗ_; map)
+open import Tools.Maybe using (just)
 import Tools.PropositionalEquality as PE
 import Definition.SUntyped as SU
 -- The different cases of the logical relation are spread out through out
@@ -159,7 +160,11 @@ mutual
 
   -- WHNF property of inductive terms
   data Inductive-prop (Γ : Con Term) (i : Nat) : (n : Term) → Set where
-    ctrᵣ : ∀ {j args} → All (λ a → Γ ⊩Ind a ∷Ind i) args
+    -- Each argument is reducible at its own inductive type (constructor
+    -- argument types are positive, hence of the shape Ind k).
+    ctrᵣ : ∀ {ind j args Ts} → ind ∈ₗ senv → SU.SInd.name ind PE.≡ i
+         → SU.ctrArgsTypeList ind j PE.≡ just Ts
+         → All₂ (λ a A → ∃ λ k → A PE.≡ Ind k × Γ ⊩Ind a ∷Ind k) args (map emb-stype Ts)
          → Inductive-prop Γ i (ctr i j args)
     ne   : ∀ {n} → Γ ⊩neNf n ∷ Ind i ^ [ ! , ι ⁰ ] → Inductive-prop Γ i n
 
@@ -174,19 +179,21 @@ mutual
 
   -- WHNF property of inductive term equality
   data [Inductive]-prop (Γ : Con Term) (i : Nat) : (n n′ : Term) → Set where
-    ctrᵣ : ∀ {j args args'} → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args args'
+    ctrᵣ : ∀ {ind j args args' Ts} → ind ∈ₗ senv → SU.SInd.name ind PE.≡ i
+         → SU.ctrArgsTypeList ind j PE.≡ just Ts
+         → All₃ (λ a a' A → ∃ λ k → A PE.≡ Ind k × Γ ⊩Ind a ≡ a' ∷Ind k) args args' (map emb-stype Ts)
          → [Inductive]-prop Γ i (ctr i j args) (ctr i j args')
     ne   : ∀ {n n′} → Γ ⊩neNf n ≡ n′ ∷ Ind i ^ [ ! , ι ⁰ ]
          → [Inductive]-prop Γ i n n′
 
 -- Inductive extraction from term equality WHNF property
 splitInd : ∀ {Γ i a b} → [Inductive]-prop Γ i a b → Inductive i a × Inductive i b
-splitInd (ctrᵣ {j} {args} {args'} _) = ctrₙ {j = j} {ts = args} , ctrₙ {j = j} {ts = args'}
+splitInd (ctrᵣ {j = j} {args} {args'} _ _ _ _) = ctrₙ {j = j} {ts = args} , ctrₙ {j = j} {ts = args'}
 splitInd (ne (neNfₜ₌ neK neM k≡m)) = ne neK , ne neM
 
 -- Inductive extraction from term WHNF property
 inductive′ : ∀ {Γ i n} → Inductive-prop Γ i n → Inductive i n
-inductive′ (ctrᵣ {j} {args} _) = ctrₙ {j = j} {ts = args}
+inductive′ (ctrᵣ {j = j} {args} _ _ _ _) = ctrₙ {j = j} {ts = args}
 inductive′ (ne (neNfₜ neK ⊢k k≡k)) = ne neK
 
 -- Reducibility of Empty

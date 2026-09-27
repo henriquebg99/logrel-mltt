@@ -2,20 +2,20 @@ import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Properties.Reduction (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+module Definition.LogicalRelation.Properties.Reduction (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Typed.RedSteps senv equivs
 open import Definition.Typed.Weakening senv equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Properties.Reflexivity senv equivs
-open import Definition.LogicalRelation.Properties.Transitivity senv equivs
-open import Definition.LogicalRelation.Properties.Symmetry senv equivs
-open import Definition.LogicalRelation.Properties.Escape senv equivs
-open import Definition.LogicalRelation.Properties.Conversion senv equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Properties.Reflexivity senv swf equivs
+open import Definition.LogicalRelation.Properties.Transitivity senv swf equivs
+open import Definition.LogicalRelation.Properties.Symmetry senv swf equivs
+open import Definition.LogicalRelation.Properties.Escape senv swf equivs
+open import Definition.LogicalRelation.Properties.Conversion senv swf equivs
 open import Tools.Product
 open import Tools.Empty
 import Tools.PropositionalEquality as PE

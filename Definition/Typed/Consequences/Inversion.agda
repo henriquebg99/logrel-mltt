@@ -5,14 +5,16 @@ import Definition.Equiv as E
 module Definition.Typed.Consequences.Inversion (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
-open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Typed.Properties senv swf equivs
+open import Definition.Typed.EqRelInstance senv swf equivs
 open import Definition.Typed.Consequences.Syntactic senv swf equivs
 open import Definition.Typed.Consequences.Substitution senv swf equivs
-open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation senv swf equivs
 open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
+import Definition.SUntyped as SU
+open import Tools.List using (_∈ₗ_)
 inversion-ctx : ∀ {Γ A r} → ⊢ Γ ∙ A ^ r → ⊢ Γ  × Γ ⊢ A ^ r
 inversion-ctx (X ∙ x) = X , x
 
@@ -56,7 +58,7 @@ inversion-ℕ (conv x x₁) with inversion-ℕ x
 
 -- Inversion of inductive type formers.
 inversion-Ind : ∀ {Γ n C r} → Γ ⊢ Ind n ∷ C ^ r → Γ ⊢ C ≡ U ⁰ ^ r × r PE.≡ [ ! , next ⁰ ]
-inversion-Ind (Indⱼ x) = refl (Ugenⱼ x) , PE.refl
+inversion-Ind (Indⱼ x _) = refl (Ugenⱼ x) , PE.refl
 inversion-Ind (conv x x₁) with inversion-Ind x
 ... | [C≡U] , PE.refl = trans (sym x₁) [C≡U] , PE.refl
 
@@ -176,3 +178,12 @@ inversion-cast : ∀ {A B e t l C r Γ}
 inversion-cast (castⱼ X X₁ X₂ X₃) = _ , X , X₁ , X₂ , X₃ , refl (univ X₁) , PE.refl , PE.refl
 inversion-cast (conv x x₁) = let r , a , b , c , d , e , r≡! , el = inversion-cast x
                              in r , a , b , c , d , trans (sym (PE.subst (λ rx → _ ⊢ _ ≡ _ ^ rx) r≡! x₁)) e , r≡! , el
+
+-- The inductive types compared by an identity proof are declared.
+Ind∈Idˡ : ∀ {Γ e i B r} → Γ ⊢ e ∷ Id (U ⁰) (Ind i) B ^ r → i ∈ₗ SU.indNames senv
+Ind∈Idˡ ⊢e with syntacticTerm ⊢e
+... | univ ⊢Id = let _ , _ , ⊢I , _ = inversion-Id ⊢Id in Ind∈ₜ ⊢I
+
+Ind∈Idʳ : ∀ {Γ e i A r} → Γ ⊢ e ∷ Id (U ⁰) A (Ind i) ^ r → i ∈ₗ SU.indNames senv
+Ind∈Idʳ ⊢e with syntacticTerm ⊢e
+... | univ ⊢Id = let _ , _ , _ , ⊢I , _ = inversion-Id ⊢Id in Ind∈ₜ ⊢I

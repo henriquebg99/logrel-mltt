@@ -3,7 +3,7 @@ import Definition.Equiv as E
 module Definition.Typed.NonParanoidTyping (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs as T hiding (wf ; wfTerm)
+open import Definition.Typed.Properties senv swf equivs as T hiding (wf ; wfTerm)
 open import Definition.Typed.Weakening senv equivs
 open import Definition.Typed.Consequences.Injectivity senv swf equivs
 open import Definition.Typed.Consequences.Inversion senv swf equivs

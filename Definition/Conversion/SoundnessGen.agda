@@ -4,7 +4,7 @@ module Definition.Conversion.SoundnessGen (senv : SI.SEnv) (swf : SI.swfenv senv
 open import Definition.Untyped senv equivs
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Typed.Weakening senv equivs as T hiding (wk; wkTerm; wkEqTerm)
 open import Definition.ConversionGen senv equivs
 open import Definition.Conversion.WhnfGen senv swf equivs

@@ -2,21 +2,21 @@ import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Properties.Symmetry (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+module Definition.LogicalRelation.Properties.Symmetry (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs hiding (wk)
-open import Definition.Typed.Properties senv equivs
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.ShapeView senv equivs
-open import Definition.LogicalRelation.Irrelevance senv equivs
-open import Definition.LogicalRelation.Properties.Escape senv equivs
-open import Definition.LogicalRelation.Properties.Conversion senv equivs
+open import Definition.Typed.Properties senv swf equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.ShapeView senv swf equivs
+open import Definition.LogicalRelation.Irrelevance senv swf equivs
+open import Definition.LogicalRelation.Properties.Escape senv swf equivs
+open import Definition.LogicalRelation.Properties.Conversion senv swf equivs
 open import Tools.Product
 open import Tools.Empty
-open import Tools.List using (All₂; []ₐ; _∷ₐ_)
+open import Tools.List using (All₂; All₃; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
 mutual
   -- Helper function for symmetry of type equality using shape views.
@@ -113,14 +113,14 @@ mutual
   symInductive-prop : ∀ {Γ i k k′}
                 → [Inductive]-prop Γ i k k′
                 → [Inductive]-prop Γ i k′ k
-  symInductive-prop (ctrᵣ ps) = ctrᵣ (symAll₂Ind ps)
+  symInductive-prop (ctrᵣ ind∈ name≡ eq ps) = ctrᵣ ind∈ name≡ eq (symAll₂Ind ps)
   symInductive-prop (ne prop) = ne (symNeutralTerm prop)
 
-  symAll₂Ind : ∀ {Γ i args args'}
-             → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args args'
-             → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args' args
+  symAll₂Ind : ∀ {Γ args args' As}
+             → All₃ (λ a a' A → ∃ λ k → A PE.≡ Ind k × Γ ⊩Ind a ≡ a' ∷Ind k) args args' As
+             → All₃ (λ a a' A → ∃ λ k → A PE.≡ Ind k × Γ ⊩Ind a ≡ a' ∷Ind k) args' args As
   symAll₂Ind []ₐ = []ₐ
-  symAll₂Ind (p ∷ₐ ps) = symEqTermInd p ∷ₐ symAll₂Ind ps
+  symAll₂Ind ((k , A≡ , p) ∷ₐ ps) = (k , A≡ , symEqTermInd p) ∷ₐ symAll₂Ind ps
 
 symEmpty-prop : ∀ {Γ k k′}
                 → [Empty]-prop Γ k k′

@@ -95,7 +95,7 @@ mutual
            → Γ       ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (G ^ rG ° lG ▹▹ G [ suc (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ [ rG , ι lG ]
            → Γ       ⊢ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
            → Γ       ⊢ natrec lG G z s n ∷ G [ n ] ^ [ rG , ι lG ]
-    Indⱼ    : ∀ {n} → ⊢ Γ → Γ ⊢ Ind n ∷ U ⁰ ^ [ ! , ι ¹ ]
+    Indⱼ    : ∀ {ind} → ⊢ Γ → ind ∈ₗ senv → Γ ⊢ Ind (SU.SInd.name ind) ∷ U ⁰ ^ [ ! , ι ¹ ]
     Ctrⱼ    : ∀ {ind j args Ts}
            → ⊢ Γ
            → ind ∈ₗ senv
@@ -223,8 +223,7 @@ mutual
                 → ⊢ Γ
                 → ind ∈ₗ senv
                 → SU.ctrArgsTypeList ind j PE.≡ just Ts
-                → length args PE.≡ length Ts
-                → All₂ (λ a a' → Γ ⊢ a ≡ a' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]) args args'
+                → All₃ (λ a a' A → Γ ⊢ a ≡ a' ∷ A ^ [ ! , ι ⁰ ]) args args' (map emb-stype Ts)
                 → Γ ⊢ ctr (SU.SInd.name ind) j args ≡ ctr (SU.SInd.name ind) j args' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
     natrec-cong : ∀ {z z′ s s′ n n′ F F′ l}
                 → Γ ∙ ℕ ^ [ ! ,  ι ⁰ ] ⊢ F ≡ F′ ^ [ ! , ι l ]
@@ -259,7 +258,8 @@ mutual
                 → nth ms j PE.≡ just m
                 → Γ ⊢ IndRect (SU.SInd.name ind) lG P (ctr (SU.SInd.name ind) j args) ms
                     ≡ apps lG m
-                             (args ++ map (λ a → IndRect (SU.SInd.name ind) lG P a ms) args)
+                             (args ++ map (λ a → IndRect (SU.SInd.name ind) lG P a ms)
+                                     (ctrRecArgs (SU.SInd.name ind) Ts args))
                     ∷ P [ ctr (SU.SInd.name ind) j args ] ^ [ ! , ι lG ]
     Emptyrec-cong : ∀ {A A' l e e'}
                 → Γ ⊢ A ≡ A' ^ [ ! , ι l ]
@@ -311,22 +311,23 @@ mutual
                → Γ ⊢ cast ⁰ ℕ ℕ e (suc n)
                    ≡ suc (cast ⁰ ℕ ℕ e n)
                    ∷ ℕ ^ [ ! , ι ⁰ ]
-    cast-Ind-ctr : ∀ {ind j e args Ts}
+    cast-Ind-ctr : ∀ {ind e t}
                → ind ∈ₗ senv
-               → SU.ctrArgsTypeList ind j PE.≡ just Ts
                → Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ]
-               → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
-               → Γ ⊢ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e (ctr (SU.SInd.name ind) j args)
-                   ≡ ctr (SU.SInd.name ind) j (map (λ a → cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e a) args)
-                   ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+               → Γ ⊢ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+               → Γ ⊢ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e t
+                   ≡ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
     -- There is an equivalence between A and B iff they have the same
     -- representative; cast then computes to its forward function.
     cast-equiv : ∀ {A B e t}
+               → (A∈ : A ∈ₗ SU.indNames senv)
+               → (B∈ : B ∈ₗ SU.indNames senv)
+               → A PE.≢ B
                → (H : reprInd A PE.≡ reprInd B)
                → Γ ⊢ e ∷ Id (U ⁰) (Ind A) (Ind B) ^ [ % , ι ⁰ ]
                → Γ ⊢ t ∷ Ind A ^ [ ! , ι ⁰ ]
                → Γ ⊢ cast ⁰ (Ind A) (Ind B) e t
-                   ≡ emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs A B H)) ∘ t ^ ⁰
+                   ≡ emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs A B A∈ B∈ H)) ∘ t ^ ⁰
                    ∷ Ind B ^ [ ! , ι ⁰ ]
 
 mutual
@@ -383,7 +384,8 @@ mutual
                  → nth ms j PE.≡ just m
                  → Γ ⊢ IndRect (SU.SInd.name ind) lG P (ctr (SU.SInd.name ind) j args) ms
                      ⇒ apps lG m
-                              (args ++ map (λ a → IndRect (SU.SInd.name ind) lG P a ms) args)
+                              (args ++ map (λ a → IndRect (SU.SInd.name ind) lG P a ms)
+                                     (ctrRecArgs (SU.SInd.name ind) Ts args))
                      ∷ P [ ctr (SU.SInd.name ind) j args ] ^ ι lG
     cast-subst : ∀ {A A' B e t} → let l = ⁰ in
                     Γ ⊢ A ⇒ A' ∷ U l ^ next l
@@ -403,11 +405,12 @@ mutual
                   → Γ ⊢ e ∷ Id (U ⁰) ℕ B ^ [ % , ι ⁰ ]
                   → Γ ⊢ t ∷ ℕ ^ [ ! , ι ⁰ ]
                   → Γ ⊢ cast ⁰ ℕ B e t ⇒ cast ⁰ ℕ B' e t ∷ B ^ ι ⁰
-    cast-Ind-subst : ∀ {i B B' e t}
+    cast-Ind-subst : ∀ {ind B B' e t}
+                  → ind ∈ₗ senv
                   → Γ ⊢ B ⇒ B' ∷ U ⁰ ^ next ⁰
-                  → Γ ⊢ e ∷ Id (U ⁰) (Ind i) B ^ [ % , ι ⁰ ]
-                  → Γ ⊢ t ∷ Ind i ^ [ ! , ι ⁰ ]
-                  → Γ ⊢ cast ⁰ (Ind i) B e t ⇒ cast ⁰ (Ind i) B' e t ∷ B ^ ι ⁰
+                  → Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) B ^ [ % , ι ⁰ ]
+                  → Γ ⊢ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+                  → Γ ⊢ cast ⁰ (Ind (SU.SInd.name ind)) B e t ⇒ cast ⁰ (Ind (SU.SInd.name ind)) B' e t ∷ B ^ ι ⁰
     cast-Π-subst : ∀ {A rA P B B' e t} → let l = ⁰ in let lA = ⁰ in let lP = ⁰ in
                     Γ ⊢ A ∷ (Univ rA lA) ^ [ ! , next lA ]
                   → Γ ∙ A ^ [ rA , ι lA ] ⊢ P ∷ U lP ^ [ ! , next lA ]
@@ -447,21 +450,12 @@ mutual
                    ⇒ cast ⁰ ℕ ℕ e u
                    ∷ ℕ ^ ι ⁰
 
-    cast-Ind-ctr : ∀ {ind j e args Ts}
+    cast-Ind-ctr : ∀ {ind e t}
                → ind ∈ₗ senv
-               → SU.ctrArgsTypeList ind j PE.≡ just Ts
                → Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ]
-               → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
-               → Γ ⊢ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e (ctr (SU.SInd.name ind) j args)
-                   ⇒ ctr (SU.SInd.name ind) j (map (λ a → cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e a) args)
-                   ∷ Ind (SU.SInd.name ind) ^ ι ⁰
-
-    cast-Ind-cong : ∀ {i e t u}
-               → Γ ⊢ e ∷ Id (U ⁰) (Ind i) (Ind i) ^ [ % , ι ⁰ ]
-               → Γ ⊢ t ⇒ u ∷ Ind i ^ ι ⁰
-               → Γ ⊢ cast ⁰ (Ind i) (Ind i) e t
-                   ⇒ cast ⁰ (Ind i) (Ind i) e u
-                   ∷ Ind i ^ ι ⁰
+               → Γ ⊢ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+               → Γ ⊢ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e t
+                   ⇒ t ∷ Ind (SU.SInd.name ind) ^ ι ⁰
 
     cast-ne-cong : ∀ {K L e t u} → 
                  Γ ⊢ K ∷ U ⁰ ^ [ ! , next ⁰ ]
@@ -476,12 +470,14 @@ mutual
     -- A cast between distinct inductives with the same representative
     -- computes to the forward function of the equivalence between them.
     cast-equiv : ∀ {A B e t}
+               → (A∈ : A ∈ₗ SU.indNames senv)
+               → (B∈ : B ∈ₗ SU.indNames senv)
                → A PE.≢ B
                → (H : reprInd A PE.≡ reprInd B)
                → Γ ⊢ e ∷ Id (U ⁰) (Ind A) (Ind B) ^ [ % , ι ⁰ ]
                → Γ ⊢ t ∷ Ind A ^ [ ! , ι ⁰ ]
                → Γ ⊢ cast ⁰ (Ind A) (Ind B) e t
-                   ⇒ emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs A B H)) ∘ t ^ ⁰
+                   ⇒ emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs A B A∈ B∈ H)) ∘ t ^ ⁰
                    ∷ Ind B ^ ι ⁰
     
   -- Type reduction
@@ -649,7 +645,7 @@ mutual
       (PE.subst (λ t → _⊢_∷_^_ (emb_con Γ) t (emb_oterm_term G [ emb_oterm_term n ]) ([ rG , ι lG ]))
         (PE.sym (emb-natrec lG G z s n))
         (natrecⱼ abs (emb-⊢ty cod) (emb-⊢∷-sgType {G = G} {s = OU.zero} ⊢z) (emb-⊢∷-natrec-s {G = G} ⊢s) (emb-⊢∷ ⊢n)))
-  emb-⊢∷ (OT.Indⱼ ⊢Γ) = Indⱼ (emb-⊢ ⊢Γ)
+  emb-⊢∷ (OT.Indⱼ ⊢Γ ind∈) = Indⱼ (emb-⊢ ⊢Γ) ind∈
   emb-⊢∷ {Γ = Γ} (OT.Ctrⱼ {ind} {j} {args} {Ts} ⊢Γ ind∈ eq args∈) =
     PE.subst (λ t → _⊢_∷_^_ (emb_con Γ) t (Ind (SU.SInd.name ind)) ([ ! , ι ⁰ ]))
       (PE.sym (emb-ctr (SU.SInd.name ind) j args))
@@ -817,30 +813,7 @@ mutual
          pf
   emb-⊢≡∷ (OT.cast-ℕ-0 e) = cast-ℕ-0 (emb-⊢∷ e)
   emb-⊢≡∷ (OT.cast-ℕ-S e n) = cast-ℕ-S (emb-⊢∷ e) (emb-⊢∷ n)
-  emb-⊢≡∷ {Γ = Γ} (OT.cast-Ind-ctr {ind} {j} {e} {args} {Ts} ind∈ eq ⊢e ⊢args) =
-    let ⊢args′ = PE.subst (λ As → emb_con Γ ⊢All map emb_oterm_term args ∷ As ^ [ ! , ι ⁰ ])
-                   (PE.trans (map-map emb_oterm_term OU.emb-stype-oterm (Ts))
-                             (map-cong (Ts) emb-stype-hom))
-                   (PE.subst (λ ts → emb_con Γ ⊢All ts ∷ map emb_oterm_term (map OU.emb-stype-oterm (Ts)) ^ [ ! , ι ⁰ ])
-                             (emb-oterm-all-map args)
-                             (emb-⊢All ⊢args))
-        pf = cast-Ind-ctr ind∈ eq (emb-⊢∷ ⊢e) ⊢args′
-    in PE.subst₂ (λ t u → emb_con Γ ⊢ t ≡ u ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ])
-         (PE.sym (PE.trans (emb-cast ⁰ (OU.Ind (SU.SInd.name ind)) (OU.Ind (SU.SInd.name ind)) e (OU.ctr (SU.SInd.name ind) j args))
-                           (PE.cong (cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) (emb_oterm_term e))
-                                    (emb-ctr (SU.SInd.name ind) j args))))
-         emb-rhs
-         pf
-    where
-      emb-rhs :
-        ctr (SU.SInd.name ind) j (map (λ a → cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) (emb_oterm_term e) a) (map emb_oterm_term args))
-        PE.≡ emb_oterm_term (OU.ctr (SU.SInd.name ind) j (map (λ a → OU.cast ⁰ (OU.Ind (SU.SInd.name ind)) (OU.Ind (SU.SInd.name ind)) e a) args))
-      emb-rhs =
-        let f = λ a → OU.cast ⁰ (OU.Ind (SU.SInd.name ind)) (OU.Ind (SU.SInd.name ind)) e a
-            g = λ a → cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) (emb_oterm_term e) a
-        in PE.trans (PE.cong (ctr (SU.SInd.name ind) j) (map-map g emb_oterm_term args))
-             (PE.trans (PE.cong (ctr (SU.SInd.name ind) j) (PE.sym (map-map emb_oterm_term f args)))
-               (PE.sym (emb-ctr (SU.SInd.name ind) j (map f args))))
+  emb-⊢≡∷ (OT.cast-Ind-ctr ind∈ ⊢e ⊢t) = cast-Ind-ctr ind∈ (emb-⊢∷ ⊢e) (emb-⊢∷ ⊢t)
 
 -- Nat as a generic inductive, matching Uniquevalence.uty NatExample.
 -- Motive P is a function Γ ⊢ P ∷ Π (Ind nat_ind) (Univ rG lG).

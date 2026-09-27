@@ -1,11 +1,11 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.Consequences.RelevanceUnicity (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
-open import Definition.Typed.EqRelInstance senv equivs
+open import Definition.Typed.EqRelInstance senv swf equivs
 open import Definition.Untyped senv equivs hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
 open import Definition.Untyped.Properties senv equivs using (subst-Univ-either)
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Typed.Weakening senv equivs
 open import Definition.Typed.Consequences.Equality senv swf equivs
 import Definition.Typed.Consequences.Inequality senv swf equivs as Ineq
@@ -56,7 +56,7 @@ mutual
     let e₁′ , el₁′ , _ = Uinjectivity e₁
         e₂′ , el₂′ , _ = Uinjectivity (trans (sym e₂) (proj₁ (inversion-ℕ y)) ) 
     in PE.sym (PE.trans e₂′ e₁′) , PE.cong next (PE.sym el₂′)
-  Univ-uniq′ e₁ e₂ el₁ PE.refl w (Indⱼ x) y =
+  Univ-uniq′ e₁ e₂ el₁ PE.refl w (Indⱼ x _) y =
     let e₁′ , el₁′ , _ = Uinjectivity e₁
         e₂′ , el₂′ , _ = Uinjectivity (trans (sym e₂) (proj₁ (inversion-Ind y)) )
     in PE.sym (PE.trans e₂′ e₁′) , PE.cong next (PE.sym el₂′)
@@ -186,7 +186,7 @@ relevance-uniq (Emptyⱼ x) (Emptyⱼ x₁) = PE.refl
 relevance-uniq (Πⱼ x ▹ x₁ ▹ X ▹ X₁) (Πⱼ x₂ ▹ x₃ ▹ Y ▹ Y₁) =
           PE.refl 
 relevance-uniq (Idⱼ X X₁ _) (Idⱼ Y Y₁ _) = PE.refl
-relevance-uniq (Indⱼ x) (Indⱼ y) = PE.refl
+relevance-uniq (Indⱼ x _) (Indⱼ y _) = PE.refl
 relevance-uniq (var xx x) (var _ y) =
     let T≡T , e = varTypeEq′ x y
         er , el = typelevel-injectivity e

@@ -2,17 +2,17 @@ import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Weakening (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+module Definition.LogicalRelation.Weakening (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 open EqRelSet {{...}}
 open import Definition.Untyped senv equivs as U hiding (wk)
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs as T hiding (wk; wkEq; wkTerm; wkEqTerm)
-open import Definition.LogicalRelation senv equivs
-open import Definition.LogicalRelation.Irrelevance senv equivs
+open import Definition.LogicalRelation senv swf equivs
+open import Definition.LogicalRelation.Irrelevance senv swf equivs
 open import Tools.Product
-open import Tools.List using (All; All₂; []ₐ; _∷ₐ_; map)
+open import Tools.List using (All; All₂; All₃; []ₐ; _∷ₐ_; map)
 import Tools.PropositionalEquality as PE
 -- Weakening of neutrals in WHNF
 wkTermNe : ∀ {ρ Γ Δ k A rA} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
@@ -52,16 +52,16 @@ mutual
   wkInductive-prop : ∀ {ρ Γ Δ n i} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
                  → Inductive-prop Γ i n
                  → Inductive-prop Δ i (U.wk ρ n)
-  wkInductive-prop {ρ} [ρ] ⊢Δ (ctrᵣ {j = j} {args = args} ps) =
+  wkInductive-prop {ρ} [ρ] ⊢Δ (ctrᵣ {j = j} {args = args} ind∈ name≡ eq ps) =
     PE.subst (Inductive-prop _ _) (PE.sym (wk-ctr ρ _ j args))
-      (ctrᵣ (wkAllInd [ρ] ⊢Δ ps))
+      (ctrᵣ ind∈ name≡ eq (wkAllInd [ρ] ⊢Δ ps))
   wkInductive-prop ρ ⊢Δ (ne nf) = ne (wkTermNe ρ ⊢Δ nf)
 
-  wkAllInd : ∀ {ρ Γ Δ i args} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
-           → All (λ a → Γ ⊩Ind a ∷Ind i) args
-           → All (λ a → Δ ⊩Ind a ∷Ind i) (map (U.wk ρ) args)
+  wkAllInd : ∀ {ρ Γ Δ args As} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
+           → All₂ (λ a A → ∃ λ k → A PE.≡ Ind k × Γ ⊩Ind a ∷Ind k) args As
+           → All₂ (λ a A → ∃ λ k → A PE.≡ Ind k × Δ ⊩Ind a ∷Ind k) (map (U.wk ρ) args) As
   wkAllInd [ρ] ⊢Δ []ₐ = []ₐ
-  wkAllInd [ρ] ⊢Δ (p ∷ₐ ps) = wkTermInd [ρ] ⊢Δ p ∷ₐ wkAllInd [ρ] ⊢Δ ps
+  wkAllInd [ρ] ⊢Δ ((k , A≡ , p) ∷ₐ ps) = (k , A≡ , wkTermInd [ρ] ⊢Δ p) ∷ₐ wkAllInd [ρ] ⊢Δ ps
 
 mutual
   wkEqTermInd : ∀ {ρ Γ Δ t u i} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
@@ -75,16 +75,17 @@ mutual
   wk[Inductive]-prop : ∀ {ρ Γ Δ n n′ i} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
                    → [Inductive]-prop Γ i n n′
                    → [Inductive]-prop Δ i (U.wk ρ n) (U.wk ρ n′)
-  wk[Inductive]-prop {ρ} [ρ] ⊢Δ (ctrᵣ {j = j} {args = args} {args' = args'} ps) =
+  wk[Inductive]-prop {ρ} [ρ] ⊢Δ (ctrᵣ {j = j} {args = args} {args' = args'} ind∈ name≡ eq ps) =
     PE.subst₂ ([Inductive]-prop _ _) (PE.sym (wk-ctr ρ _ j args)) (PE.sym (wk-ctr ρ _ j args'))
-      (ctrᵣ (wkAll₂Ind [ρ] ⊢Δ ps))
+      (ctrᵣ ind∈ name≡ eq (wkAll₂Ind [ρ] ⊢Δ ps))
   wk[Inductive]-prop ρ ⊢Δ (ne x) = ne (wkEqTermNe ρ ⊢Δ x)
 
-  wkAll₂Ind : ∀ {ρ Γ Δ i args args'} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
-            → All₂ (λ a a' → Γ ⊩Ind a ≡ a' ∷Ind i) args args'
-            → All₂ (λ a a' → Δ ⊩Ind a ≡ a' ∷Ind i) (map (U.wk ρ) args) (map (U.wk ρ) args')
+  wkAll₂Ind : ∀ {ρ Γ Δ args args' As} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)
+            → All₃ (λ a a' A → ∃ λ k → A PE.≡ Ind k × Γ ⊩Ind a ≡ a' ∷Ind k) args args' As
+            → All₃ (λ a a' A → ∃ λ k → A PE.≡ Ind k × Δ ⊩Ind a ≡ a' ∷Ind k)
+                   (map (U.wk ρ) args) (map (U.wk ρ) args') As
   wkAll₂Ind [ρ] ⊢Δ []ₐ = []ₐ
-  wkAll₂Ind [ρ] ⊢Δ (p ∷ₐ ps) = wkEqTermInd [ρ] ⊢Δ p ∷ₐ wkAll₂Ind [ρ] ⊢Δ ps
+  wkAll₂Ind [ρ] ⊢Δ ((k , A≡ , p) ∷ₐ ps) = (k , A≡ , wkEqTermInd [ρ] ⊢Δ p) ∷ₐ wkAll₂Ind [ρ] ⊢Δ ps
 
 mutual
   wkEqTermℕ : ∀ {ρ Γ Δ t u} → ρ ∷ Δ ⊆ Γ → (⊢Δ : ⊢ Δ)

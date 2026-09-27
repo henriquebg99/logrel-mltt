@@ -4,7 +4,7 @@ module Definition.Conversion.Conversion (senv : SI.SEnv) (swf : SI.swfenv senv) 
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.RedSteps senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Conversion senv equivs
 open import Definition.Conversion.Stability senv swf equivs
 open import Definition.Typed.Consequences.Syntactic senv swf equivs
@@ -12,7 +12,7 @@ open import Definition.Typed.Consequences.Injectivity senv swf equivs
 open import Definition.Typed.Consequences.Equality senv swf equivs
 open import Definition.Typed.Consequences.Reduction senv swf equivs
 open import Tools.Product
-open import Tools.List using (All₂; []ₐ; _∷ₐ_)
+open import Tools.List using (All₃; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
 mutual
 
@@ -88,26 +88,26 @@ mutual
     let eqU = U≡A-whnf A≡B whnfB
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU)
                 (Π-cong lΠ rF lF lG l< l<' (stability Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityConv↑Term (Γ≡Δ ∙ refl x) x₂))
-  convConv↓Term Γ≡Δ A≡B whnfB (Ind-refl x) =
+  convConv↓Term Γ≡Δ A≡B whnfB (Ind-refl x i∈) =
     let eqU = U≡A-whnf A≡B whnfB
         _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU) (Ind-refl ⊢Δ)
-  convConv↓Term Γ≡Δ A≡B whnfB (ctr-cong ⊢Γ ind∈ eq len args) =
+    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU) (Ind-refl ⊢Δ i∈)
+  convConv↓Term Γ≡Δ A≡B whnfB (ctr-cong ⊢Γ ind∈ eq args) =
     let eqI = Ind≡A A≡B whnfB
         _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqI)
-                (ctr-cong ⊢Δ ind∈ eq len (All₂-conv Γ≡Δ args))
+                (ctr-cong ⊢Δ ind∈ eq (All₃-conv Γ≡Δ args))
 
   convConv↓Term Γ≡Δ A≡B whnfB (Id-cong x x₁ x₂) =
     let eqU = U≡A-whnf A≡B whnfB
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU)
                 (Id-cong (stabilityConv↑Term Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityConv↑Term Γ≡Δ x₂))
 
-  All₂-conv : ∀ {args args' i Γ Δ} → ⊢ Γ ≡ Δ →
-    All₂ (λ a a' → Γ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) args args' →
-    All₂ (λ a a' → Δ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) args args'
-  All₂-conv Γ≡Δ []ₐ = []ₐ
-  All₂-conv Γ≡Δ (p ∷ₐ ps) = stabilityConv↑Term Γ≡Δ p ∷ₐ All₂-conv Γ≡Δ ps
+  All₃-conv : ∀ {args args' As Γ Δ} → ⊢ Γ ≡ Δ →
+    All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' As →
+    All₃ (λ a a' A → Δ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' As
+  All₃-conv Γ≡Δ []ₐ = []ₐ
+  All₃-conv Γ≡Δ (p ∷ₐ ps) = stabilityConv↑Term Γ≡Δ p ∷ₐ All₃-conv Γ≡Δ ps
 
 -- Conversion of algorithmic equality with the same context.
 convConvTerm : ∀ {t u A B Γ l}

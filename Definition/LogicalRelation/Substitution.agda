@@ -2,11 +2,11 @@ import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.LogicalRelation.Substitution (senv : SI.SEnv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
+module Definition.LogicalRelation.Substitution (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
 open import Definition.Typed.EqualityRelation senv equivs
 open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
-open import Definition.LogicalRelation senv equivs
+open import Definition.LogicalRelation senv swf equivs
 open import Tools.Product
 open import Tools.Unit
 -- The validity judgements:

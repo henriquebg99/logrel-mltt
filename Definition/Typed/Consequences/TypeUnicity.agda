@@ -4,7 +4,7 @@ module Definition.Typed.Consequences.TypeUnicity (senv : SI.SEnv) (swf : SI.swfe
 open import Definition.Untyped senv equivs hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
 open import Definition.Untyped.Properties senv equivs using (subst-Univ-either)
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Typed.Weakening senv equivs
 open import Definition.Typed.Consequences.Equality senv swf equivs
 -- import Definition.Typed.Consequences.Inequality as Ineq
@@ -29,7 +29,7 @@ type-uniq : ∀ {Γ t T₁ T₂ r₁ l₁ l₂} → Γ ⊢ t ∷ T₁ ^ [ r₁ ,
                  l₁ PE.≡ l₂ × Γ ⊢ T₁ ≡ T₂ ^ [ r₁ , l₁ ]
 type-uniq (univ 0<1 x) (univ 0<1 x') = PE.refl , refl (Ugenⱼ x)
 type-uniq (ℕⱼ x) (ℕⱼ x₁) = PE.refl , refl (Ugenⱼ x)
-type-uniq (Indⱼ x) (Indⱼ x₁) = PE.refl , refl (Ugenⱼ x)
+type-uniq (Indⱼ x _) (Indⱼ x₁ _) = PE.refl , refl (Ugenⱼ x)
 type-uniq (Emptyⱼ x) (Emptyⱼ x₁) = PE.refl , refl (Ugenⱼ x)
 type-uniq (Πⱼ x ▹ x₁ ▹ X ▹ X₁) (Πⱼ x₂ ▹ x₃ ▹ Y ▹ Y₁) =
     let _ , eU = type-uniq X₁ Y₁

@@ -4,7 +4,7 @@ module Definition.Conversion.Inversion (senv : SI.SEnv) (swf : SI.swfenv senv) (
 open import Definition.Untyped senv equivs
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
-open import Definition.Typed.Properties senv equivs
+open import Definition.Typed.Properties senv swf equivs
 open import Definition.Typed.RedSteps senv equivs
 open import Definition.Conversion senv equivs
 open import Definition.Conversion.Soundness senv swf equivs

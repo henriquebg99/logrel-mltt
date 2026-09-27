@@ -1,6 +1,6 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.Properties (senv : SI.SEnv) (equivs : E.Equivs senv) where
+module Definition.Typed.Properties (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Untyped senv equivs
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
@@ -11,13 +11,85 @@ open import Tools.Empty using (⊥; ⊥-elim)
 open import Tools.Product
 open import Tools.Sum hiding (id ; sym)
 open import Tools.Nat using (Nat; 1+; _<<_)
-open import Tools.List using (map; _++_; nth; All; []ₐ; _∷ₐ_; all∈; _∈ₗ_)
+open import Tools.List using (map; _++_; nth; All; []ₐ; _∷ₐ_; all∈; _∈ₗ_; ∈ₗ-map; ∈ₗ-map-inv)
 open import Tools.Maybe using (just; just-injective)
 import Tools.List as L
 import Tools.PropositionalEquality as PE
 import Definition.SUntyped as SU
 un-univ : ∀ {A r Γ l} → Γ ⊢ A ^ [ r , ι l ] → Γ ⊢ A ∷ Univ r l ^ [ ! , next l ]
 un-univ (univ x) = x
+
+-- Inductive types given by a declared name
+
+Indⱼ′ : ∀ {Γ i} → ⊢ Γ → i ∈ₗ SU.indNames senv → Γ ⊢ Ind i ∷ U ⁰ ^ [ ! , ι ¹ ]
+Indⱼ′ {i = i} ⊢Γ i∈ with ∈ₗ-map-inv SU.SInd.name senv i i∈
+... | ind , PE.refl , ind∈ = Indⱼ ⊢Γ ind∈
+
+-- A well-formed inductive type is declared in [senv]
+Ind∈ₜ : ∀ {Γ i A r} → Γ ⊢ Ind i ∷ A ^ r → i ∈ₗ SU.indNames senv
+Ind∈ₜ (Indⱼ _ ind∈) = ∈ₗ-map SU.SInd.name ind∈
+Ind∈ₜ (conv ⊢I _) = Ind∈ₜ ⊢I
+
+Ind∈ : ∀ {Γ i r} → Γ ⊢ Ind i ^ r → i ∈ₗ SU.indNames senv
+Ind∈ (univ ⊢I) = Ind∈ₜ ⊢I
+
+-- Inversion for constructors
+inversion-Ctr : ∀ {Γ i j args C r}
+  → Γ ⊢ ctr i j args ∷ C ^ r
+  → ∃ λ ind → ∃ λ Ts
+      → (ind ∈ₗ senv) × (SU.SInd.name ind PE.≡ i)
+      × (SU.ctrArgsTypeList ind j PE.≡ just Ts)
+      × (Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ])
+inversion-Ctr {Γ} {i} {j} {args} ⊢t = go ⊢t PE.refl
+  where
+    go : ∀ {t A r} → Γ ⊢ t ∷ A ^ r → t PE.≡ ctr i j args
+       → ∃ λ ind → ∃ λ Ts
+           → (ind ∈ₗ senv) × (SU.SInd.name ind PE.≡ i)
+           × (SU.ctrArgsTypeList ind j PE.≡ just Ts)
+           × (Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ])
+    go (Ctrⱼ {ind = ind′} {j′} {args′} {Ts} _ ind∈ eq ⊢args) e =
+      let i≡ , j≡ , args≡ = ctr-PE-injectivity e
+      in  ind′ , Ts , ind∈ , i≡
+          , PE.subst (λ j → SU.ctrArgsTypeList ind′ j PE.≡ just Ts) j≡ eq
+          , PE.subst (λ args → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]) args≡ ⊢args
+    go (conv x _) e = go x e
+    go (univ _ _) ()
+    go (ℕⱼ _) ()
+    go (Emptyⱼ _) ()
+    go (Πⱼ _ ▹ _ ▹ _ ▹ _) ()
+    go (var _ _) ()
+    go (lamⱼ _ _ _ _) ()
+    go (_▹_▹_▹_∘ⱼ_ _ _ _ _ _) ()
+    go (fstⱼ _ _ _ _ _) ()
+    go (sndⱼ _ _ _ _ _) ()
+    go (zeroⱼ _) ()
+    go (sucⱼ _) ()
+    go (natrecⱼ _ _ _ _ _) ()
+    go (Indⱼ _ _) ()
+    go (IndRectⱼ _ _ _ _ _) ()
+    go (Emptyrecⱼ _ _) ()
+    go (Idⱼ _ _ _) ()
+    go (Idreflⱼ _) ()
+    go (transpⱼ _ _ _ _ _ _) ()
+    go (castⱼ _ _ _ _) ()
+    go (equiv-eqⱼ _ _) ()
+
+-- Constructor argument types only mention declared inductive types.
+ctrArgInds : ∀ {ind j Ts} → ind ∈ₗ senv → SU.ctrArgsTypeList ind j PE.≡ just Ts
+           → All (SU.indsInSEnv senv) Ts
+ctrArgInds {ind} {j} ind∈ eq =
+  lookupAll∈ (lookupAll∈ (proj₂ swf) ind∈) (L.nth-∈ₗ (SU.SInd.ctrArgsTypes ind) j eq)
+  where
+  lookupAll∈ : ∀ {A : Set} {P : A → Set} {x xs} → All P xs → x ∈ₗ xs → P x
+  lookupAll∈ (p ∷ₐ _) L.hereₗ = p
+  lookupAll∈ (_ ∷ₐ ps) (L.thereₗ h) = lookupAll∈ ps h
+
+Ind-name : ∀ {Γ i A r} → Γ ⊢ Ind i ∷ A ^ r → i ∈ₗ SU.indNames senv
+Ind-name (Indⱼ _ ind∈) = ∈ₗ-map SU.SInd.name ind∈
+Ind-name (conv ⊢Ind _) = Ind-name ⊢Ind
+
+Ind-nameᵗ : ∀ {Γ i r} → Γ ⊢ Ind i ^ r → i ∈ₗ SU.indNames senv
+Ind-nameᵗ (univ ⊢Ind) = Ind-name ⊢Ind
 
 -- Escape context extraction
 
@@ -42,7 +114,7 @@ wfTerm (transpⱼ A P t s u e) = wfTerm t
 wfTerm (castⱼ A B e t) = wfTerm t
 wfTerm (conv t A≡B) = wfTerm t
 wfTerm (equiv-eqⱼ ⊢Γ _) = ⊢Γ
-wfTerm (Indⱼ ⊢Γ) = ⊢Γ
+wfTerm (Indⱼ ⊢Γ _) = ⊢Γ
 wfTerm (Ctrⱼ ⊢Γ _ _ _) = ⊢Γ
 wfTerm (IndRectⱼ _ _ _ ⊢t _) = wfTerm ⊢t
 
@@ -61,7 +133,7 @@ mutual
   wfEqTerm (β-red _ _ F t a) = wfTerm a
   wfEqTerm (η-eq _ _ F f g f0≡g0) = wfTerm f
   wfEqTerm (suc-cong n) = wfEqTerm n
-  wfEqTerm (ctr-cong ⊢Γ _ _ _ _) = ⊢Γ
+  wfEqTerm (ctr-cong ⊢Γ _ _ _) = ⊢Γ
   wfEqTerm (natrec-cong F≡F′ z≡z′ s≡s′ n≡n′) = wfEqTerm z≡z′
   wfEqTerm (natrec-zero F z s) = wfTerm z
   wfEqTerm (natrec-suc n F z s) = wfTerm n
@@ -76,8 +148,8 @@ mutual
   wfEqTerm (cast-Π A B A' B' e f) = wfTerm f
   wfEqTerm (cast-ℕ-0 e) = wfTerm e
   wfEqTerm (cast-ℕ-S e n) = wfTerm n
-  wfEqTerm (cast-Ind-ctr _ _ e args) = wfTerm e
-  wfEqTerm (cast-equiv _ e t) = wfTerm t
+  wfEqTerm (cast-Ind-ctr _ e t) = wfTerm e
+  wfEqTerm (cast-equiv _ _ _ _ e t) = wfTerm t
 
   wfEq : ∀ {Γ A B r} → Γ ⊢ A ≡ B ^ r → ⊢ Γ
   wfEq (univ A≡B) = wfEqTerm A≡B
@@ -112,22 +184,19 @@ subsetTerm (cast-ne-subst A neA B e t) = let ⊢Γ = wfEqTerm (subsetTerm B)
                                   in cast-cong (refl A) (subsetTerm B) (refl t) e (conv e (univ (Id-cong (refl (univ 0<1 ⊢Γ)) (refl A) (subsetTerm B))))
 subsetTerm (cast-ℕ-subst B e t) = let ⊢Γ = wfEqTerm (subsetTerm B)
                                   in cast-cong (refl (ℕⱼ (wfTerm t))) (subsetTerm B) (refl t) e (conv e (univ (Id-cong (refl (univ 0<1 ⊢Γ)) (refl (ℕⱼ ⊢Γ)) (subsetTerm B))))
-subsetTerm (cast-Ind-subst {i = i} B e t) = let ⊢Γ = wfEqTerm (subsetTerm B)
-                                   in cast-cong (refl (Indⱼ ⊢Γ)) (subsetTerm B) (refl t) e (conv e (univ (Id-cong (refl (univ 0<1 ⊢Γ)) (refl (Indⱼ ⊢Γ)) (subsetTerm B))))
+subsetTerm (cast-Ind-subst ind∈ B e t) = let ⊢Γ = wfEqTerm (subsetTerm B)
+                                   in cast-cong (refl (Indⱼ ⊢Γ ind∈)) (subsetTerm B) (refl t) e (conv e (univ (Id-cong (refl (univ 0<1 ⊢Γ)) (refl (Indⱼ ⊢Γ ind∈)) (subsetTerm B))))
 subsetTerm (cast-Π-subst A P B e t) = let ⊢Γ = wfTerm A
                                       in cast-cong (refl (Πⱼ (λ x → ≡is≤ PE.refl , ≡is≤ PE.refl) ▹ (λ x → ⊥-elim (!≢% x)) ▹ A ▹ P)) (subsetTerm B) (refl t) e
                                                    (conv e (univ (Id-cong (refl (univ 0<1 ⊢Γ)) (refl (Πⱼ (λ x → ≡is≤ PE.refl , ≡is≤ PE.refl) ▹ (λ x → ⊥-elim (!≢% x)) ▹ A ▹ P)) (subsetTerm B) )))
 subsetTerm (cast-Π A B A' B' e f) = cast-Π A B A' B' e f
 subsetTerm (cast-ℕ-0 e) = cast-ℕ-0 e
 subsetTerm (cast-ℕ-S e n) = cast-ℕ-S e n
-subsetTerm (cast-Ind-ctr ind∈ eq e args) = cast-Ind-ctr ind∈ eq e args
-subsetTerm (cast-equiv A≢B H e t) = cast-equiv H e t
+subsetTerm (cast-Ind-ctr ind∈ e t) = cast-Ind-ctr ind∈ e t
+subsetTerm (cast-equiv A∈ B∈ A≢B H e t) = cast-equiv A∈ B∈ A≢B H e t
 subsetTerm (cast-ℕ-cong e n) = let ⊢Γ = wfTerm e
                                    ⊢ℕ = ℕⱼ ⊢Γ
                                in cast-cong (refl ⊢ℕ) (refl ⊢ℕ) (subsetTerm n) e e
-subsetTerm (cast-Ind-cong {i = i} e n) = let ⊢Γ = wfTerm e
-                                             ⊢Ind = Indⱼ ⊢Γ
-                                         in cast-cong (refl ⊢Ind) (refl ⊢Ind) (subsetTerm n) e e
 subsetTerm (cast-ne-cong A neA B neB e t) = let ⊢Γ = wfTerm A
                                   in cast-cong (refl A) (refl B) (subsetTerm t) e e
 
@@ -180,15 +249,14 @@ redFirstTerm (IndRect-ctr ind∈ eq ⊢P ⊢args ⊢ms _) with wf ⊢P
 redFirstTerm (cast-subst A B e t) = castⱼ (redFirstTerm A) B e t
 redFirstTerm (cast-ne-subst A neA B e t) = castⱼ A (redFirstTerm B) e t
 redFirstTerm (cast-ℕ-subst B e t) = castⱼ (ℕⱼ (wfTerm t)) (redFirstTerm B) e t
-redFirstTerm (cast-Ind-subst {i = i} B e t) = castⱼ (Indⱼ (wfTerm t)) (redFirstTerm B) e t
+redFirstTerm (cast-Ind-subst ind∈ B e t) = castⱼ (Indⱼ (wfTerm t) ind∈) (redFirstTerm B) e t
 redFirstTerm (cast-Π-subst A P B e t) = castⱼ (Πⱼ (λ x → ≡is≤ PE.refl , ≡is≤ PE.refl) ▹ (λ x → ⊥-elim (!≢% x)) ▹ A ▹ P) (redFirstTerm B) e t
 redFirstTerm (cast-Π A B A' B' e f) = castⱼ (Πⱼ (λ x → ≡is≤ PE.refl , ≡is≤ PE.refl) ▹ (λ x → ⊥-elim (!≢% x)) ▹ A ▹ B) (Πⱼ (λ x → ≡is≤ PE.refl , ≡is≤ PE.refl) ▹ (λ x → ⊥-elim (!≢% x)) ▹ A' ▹ B') e f
 redFirstTerm (cast-ℕ-0 e) = castⱼ (ℕⱼ (wfTerm e)) (ℕⱼ (wfTerm e)) e (zeroⱼ (wfTerm e))
 redFirstTerm (cast-ℕ-S e n) = castⱼ (ℕⱼ (wfTerm e)) (ℕⱼ (wfTerm e)) e (sucⱼ n)
 redFirstTerm (cast-ℕ-cong e n) = castⱼ (ℕⱼ (wfTerm e)) (ℕⱼ (wfTerm e)) e (redFirstTerm n)
-redFirstTerm (cast-Ind-ctr ind∈ eq e args) = castⱼ (Indⱼ (wfTerm e)) (Indⱼ (wfTerm e)) e (Ctrⱼ (wfTerm e) ind∈ eq args)
-redFirstTerm (cast-equiv A≢B H e t) = castⱼ (Indⱼ (wfTerm e)) (Indⱼ (wfTerm e)) e t
-redFirstTerm (cast-Ind-cong {i = i} e n) = castⱼ (Indⱼ (wfTerm e)) (Indⱼ (wfTerm e)) e (redFirstTerm n)
+redFirstTerm (cast-Ind-ctr ind∈ e t) = castⱼ (Indⱼ (wfTerm e) ind∈) (Indⱼ (wfTerm e) ind∈) e t
+redFirstTerm (cast-equiv A∈ B∈ A≢B H e t) = castⱼ (Indⱼ′ (wfTerm e) A∈) (Indⱼ′ (wfTerm e) B∈) e t
 redFirstTerm (cast-ne-cong K neK L neL e n) = castⱼ K L e (redFirstTerm n)
 
 redFirst (univ A⇒B) = univ (redFirstTerm A⇒B)
@@ -226,7 +294,6 @@ indRectNeRed _ (castΠₙ _) ()
 indRectNeRed _ (castℕℕₙ _) ()
 indRectNeRed _ (castnIndₙ _) ()
 indRectNeRed _ (castIndₙ _) ()
-indRectNeRed _ (castIndIndₙ _) ()
 indRectNeRed _ (castIndInd≢ₙ _) ()
 indRectNeRed _ castℕΠₙ ()
 indRectNeRed _ castΠℕₙ ()
@@ -267,7 +334,6 @@ neRedTerm (cast-subst tr x x₁ x₂) (castnΠₙ tn) = neRedTerm tr tn
 neRedTerm (cast-subst tr x x₁ x₂) (castℕℕₙ tn) = whnfRedTerm tr ℕₙ
 neRedTerm (cast-subst tr x x₁ x₂) (castnIndₙ tn) = neRedTerm tr tn
 neRedTerm (cast-subst tr x x₁ x₂) (castIndₙ tn) = whnfRedTerm tr Indₙ
-neRedTerm (cast-subst tr x x₁ x₂) (castIndIndₙ tn) = whnfRedTerm tr Indₙ
 neRedTerm (cast-subst tr x x₁ x₂) (castIndInd≢ₙ _) = whnfRedTerm tr Indₙ
 neRedTerm (cast-subst tr x x₁ x₂) (castℕΠₙ) = whnfRedTerm tr ℕₙ
 neRedTerm (cast-subst tr x x₁ x₂) (castΠℕₙ) = whnfRedTerm tr Πₙ
@@ -279,11 +345,10 @@ neRedTerm (cast-ℕ-subst tr x x₁) (castℕₙ tn) = neRedTerm tr tn
 neRedTerm (cast-ℕ-subst tr x x₁) (castℕℕₙ tn) = whnfRedTerm tr ℕₙ
 neRedTerm (cast-ℕ-subst tr x x₁) (castℕΠₙ) = whnfRedTerm tr Πₙ
 neRedTerm (cast-ℕ-subst tr x x₁) castℕIndₙ = whnfRedTerm tr Indₙ
-neRedTerm (cast-Ind-subst tr x x₁) (castIndΠₙ) = whnfRedTerm tr Πₙ
-neRedTerm (cast-Ind-subst tr x x₁) (castIndₙ tn) = neRedTerm tr tn
-neRedTerm (cast-Ind-subst tr x x₁) (castIndIndₙ tn) = whnfRedTerm tr Indₙ
-neRedTerm (cast-Ind-subst tr x x₁) (castIndInd≢ₙ _) = whnfRedTerm tr Indₙ
-neRedTerm (cast-Ind-subst tr x x₁) castIndℕₙ = whnfRedTerm tr ℕₙ
+neRedTerm (cast-Ind-subst _ tr x x₁) (castIndΠₙ) = whnfRedTerm tr Πₙ
+neRedTerm (cast-Ind-subst _ tr x x₁) (castIndₙ tn) = neRedTerm tr tn
+neRedTerm (cast-Ind-subst _ tr x x₁) (castIndInd≢ₙ _) = whnfRedTerm tr Indₙ
+neRedTerm (cast-Ind-subst _ tr x x₁) castIndℕₙ = whnfRedTerm tr ℕₙ
 neRedTerm (cast-Π A B A' B' e f) (castₙ () _ _)
 neRedTerm (cast-Π A B A' B' e f) (castΠₙ ())
 neRedTerm (cast-ℕ-0 x) (castₙ () _ _)
@@ -292,21 +357,15 @@ neRedTerm (cast-ℕ-0 x) (castℕℕₙ ())
 neRedTerm (cast-ℕ-S x x₁) (castₙ () _ _)
 neRedTerm (cast-ℕ-S x x₁) (castℕₙ ())
 neRedTerm (cast-ℕ-S x x₁) (castℕℕₙ ())
-neRedTerm (cast-Ind-ctr x₆ x x₁ x₂) (castₙ () _ _)
-neRedTerm (cast-Ind-ctr x₆ x x₁ x₂) (castIndₙ ())
-neRedTerm (cast-Ind-ctr x₆ x x₁ x₂) (castIndIndₙ ())
-neRedTerm (cast-Ind-ctr x₆ x x₁ x₂) (castIndInd≢ₙ p) = ⊥-elim (p PE.refl)
-neRedTerm (cast-equiv A≢B H e t) (castₙ () _ _)
-neRedTerm (cast-equiv A≢B H e t) (castIndₙ ())
-neRedTerm (cast-equiv A≢B H e t) (castIndIndₙ _) = A≢B PE.refl
-neRedTerm (cast-equiv A≢B H e t) (castIndInd≢ₙ p) = p H
+neRedTerm (cast-Ind-ctr x x₁ x₂) (castₙ () _ _)
+neRedTerm (cast-Ind-ctr x x₁ x₂) (castIndₙ ())
+neRedTerm (cast-Ind-ctr x x₁ x₂) (castIndInd≢ₙ p) = ⊥-elim (p PE.refl)
+neRedTerm (cast-equiv _ _ A≢B H e t) (castₙ () _ _)
+neRedTerm (cast-equiv _ _ A≢B H e t) (castIndₙ ())
+neRedTerm (cast-equiv _ _ A≢B H e t) (castIndInd≢ₙ p) = p H
 neRedTerm (cast-ℕ-cong x x₁) (castₙ () _ _)
 neRedTerm (cast-ℕ-cong x x₁) (castℕₙ ())
 neRedTerm (cast-ℕ-cong x x₁) (castℕℕₙ t) = neRedTerm x₁ t
-neRedTerm (cast-Ind-cong x x₁) (castₙ () _ _)
-neRedTerm (cast-Ind-cong x x₁) (castIndₙ ())
-neRedTerm (cast-Ind-cong x x₁) (castIndIndₙ t) = neRedTerm x₁ t
-neRedTerm (cast-Ind-cong x x₁) (castIndInd≢ₙ p) = ⊥-elim (p PE.refl)
 neRedTerm (cast-subst d x x₁ x₂) castΠΠ%!ₙ = whnfRedTerm d Πₙ
 neRedTerm (cast-subst d x x₁ x₂) castΠΠ!%ₙ = whnfRedTerm d Πₙ
 neRedTerm (cast-Π-subst x x₁ d x₂ x₃) castΠΠ%!ₙ = whnfRedTerm d Πₙ
@@ -333,7 +392,6 @@ whnfRedTerm (cast-subst d x x₁ x₂) (ne (castℕₙ x₃)) = whnfRedTerm d �
 whnfRedTerm (cast-subst d x x₁ x₂) (ne (castIndₙ x₃)) = whnfRedTerm d Indₙ
 whnfRedTerm (cast-subst d x x₁ x₂) (ne (castΠₙ x₃)) = whnfRedTerm d Πₙ
 whnfRedTerm (cast-subst d x x₁ x₂) (ne (castℕℕₙ x₃)) = whnfRedTerm d ℕₙ
-whnfRedTerm (cast-subst d x x₁ x₂) (ne (castIndIndₙ x₃)) = whnfRedTerm d Indₙ
 whnfRedTerm (cast-subst d x x₁ x₂) (ne (castIndInd≢ₙ _)) = whnfRedTerm d Indₙ
 whnfRedTerm (cast-subst d x x₁ x₂) (ne castℕΠₙ) = whnfRedTerm d ℕₙ
 whnfRedTerm (cast-subst d x x₁ x₂) (ne castΠℕₙ) = whnfRedTerm d Πₙ
@@ -349,7 +407,6 @@ whnfRedTerm (cast-ne-subst x () d x₁ x₂) (ne (castℕₙ x₃))
 whnfRedTerm (cast-ne-subst x () d x₁ x₂) (ne (castIndₙ x₃))
 whnfRedTerm (cast-ne-subst x () d x₁ x₂) (ne (castΠₙ x₃))
 whnfRedTerm (cast-ne-subst x () d x₁ x₂) (ne (castℕℕₙ x₃))
-whnfRedTerm (cast-ne-subst x () d x₁ x₂) (ne (castIndIndₙ x₃))
 whnfRedTerm (cast-ne-subst x () d x₁ x₂) (ne (castIndInd≢ₙ _))
 whnfRedTerm (cast-ne-subst x () d x₁ x₂) (ne castℕΠₙ)
 whnfRedTerm (cast-ne-subst x () d x₁ x₂) (ne castΠℕₙ)
@@ -361,11 +418,10 @@ whnfRedTerm (cast-ℕ-subst d x x₁) (ne (castℕₙ x₂)) = neRedTerm d x₂
 whnfRedTerm (cast-ℕ-subst d x x₁) (ne (castℕℕₙ x₂)) = whnfRedTerm d ℕₙ
 whnfRedTerm (cast-ℕ-subst d x x₁) (ne castℕΠₙ) = whnfRedTerm d Πₙ
 whnfRedTerm (cast-ℕ-subst d x x₁) (ne castℕIndₙ) = whnfRedTerm d Indₙ
-whnfRedTerm (cast-Ind-subst d x x₁) (ne castIndΠₙ) = whnfRedTerm d Πₙ
-whnfRedTerm (cast-Ind-subst d x x₁) (ne (castIndₙ x₂)) = neRedTerm d x₂
-whnfRedTerm (cast-Ind-subst d x x₁) (ne (castIndIndₙ x₂)) = whnfRedTerm d Indₙ
-whnfRedTerm (cast-Ind-subst d x x₁) (ne (castIndInd≢ₙ _)) = whnfRedTerm d Indₙ
-whnfRedTerm (cast-Ind-subst d x x₁) (ne castIndℕₙ) = whnfRedTerm d ℕₙ
+whnfRedTerm (cast-Ind-subst _ d x x₁) (ne castIndΠₙ) = whnfRedTerm d Πₙ
+whnfRedTerm (cast-Ind-subst _ d x x₁) (ne (castIndₙ x₂)) = neRedTerm d x₂
+whnfRedTerm (cast-Ind-subst _ d x x₁) (ne (castIndInd≢ₙ _)) = whnfRedTerm d Indₙ
+whnfRedTerm (cast-Ind-subst _ d x x₁) (ne castIndℕₙ) = whnfRedTerm d ℕₙ
 whnfRedTerm (cast-Π-subst x x₁ d x₂ x₃) (ne (castΠₙ x₄)) = neRedTerm d x₄
 whnfRedTerm (cast-Π-subst x x₁ d x₂ x₃) (ne castΠℕₙ) = whnfRedTerm d ℕₙ
 whnfRedTerm (cast-Π-subst x x₁ d x₂ x₃) (ne castΠIndₙ) = whnfRedTerm d Indₙ
@@ -377,21 +433,15 @@ whnfRedTerm (cast-ℕ-0 x) (ne (castℕℕₙ ()))
 whnfRedTerm (cast-ℕ-S x x₁) (ne (castₙ () _ _))
 whnfRedTerm (cast-ℕ-S x x₁) (ne (castℕₙ ()))
 whnfRedTerm (cast-ℕ-S x x₁) (ne (castℕℕₙ ()))
-whnfRedTerm (cast-Ind-ctr x₆ x x₁ x₂) (ne (castₙ () _ _))
-whnfRedTerm (cast-Ind-ctr x₆ x x₁ x₂) (ne (castIndₙ ()))
-whnfRedTerm (cast-Ind-ctr x₆ x x₁ x₂) (ne (castIndIndₙ ()))
-whnfRedTerm (cast-Ind-ctr x₆ x x₁ x₂) (ne (castIndInd≢ₙ p)) = ⊥-elim (p PE.refl)
-whnfRedTerm (cast-equiv A≢B H e t) (ne (castₙ () _ _))
-whnfRedTerm (cast-equiv A≢B H e t) (ne (castIndₙ ()))
-whnfRedTerm (cast-equiv A≢B H e t) (ne (castIndIndₙ _)) = A≢B PE.refl
-whnfRedTerm (cast-equiv A≢B H e t) (ne (castIndInd≢ₙ p)) = p H
+whnfRedTerm (cast-Ind-ctr x x₁ x₂) (ne (castₙ () _ _))
+whnfRedTerm (cast-Ind-ctr x x₁ x₂) (ne (castIndₙ ()))
+whnfRedTerm (cast-Ind-ctr x x₁ x₂) (ne (castIndInd≢ₙ p)) = ⊥-elim (p PE.refl)
+whnfRedTerm (cast-equiv _ _ A≢B H e t) (ne (castₙ () _ _))
+whnfRedTerm (cast-equiv _ _ A≢B H e t) (ne (castIndₙ ()))
+whnfRedTerm (cast-equiv _ _ A≢B H e t) (ne (castIndInd≢ₙ p)) = p H
 whnfRedTerm (cast-ℕ-cong x x₁) (ne (castₙ () _ _))
 whnfRedTerm (cast-ℕ-cong x x₁) (ne (castℕₙ ()))
 whnfRedTerm (cast-ℕ-cong x x₁) (ne (castℕℕₙ t)) = neRedTerm x₁ t
-whnfRedTerm (cast-Ind-cong x x₁) (ne (castₙ () _ _))
-whnfRedTerm (cast-Ind-cong x x₁) (ne (castIndₙ ()))
-whnfRedTerm (cast-Ind-cong x x₁) (ne (castIndIndₙ t)) = neRedTerm x₁ t
-whnfRedTerm (cast-Ind-cong x x₁) (ne (castIndInd≢ₙ p)) = ⊥-elim (p PE.refl)
 whnfRedTerm (cast-subst d x x₁ x₂) (ne castΠΠ%!ₙ) = whnfRedTerm d Πₙ
 whnfRedTerm (cast-subst d x x₁ x₂) (ne castΠΠ!%ₙ) = whnfRedTerm d Πₙ
 whnfRedTerm (cast-Π-subst x x₁ d x₂ x₃) (ne castΠΠ%!ₙ) = whnfRedTerm d Πₙ
@@ -457,16 +507,15 @@ whrDetIndRect-subst _ _ _ _ _ _ (natrec-suc _ _ _ _) ()
 whrDetIndRect-subst _ _ _ _ _ _ (cast-subst _ _ _ _) ()
 whrDetIndRect-subst _ _ _ _ _ _ (cast-ne-subst _ _ _ _ _) ()
 whrDetIndRect-subst _ _ _ _ _ _ (cast-ℕ-subst _ _ _) ()
-whrDetIndRect-subst _ _ _ _ _ _ (cast-Ind-subst _ _ _) ()
+whrDetIndRect-subst _ _ _ _ _ _ (cast-Ind-subst _ _ _ _) ()
 whrDetIndRect-subst _ _ _ _ _ _ (cast-Π-subst _ _ _ _ _) ()
 whrDetIndRect-subst _ _ _ _ _ _ (cast-Π _ _ _ _ _ _) ()
 whrDetIndRect-subst _ _ _ _ _ _ (cast-ℕ-0 _) ()
 whrDetIndRect-subst _ _ _ _ _ _ (cast-ℕ-S _ _) ()
 whrDetIndRect-subst _ _ _ _ _ _ (cast-ℕ-cong _ _) ()
-whrDetIndRect-subst _ _ _ _ _ _ (cast-Ind-ctr _ _ _ _) ()
-whrDetIndRect-subst _ _ _ _ _ _ (cast-Ind-cong _ _) ()
+whrDetIndRect-subst _ _ _ _ _ _ (cast-Ind-ctr _ _ _) ()
 whrDetIndRect-subst _ _ _ _ _ _ (cast-ne-cong _ _ _ _ _ _) ()
-whrDetIndRect-subst _ _ _ _ _ _ (cast-equiv _ _ _ _) ()
+whrDetIndRect-subst _ _ _ _ _ _ (cast-equiv _ _ _ _ _ _) ()
 
 whrDetTerm : ∀{Γ t u A l u′ A′ l′} (d : Γ ⊢ t ⇒ u ∷ A ^ l) (d′ : Γ ⊢ t ⇒ u′ ∷ A′ ^ l′) → u PE.≡ u′
 whrDet : ∀{Γ A B B′ r r'} (d : Γ ⊢ A ⇒ B ^ r) (d′ : Γ ⊢ A ⇒ B′ ^ r') → B PE.≡ B′
@@ -489,10 +538,9 @@ whrDetTerm (cast-subst d x x₁ x₂) (cast-Π-subst x₃ x₄ d' x₅ x₆) = �
 whrDetTerm (cast-subst d x x₁ x₂) (cast-Π x₃ x₄ x₅ x₆ x₇ x₈) = ⊥-elim (whnfRedTerm d Πₙ)
 whrDetTerm (cast-subst d x x₁ x₂) (cast-ℕ-0 x₃) = ⊥-elim (whnfRedTerm d ℕₙ)
 whrDetTerm (cast-subst d x x₁ x₂) (cast-ℕ-S x₃ x₄) = ⊥-elim (whnfRedTerm d ℕₙ)
-whrDetTerm (cast-subst d x x₁ x₂) (cast-Ind-subst d' x₃ x₄) = ⊥-elim (whnfRedTerm d Indₙ)
-whrDetTerm (cast-subst d x x₁ x₂) (cast-Ind-ctr x₆ x₃ x₄ x₅) = ⊥-elim (whnfRedTerm d Indₙ)
-whrDetTerm (cast-subst d x x₁ x₂) (cast-Ind-cong x₃ d′) = ⊥-elim (whnfRedTerm d Indₙ)
-whrDetTerm (cast-subst d x x₁ x₂) (cast-equiv x₃ H x₄ x₅) = ⊥-elim (whnfRedTerm d Indₙ)
+whrDetTerm (cast-subst d x x₁ x₂) (cast-Ind-subst _ d' x₃ x₄) = ⊥-elim (whnfRedTerm d Indₙ)
+whrDetTerm (cast-subst d x x₁ x₂) (cast-Ind-ctr x₃ x₄ x₅) = ⊥-elim (whnfRedTerm d Indₙ)
+whrDetTerm (cast-subst d x x₁ x₂) (cast-equiv _ _ x₃ H x₄ x₅) = ⊥-elim (whnfRedTerm d Indₙ)
 whrDetTerm (cast-subst d x x₁ x₂) (cast-ne-subst y ney d' x₄ x₅) = ⊥-elim (neRedTerm d ney)
 whrDetTerm (cast-ne-subst x nex d x₁ x₂) (cast-subst d' x₃ x₄ x₅) = ⊥-elim (neRedTerm d' nex)
 whrDetTerm (cast-ne-subst x () d x₁ x₂) (cast-ℕ-subst d' x₃ x₄)
@@ -500,32 +548,29 @@ whrDetTerm (cast-ne-subst x () d x₁ x₂) (cast-Π-subst x₃ x₄ d' x₅ x�
 whrDetTerm (cast-ne-subst x () d x₁ x₂) (cast-Π x₃ x₄ x₅ x₆ x₇ x₈)
 whrDetTerm (cast-ne-subst x () d x₁ x₂) (cast-ℕ-0 x₃)
 whrDetTerm (cast-ne-subst x () d x₁ x₂) (cast-ℕ-S x₃ x₄)
-whrDetTerm (cast-ne-subst x () d x₁ x₂) (cast-Ind-subst d' x₃ x₄)
-whrDetTerm (cast-ne-subst x () d x₁ x₂) (cast-Ind-ctr x₆ x₃ x₄ x₅)
-whrDetTerm (cast-ne-subst x () d x₁ x₂) (cast-Ind-cong x₃ x₄)
+whrDetTerm (cast-ne-subst x () d x₁ x₂) (cast-Ind-subst _ d' x₃ x₄)
+whrDetTerm (cast-ne-subst x () d x₁ x₂) (cast-Ind-ctr x₃ x₄ x₅)
 whrDetTerm (cast-ne-subst x nex d x₁ x₂) (cast-ne-subst y ney d' x₄ x₅) rewrite whrDetTerm d d' = PE.refl
 whrDetTerm (cast-ℕ-subst d x x₁) (cast-subst d' x₂ x₃ x₄) = ⊥-elim (whnfRedTerm d' ℕₙ)
 whrDetTerm (cast-ℕ-subst d x x₁) (cast-ℕ-subst d' x₂ x₃) rewrite whrDetTerm d d' = PE.refl
 whrDetTerm (cast-ℕ-subst d x x₁) (cast-ℕ-0 x₂) = ⊥-elim (whnfRedTerm d ℕₙ)
 whrDetTerm (cast-ℕ-subst d x x₁) (cast-ℕ-S x₂ x₃) = ⊥-elim (whnfRedTerm d ℕₙ)
-whrDetTerm {Γ} {u = u} (cast-Ind-subst {i = i} {B = B} {e = e} {t = t} d _ _) d' =
+whrDetTerm {Γ} {u = u} (cast-Ind-subst {ind} {B = B} {e = e} {t = t} _ d _ _) d' =
   goCastIndSubst d' PE.refl
   where
   cast-inj : ∀ {l l' A A' B₁ B₂ e₁ e₂ t₁ t₂}
            → cast l A B₁ e₁ t₁ PE.≡ cast l' A' B₂ e₂ t₂
            → l PE.≡ l' × A PE.≡ A' × B₁ PE.≡ B₂ × e₁ PE.≡ e₂ × t₁ PE.≡ t₂
   cast-inj PE.refl = PE.refl , PE.refl , PE.refl , PE.refl , PE.refl
-  goCastIndSubst : ∀ {s u' A' l'} → Γ ⊢ s ⇒ u' ∷ A' ^ l' → s PE.≡ cast ⁰ (Ind i) B e t → u PE.≡ u'
+  goCastIndSubst : ∀ {s u' A' l'} → Γ ⊢ s ⇒ u' ∷ A' ^ l' → s PE.≡ cast ⁰ (Ind (SU.SInd.name ind)) B e t → u PE.≡ u'
   goCastIndSubst (conv d'' _) eq = goCastIndSubst d'' eq
-  goCastIndSubst (cast-Ind-subst d'' _ _) eq with cast-inj eq
-  ... | PE.refl , PE.refl , PE.refl , PE.refl , PE.refl =
-    PE.cong (λ B′ → cast ⁰ (Ind i) B′ e t) (whrDetTerm d d'')
+  goCastIndSubst (cast-Ind-subst _ d'' _ _) eq with cast-inj eq
+  ... | PE.refl , A≡ , PE.refl , PE.refl , PE.refl =
+    PE.cong₂ (λ A′ B′ → cast ⁰ A′ B′ e t) (PE.sym A≡) (whrDetTerm d d'')
   goCastIndSubst (cast-subst d'' _ _ _) eq with cast-inj eq
   ... | PE.refl , PE.refl , PE.refl , PE.refl , _ = ⊥-elim (whnfRedTerm d'' Indₙ)
-  goCastIndSubst (cast-Ind-ctr _ _ _ _) eq with cast-inj eq
-  ... | PE.refl , PE.refl , PE.refl , PE.refl , PE.refl = ⊥-elim (whnfRedTerm d Indₙ)
-  goCastIndSubst (cast-Ind-cong _ _) eq with cast-inj eq
-  ... | PE.refl , PE.refl , PE.refl , PE.refl , PE.refl = ⊥-elim (whnfRedTerm d Indₙ)
+  goCastIndSubst (cast-Ind-ctr _ _ _) eq with cast-inj eq
+  ... | PE.refl , _ , PE.refl , PE.refl , PE.refl = ⊥-elim (whnfRedTerm d Indₙ)
   goCastIndSubst (app-subst _ _ _ _) ()
   goCastIndSubst (β-red _ _ _ _ _ _) ()
   goCastIndSubst (natrec-subst _ _ _ _) ()
@@ -545,7 +590,7 @@ whrDetTerm {Γ} {u = u} (cast-Ind-subst {i = i} {B = B} {e = e} {t = t} d _ _) d
   ... | ()
   goCastIndSubst (IndRect-subst _ _ _ _) ()
   goCastIndSubst (IndRect-ctr _ _ _ _ _ _) ()
-  goCastIndSubst (cast-equiv _ _ _ _) eq with cast-inj eq
+  goCastIndSubst (cast-equiv _ _ _ _ _ _) eq with cast-inj eq
   ... | PE.refl , PE.refl , PE.refl , PE.refl , PE.refl = ⊥-elim (whnfRedTerm d Indₙ)
 whrDetTerm (cast-Π-subst x x₁ d x₂ x₃) (cast-subst d' x₄ x₅ x₆) = ⊥-elim (whnfRedTerm d' Πₙ)
 whrDetTerm (cast-Π-subst x x₁ d x₂ x₃) (cast-Π-subst x₄ x₅ d' x₆ x₇) rewrite whrDetTerm d d' = PE.refl
@@ -566,7 +611,7 @@ whrDetTerm (cast-ℕ-0 x) (cast-ℕ-cong x₁ d′) = ⊥-elim (whnfRedTerm d′
 whrDetTerm (cast-ℕ-S x x₁) (cast-ℕ-cong x₂ d′) = ⊥-elim (whnfRedTerm d′ sucₙ)
 whrDetTerm (cast-ℕ-cong x d) (cast-ℕ-0 x₁) = ⊥-elim (whnfRedTerm d zeroₙ)
 whrDetTerm (cast-ℕ-cong x d) (cast-ℕ-S x₁ x₂) = ⊥-elim (whnfRedTerm d sucₙ)
-whrDetTerm {Γ} {u = u} (cast-Ind-ctr {ind} {j} {e} {args} _ _ _ _) d' =
+whrDetTerm {Γ} {u = u} (cast-Ind-ctr {ind} {e} {t} _ _ _) d' =
   goCastIndCtr d' PE.refl
   where
   cast-inj : ∀ {l l' A A' B B' e₁ e₂ t t'}
@@ -574,18 +619,14 @@ whrDetTerm {Γ} {u = u} (cast-Ind-ctr {ind} {j} {e} {args} _ _ _ _) d' =
            → l PE.≡ l' × A PE.≡ A' × B PE.≡ B' × e₁ PE.≡ e₂ × t PE.≡ t'
   cast-inj PE.refl = PE.refl , PE.refl , PE.refl , PE.refl , PE.refl
   goCastIndCtr : ∀ {s u' A' l'} → Γ ⊢ s ⇒ u' ∷ A' ^ l' →
-                 s PE.≡ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e
-                          (ctr (SU.SInd.name ind) j args) → u PE.≡ u'
+                 s PE.≡ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e t → u PE.≡ u'
   goCastIndCtr (conv d'' _) eq = goCastIndCtr d'' eq
-  goCastIndCtr (cast-Ind-ctr _ _ _ _) eq with cast-inj eq
-  ... | PE.refl , PE.refl , PE.refl , PE.refl , ctr≡ with ctr-PE-injectivity ctr≡
-  ... | PE.refl , PE.refl , PE.refl = PE.refl
+  goCastIndCtr (cast-Ind-ctr _ _ _) eq with cast-inj eq
+  ... | _ , _ , _ , _ , PE.refl = PE.refl
   goCastIndCtr (cast-subst d'' _ _ _) eq with cast-inj eq
   ... | PE.refl , PE.refl , PE.refl , PE.refl , _ = ⊥-elim (whnfRedTerm d'' Indₙ)
-  goCastIndCtr (cast-Ind-subst d'' _ _) eq with cast-inj eq
-  ... | PE.refl , PE.refl , PE.refl , PE.refl , _ = ⊥-elim (whnfRedTerm d'' Indₙ)
-  goCastIndCtr (cast-Ind-cong _ d'') eq with cast-inj eq
-  ... | PE.refl , PE.refl , PE.refl , PE.refl , PE.refl = ⊥-elim (whnfRedTerm d'' ctrₙ)
+  goCastIndCtr (cast-Ind-subst _ d'' _ _) eq with cast-inj eq
+  ... | PE.refl , _ , PE.refl , PE.refl , _ = ⊥-elim (whnfRedTerm d'' Indₙ)
   goCastIndCtr (app-subst _ _ _ _) ()
   goCastIndCtr (β-red _ _ _ _ _ _) ()
   goCastIndCtr (natrec-subst _ _ _ _) ()
@@ -605,74 +646,31 @@ whrDetTerm {Γ} {u = u} (cast-Ind-ctr {ind} {j} {e} {args} _ _ _ _) d' =
   ... | ()
   goCastIndCtr (IndRect-subst _ _ _ _) ()
   goCastIndCtr (IndRect-ctr _ _ _ _ _ _) ()
-  goCastIndCtr (cast-equiv A≢B _ _ _) eq with cast-inj eq
-  ... | PE.refl , PE.refl , PE.refl , PE.refl , PE.refl = ⊥-elim (A≢B PE.refl)
-whrDetTerm {Γ} {u = u} (cast-Ind-cong {i} {e} {t} _ d) d' =
-  goCastIndCong d' PE.refl
-  where
-  cast-inj : ∀ {l l' A A' B B' e₁ e₂ t₁ t₂}
-           → cast l A B e₁ t₁ PE.≡ cast l' A' B' e₂ t₂
-           → l PE.≡ l' × A PE.≡ A' × B PE.≡ B' × e₁ PE.≡ e₂ × t₁ PE.≡ t₂
-  cast-inj PE.refl = PE.refl , PE.refl , PE.refl , PE.refl , PE.refl
-  goCastIndCong : ∀ {s u' A' l'} → Γ ⊢ s ⇒ u' ∷ A' ^ l' → s PE.≡ cast ⁰ (Ind i) (Ind i) e t → u PE.≡ u'
-  goCastIndCong (conv d'' _) eq = goCastIndCong d'' eq
-  goCastIndCong (cast-Ind-cong _ d'') eq with cast-inj eq
-  ... | PE.refl , PE.refl , PE.refl , PE.refl , PE.refl =
-    PE.cong (cast ⁰ (Ind i) (Ind i) e) (whrDetTerm d d'')
-  goCastIndCong (cast-subst d'' _ _ _) eq with cast-inj eq
-  ... | PE.refl , PE.refl , PE.refl , PE.refl , _ = ⊥-elim (whnfRedTerm d'' Indₙ)
-  goCastIndCong (cast-Ind-subst d'' _ _) eq with cast-inj eq
-  ... | PE.refl , PE.refl , PE.refl , PE.refl , PE.refl = ⊥-elim (whnfRedTerm d'' Indₙ)
-  goCastIndCong (cast-Ind-ctr _ _ _ _) eq with cast-inj eq
-  ... | PE.refl , PE.refl , PE.refl , PE.refl , PE.refl = ⊥-elim (whnfRedTerm d ctrₙ)
-  goCastIndCong (app-subst _ _ _ _) ()
-  goCastIndCong (β-red _ _ _ _ _ _) ()
-  goCastIndCong (natrec-subst _ _ _ _) ()
-  goCastIndCong (natrec-zero _ _ _) ()
-  goCastIndCong (natrec-suc _ _ _ _) ()
-  goCastIndCong (cast-ne-subst _ neK _ _ _) eq with cast-inj eq
-  ... | PE.refl , PE.refl , PE.refl , PE.refl , PE.refl with neK
-  ... | ()
-  goCastIndCong (cast-ℕ-subst _ _ _) ()
-  goCastIndCong (cast-Π-subst _ _ _ _ _) ()
-  goCastIndCong (cast-Π _ _ _ _ _ _) ()
-  goCastIndCong (cast-ℕ-0 _) ()
-  goCastIndCong (cast-ℕ-S _ _) ()
-  goCastIndCong (cast-ℕ-cong _ _) ()
-  goCastIndCong (cast-ne-cong _ neK _ _ _ _) eq with cast-inj eq
-  ... | PE.refl , PE.refl , PE.refl , PE.refl , PE.refl with neK
-  ... | ()
-  goCastIndCong (IndRect-subst _ _ _ _) ()
-  goCastIndCong (IndRect-ctr _ _ _ _ _ _) ()
-  goCastIndCong (cast-equiv A≢B _ _ _) eq with cast-inj eq
+  goCastIndCtr (cast-equiv _ _ A≢B _ _ _) eq with cast-inj eq
   ... | PE.refl , PE.refl , PE.refl , PE.refl , PE.refl = ⊥-elim (A≢B PE.refl)
 whrDetTerm (cast-ne-cong K neK L neL x d) (cast-subst X x₁ x₂ x₃) = ⊥-elim (neRedTerm X neK)
 whrDetTerm (cast-ne-cong K neK L neL x d) (cast-ne-subst x₁ x₂ X x₃ x₄) = ⊥-elim (neRedTerm X neL)
 whrDetTerm (cast-ne-cong K neK L neL x d) (cast-ne-cong x₁ x₂ x₃ x₄ x₅ X) rewrite whrDetTerm d X = PE.refl
 whrDetTerm (cast-subst X x x₁ x₂) (cast-ne-cong K neK L neL e tr) = ⊥-elim (neRedTerm X neK)
 whrDetTerm (cast-ne-subst x x₁ X x₂ x₃) (cast-ne-cong K neK L neL e tr) = ⊥-elim (neRedTerm X neL)
-whrDetTerm {Γ} {u = u} (cast-equiv {A} {B} {e} {t} A≢B H _ _) d' =
+whrDetTerm {Γ} {u = u} (cast-equiv {A} {B} {e} {t} A∈ B∈ A≢B H _ _) d' =
   goCastEquiv d' PE.refl
   where
   cast-inj : ∀ {l l' A₁ A₂ B₁ B₂ e₁ e₂ t₁ t₂}
            → cast l A₁ B₁ e₁ t₁ PE.≡ cast l' A₂ B₂ e₂ t₂
            → l PE.≡ l' × A₁ PE.≡ A₂ × B₁ PE.≡ B₂ × e₁ PE.≡ e₂ × t₁ PE.≡ t₂
   cast-inj PE.refl = PE.refl , PE.refl , PE.refl , PE.refl , PE.refl
-  uip : ∀ {X : Set} {x y : X} (p q : x PE.≡ y) → p PE.≡ q
-  uip PE.refl PE.refl = PE.refl
   goCastEquiv : ∀ {s u' A' l'} → Γ ⊢ s ⇒ u' ∷ A' ^ l' → s PE.≡ cast ⁰ (Ind A) (Ind B) e t → u PE.≡ u'
   goCastEquiv (conv d'' _) eq = goCastEquiv d'' eq
-  goCastEquiv (cast-equiv _ H′ _ _) eq with cast-inj eq
+  goCastEquiv (cast-equiv A∈′ B∈′ _ H′ _ _) eq with cast-inj eq
   ... | PE.refl , A≡ , B≡ , PE.refl , PE.refl with Ind-inj A≡ | Ind-inj B≡
   ... | PE.refl | PE.refl =
-    PE.cong (λ H″ → emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs A B H″)) ∘ t ^ ⁰) (uip H H′)
+    PE.cong (λ f → emb_oterm_term f ∘ t ^ ⁰) (Eq.repr-equiv-fwd-irr equivs A B A∈ B∈ H A∈′ B∈′ H′)
   goCastEquiv (cast-subst d'' _ _ _) eq with cast-inj eq
   ... | PE.refl , PE.refl , _ , _ , _ = ⊥-elim (whnfRedTerm d'' Indₙ)
-  goCastEquiv (cast-Ind-subst d'' _ _) eq with cast-inj eq
+  goCastEquiv (cast-Ind-subst _ d'' _ _) eq with cast-inj eq
   ... | PE.refl , _ , PE.refl , _ , _ = ⊥-elim (whnfRedTerm d'' Indₙ)
-  goCastEquiv (cast-Ind-ctr _ _ _ _) eq with cast-inj eq
-  ... | PE.refl , A≡ , B≡ , _ , _ = ⊥-elim (A≢B (PE.trans (PE.sym (Ind-inj A≡)) (Ind-inj B≡)))
-  goCastEquiv (cast-Ind-cong _ _) eq with cast-inj eq
+  goCastEquiv (cast-Ind-ctr _ _ _) eq with cast-inj eq
   ... | PE.refl , A≡ , B≡ , _ , _ = ⊥-elim (A≢B (PE.trans (PE.sym (Ind-inj A≡)) (Ind-inj B≡)))
   goCastEquiv (cast-ne-subst _ neK _ _ _) eq with cast-inj eq
   ... | PE.refl , PE.refl , _ , _ , _ with neK
@@ -695,7 +693,7 @@ whrDetTerm {Γ} {u = u} (cast-equiv {A} {B} {e} {t} A≢B H _ _) d' =
   goCastEquiv (IndRect-ctr _ _ _ _ _ _) ()
 whrDetTerm (IndRect-subst {ind} {P} {lG} {t} {t'} {ms = ms} _ _ d _) d' =
   whrDetIndRect-subst (SU.SInd.name ind) P lG ms whrDetTerm d d' PE.refl
-whrDetTerm {Γ} {u = u} (IndRect-ctr {ind} {j} {P} {lG} {args} {ms = ms} _ _ _ _ _ nth≡) d' =
+whrDetTerm {Γ} {u = u} (IndRect-ctr {ind} {j} {P} {lG} {args} {ms = ms} ind∈ eqTs _ _ _ nth≡) d' =
   go d' PE.refl
   where
   go : ∀ {s u' A' l'} → Γ ⊢ s ⇒ u' ∷ A' ^ l' →
@@ -704,9 +702,12 @@ whrDetTerm {Γ} {u = u} (IndRect-ctr {ind} {j} {P} {lG} {args} {ms = ms} _ _ _ _
   go (IndRect-subst _ _ d'' _) eq with IndRect-PE-injectivity eq
   ... | PE.refl , PE.refl , PE.refl , PE.refl , PE.refl =
     ⊥-elim (whnfRedTerm d'' ctrₙ)
-  go (IndRect-ctr _ _ _ _ _ nth≡') eq with IndRect-PE-injectivity eq
-  ... | PE.refl , PE.refl , PE.refl , ctr≡ , PE.refl with ctr-PE-injectivity ctr≡
-  ... | PE.refl , PE.refl , PE.refl
+  go (IndRect-ctr ind∈′ eqTs′ _ _ _ nth≡') eq with IndRect-PE-injectivity eq
+  ... | name≡ , _ , _ , _ , _ with SU.name-inj senv (proj₁ swf) ind∈′ ind∈ name≡
+  ... | PE.refl with IndRect-PE-injectivity eq
+  ... | _ , PE.refl , PE.refl , ctr≡ , PE.refl with ctr-PE-injectivity ctr≡
+  ... | _ , PE.refl , PE.refl with just-injective (PE.trans (PE.sym eqTs) eqTs′)
+  ... | PE.refl
     rewrite just-injective (PE.trans (PE.sym nth≡) nth≡') = PE.refl
   go (app-subst _ _ _ _) ()
   go (β-red _ _ _ _ _ _) ()
@@ -716,16 +717,15 @@ whrDetTerm {Γ} {u = u} (IndRect-ctr {ind} {j} {P} {lG} {args} {ms = ms} _ _ _ _
   go (cast-subst _ _ _ _) ()
   go (cast-ne-subst _ _ _ _ _) ()
   go (cast-ℕ-subst _ _ _) ()
-  go (cast-Ind-subst _ _ _) ()
+  go (cast-Ind-subst _ _ _ _) ()
   go (cast-Π-subst _ _ _ _ _) ()
   go (cast-Π _ _ _ _ _ _) ()
   go (cast-ℕ-0 _) ()
   go (cast-ℕ-S _ _) ()
   go (cast-ℕ-cong _ _) ()
-  go (cast-Ind-ctr _ _ _ _) ()
-  go (cast-Ind-cong _ _) ()
+  go (cast-Ind-ctr _ _ _) ()
   go (cast-ne-cong _ _ _ _ _ _) ()
-  go (cast-equiv _ _ _ _) ()
+  go (cast-equiv _ _ _ _ _ _) ()
 
 {-# CATCHALL #-}
 whrDetTerm d (conv d′ x₁) = whrDetTerm d d′
@@ -796,6 +796,7 @@ redU*Term′ () (natrec-subst x x₁ x₂ A⇒U)
 redU*Term′ U′≡U (natrec-zero x x₁ x₂) rewrite U′≡U = UnotInA x₁
 redU*Term′ () (natrec-suc x x₁ x₂ x₃)
 redU*Term′ () (IndRect-subst _ _ _ _)
+redU*Term′ U′≡U (cast-Ind-ctr _ _ ⊢t) rewrite U′≡U = UnotInA ⊢t
 redU*Term′ {Γ = Γ} {r = r} U′≡U (IndRect-ctr {ind} {j} {args = L.[]} {ms} _ _ _ _ ⊢ms nth≡) =
   look ms _ j ⊢ms nth≡ U′≡U
   where
@@ -803,9 +804,10 @@ redU*Term′ {Γ = Γ} {r = r} U′≡U (IndRect-ctr {ind} {j} {args = L.[]} {ms
   look L.[] _ n εⱼ ()
   look (_ L.∷ _) _ 0 (consⱼ ⊢m _) PE.refl eq rewrite eq = UnotInA ⊢m
   look (_ L.∷ ms) _ (1+ n) (consⱼ _ ⊢ms) nth≡ eq = look ms _ n ⊢ms nth≡ eq
-redU*Term′ U′≡U (IndRect-ctr {ind} {j} {P} {lG} {args = a L.∷ args} {ms} {m} _ _ _ _ _ _) =
+redU*Term′ U′≡U (IndRect-ctr {ind} {j} {P} {lG} {args = a L.∷ args} {ms} {m} {Ts} _ _ _ _ _ _) =
   apps-∷≢Univ lG m a
-    (args ++ map (λ a′ → IndRect (SU.SInd.name ind) lG P a′ ms) (a L.∷ args)) U′≡U
+    (args ++ map (λ a′ → IndRect (SU.SInd.name ind) lG P a′ ms)
+                 (ctrRecArgs (SU.SInd.name ind) Ts (a L.∷ args))) U′≡U
 
 redU*Term : ∀ {A B l Γ r} → Γ ⊢ A ⇒* (Univ r ¹) ∷ B ^ l → ⊥
 redU*Term (id x) = UnotInA x
@@ -1021,80 +1023,49 @@ CastRed*Termℕzero ⊢e =
        cast-ℕ-0 ⊢e ⇨ id (zeroⱼ (wfTerm ⊢e)) ]]
 
 CastRed*TermInd′ : ∀ {Γ i A B e t}
+         (i∈ : i ∈ₗ SU.indNames senv)
          (⊢e : Γ ⊢ e ∷ Id (U ⁰) (Ind i) A ^ [ % , ι ⁰ ])
          (⊢t : Γ ⊢ t ∷ Ind i ^ [ ! , ι ⁰ ])
          (D : Γ ⊢ A ⇒* B ^ [ ! , ι ⁰ ])
        → Γ ⊢ cast ⁰ (Ind i) A e t ⇒* cast ⁰ (Ind i) B e t ∷ A ^ ι ⁰
-CastRed*TermInd′ ⊢e ⊢t  (id (univ ⊢A)) = id (castⱼ (Indⱼ (wfTerm ⊢A)) ⊢A ⊢e ⊢t)
-CastRed*TermInd′ {i = i} ⊢e ⊢t  (univ d ⇨ D) = cast-Ind-subst d ⊢e ⊢t ⇨
-                                     conv* (CastRed*TermInd′
-                                             (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wfTerm ⊢e))) (refl (Indⱼ (wfTerm ⊢e))) (subsetTerm d))) )
+CastRed*TermInd′ i∈ ⊢e ⊢t  (id (univ ⊢A)) = id (castⱼ (Indⱼ′ (wfTerm ⊢A) i∈) ⊢A ⊢e ⊢t)
+CastRed*TermInd′ {i = i} i∈ ⊢e ⊢t  (univ d ⇨ D) with ∈ₗ-map-inv SU.SInd.name senv i i∈
+... | ind , PE.refl , ind∈ = cast-Ind-subst ind∈ d ⊢e ⊢t ⇨
+                                     conv* (CastRed*TermInd′ i∈
+                                             (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wfTerm ⊢e))) (refl (Indⱼ (wfTerm ⊢e) ind∈)) (subsetTerm d))) )
                                              ⊢t D)
                                            (sym (subset (univ d)))
 
 CastRed*TermInd : ∀ {Γ i A B e t}
+         (i∈ : i ∈ₗ SU.indNames senv)
          (⊢e : Γ ⊢ e ∷ Id (U ⁰) (Ind i) A ^ [ % , ι ⁰ ])
          (⊢t : Γ ⊢ t ∷ Ind i ^ [ ! , ι ⁰ ])
          (D : Γ ⊢ A :⇒*: B ^ [ ! , ι ⁰ ])
        → Γ ⊢ cast ⁰ (Ind i) A e t :⇒*: cast ⁰ (Ind i) B e t ∷ A ^ ι ⁰
-CastRed*TermInd ⊢e ⊢t  [[ ⊢A , ⊢B , D ]] =
-  [[ castⱼ (Indⱼ (wfTerm ⊢e)) (un-univ ⊢A) ⊢e ⊢t ,
-     conv (castⱼ (Indⱼ (wfTerm ⊢e)) (un-univ ⊢B)
-          (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wfTerm ⊢e))) (refl (Indⱼ (wfTerm ⊢e))) (subset*Term (un-univ⇒* D)))))
+CastRed*TermInd i∈ ⊢e ⊢t  [[ ⊢A , ⊢B , D ]] =
+  [[ castⱼ (Indⱼ′ (wfTerm ⊢e) i∈) (un-univ ⊢A) ⊢e ⊢t ,
+     conv (castⱼ (Indⱼ′ (wfTerm ⊢e) i∈) (un-univ ⊢B)
+          (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wfTerm ⊢e))) (refl (Indⱼ′ (wfTerm ⊢e) i∈)) (subset*Term (un-univ⇒* D)))))
           ⊢t) (sym (subset* D)) ,
-       CastRed*TermInd′ ⊢e ⊢t D ]]
+       CastRed*TermInd′ i∈ ⊢e ⊢t D ]]
 
-CastRed*TermIndInd′ : ∀ {Γ i e t u}
-         (⊢e : Γ ⊢ e ∷ Id (U ⁰) (Ind i) (Ind i) ^ [ % , ι ⁰ ])
-         (⊢t : Γ ⊢ t ⇒* u ∷ Ind i ^ ι ⁰ )
-       → Γ ⊢ cast ⁰ (Ind i) (Ind i) e t ⇒* cast ⁰ (Ind i) (Ind i) e u ∷ Ind i ^ ι ⁰
-CastRed*TermIndInd′ ⊢e (id ⊢t) = id (castⱼ (Indⱼ (wfTerm ⊢e)) (Indⱼ (wfTerm ⊢e)) ⊢e ⊢t)
-CastRed*TermIndInd′ ⊢e (d ⇨ D) = cast-Ind-cong ⊢e d ⇨ CastRed*TermIndInd′ ⊢e D
-
-CastRed*TermIndInd : ∀ {Γ i e t u}
-         (⊢e : Γ ⊢ e ∷ Id (U ⁰) (Ind i) (Ind i) ^ [ % , ι ⁰ ])
-         (⊢t : Γ ⊢ t :⇒*: u ∷ Ind i ^ ι ⁰ )
-       → Γ ⊢ cast ⁰ (Ind i) (Ind i) e t :⇒*: cast ⁰ (Ind i) (Ind i) e u ∷ Ind i ^ ι ⁰
-CastRed*TermIndInd ⊢e [[ ⊢t , ⊢u , D ]] =
-  [[ castⱼ (Indⱼ (wfTerm ⊢e)) (Indⱼ (wfTerm ⊢e)) ⊢e ⊢t ,
-     castⱼ (Indⱼ (wfTerm ⊢e)) (Indⱼ (wfTerm ⊢e)) ⊢e ⊢u ,
-       CastRed*TermIndInd′ ⊢e D ]]
-
-CastRed*TermIndctr : ∀ {Γ ind j e args Ts}
+CastRed*TermIndctr : ∀ {Γ ind e t}
          (ind∈ : ind ∈ₗ senv)
-         (eq : SU.ctrArgsTypeList ind j PE.≡ just Ts)
          (⊢e : Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ])
-         (⊢args : Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ])
-       → Γ ⊢ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e (ctr (SU.SInd.name ind) j args)
-           :⇒*: ctr (SU.SInd.name ind) j
-                  (map (λ a → cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e a) args)
-           ∷ Ind (SU.SInd.name ind) ^ ι ⁰
-CastRed*TermIndctr {Γ} {ind} {j} {e} {args} {Ts} ind∈ eq ⊢e ⊢args =
-  let ⊢Γ = wfTerm ⊢e
-      ⊢castArgs = castAll (all∈ (SU.ctrArgsTypesPositive ind j Ts eq)) ⊢args
-      ⊢rhs = Ctrⱼ ⊢Γ ind∈ eq ⊢castArgs
-  in [[ castⱼ (Indⱼ ⊢Γ) (Indⱼ ⊢Γ) ⊢e (Ctrⱼ ⊢Γ ind∈ eq ⊢args) ,
-       ⊢rhs ,
-         cast-Ind-ctr ind∈ eq ⊢e ⊢args ⇨ id ⊢rhs ]]
-  where
-    i = SU.SInd.name ind
+         (⊢t : Γ ⊢ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ])
+       → Γ ⊢ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e t :⇒*: t ∷ Ind (SU.SInd.name ind) ^ ι ⁰
+CastRed*TermIndctr ind∈ ⊢e ⊢t =
+  [[ castⱼ (Indⱼ (wfTerm ⊢e) ind∈) (Indⱼ (wfTerm ⊢e) ind∈) ⊢e ⊢t ,
+     ⊢t ,
+       cast-Ind-ctr ind∈ ⊢e ⊢t ⇨ id ⊢t ]]
 
-    emb-stype-pos : ∀ (T : SU.Type) → SU.isPositive i T → emb-stype T PE.≡ Ind i
-    emb-stype-pos (SU.Ind j′) i≡i = PE.cong Ind (PE.sym i≡i)
-    emb-stype-pos (SU.Arrow _ _) ()
-
-    castAll : ∀ {args} {Ts : L.List SU.Type}
-            → All (SU.isPositive i) Ts
-            → Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
-            → Γ ⊢All map (λ a → cast ⁰ (Ind i) (Ind i) e a) args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
-    castAll []ₐ εⱼ = εⱼ
-    castAll (pos ∷ₐ poss) (consⱼ ⊢t ⊢ts) =
-      let emb≡Ind = emb-stype-pos _ pos
-          ⊢tInd = PE.subst (λ A → _ ⊢ _ ∷ A ^ [ ! , ι ⁰ ]) emb≡Ind ⊢t
-          ⊢cast = castⱼ (Indⱼ (wfTerm ⊢e)) (Indⱼ (wfTerm ⊢e)) ⊢e ⊢tInd
-          ⊢cast′ = PE.subst (λ A → _ ⊢ cast ⁰ (Ind i) (Ind i) e _ ∷ A ^ [ ! , ι ⁰ ])
-                            (PE.sym emb≡Ind) ⊢cast
-      in  consⱼ ⊢cast′ (castAll poss ⊢ts)
+CastRed*TermIndInd : ∀ {Γ i e t}
+         (i∈ : i ∈ₗ SU.indNames senv)
+         (⊢e : Γ ⊢ e ∷ Id (U ⁰) (Ind i) (Ind i) ^ [ % , ι ⁰ ])
+         (⊢t : Γ ⊢ t ∷ Ind i ^ [ ! , ι ⁰ ])
+       → Γ ⊢ cast ⁰ (Ind i) (Ind i) e t :⇒*: t ∷ Ind i ^ ι ⁰
+CastRed*TermIndInd {i = i} i∈ ⊢e ⊢t with ∈ₗ-map-inv SU.SInd.name senv i i∈
+... | ind , PE.refl , ind∈ = CastRed*TermIndctr ind∈ ⊢e ⊢t
 
 CastRed*TermΠ′ : ∀ {Γ F rF G A B e t}
          (⊢F : Γ ⊢ F ∷ (Univ rF ⁰) ^ [ ! , next ⁰ ])

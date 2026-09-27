@@ -6,7 +6,7 @@ open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Weakening senv equivs
 open import Definition.Conversion senv equivs
-open import Tools.List using (List; All₂; []ₐ; _∷ₐ_; map; length; length-map)
+open import Tools.List using (List; []; All₃; []ₐ; _∷ₐ_; map; length; length-map) renaming (_∷_ to _List∷_)
 import Tools.PropositionalEquality as PE
 import Definition.SUntyped as SU
 mutual
@@ -57,19 +57,15 @@ mutual
       (PE.sym (wk-IndRect ρ (SU.SInd.name ind) lG P' t' ms'))
       (PE.sym (wk-β P))
       (IndRect-cong ind∈
-                    (wkConv↑ (lift [ρ]) (⊢Δ ∙ (univ (Indⱼ ⊢Δ))) x)
+                    (wkConv↑ (lift [ρ]) (⊢Δ ∙ (univ (Indⱼ ⊢Δ ind∈))) x)
                     (wk~↓! [ρ] ⊢Δ x₁)
                     (PE.subst (λ As → Δ ⊢All map (U.wk ρ) ms ≡ map (U.wk ρ) ms' ∷ As ^ [ ! , ι lG ])
                               (wk-indRectBranchTyList ρ ind P ! lG)
                               (wkAllEq [ρ] ⊢Δ x₂)))
-  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (castInd-refl' x x₁) =
-    castInd-refl' (wk~↓! [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-neInd x x₁ x₂ x₃) =
     cast-neInd (wk~↓! [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-Ind x x₁ x₂ x₃) =
     cast-Ind (wk~↓! [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
-  wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (castInd-refl x x₁) =
-    castInd-refl (wk~↓! [ρ] ⊢Δ x) (wkTerm [ρ] ⊢Δ x₁)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-IndΠ x x₁ x₂ x₃) =
     cast-IndΠ (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-ΠInd x x₁ x₂ x₃) =
@@ -151,22 +147,22 @@ mutual
                         PE.refl
                         (wkConv↑Term (lift [ρ]) (⊢Δ ∙ ⊢ρF) t<>u))
   wkConv↓Term ρ ⊢Δ (ℕ-refl x) = ℕ-refl ⊢Δ
-  wkConv↓Term ρ ⊢Δ (Ind-refl x) = Ind-refl ⊢Δ
+  wkConv↓Term ρ ⊢Δ (Ind-refl x i∈) = Ind-refl ⊢Δ i∈
   wkConv↓Term ρ ⊢Δ (Empty-refl _) = Empty-refl ⊢Δ
   wkConv↓Term ρ ⊢Δ (Π-cong eql eqr eqlF eqlG l< l<'   x A<>B A<>B₁) =
     let ⊢ρF = wk ρ ⊢Δ x
     in  Π-cong eql eqr eqlF eqlG l< l<' ⊢ρF (wkConv↑Term ρ ⊢Δ A<>B) (wkConv↑Term (lift ρ) (⊢Δ ∙ ⊢ρF) A<>B₁)
   wkConv↓Term {ρ} {Δ = Δ} [ρ] ⊢Δ (Id-cong X x x₁) = Id-cong (wkConv↑Term [ρ] ⊢Δ X) (wkConv↑Term [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁)
-  wkConv↓Term {ρ} {Δ = Δ} [ρ] ⊢Δ (ctr-cong {ind} {j} {args} {args'} ⊢Γ ind∈ eq len eqs) =
+  wkConv↓Term {ρ} {Δ = Δ} [ρ] ⊢Δ (ctr-cong {ind} {j} {args} {args'} ⊢Γ ind∈ eq eqs) =
     PE.subst₂ (λ t u → Δ ⊢ t [conv↓] u ∷ Ind (SU.SInd.name ind) ^ ι ⁰)
       (PE.sym (wk-ctr ρ (SU.SInd.name ind) j args))
       (PE.sym (wk-ctr ρ (SU.SInd.name ind) j args'))
-      (ctr-cong ⊢Δ ind∈ eq
-        (PE.trans (length-map (U.wk ρ) args) len)
-        (wkAll₂Conv [ρ] ⊢Δ eqs))
+      (ctr-cong ⊢Δ ind∈ eq (wkAll₃Conv [ρ] ⊢Δ eqs))
 
-  wkAll₂Conv : ∀ {ρ args args' i Γ Δ} ([ρ] : ρ ∷ Δ ⊆ Γ) → ⊢ Δ →
-    All₂ (λ a a' → Γ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) args args' →
-    All₂ (λ a a' → Δ ⊢ a [conv↑] a' ∷ Ind i ^ ι ⁰) (map (U.wk ρ) args) (map (U.wk ρ) args')
-  wkAll₂Conv [ρ] ⊢Δ []ₐ = []ₐ
-  wkAll₂Conv [ρ] ⊢Δ (p ∷ₐ ps) = wkConv↑Term [ρ] ⊢Δ p ∷ₐ wkAll₂Conv [ρ] ⊢Δ ps
+  wkAll₃Conv : ∀ {ρ args args' Ts Γ Δ} ([ρ] : ρ ∷ Δ ⊆ Γ) → ⊢ Δ →
+    All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' (map emb-stype Ts) →
+    All₃ (λ a a' A → Δ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) (map (U.wk ρ) args) (map (U.wk ρ) args') (map emb-stype Ts)
+  wkAll₃Conv {Ts = []} [ρ] ⊢Δ []ₐ = []ₐ
+  wkAll₃Conv {ρ = ρ} {Ts = T List∷ Ts} [ρ] ⊢Δ (p ∷ₐ ps) =
+    PE.subst (λ A → _ ⊢ _ [conv↑] _ ∷ A ^ ι ⁰) (wk-emb-stype ρ T) (wkConv↑Term [ρ] ⊢Δ p)
+    ∷ₐ wkAll₃Conv [ρ] ⊢Δ ps
