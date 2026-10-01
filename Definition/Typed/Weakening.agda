@@ -84,7 +84,6 @@ mutual
              ρt = U.wk ρ t
          in ⊢ Δ → Γ ⊢ t ∷ A ^ r → Δ ⊢ ρt ∷ ρA ^ r
   wkTerm ρ ⊢Δ (univ <l ⊢Γ) = univ <l ⊢Δ
-  wkTerm ρ ⊢Δ (ℕⱼ ⊢Γ) = ℕⱼ ⊢Δ
   wkTerm ρ ⊢Δ (equiv-eqⱼ ⊢Γ eq) = equiv-eqⱼ ⊢Δ eq
   wkTerm ρ ⊢Δ (Emptyⱼ ⊢Γ) = Emptyⱼ ⊢Δ
   wkTerm ρ ⊢Δ (Πⱼ <l ▹ <l' ▹ F ▹ G) = let ρF = wkTerm ρ ⊢Δ F
@@ -143,17 +142,6 @@ wkTerm {ρ = ρ} [ρ] ⊢Δ (Id-Π {rA = rA} {t = t} {u = u} <l <l' Aⱼ Bⱼ t�
                       j4 in
     PE.subst (λ x → Δ ⊢ U.wk ρ (snd e) ∷  Π U.wk ρ A' ^ rA ° ⁰ ▹ Id (U l) x (U.wk (lift ρ) B') ° l' ° l' ^ % ^ [ % , _ ])
              (PE.sym (wk-β↑ {ρ = ρ} {a = cast l (wk1 A') (wk1 A) (Idsym (Univ rA l) (wk1 A) (wk1 A') (fst (wk1 e))) (var 0)} B)) j5
-  wkTerm ρ ⊢Δ (zeroⱼ ⊢Γ) = zeroⱼ ⊢Δ
-  wkTerm ρ ⊢Δ (sucⱼ n) = sucⱼ (wkTerm ρ ⊢Δ n)
-  wkTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (natrecⱼ {G = G} {rG = rG} {lG = lG}  {s = s} rGlG ⊢G ⊢z ⊢s ⊢n) =
-    PE.subst (λ x → _ ⊢ natrec _ _ _ _ _ ∷ x ^ _) (PE.sym (wk-β G))
-             (natrecⱼ rGlG
-                      (wk (lift [ρ]) (⊢Δ ∙ univ (ℕⱼ ⊢Δ)) ⊢G)
-                      (PE.subst (λ x → _ ⊢ _ ∷ x ^ _) (wk-β G) (wkTerm [ρ] ⊢Δ ⊢z))
-                      (PE.subst (λ x → Δ ⊢ U.wk ρ s ∷ x ^ [ rG , ι lG ])
-                                (wk-β-natrec ρ G rG lG)
-                                (wkTerm [ρ] ⊢Δ ⊢s))
-                      (wkTerm [ρ] ⊢Δ ⊢n))
   wkTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (Emptyrecⱼ {A = A} {e = e} ⊢A ⊢e) =
     (Emptyrecⱼ (wk [ρ] ⊢Δ ⊢A) (wkTerm [ρ] ⊢Δ ⊢e))
   wkTerm ρ ⊢Δ (Idⱼ A t u) = Idⱼ (wkTerm ρ ⊢Δ A) (wkTerm ρ ⊢Δ t) (wkTerm ρ ⊢Δ u)
@@ -249,7 +237,6 @@ wkTerm {ρ = ρ} [ρ] ⊢Δ (Id-Π {rA = rA} {t = t} {u = u} <l <l' Aⱼ Bⱼ t�
                           (PE.subst (λ t → _ ⊢ _ ≡ t ∘ _ ^ _ ∷ _ ^ _)
                                     (PE.sym (wk1-wk≡lift-wk1 _ _))
                                     (wkEqTerm (lift ρ) (⊢Δ ∙ ρF) f0≡g0)))
-  wkEqTerm ρ ⊢Δ (suc-cong m≡n) = suc-cong (wkEqTerm ρ ⊢Δ m≡n)
   wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (ctr-cong {ind} {j} {args} {args'} {Ts} ⊢Γ ind∈ eq eqs) =
     PE.subst₂ (λ t u → Δ ⊢ t ≡ u ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ])
       (PE.sym (wk-ctr ρ (SU.SInd.name ind) j args))
@@ -258,39 +245,6 @@ wkTerm {ρ = ρ} [ρ] ⊢Δ (Id-Π {rA = rA} {t = t} {u = u} <l <l' Aⱼ Bⱼ t�
         (λ As → All₃ (λ a a' A → Δ ⊢ a ≡ a' ∷ A ^ [ ! , ι ⁰ ]) (map (U.wk ρ) args) (map (U.wk ρ) args') As)
         (map-wk-emb-stype ρ (Ts))
         (wkAll₃Eq [ρ] ⊢Δ eqs)))
-  wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (natrec-cong {s = s} {s′ = s′} {F = F} {l = l}
-                                     F≡F′ z≡z′ s≡s′ n≡n′) =
-    PE.subst (λ x → Δ ⊢ natrec _ _ _ _ _ ≡ _ ∷ x ^ _) (PE.sym (wk-β F))
-             (natrec-cong (wkEq (lift [ρ]) (⊢Δ ∙ univ (ℕⱼ ⊢Δ)) F≡F′)
-                          (PE.subst (λ x → Δ ⊢ _ ≡ _ ∷ x ^ _) (wk-β F)
-                                    (wkEqTerm [ρ] ⊢Δ z≡z′))
-                          (PE.subst (λ x → Δ ⊢ U.wk ρ s
-                                             ≡ U.wk ρ s′ ∷ x ^ [ ! , ι l ])
-                                    (wk-β-natrec _ F ! l)
-                                    (wkEqTerm [ρ] ⊢Δ s≡s′))
-                          (wkEqTerm [ρ] ⊢Δ n≡n′))
-  wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (natrec-zero {z} {s} {F} {l = l} ⊢F ⊢z ⊢s) =
-    PE.subst (λ x → Δ ⊢ natrec _ (U.wk (lift _) F) _ _ _ ≡ _ ∷ x ^ _)
-             (PE.sym (wk-β F))
-             (natrec-zero (wk (lift [ρ]) (⊢Δ ∙ univ (ℕⱼ ⊢Δ)) ⊢F)
-                          (PE.subst (λ x → Δ ⊢ U.wk ρ z ∷ x ^ _)
-                                    (wk-β F)
-                                    (wkTerm [ρ] ⊢Δ ⊢z))
-                          (PE.subst (λ x → Δ ⊢ U.wk ρ s ∷ x ^ [ ! , ι l ])
-                                    (wk-β-natrec _ F ! l)
-                                    (wkTerm [ρ] ⊢Δ ⊢s)))
-  wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (natrec-suc {n} {z} {s} {F} {l = l} ⊢n ⊢F ⊢z ⊢s) =
-    PE.subst (λ x → Δ ⊢ natrec _ (U.wk (lift _) F) _ _ _
-                      ≡ _ ∘ (natrec _ _ _ _ _) ^ _ ∷ x ^ _)
-             (PE.sym (wk-β F))
-             (natrec-suc (wkTerm [ρ] ⊢Δ ⊢n)
-                         (wk (lift [ρ]) (⊢Δ ∙ univ (ℕⱼ ⊢Δ)) ⊢F)
-                         (PE.subst (λ x → Δ ⊢ U.wk ρ z ∷ x ^ _)
-                                   (wk-β F)
-                                   (wkTerm [ρ] ⊢Δ ⊢z))
-                         (PE.subst (λ x → Δ ⊢ U.wk ρ s ∷ x ^ [ ! , ι l ])
-                                   (wk-β-natrec _ F ! l)
-                                   (wkTerm [ρ] ⊢Δ ⊢s)))
   wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (IndRect-cong {ind} {P} {P'} {lG} {t} {t'} {ms} {ms'} ind∈ P≡P' t≡t' ⊢ms) =
     let eq = IndRect-cong ind∈ (wkEq (lift [ρ]) (⊢Δ ∙ univ (Indⱼ ⊢Δ ind∈)) P≡P') (wkEqTerm [ρ] ⊢Δ t≡t')
                (PE.subst (λ As → Δ ⊢All map (U.wk ρ) ms ≡ map (U.wk ρ) ms' ∷ As ^ [ ! , ι lG ])
@@ -360,12 +314,10 @@ wkTerm {ρ = ρ} [ρ] ⊢Δ (Id-Π {rA = rA} {t = t} {u = u} <l <l' Aⱼ Bⱼ t�
     let j4 = PE.subst (λ x → pred (U.wk (lift ρ) (wk1 A)) (U.wk (lift ρ) (wk1 A')) (U.wk (lift ρ) (wk1 e)) x) (wk1-wk≡lift-wk1 ρ f) j3 in
     let j5 = PE.subst (λ x → Δ ⊢ U.wk ρ (cast l (Π A ^ rA ° lA ▹ B ° lB ° l ^ !) (Π A' ^ rA ° lA ▹ B' ° lB ° l ^ !) e f) ≡ (lam (U.wk ρ A') ▹ (let a = cast l (U.wk (lift ρ) (wk1 A')) (U.wk (lift ρ) (wk1 A)) x (var 0) in cast l ((U.wk (lift ρ) B) [ a ]↑) (U.wk (lift ρ) B') ((snd (U.wk (lift ρ) (wk1 e))) ∘ (var 0) ^ ⁰) ((U.wk (lift ρ) (wk1 f)) ∘ a ^ l)) ^ l) ∷ U.wk ρ (Π A' ^ rA ° lA ▹ B' ° lB ° l ^ !) ^ [ ! , ι l ]) (PE.sym (wk-Idsym (lift ρ) (Univ rA l) (wk1 A) (wk1 A') (fst (wk1 e)))) j4 in
     PE.subst (λ x → Δ ⊢ U.wk ρ (cast l (Π A ^ rA ° lA ▹ B ° lB ° l ^ _) (Π A' ^ rA ° lA ▹ B' ° lB ° l ^ _) e f) ≡ (lam (U.wk ρ A') ▹ (let a = U.wk (lift ρ) (cast l (wk1 A') (wk1 A) (Idsym (Univ rA l) (wk1 A) (wk1 A') (fst (wk1 e))) (var 0)) in cast l x (U.wk (lift ρ) B') ((snd (U.wk (lift ρ) (wk1 e))) ∘ (var 0) ^ ⁰) ((U.wk (lift ρ) (wk1 f)) ∘ a ^ l)) ^ l) ∷ U.wk ρ (Π A' ^ rA ° lA ▹ B' ° lB ° l ^ _) ^ [ ! , ι l ]) (PE.sym (wk-β↑ {ρ = ρ} {a = (cast l (wk1 A') (wk1 A) (Idsym (Univ rA l) (wk1 A) (wk1 A') (fst (wk1 e))) (var 0))} B)) j5
-  wkEqTerm ρ ⊢Δ (cast-ℕ-0 e) = cast-ℕ-0 (wkTerm ρ ⊢Δ e)
   wkEqTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (cast-equiv {A} {B} {e} {t} A∈ B∈ A≢B H ⊢e ⊢t) =
     PE.subst (λ f → Δ ⊢ cast ⁰ (Ind A) (Ind B) (U.wk ρ e) (U.wk ρ t) ≡ f ∘ U.wk ρ t ^ ⁰ ∷ Ind B ^ [ ! , ι ⁰ ])
              (PE.sym (wk-emb-fwd (Eq.repr-equiv equivs A B A∈ B∈ H) ρ))
              (cast-equiv A∈ B∈ A≢B H (wkTerm [ρ] ⊢Δ ⊢e) (wkTerm [ρ] ⊢Δ ⊢t))
-  wkEqTerm ρ ⊢Δ (cast-ℕ-S e n) = cast-ℕ-S (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ n)
   wkEqTerm ρ ⊢Δ (cast-Ind-ctr ind∈ e t) = cast-Ind-ctr ind∈ (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
 
 mutual
@@ -392,36 +344,6 @@ mutual
                            (PE.sym (wk-β t))
                            (β-red l< l<' ⊢ρA (wkTerm (lift ρ) (⊢Δ ∙ ⊢ρA) ⊢B) (wkTerm (lift ρ) (⊢Δ ∙ ⊢ρA) ⊢t)
                                       (wkTerm ρ ⊢Δ ⊢a)))
-  wkRedTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (natrec-subst {s = s} {F = F} {l = l} ⊢F ⊢z ⊢s n⇒n′) =
-    PE.subst (λ x → _ ⊢ natrec _ _ _ _ _ ⇒ _ ∷ x ^ _) (PE.sym (wk-β F))
-             (natrec-subst (wk (lift [ρ]) (⊢Δ ∙ univ (ℕⱼ ⊢Δ)) ⊢F)
-                           (PE.subst (λ x → _ ⊢ _ ∷ x ^ _) (wk-β F)
-                                     (wkTerm [ρ] ⊢Δ ⊢z))
-                           (PE.subst (λ x → Δ ⊢ U.wk ρ s ∷ x ^ [ ! , ι l ])
-                                     (wk-β-natrec _ F ! l)
-                                     (wkTerm [ρ] ⊢Δ ⊢s))
-                           (wkRedTerm [ρ] ⊢Δ n⇒n′))
-  wkRedTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (natrec-zero {s = s} {F = F} {l = l} ⊢F ⊢z ⊢s) =
-    PE.subst (λ x → _ ⊢ natrec _ (U.wk (lift ρ) F) _ _ _ ⇒ _ ∷ x ^ _)
-             (PE.sym (wk-β F))
-             (natrec-zero (wk (lift [ρ]) (⊢Δ ∙ univ (ℕⱼ ⊢Δ)) ⊢F)
-                          (PE.subst (λ x → _ ⊢ _ ∷ x ^ _)
-                                    (wk-β F)
-                                    (wkTerm [ρ] ⊢Δ ⊢z))
-                          (PE.subst (λ x → Δ ⊢ U.wk ρ s ∷ x ^ [ ! , ι l ])
-                                    (wk-β-natrec ρ F ! l)
-                                    (wkTerm [ρ] ⊢Δ ⊢s)))
-  wkRedTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (natrec-suc {s = s} {F = F} {l = l} ⊢n ⊢F ⊢z ⊢s) =
-    PE.subst (λ x → _ ⊢ natrec _ _ _ _ _ ⇒ _ ∘ natrec _ _ _ _ _ ^ _ ∷ x  ^ _)
-             (PE.sym (wk-β F))
-             (natrec-suc (wkTerm [ρ] ⊢Δ ⊢n)
-                         (wk (lift [ρ]) (⊢Δ ∙ univ (ℕⱼ ⊢Δ)) ⊢F)
-                         (PE.subst (λ x → _ ⊢ _ ∷ x ^ _)
-                                   (wk-β F)
-                                   (wkTerm [ρ] ⊢Δ ⊢z))
-                         (PE.subst (λ x → Δ ⊢ U.wk ρ s ∷ x ^ [ ! , ι l ])
-                                    (wk-β-natrec ρ F ! l)
-                                    (wkTerm [ρ] ⊢Δ ⊢s)))
   wkRedTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (IndRect-subst {ind = ind} {P = P} {lG = lG} {t = t} {t' = t'} {ms = ms} ind∈ ⊢P t⇒t' ⊢ms) =
     PE.subst₂ (λ lhs rhs → Δ ⊢ lhs ⇒ rhs ∷ U.wk ρ (P [ t ]) ^ ι lG)
       (PE.sym (wk-IndRect ρ (SU.SInd.name ind) lG P t ms))
@@ -466,7 +388,6 @@ mutual
            inner′)
   wkRedTerm ρ ⊢Δ  (cast-subst A B e t) = cast-subst (wkRedTerm ρ ⊢Δ A) (wkTerm ρ ⊢Δ  B) (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
   wkRedTerm {Γ} {Δ} {A} {l} {t'} {u} {ρ₁} ρ ⊢Δ  (cast-ne-subst K neK B e t) = cast-ne-subst (wkTerm ρ ⊢Δ K) (wkNeutral ρ₁ neK) (wkRedTerm ρ ⊢Δ  B) (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
-  wkRedTerm ρ ⊢Δ  (cast-ℕ-subst B e t) = cast-ℕ-subst (wkRedTerm ρ ⊢Δ B) (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
   wkRedTerm ρ ⊢Δ  (cast-Ind-subst ind∈ B e t) = cast-Ind-subst ind∈ (wkRedTerm ρ ⊢Δ B) (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
   wkRedTerm ρ ⊢Δ  (cast-Π-subst A P B e t) = let ρA = wkTerm ρ ⊢Δ A in cast-Π-subst ρA (wkTerm (lift ρ) (⊢Δ ∙ (univ ρA)) P) (wkRedTerm ρ ⊢Δ B) (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
   wkRedTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (cast-Π {A = A} {A' = A'} {rA = rA} {B = B} {B' = B'} {e = e} {f = f} Aⱼ Bⱼ A'ⱼ B'ⱼ eⱼ fⱼ) = let l = ⁰ in let lA = ⁰ in let lB = ⁰ in
@@ -486,13 +407,10 @@ mutual
     let j4 = PE.subst (λ x → pred (U.wk (lift ρ) (wk1 A)) (U.wk (lift ρ) (wk1 A')) (U.wk (lift ρ) (wk1 e)) x) (wk1-wk≡lift-wk1 ρ f) j3 in
     let j5 = PE.subst (λ x → Δ ⊢ U.wk ρ (cast l (Π A ^ rA ° lA ▹ B ° lB ° l ^ !) (Π A' ^ rA ° lA ▹ B' ° lB ° l ^ !) e f) ⇒ (lam (U.wk ρ A') ▹ (let a = cast l (U.wk (lift ρ) (wk1 A')) (U.wk (lift ρ) (wk1 A)) x (var 0) in cast l ((U.wk (lift ρ) B) [ a ]↑) (U.wk (lift ρ) B') ((snd (U.wk (lift ρ) (wk1 e))) ∘ (var 0) ^ ⁰) ((U.wk (lift ρ) (wk1 f)) ∘ a ^ l)) ^ l) ∷ U.wk ρ (Π A' ^ rA ° lA ▹ B' ° lB ° l ^ !) ^ ι l) (PE.sym (wk-Idsym (lift ρ) (Univ rA l) (wk1 A) (wk1 A') (fst (wk1 e)))) j4 in
    PE.subst (λ x → Δ ⊢ U.wk ρ (cast l (Π A ^ rA ° lA ▹ B ° lB ° l ^ _) (Π A' ^ rA ° lA ▹ B' ° lB ° l ^ _) e f) ⇒ (lam (U.wk ρ A') ▹ (let a = U.wk (lift ρ) (cast l (wk1 A') (wk1 A) (Idsym (Univ rA l) (wk1 A) (wk1 A') (fst (wk1 e))) (var 0)) in cast l x (U.wk (lift ρ) B') ((snd (U.wk (lift ρ) (wk1 e))) ∘ (var 0) ^ ⁰) ((U.wk (lift ρ) (wk1 f)) ∘ a ^ l)) ^ l) ∷ U.wk ρ (Π A' ^ rA ° lA ▹ B' ° lB ° l ^ _) ^ ι l) (PE.sym (wk-β↑ {ρ = ρ} {a = (cast l (wk1 A') (wk1 A) (Idsym (Univ rA l) (wk1 A) (wk1 A') (fst (wk1 e))) (var 0))} B)) j5
-  wkRedTerm ρ ⊢Δ (cast-ℕ-0 e) = cast-ℕ-0 (wkTerm ρ ⊢Δ e)
-  wkRedTerm ρ ⊢Δ (cast-ℕ-S e n) = cast-ℕ-S (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ n)
   wkRedTerm {Δ = Δ} {ρ = ρ} [ρ] ⊢Δ (cast-equiv {A} {B} {e} {t} A∈ B∈ A≢B H ⊢e ⊢t) =
     PE.subst (λ f → Δ ⊢ cast ⁰ (Ind A) (Ind B) (U.wk ρ e) (U.wk ρ t) ⇒ f ∘ U.wk ρ t ^ ⁰ ∷ Ind B ^ ι ⁰)
              (PE.sym (wk-emb-fwd (Eq.repr-equiv equivs A B A∈ B∈ H) ρ))
              (cast-equiv A∈ B∈ A≢B H (wkTerm [ρ] ⊢Δ ⊢e) (wkTerm [ρ] ⊢Δ ⊢t))
-  wkRedTerm ρ ⊢Δ (cast-ℕ-cong e n) = cast-ℕ-cong (wkTerm ρ ⊢Δ e) (wkRedTerm ρ ⊢Δ n)
   wkRedTerm ρ ⊢Δ (cast-Ind-ctr ind∈ e t) = cast-Ind-ctr ind∈ (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
   wkRedTerm {ρ = ρ₁} ρ ⊢Δ (cast-ne-cong K neK L neL e n) = cast-ne-cong (wkTerm ρ ⊢Δ K) (wkNeutral ρ₁ neK) (wkTerm ρ ⊢Δ L) (wkNeutral ρ₁ neL) (wkTerm ρ ⊢Δ e) (wkRedTerm ρ ⊢Δ n)
 wkRed* : ∀ {Γ Δ A B r ρ} → ρ ∷ Δ ⊆ Γ →

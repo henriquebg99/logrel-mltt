@@ -16,7 +16,6 @@ infix 10 _⊢⊢_[conv↓]_∷_^_
 infix 10 _⊢⊢_[genconv↑]_∷_^_
 
 data PosType : Term → Set where
-  ℕₙ : PosType ℕ
   Uₙ : ∀ {r l} → PosType (Univ r l)
   ne : ∀{n} → Neutral n → PosType n
 
@@ -24,7 +23,6 @@ data PosType : Term → Set where
 -- Natural, PosType, and Function are a subsets of Whnf.
 
 posTypeWhnf : ∀ {A} → PosType A → Whnf A
-posTypeWhnf ℕₙ = ℕₙ
 posTypeWhnf Uₙ  = Uₙ
 posTypeWhnf (ne x) = ne x
 
@@ -39,12 +37,6 @@ mutual
                 → Γ ⊢⊢ k ~ l ↓! Π F ^ rF ° lF ▹ G ° lG ° lΠ ^ ! ^ ι lΠ
                 → Γ ⊢⊢ t [genconv↑] v ∷ F ^ [ rF , ι lF ]
                 → Γ ⊢⊢ k ∘ t ^ lΠ ~ l ∘ v ^ lΠ ↑! G [ t ] ^ ι lG
-    natrec-cong : ∀ {k l h g a₀ b₀ F G lF}
-                → Γ ∙ ℕ ^ [ ! , ι ⁰ ] ⊢⊢ F [conv↑] G ^ [ ! , ι lF ]
-                → Γ ⊢⊢ a₀ [conv↑] b₀ ∷ F [ zero ] ^ ι lF
-                → Γ ⊢⊢ h [conv↑] g ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° lF ▹▹ F [ suc (var 0) ]↑ ° lF ° lF ^ !) ° lF ° lF ^ ! ^ ι lF
-                → Γ ⊢⊢ k ~ l ↓! ℕ ^ ι ⁰
-                → Γ ⊢⊢ natrec lF F a₀ h k ~ natrec lF G b₀ g l ↑! F [ k ] ^ ι lF
     Emptyrec-cong : ∀ {k l F G ll}
                   → Γ ⊢⊢ F [conv↑] G ^ [ ! , ι ll ]
                   → Γ ⊢⊢ k ~ l ↑% sEmpty ^ ι ⁰
@@ -134,7 +126,6 @@ mutual
     U-cong    : ∀ {r r' }
               → r PE.≡ r' -- needed for K issues
               → ⊢ Γ → Γ ⊢⊢ Univ r ⁰ [conv↓] Univ r' ⁰ ∷ U ¹ ^ next ¹
-    ℕ-cong    : ⊢ Γ → Γ ⊢⊢ ℕ [conv↓] ℕ ∷ U ⁰ ^ next ⁰
     Empty-cong : ⊢ Γ → Γ ⊢⊢ sEmpty [conv↓] sEmpty ∷ SProp ^ next ⁰
     Π-cong    : ∀ {F G H E rF rH rΠ lF lH lG lE lΠ ll}
               → ll PE.≡ next lΠ
@@ -151,10 +142,6 @@ mutual
               → Γ ⊢⊢ t [conv↑] t' ∷ A ^ ι l
               → Γ ⊢⊢ u [conv↑] u' ∷ A ^ ι l
               → Γ ⊢⊢ Id A t u [conv↓] Id A' t' u' ∷ SProp ^ next ⁰
-    zero-cong : ⊢ Γ → Γ ⊢⊢ zero [conv↓] zero ∷ ℕ ^ ι ⁰
-    suc-cong  : ∀ {m n}
-              → Γ ⊢⊢ m [conv↑] n ∷ ℕ ^ ι ⁰
-              → Γ ⊢⊢ suc m [conv↓] suc n ∷ ℕ ^ ι ⁰
     ne        : ∀ {k l M W ll}
               → Γ ⊢ k ∷ W ^ [ ! , ll ]
               → Γ ⊢ l ∷ W ^ [ ! , ll ]

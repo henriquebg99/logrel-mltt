@@ -12,5 +12,4 @@ open import Definition.LogicalRelation.Properties.Escape senv swf equivs public
 open import Definition.LogicalRelation.Properties.Universe senv swf equivs public
 open import Definition.LogicalRelation.Properties.Neutral senv swf equivs public
 open import Definition.LogicalRelation.Properties.Reduction senv swf equivs public
-open import Definition.LogicalRelation.Properties.Successor senv swf equivs public
 open import Definition.LogicalRelation.Properties.MaybeEmb senv swf equivs public

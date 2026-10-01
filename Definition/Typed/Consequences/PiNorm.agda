@@ -28,7 +28,6 @@ data ΠNorm : Term → Set where
   Πₙ : ∀ {F rF lF G lG lΠ} → ΠNorm G → ΠNorm (Π F ^ rF ° lF ▹ G ° lG ° lΠ ^ !)
   Πirrₙ : ∀ {F rF lF G} → ΠNorm (Π F ^ rF ° lF ▹ G ° ⁰ ° ⁰ ^ %)
   Idₙ : ∀ {A t u} → ΠNorm (Id A t u)
-  ℕₙ : ΠNorm ℕ
   Indₙ : ∀ {i} → ΠNorm (Ind i)
   Emptyₙ : ΠNorm sEmpty
   ne   : ∀ {n} → Neutral n → ΠNorm n
@@ -109,7 +108,6 @@ deep*-correct ⊢A (x ⇨ X) =
 doΠNorm′ : ∀ {A rA Γ l} ([A] : Γ ⊩⟨ l ⟩ A ^ rA)
          → ∃ λ B → ΠNorm B × Γ ⊢ B ^ rA × Γ ⊢ A ⇒*Π B ^ rA
 doΠNorm′ (Uᵣ (Uᵣ r l′ l< PE.refl [[ A , U , d ]])) = Univ r l′ , Uₙ , Ugenⱼ (wf A) , regular* d
-doΠNorm′ (ℕᵣ [[ ⊢A , ⊢B , D ]]) = ℕ , ℕₙ , ⊢B , regular* D
 doΠNorm′ (Indᵣ {i = i} [[ ⊢A , ⊢B , D ]]) = Ind i , Indₙ , ⊢B , regular* D
 doΠNorm′ (Emptyᵣ [[ ⊢A , ⊢B , D ]]) = sEmpty , Emptyₙ , ⊢B , regular* D
 doΠNorm′ (ne′ K [[ ⊢A , ⊢B , D ]] neK K≡K) = K , ne neK , ⊢B , regular* D
@@ -135,7 +133,6 @@ doΠNorm ⊢A = doΠNorm′ (reducible ⊢A)
 ΠNorm-whnf (Πₙ _) = Πₙ
 ΠNorm-whnf Πirrₙ = Πₙ
 ΠNorm-whnf Idₙ = Idₙ
-ΠNorm-whnf ℕₙ = ℕₙ
 ΠNorm-whnf Indₙ = Indₙ
 ΠNorm-whnf Emptyₙ = Emptyₙ
 ΠNorm-whnf (ne x) = ne x

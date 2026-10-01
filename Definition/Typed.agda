@@ -42,7 +42,6 @@ mutual
          → l < l'
          → ⊢ Γ
          → Γ ⊢ (Univ r l) ∷ (Univ ! l') ^ [ ! , next l' ]
-    ℕⱼ      : ⊢ Γ → Γ ⊢ ℕ ∷ U ⁰ ^ [ ! , ι ¹ ]
     Emptyⱼ : ⊢ Γ → Γ ⊢ sEmpty ∷ SProp ^ [ ! , ι ¹ ]
     Πⱼ_▹_▹_▹_ : ∀ {F rF lF G lG r l}
            → (r PE.≡ ! → lF ≤ l × lG ≤ l)
@@ -83,18 +82,6 @@ mutual
            → Γ ⊢ snd e ∷ Π A' ^ rA ° ⁰ ▹ Id (U ⁰)
                         (B [ cast ⁰ (wk1 A') (wk1 A) (Idsym (Univ rA ⁰) (wk1 A) (wk1 A') (fst (wk1 e))) (var 0) ]↑)
                         B' ° ⁰ ° ⁰ ^ % ^ [ % , ι ⁰ ]
-    zeroⱼ   : ⊢ Γ
-           → Γ ⊢ zero ∷ ℕ ^ [ ! ,  ι ⁰ ]
-    sucⱼ    : ∀ {n}
-           → Γ ⊢ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-           → Γ ⊢ suc n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-    natrecⱼ : ∀ {G rG lG s z n}
-           → (rG PE.≡ % → lG PE.≡ ⁰)
-           → Γ ∙ ℕ ^ [ ! ,  ι ⁰ ] ⊢ G ^ [ rG , ι lG ]
-           → Γ       ⊢ z ∷ G [ zero ] ^ [ rG , ι lG ]
-           → Γ       ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (G ^ rG ° lG ▹▹ G [ suc (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ [ rG , ι lG ]
-           → Γ       ⊢ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-           → Γ       ⊢ natrec lG G z s n ∷ G [ n ] ^ [ rG , ι lG ]
     Indⱼ    : ∀ {ind} → ⊢ Γ → ind ∈ₗ senv → Γ ⊢ Ind (SU.SInd.name ind) ∷ U ⁰ ^ [ ! , ι ¹ ]
     Ctrⱼ    : ∀ {ind j args Ts}
            → ⊢ Γ
@@ -216,33 +203,12 @@ mutual
                 → Γ     ⊢ g ∷ Π F ^ rF ° lF ▹ G ° lG ° l ^ ! ^ [ ! , ι l ]
                 → Γ ∙ F ^ [ rF , ι lF ] ⊢ wk1 f ∘ var Nat.zero ^ l ≡ wk1 g ∘ var Nat.zero ^ l ∷ G ^ [ ! , ι lG ]
                 → Γ     ⊢ f ≡ g ∷ Π F ^ rF ° lF ▹ G ° lG ° l ^ ! ^ [ ! , ι l ]
-    suc-cong    : ∀ {m n}
-                → Γ ⊢ m ≡ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-                → Γ ⊢ suc m ≡ suc n ∷ ℕ ^ [ ! ,  ι ⁰ ]
     ctr-cong    : ∀ {ind j args args' Ts}
                 → ⊢ Γ
                 → ind ∈ₗ senv
                 → SU.ctrArgsTypeList ind j PE.≡ just Ts
                 → All₃ (λ a a' A → Γ ⊢ a ≡ a' ∷ A ^ [ ! , ι ⁰ ]) args args' (map emb-stype Ts)
                 → Γ ⊢ ctr (SU.SInd.name ind) j args ≡ ctr (SU.SInd.name ind) j args' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
-    natrec-cong : ∀ {z z′ s s′ n n′ F F′ l}
-                → Γ ∙ ℕ ^ [ ! ,  ι ⁰ ] ⊢ F ≡ F′ ^ [ ! , ι l ]
-                → Γ     ⊢ z ≡ z′ ∷ F [ zero ] ^ [ ! , ι l ]
-                → Γ     ⊢ s ≡ s′ ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l  ]
-                → Γ     ⊢ n ≡ n′ ∷ ℕ ^ [ ! ,  ι ⁰ ]
-                → Γ     ⊢ natrec l F z s n ≡ natrec l F′ z′ s′ n′ ∷ F [ n ] ^ [ ! , ι l ]
-    natrec-zero : ∀ {z s F l}
-                → Γ ∙ ℕ ^ [ ! ,  ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                → Γ     ⊢ z ∷ F [ zero ] ^ [ ! , ι l ]
-                → Γ     ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                → Γ     ⊢ natrec l F z s zero ≡ z ∷ F [ zero ] ^ [ ! , ι l ]
-    natrec-suc  : ∀ {n z s F l}
-                → Γ     ⊢ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-                → Γ ∙ ℕ ^ [ ! ,  ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                → Γ     ⊢ z ∷ F [ zero ] ^ [ ! , ι l ]
-                → Γ     ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                → Γ     ⊢ natrec l F z s (suc n) ≡ (s ∘ n ^ l) ∘ (natrec l F z s n) ^ l
-                        ∷ F [ suc n ] ^ [ ! , ι l ]
     IndRect-cong : ∀ {ind P P' lG t t' ms ms'}
                 → ind ∈ₗ senv
                 → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P ≡ P' ^ [ ! , ι lG ]
@@ -300,17 +266,6 @@ mutual
                       cast l (B [ a ]↑) B' ((snd (wk1 e)) ∘ (var 0) ^ ⁰) ((wk1 f) ∘ a ^ l))
                       ^ l)
                    ∷ Π A' ^ rA ° lA ▹ B' ° lB ° l  ^ ! ^ [ ! , ι l ]
-    cast-ℕ-0 : ∀ {e}
-               → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ ^ [ % , ι ⁰ ]
-               → Γ ⊢ cast ⁰ ℕ ℕ e zero
-                   ≡ zero
-                   ∷ ℕ ^ [ ! , ι ⁰ ]
-    cast-ℕ-S : ∀ {e n}
-               → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ ^ [ % , ι ⁰ ]
-               → Γ ⊢ n ∷ ℕ ^ [ ! , ι ⁰ ]
-               → Γ ⊢ cast ⁰ ℕ ℕ e (suc n)
-                   ≡ suc (cast ⁰ ℕ ℕ e n)
-                   ∷ ℕ ^ [ ! , ι ⁰ ]
     cast-Ind-ctr : ∀ {ind e t}
                → ind ∈ₗ senv
                → Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ]
@@ -350,24 +305,6 @@ mutual
                  → Γ ∙ A ^ [ rA , ι lA ] ⊢ t ∷ B ^ [ ! , ι lB ]
                  → Γ     ⊢ a ∷ A ^ [ rA , ι lA ]
                  → Γ     ⊢ (lam A ▹ t ^ l) ∘ a ^ l ⇒ t [ a ] ∷ B [ a ] ^ ι lB
-    natrec-subst : ∀ {z s n n′ F l}
-                 → Γ ∙ ℕ ^ [ ! , ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                 → Γ     ⊢ z ∷ F [ zero ] ^ [ ! , ι l ]
-                 → Γ     ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                 → Γ     ⊢ n ⇒ n′ ∷ ℕ ^ ι ⁰
-                 → Γ     ⊢ natrec l F z s n ⇒ natrec l F z s n′ ∷ F [ n ] ^ ι l
-    natrec-zero  : ∀ {z s F l }
-                 → Γ ∙ ℕ ^ [ ! , ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                 → Γ     ⊢ z ∷ F [ zero ] ^ [ ! , ι l ]
-                 → Γ     ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                 → Γ     ⊢ natrec l F z s zero ⇒ z ∷ F [ zero ] ^ ι l
-    natrec-suc   : ∀ {n z s F l}
-                 → Γ     ⊢ n ∷ ℕ ^ [ ! , ι ⁰ ]
-                 → Γ ∙ ℕ ^ [ ! , ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                 → Γ     ⊢ z ∷ F [ zero ] ^ [ ! , ι l ]
-                 → Γ     ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                 → Γ     ⊢ natrec l F z s (suc n) ⇒ (s ∘ n ^ l) ∘ (natrec l F z s n) ^ l
-                         ∷ F [ suc n ] ^ ι l
     IndRect-subst : ∀ {ind P lG t t' ms}
                  → ind ∈ₗ senv
                  → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P ^ [ ! , ι lG ]
@@ -400,11 +337,6 @@ mutual
                   → Γ ⊢ e ∷ Id (U l) K B ^ [ % , ι ⁰ ]
                   → Γ ⊢ t ∷ K ^ [ ! , ι l ]
                   → Γ ⊢ cast l K B e t ⇒ cast l K B' e t ∷ B ^ ι l
-    cast-ℕ-subst : ∀ {B B' e t}
-                  → Γ ⊢ B ⇒ B' ∷ U ⁰ ^ next ⁰
-                  → Γ ⊢ e ∷ Id (U ⁰) ℕ B ^ [ % , ι ⁰ ]
-                  → Γ ⊢ t ∷ ℕ ^ [ ! , ι ⁰ ]
-                  → Γ ⊢ cast ⁰ ℕ B e t ⇒ cast ⁰ ℕ B' e t ∷ B ^ ι ⁰
     cast-Ind-subst : ∀ {ind B B' e t}
                   → ind ∈ₗ senv
                   → Γ ⊢ B ⇒ B' ∷ U ⁰ ^ next ⁰
@@ -431,24 +363,7 @@ mutual
                        in cast l (B [ a ]↑) B' ((snd (wk1 e)) ∘ (var 0) ^ ⁰) ((wk1 f) ∘ a ^ l))
                        ^ l )
                    ∷ Π A' ^ rA ° l ▹ B' ° l ° l ^ ! ^ ι l
-    cast-ℕ-0 : ∀ {e}
-               → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ ^ [ % , ι ⁰ ]
-               → Γ ⊢ cast ⁰ ℕ ℕ e zero
-                   ⇒ zero
-                   ∷ ℕ ^ ι ⁰
-    cast-ℕ-S : ∀ {e n}
-               → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ ^ [ % , ι ⁰ ]
-               → Γ ⊢ n ∷ ℕ ^ [ ! , ι ⁰ ]
-               → Γ ⊢ cast ⁰ ℕ ℕ e (suc n)
-                   ⇒ suc (cast ⁰ ℕ ℕ e n)
-                   ∷ ℕ ^ ι ⁰
 
-    cast-ℕ-cong : ∀ {e t u}
-               → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ ^ [ % , ι ⁰ ]
-               → Γ ⊢ t ⇒ u ∷ ℕ ^ ι ⁰
-               → Γ ⊢ cast ⁰ ℕ ℕ e t
-                   ⇒ cast ⁰ ℕ ℕ e u
-                   ∷ ℕ ^ ι ⁰
 
     cast-Ind-ctr : ∀ {ind e t}
                → ind ∈ₗ senv
@@ -587,12 +502,6 @@ mutual
     PE.subst (λ B → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term t) B r)
       (emb-sgSubst G s) (emb-⊢∷ ⊢t)
 
-  emb-⊢∷-natrec-s : ∀ {Γ G rG lG s} (⊢s : OT._⊢_∷_^_ Γ s (OU.natrecStepType G rG lG) ([ rG , ι lG ])) →
-    emb_con Γ ⊢ emb_oterm_term s ∷
-      Π ℕ ^ ! ° ⁰ ▹ (emb_oterm_term G ^ rG ° lG ▹▹ emb_oterm_term G [ suc (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ ([ rG , ι lG ])
-  emb-⊢∷-natrec-s {Γ} {G} {rG} {lG} {s} ⊢s =
-    PE.subst (λ A → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term s) A ([ rG , ι lG ]))
-      (emb-natrec-s-type G rG lG) (emb-⊢∷ ⊢s)
 
   emb-⊢All : ∀ {Γ args As r} → OT._⊢All_∷_^_ Γ args As r
     → emb_con Γ ⊢All emb-oterm-all args ∷ map emb_oterm_term As ^ r
@@ -610,7 +519,6 @@ mutual
   emb-⊢∷ : ∀ {Γ t A r} → OT._⊢_∷_^_ Γ t A r
          → emb_con Γ ⊢ emb_oterm_term t ∷ (emb_oterm_term A) ^ r
   emb-⊢∷ (OT.univ <l ⊢Γ) = univ <l (emb-⊢ ⊢Γ)
-  emb-⊢∷ (OT.ℕⱼ ⊢Γ) = ℕⱼ (emb-⊢ ⊢Γ)
   emb-⊢∷ (OT.Emptyⱼ ⊢Γ) = Emptyⱼ (emb-⊢ ⊢Γ)
   emb-⊢∷ (OT.Πⱼ abs₁ ▹ abs₂ ▹ dom ▹ cod) =
     Πⱼ abs₁ ▹ abs₂ ▹ (emb-⊢∷ dom) ▹ (emb-⊢∷ cod)
@@ -637,14 +545,6 @@ mutual
                    ([ % , ι ⁰ ]))
         (PE.sym (emb-snd e))
         (sndⱼ (emb-⊢∷ ⊢A) (emb-⊢∷ ⊢B) (emb-⊢∷ ⊢A') (emb-⊢∷ ⊢B') (emb-⊢∷ ⊢e)))
-  emb-⊢∷ (OT.zeroⱼ ⊢Γ) = zeroⱼ (emb-⊢ ⊢Γ)
-  emb-⊢∷ (OT.sucⱼ n) = sucⱼ (emb-⊢∷ n)
-  emb-⊢∷ {Γ = Γ} (OT.natrecⱼ {G = G} {rG = rG} {lG = lG} {s = s} {z = z} {n = n} abs cod ⊢z ⊢s ⊢n) =
-    PE.subst (λ A → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec lG G z s n)) A ([ rG , ι lG ]))
-      (PE.sym (emb-sgSubst G n))
-      (PE.subst (λ t → _⊢_∷_^_ (emb_con Γ) t (emb_oterm_term G [ emb_oterm_term n ]) ([ rG , ι lG ]))
-        (PE.sym (emb-natrec lG G z s n))
-        (natrecⱼ abs (emb-⊢ty cod) (emb-⊢∷-sgType {G = G} {s = OU.zero} ⊢z) (emb-⊢∷-natrec-s {G = G} ⊢s) (emb-⊢∷ ⊢n)))
   emb-⊢∷ (OT.Indⱼ ⊢Γ ind∈) = Indⱼ (emb-⊢ ⊢Γ) ind∈
   emb-⊢∷ {Γ = Γ} (OT.Ctrⱼ {ind} {j} {args} {Ts} ⊢Γ ind∈ eq args∈) =
     PE.subst (λ t → _⊢_∷_^_ (emb_con Γ) t (Ind (SU.SInd.name ind)) ([ ! , ι ⁰ ]))
@@ -689,65 +589,9 @@ mutual
     PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term t) (emb_oterm_term u) B r)
       (emb-sgSubst G s) (emb-⊢≡∷ ⊢tu)
 
-  emb-⊢≡∷-natrec-s : ∀ {Γ G rG lG s s'} (⊢tu : OT._⊢_≡_∷_^_ Γ s s' (OU.natrecStepType G rG lG) ([ rG , ι lG ])) →
-    emb_con Γ ⊢ emb_oterm_term s ≡ emb_oterm_term s' ∷
-      Π ℕ ^ ! ° ⁰ ▹ (emb_oterm_term G ^ rG ° lG ▹▹ emb_oterm_term G [ suc (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ ([ rG , ι lG ])
-  emb-⊢≡∷-natrec-s {Γ} {G} {rG} {lG} {s} {s'} ⊢tu =
-    PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term s) (emb_oterm_term s') B ([ rG , ι lG ]))
-      (emb-natrec-s-type G rG lG) (emb-⊢≡∷ ⊢tu)
 
-  emb-⊢≡∷-natrecEq : ∀ {Γ l F F' z z' s s' n n'}
-    (pf : emb_con Γ ⊢ natrec l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) (emb_oterm_term n)
-      ≡ natrec l (emb_oterm_term F') (emb_oterm_term z') (emb_oterm_term s') (emb_oterm_term n')
-      ∷ emb_oterm_term F [ emb_oterm_term n ] ^ [ ! , ι l ]) →
-    emb_con Γ ⊢ emb_oterm_term (OU.natrec l F z s n)
-      ≡ emb_oterm_term (OU.natrec l F' z' s' n')
-      ∷ emb_oterm_term (F OU.[ n ]) ^ [ ! , ι l ]
-  emb-⊢≡∷-natrecEq {Γ} {l} {F} {F'} {z} {z'} {s} {s'} {n} {n'} pf =
-    PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec l F z s n))
-                (emb_oterm_term (OU.natrec l F' z' s' n')) B ([ ! , ι l ]))
-      (PE.sym (emb-sgSubst F n))
-      (PE.subst (λ u → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec l F z s n)) u
-                  (emb_oterm_term F [ emb_oterm_term n ]) ([ ! , ι l ]))
-        (PE.sym (emb-natrec l F' z' s' n'))
-        (PE.subst (λ t → _⊢_≡_∷_^_ (emb_con Γ) t
-                    (natrec l (emb_oterm_term F') (emb_oterm_term z') (emb_oterm_term s') (emb_oterm_term n'))
-                    (emb_oterm_term F [ emb_oterm_term n ]) ([ ! , ι l ]))
-          (PE.sym (emb-natrec l F z s n)) pf))
 
-  emb-⊢≡∷-natrecZero : ∀ {Γ l F z s}
-    (pf : emb_con Γ ⊢ natrec l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) zero
-      ≡ emb_oterm_term z ∷ emb_oterm_term F [ zero ] ^ [ ! , ι l ]) →
-    emb_con Γ ⊢ emb_oterm_term (OU.natrec l F z s OU.zero)
-      ≡ emb_oterm_term z ∷ emb_oterm_term (F OU.[ OU.zero ]) ^ [ ! , ι l ]
-  emb-⊢≡∷-natrecZero {Γ} {l} {F} {z} {s} pf =
-    PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec l F z s OU.zero))
-                (emb_oterm_term z) B ([ ! , ι l ]))
-      (PE.sym (emb-sgSubst F OU.zero))
-      (PE.subst (λ t → _⊢_≡_∷_^_ (emb_con Γ) t (emb_oterm_term z)
-                  (emb_oterm_term F [ zero ]) ([ ! , ι l ]))
-        (PE.sym (emb-natrec l F z s OU.zero))
-        pf)
 
-  emb-⊢≡∷-natrecSuc : ∀ {Γ l F z s n}
-    (pf : emb_con Γ ⊢ natrec l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) (suc (emb_oterm_term n))
-      ≡ (emb_oterm_term s ∘ emb_oterm_term n ^ l) ∘ (natrec l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) (emb_oterm_term n)) ^ l
-      ∷ emb_oterm_term F [ suc (emb_oterm_term n) ] ^ [ ! , ι l ]) →
-    emb_con Γ ⊢ emb_oterm_term (OU.natrec l F z s (OU.suc n))
-      ≡ emb_oterm_term ((s OU.∘ n ^ l) OU.∘ (OU.natrec l F z s n) ^ l)
-      ∷ emb_oterm_term (F OU.[ OU.suc n ]) ^ [ ! , ι l ]
-  emb-⊢≡∷-natrecSuc {Γ} {l} {F} {z} {s} {n} pf =
-    PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec l F z s (OU.suc n)))
-                (emb_oterm_term ((s OU.∘ n ^ l) OU.∘ (OU.natrec l F z s n) ^ l)) B ([ ! , ι l ]))
-      (PE.sym (emb-sgSubst F (OU.suc n)))
-      (PE.subst (λ u → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term (OU.natrec l F z s (OU.suc n))) u
-                  (emb_oterm_term F [ suc (emb_oterm_term n) ]) ([ ! , ι l ]))
-        (PE.sym (emb-natrec-suc-rhs l s n F z))
-        (PE.subst (λ t → _⊢_≡_∷_^_ (emb_con Γ) t
-                    ((emb_oterm_term s ∘ emb_oterm_term n ^ l) ∘ (natrec l (emb_oterm_term F) (emb_oterm_term z) (emb_oterm_term s) (emb_oterm_term n)) ^ l)
-                    (emb_oterm_term F [ suc (emb_oterm_term n) ]) ([ ! , ι l ]))
-          (PE.sym (emb-natrec-suc l F z s n))
-          pf))
 
   emb-⊢≡∷-ηPremise : ∀ {Γ' f g G l lG} (pf0g0 : OT._⊢_≡_∷_^_ Γ' (OU.wk1 f OU.∘ OU.var Nat.zero ^ l) (OU.wk1 g OU.∘ OU.var Nat.zero ^ l) G ([ ! , ι lG ])) →
     emb_con Γ' ⊢ wk1 (emb_oterm_term f) ∘ var Nat.zero ^ l
@@ -783,17 +627,6 @@ mutual
            pf)
   emb-⊢≡∷ (OT.η-eq lF≤l lG≤l dom⊢ f g pf0g0) =
     η-eq lF≤l lG≤l (emb-⊢ty dom⊢) (emb-⊢∷ f) (emb-⊢∷ g) (emb-⊢≡∷-ηPremise pf0g0)
-  emb-⊢≡∷ (OT.suc-cong n) = suc-cong (emb-⊢≡∷ n)
-  emb-⊢≡∷ (OT.natrec-cong {F = F} pFF' pzz' pss' pnn') =
-    emb-⊢≡∷-natrecEq (natrec-cong (emb-⊢≡ pFF')
-      (emb-⊢≡∷-sgType {G = F} {s = OU.zero} pzz')
-      (emb-⊢≡∷-natrec-s pss') (emb-⊢≡∷ pnn'))
-  emb-⊢≡∷ (OT.natrec-zero {F = F} dom⊢ z s) =
-    emb-⊢≡∷-natrecZero (natrec-zero (emb-⊢ty dom⊢)
-      (emb-⊢∷-sgType {G = F} {s = OU.zero} z) (emb-⊢∷-natrec-s s))
-  emb-⊢≡∷ (OT.natrec-suc {F = F} n dom⊢ z s) =
-    emb-⊢≡∷-natrecSuc (natrec-suc (emb-⊢∷ n) (emb-⊢ty dom⊢)
-      (emb-⊢∷-sgType {G = F} {s = OU.zero} z) (emb-⊢∷-natrec-s s))
   emb-⊢≡∷ (OT.Emptyrec-cong pAA' e e') =
     Emptyrec-cong (emb-⊢≡ pAA') (emb-⊢∷ e) (emb-⊢∷ e')
   emb-⊢≡∷ (OT.proof-irrelevance t u) =
@@ -811,8 +644,6 @@ mutual
     in PE.subst (λ rhs → emb_con Γ ⊢ LHS ≡ rhs ∷ (emb_oterm_term (OU.Π A' ^ rA ° l ▹ B' ° l ° l ^ !)) ^ [ ! , ι l ])
          (PE.sym (emb-castΠ-lamBody {A} {A'} {rA} {B} {B'} {e} {f}))
          pf
-  emb-⊢≡∷ (OT.cast-ℕ-0 e) = cast-ℕ-0 (emb-⊢∷ e)
-  emb-⊢≡∷ (OT.cast-ℕ-S e n) = cast-ℕ-S (emb-⊢∷ e) (emb-⊢∷ n)
   emb-⊢≡∷ (OT.cast-Ind-ctr ind∈ ⊢e ⊢t) = cast-Ind-ctr ind∈ (emb-⊢∷ ⊢e) (emb-⊢∷ ⊢t)
 
 -- Nat as a generic inductive, matching Uniquevalence.uty NatExample.

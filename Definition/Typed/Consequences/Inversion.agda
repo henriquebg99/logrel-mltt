@@ -35,8 +35,6 @@ inversion-ne' : ∀ {Γ t A ll l} → Neutral A
                 → Whnf t → Neutral t
 inversion-ne' neA (Uᵣ (Uᵣ r l′ l< eq d)) [t] whnft with whnfRed* (red d) (ne neA) 
 inversion-ne' () (Uᵣ (Uᵣ r l′ l< eq d)) [t] whnft | PE.refl 
-inversion-ne' neA (ℕᵣ d) [t] whnft with whnfRed* (red d) (ne neA) 
-inversion-ne' () (ℕᵣ d) [t] whnft | PE.refl
 inversion-ne' neA (Indᵣ D) [t] whnft with whnfRed* (red D) (ne neA) 
 inversion-ne' () (Indᵣ D) [t] whnft | PE.refl
 inversion-ne' neA (ne′ K D neK K≡K) (neₜ k d (neNfₜ neK₁ ⊢k k≡k)) whnft =
@@ -51,10 +49,6 @@ inversion-ne : ∀ {Γ t A l} → Neutral A → Whnf t → Γ ⊢ t ∷ A ^ [ ! 
 inversion-ne neA whnft ⊢t =  let [A] , [t] = reducibleTerm ⊢t in inversion-ne' neA [A] [t] whnft
 
 -- Inversion of natural number type.
-inversion-ℕ : ∀ {Γ C r} → Γ ⊢ ℕ ∷ C ^ r → Γ ⊢ C ≡ U ⁰ ^ r × r PE.≡ [ ! , next ⁰ ]
-inversion-ℕ (ℕⱼ x) = refl (Ugenⱼ x) , PE.refl
-inversion-ℕ (conv x x₁) with inversion-ℕ x
-... | [C≡U] , PE.refl = trans (sym x₁) [C≡U] , PE.refl
 
 -- Inversion of inductive type formers.
 inversion-Ind : ∀ {Γ n C r} → Γ ⊢ Ind n ∷ C ^ r → Γ ⊢ C ≡ U ⁰ ^ r × r PE.≡ [ ! , next ⁰ ]
@@ -86,30 +80,10 @@ inversion-Empty (conv x x₁) =
   in trans (sym x₁) C≡SProp , r
 
 -- Inversion of zero.
-inversion-zero : ∀ {Γ C r} → Γ ⊢ zero ∷ C ^ r → Γ ⊢ C ≡ ℕ ^ [ ! , ι ⁰ ] × r PE.≡ [ ! , ι ⁰ ]
-inversion-zero (zeroⱼ x) = univ (refl (ℕⱼ x)) , PE.refl
-inversion-zero (conv x x₁) with inversion-zero x
-... | [C≡ℕ] , PE.refl = trans (sym x₁) [C≡ℕ] , PE.refl
 
 -- Inversion of successor.
-inversion-suc : ∀ {Γ t C r} → Γ ⊢ suc t ∷ C ^ r → Γ ⊢ t ∷ ℕ ^ [ ! , ι ⁰ ] × Γ ⊢ C ≡ ℕ ^ [ ! , ι ⁰ ] × r PE.≡ [ ! , ι ⁰ ]
-inversion-suc (sucⱼ x) = x , refl (univ (ℕⱼ (wfTerm x))) , PE.refl
-inversion-suc (conv x x₁) with inversion-suc x
-... | a , b , PE.refl = a , trans (sym x₁) b , PE.refl
 
 -- Inversion of natural recursion.
-inversion-natrec : ∀ {Γ c g n A C rlC lC} → Γ ⊢ natrec lC C c g n ∷ A ^ rlC
-  →  ∃ λ rC →
-    (rC PE.≡ % → lC PE.≡ ⁰)
-  × (Γ ∙ ℕ ^ [ ! , ι ⁰ ]) ⊢ C ^ [ rC , ι lC ]
-  × Γ ⊢ c ∷ C [ zero ] ^ [ rC , ι lC ]
-  × Γ ⊢ g ∷ Π ℕ ^ ! ° ⁰ ▹ (C ^ rC ° lC ▹▹ C [ suc (var 0) ]↑ ° lC ° lC ^ rC) ° lC ° lC ^ rC ^ [ rC , ι lC ]
-  × Γ ⊢ n ∷ ℕ ^ [ ! , ι ⁰ ]
-  × Γ ⊢ A ≡ C [ n ] ^ [ rC , ι lC ]
-  × rlC PE.≡ [ rC , ι lC ]
-inversion-natrec (natrecⱼ r% x d d₁ n) = _ , r% , x , d , d₁ , n , refl (substType x n) , PE.refl
-inversion-natrec (conv d x) = let r% , a' , a , b , c , d , e , e' = inversion-natrec d
-                              in  r% , a' , a , b , c , d , trans (sym (PE.subst (λ rx → _ ⊢ _ ≡ _ ^ rx) e' x)) e , e'
 
 inversion-Emptyrec : ∀ {Γ e A C rlC lEmpty lC} → Γ ⊢ Emptyrec lC lEmpty C e ∷ A ^ rlC
   → ∃ λ rC → Γ ⊢ C ^ [ rC , ι lC ]

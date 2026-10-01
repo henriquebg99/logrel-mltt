@@ -24,7 +24,6 @@ open import Definition.Typed.Consequences.Reduction senv swf equivs
 open import Definition.Typed.Consequences.Equality senv swf equivs
 open import Definition.Typed.Consequences.Inequality senv swf equivs as IE
 open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
-open import Definition.Typed.Consequences.SucCong senv swf equivs
 open import Definition.Typed.Consequences.Inversion senv swf equivs
 open import Definition.Typed.Consequences.TypeUnicity senv swf equivs
 open import Definition.Conversion.Consequences.Completeness senv swf equivs
@@ -51,20 +50,13 @@ neutralconvTerm~↑! : ∀ {t u A Γ l}
                      → Γ ⊢ t [conv↓] u ∷ A ^ l
                      → ∃ λ B → Γ ⊢ t ~ u ↑! B ^ l
 neutralconvTerm~↑! neA (ne ([~] A D whnfB k~l)) = _ , k~l
-neutralconvTerm~↑! neA (ℕ-ins ([~] A D whnfB k~l)) = _ , k~l
 neutralconvTerm~↑! neA (ne-ins x x₁ x₂ ([~] A D whnfB k~l)) = _ , k~l
 
-noNeℕ : Neutral ℕ → ⊥
-noNeℕ ()
 
 noNeInd : ∀ {i} → Neutral (Ind i) → ⊥
 noNeInd ()
 
-noNe0 : Neutral zero → ⊥
-noNe0 ()
 
-noNeSuc : ∀ {n} → Neutral (suc n) → ⊥
-noNeSuc ()
 
 noNeΠ : ∀ {A rA B} → Neutral (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° ⁰ ^ !) → ⊥
 noNeΠ ()
@@ -76,14 +68,8 @@ noNeUniv ()
 ⁰-next {⁰} ()
 ⁰-next {¹} ()
 
-neutralZero : Neutral zero → ⊥
-neutralZero ()
 
-neutralSuc : ∀ {n} → Neutral (suc n) → ⊥
-neutralSuc ()
 
-noℕ~ℕ : ∀ {Γ X l} → Γ ⊢ ℕ ~ ℕ ↓! X ^ l → ⊥
-noℕ~ℕ ()
 
 sizeSubst₂-gen :  ∀ {A B a b a' b'}
               → (P : A → B → Set)
@@ -165,26 +151,6 @@ conv↑-inversion whnfA whnft whnfu ([↑]ₜ B t′ u′ D d d′ whnfB whnft�
   in PE.subst₃ (λ A X Y → _ ⊢ X [conv↓] Y ∷ A ^ _) (PE.sym eA) (PE.sym et) (PE.sym eu) t<>u
 
 -- Helper functions for decidability for neutrals
-decConv↓Term-ℕ-ins : ∀ {t u v Γ l}
- → Γ ⊢ t [conv↓] u ∷ ℕ ^ l
- → Γ ⊢ t ~ v ↓! ℕ ^ l
- → Γ ⊢ t ~ u ↓! ℕ ^ l
-decConv↓Term-ℕ-ins (ℕ-ins x) t~t = x
-decConv↓Term-ℕ-ins (ne-ins x x₁ () x₃) t~t
-decConv↓Term-ℕ-ins (zero-refl x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) =
-  let _ , _ , neA = ne~↓! x₁
-      e = whnfRed* D (ne neA)
-  in ⊥-elim (ℕ≢ne neA (PE.sym e))
-decConv↓Term-ℕ-ins (zero-refl x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂))
-  with ne~↓! x₁
-... | _ , () , _
-decConv↓Term-ℕ-ins (suc-cong x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) =
-  let _ , _ , neA = ne~↓! x₁
-      e = whnfRed* D (ne neA)
-  in ⊥-elim (ℕ≢ne neA (PE.sym e))
-decConv↓Term-ℕ-ins (suc-cong x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂))
-  with ne~↓! x₁
-... | _ , () , _
 
 decConv↓Term-Ind-ins : ∀ {t u v i Γ l}
  → Γ ⊢ t [conv↓] u ∷ Ind i ^ l
@@ -204,8 +170,6 @@ decConv↓Term-U-ins (Π-cong x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉) ([~]
       e = whnfRed* D (ne neA)
   in ⊥-elim (U≢ne neA (PE.sym e))
                                                                               
-decConv↓Term-U-ins (Π-cong x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉) ([~] .ℕ D whnfB (castℕ-refl' x x₁₀)) =
-  let e = whnfRed* D ℕₙ in ⊥-elim (U≢ℕ (PE.sym e))
 
 
 decConv↓Term-ne-ins : ∀ {t u A Γ l}
@@ -216,27 +180,6 @@ decConv↓Term-ne-ins neA (ne-ins x x₁ x₂ x₃) = _ , _ , x₃
 
 -- Helper function for decidability for impossibility of terms not being equal
 -- as neutrals when they are equal as terms and the first is a neutral.
-decConv↓Term-ℕ : ∀ {t u v Γ l}
-  → Γ ⊢ t [conv↓] u ∷ ℕ ^ l
-  → Γ ⊢ t ~ v ↓! ℕ ^ l
-  → ¬ (Γ ⊢ t ~ u ↓! ℕ ^ l)
-  → ⊥
-decConv↓Term-ℕ (ℕ-ins x) t~t ¬u~u = ¬u~u x
-decConv↓Term-ℕ (ne-ins x x₁ () x₃) t~t ¬u~u
-decConv↓Term-ℕ (zero-refl x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) ¬u~u =
-  let _ , _ , neA = ne~↓! x₁
-      e = whnfRed* D (ne neA)
-  in ⊥-elim (ℕ≢ne neA (PE.sym e))
-decConv↓Term-ℕ (zero-refl x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂)) ¬u~u
- with ne~↓! x₁
-... | _ , () , _
-decConv↓Term-ℕ (suc-cong x) ([~] A D whnfB (cast-refl' x₁ x₂ x₃)) ¬u~u =
-  let _ , _ , neA = ne~↓! x₁
-      e = whnfRed* D (ne neA)
-  in ⊥-elim (ℕ≢ne neA (PE.sym e))
-decConv↓Term-ℕ (suc-cong x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂)) ¬u~u
- with ne~↓! x₁
-... | _ , () , _
 
 decConv↓Term-U : ∀ {t u v Γ r lU l}
   → Γ ⊢ t [conv↓] u ∷ Univ r lU ^ l
@@ -248,8 +191,6 @@ decConv↓Term-U (Π-cong x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉ x₁₀) ([~] 
   let _ , _ , neA = ne~↓! x
       e = whnfRed* D (ne neA)
   in ⊥-elim (U≢ne neA (PE.sym e))
-decConv↓Term-U (Π-cong x₂ x₃ x₄ x₅ x₆ x₇ x₈ x₉ x₁₀) ([~] .ℕ D whnfB (castℕ-refl' x x₁₀')) ¬u~u =
-  let e = whnfRed* D ℕₙ in ⊥-elim (U≢ℕ (PE.sym e))
 
 abstract -- Agda will do some slow unfolding without abstract
 
@@ -340,8 +281,6 @@ abstract
                 
 abstract
 
-  castℕInv : ∀ {l e t} → Neutral (cast l ℕ ℕ e t) → Neutral t 
-  castℕInv (castℕℕₙ net) = net
 
   castIndInv : ∀ {l i e t} → Neutral (cast l (Ind i) (Ind i) e t) → Neutral t
   castIndInv (castIndInd≢ₙ i≢i) = ⊥-elim (i≢i PE.refl)

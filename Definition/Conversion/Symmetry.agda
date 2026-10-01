@@ -10,12 +10,11 @@ open import Definition.Conversion.Soundness senv swf equivs hiding (soundnessCon
 open import Definition.Conversion.Conversion senv swf equivs
 open import Definition.Conversion.Whnf senv swf equivs
 open import Definition.Typed.Consequences.Syntactic senv swf equivs
-open import Definition.Typed.Consequences.Equality senv swf equivs hiding (ℕ≡A; Ind≡A; U≡A-whnf; Π≡A)
 open import Definition.Typed.Consequences.Reduction senv swf equivs
 open import Definition.Typed.Consequences.Injectivity senv swf equivs
 open import Definition.Typed.Consequences.Substitution senv swf equivs hiding (substTypeEq)
-open import Definition.Typed.Consequences.SucCong senv swf equivs hiding (sucCong)
 open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
+open import Definition.Typed.Consequences.Equality senv swf equivs hiding (Ind≡A; U≡A-whnf; Π≡A)
 open import Definition.Typed.Consequences.Inversion senv swf equivs using (Ind∈Idʳ)
 open import Definition.Typed.Consequences.RelevanceUnicity senv swf equivs
 open import Definition.Typed.Consequences.IndRectCong senv swf equivs using (indRectBranchTyListEq)
@@ -24,7 +23,6 @@ open import Tools.List using (All₃; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
 import Definition.Typed.Consequences.Equality senv swf equivs as Eq
 import Definition.Typed.Consequences.Substitution senv swf equivs as Sub
-import Definition.Typed.Consequences.SucCong senv swf equivs as Suc
 import Definition.Conversion.Stability senv swf equivs as Stab
 import Definition.Conversion.Soundness senv swf equivs as Sound
 
@@ -36,11 +34,6 @@ module Opaque where
   -- Definition.Conversion.SymmetrySize) it symbolically runs the whole logical
   -- relation. Their computational content is never needed, so we hide it.
   abstract
-    ℕ≡A : ∀ {A Γ}
-        → Γ ⊢ ℕ ≡ A ^ [ ! , ι ⁰ ]
-        → Whnf A
-        → A PE.≡ ℕ
-    ℕ≡A = Eq.ℕ≡A
 
     Ind≡A : ∀ {A Γ i}
         → Γ ⊢ Ind i ≡ A ^ [ ! , ι ⁰ ]
@@ -78,10 +71,6 @@ module Opaque where
                 → Γ ⊢ G [ t ] ≡ E [ u ] ^ rG
     substTypeEq = Sub.substTypeEq
 
-    sucCong : ∀ {F G lF Γ} → Γ ∙ ℕ ^ [ ! , ι ⁰ ] ⊢ F ≡ G ^ [ ! , ι lF ]
-            → Γ ⊢ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° lF ▹▹ F [ suc (var 0) ]↑ ° lF ° lF ^ !) ° lF ° lF ^ !
-                ≡ Π ℕ ^ ! ° ⁰ ▹ (G ^ ! ° lF ▹▹ G [ suc (var 0) ]↑ ° lF ° lF ^ !) ° lF ° lF ^ ! ^ [ ! , ι lF ]
-    sucCong = Suc.sucCong
 open Opaque
 
 -- Pointwise symmetry of the list equality.
@@ -115,17 +104,6 @@ mutual
     in  _ , substTypeEq G≡G′ (proj₂ (proj₂ (soundness~↑% x)))
     ,   app-cong (PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) ΠF′G′≡B u~t)
                  (sym~↑% Γ≡Δ (conv~↑% x (stabilityEq (reflConEq ⊢Γ) F≡F′)))
-  sym~↑! Γ≡Δ (natrec-cong x x₁ x₂ t~u) =
-    let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-        B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
-        B≡ℕ = ℕ≡A A≡B whnfB
-        F≡G = stabilityEq (Γ≡Δ ∙ refl (univ (ℕⱼ ⊢Γ))) (soundnessConv↑ x)
-        F[0]≡G[0] = substTypeEq F≡G (refl (zeroⱼ ⊢Δ))
-    in  _ , substTypeEq (soundnessConv↑ x) (soundness~↓! t~u)
-    ,   natrec-cong (symConv↑ (Γ≡Δ ∙ (refl (univ (ℕⱼ ⊢Γ)))) x)
-                    (convConvTerm (symConv↑Term Γ≡Δ x₁) F[0]≡G[0])
-                    (convConvTerm (symConv↑Term Γ≡Δ x₂) (sucCong F≡G))
-                    (PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) B≡ℕ u~t)
   sym~↑! Γ≡Δ (IndRect-cong {ind} {lG = lG} ind∈ x x₁ x₂) =
     let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
         B , whnfB , Ind≡B , t'~t = sym~↓! Γ≡Δ x₁
@@ -156,12 +134,6 @@ mutual
           , cast-cong A'≡A B'≡B
                       (convConv↓Term (reflConEq ⊢Δ) (univ (sym (soundness~↓! A'≡A))) (ne neA') t'~t ) 
                       (stabilityTerm Γ≡Δ x₃) (stabilityTerm Γ≡Δ x₂)
-  sym~↑! Γ≡Δ (cast-ℕ X x x₁ x₂) =
-      let U , whnfU , U≡U' , A'~A = sym~↓! Γ≡Δ X
-          B'~B = symConv↑Term Γ≡Δ x
-          U≡B = U≡A-whnf U≡U' whnfU
-          A'≡A = PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) U≡B A'~A
-      in _ , univ (sym (soundness~↓! X)) , cast-ℕ A'≡A (symConv↑Term Γ≡Δ x) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₁)
   sym~↑! Γ≡Δ (cast-Π x X x₁ x₂ x₃) =
       let U , whnfU , U≡U' , A'~A = sym~↓! Γ≡Δ X
           B'~B = symConv↑Term Γ≡Δ x
@@ -170,13 +142,6 @@ mutual
       in _ , univ (sym (soundness~↓! X)) , cast-Π B'~B A'≡A
                                             (convConvTerm (symConv↑Term Γ≡Δ x₁) (univ (soundnessConv↑Term (stabilityConv↑Term Γ≡Δ x))))
                                             (stabilityTerm Γ≡Δ x₃) (stabilityTerm Γ≡Δ x₂)
-  sym~↑! Γ≡Δ (cast-Πℕ x x₁ x₂ x₃) =
-      let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-      in _ , refl (univ (ℕⱼ ⊢Γ)) , cast-Πℕ (symConv↑Term Γ≡Δ x)
-                                           (convConvTerm (symConv↑Term Γ≡Δ x₁) (univ (soundnessConv↑Term (stabilityConv↑Term Γ≡Δ x))))
-                                           (stabilityTerm Γ≡Δ x₃) (stabilityTerm Γ≡Δ x₂)
-  sym~↑! Γ≡Δ (cast-ℕΠ x x₁ x₂ x₃) = _ , univ (sym (soundnessConv↑Term x)) , cast-ℕΠ (symConv↑Term Γ≡Δ x) (symConv↑Term Γ≡Δ x₁)
-                                                                              (stabilityTerm Γ≡Δ x₃) (stabilityTerm Γ≡Δ x₂)
   sym~↑! Γ≡Δ (cast-ΠΠ%! x x₁ x₂ x₃ x₄) = _ , univ (sym (soundnessConv↑Term x₁)) ,
                                          cast-ΠΠ%! (symConv↑Term Γ≡Δ x) (symConv↑Term Γ≡Δ x₁)
                                                    (convConvTerm (symConv↑Term Γ≡Δ x₂) (univ (soundnessConv↑Term (stabilityConv↑Term Γ≡Δ x))))
@@ -195,11 +160,6 @@ mutual
         U≡B = U≡A-whnf U≡U whnfU
         A≡B = PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) U≡B A~B
     in _ , sym (univ A≡A) , cast-refl' A≡B (convConv↓Term (reflConEq ⊢Δ) (refl (stability Γ≡Δ ⊢A) ) (ne neA) t'~t ) (stabilityTerm Γ≡Δ x₂) 
-  sym~↑! Γ≡Δ (castℕ-refl x x₁) =
-    let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-        B , whnfB , N≡B , u~t = sym~↓! Γ≡Δ x
-        B≡ℕ = ℕ≡A N≡B whnfB
-    in _ , refl (univ (ℕⱼ ⊢Γ)) , castℕ-refl' (PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) B≡ℕ u~t) (stabilityTerm Γ≡Δ x₁)
 
   sym~↑! Γ≡Δ (cast-refl' x x₁ x₂) =
     let A≡A = soundness~↓! x
@@ -212,20 +172,8 @@ mutual
         A≡B = PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) U≡B A~B
     in _ , sym (univ A≡A) , cast-refl A≡B (convConv↓Term (reflConEq ⊢Δ) (refl (stability Γ≡Δ ⊢A) ) (ne neA) t'~t ) (stabilityTerm Γ≡Δ x₂)  
 
-  sym~↑! Γ≡Δ (castℕ-refl' x x₁) =
-    let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-        B , whnfB , N≡B , u~t = sym~↓! Γ≡Δ x
-        B≡ℕ = ℕ≡A N≡B whnfB
-    in _ , refl (univ (ℕⱼ ⊢Γ)) , castℕ-refl (PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) B≡ℕ u~t) (stabilityTerm Γ≡Δ x₁) 
 
 
-  sym~↑! Γ≡Δ (cast-neℕ x x₁ x₂ x₃) =
-    let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-        U , whnfU , U≡U' , A'~A = sym~↓! Γ≡Δ x
-        U≡B = U≡A-whnf U≡U' whnfU
-        A'≡A = PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) U≡B A'~A
-    in _ , refl (univ (ℕⱼ ⊢Γ)) , cast-neℕ A'≡A (convConvTerm (symConv↑Term Γ≡Δ x₁) (univ (soundness~↓! (stability~↓! Γ≡Δ x))))
-                                          (stabilityTerm Γ≡Δ x₃) (stabilityTerm Γ≡Δ x₂)
   sym~↑! Γ≡Δ (cast-neΠ X x x₁ x₂ x₃) =
     let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
         U , whnfU , U≡U' , A'~A = sym~↓! Γ≡Δ x
@@ -256,14 +204,6 @@ mutual
       in _ , refl (univ (Indⱼ′ ⊢Γ (Ind∈Idʳ x₂))) , cast-ΠInd (symConv↑Term Γ≡Δ x)
                                            (convConvTerm (symConv↑Term Γ≡Δ x₁) (univ (sym (soundnessConv↑Term (stabilityConv↑Term Γ≡Δ x)))))
                                            (stabilityTerm Γ≡Δ x₃) (stabilityTerm Γ≡Δ x₂)
-  sym~↑! Γ≡Δ (cast-Indℕ x x₁ x₂) =
-      let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-      in _ , refl (univ (ℕⱼ ⊢Γ)) , cast-Indℕ (symConv↑Term Γ≡Δ x)
-                                           (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₁)
-  sym~↑! Γ≡Δ (cast-ℕInd x x₁ x₂) =
-      let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-      in _ , refl (univ (Indⱼ′ ⊢Γ (Ind∈Idʳ x₁))) , cast-ℕInd (symConv↑Term Γ≡Δ x)
-                                           (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₁)
   sym~↑! Γ≡Δ (cast-IndInd x₁ x₂ x₃ x₄) =
       let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
       in _ , refl (univ (Indⱼ′ ⊢Γ (Ind∈Idʳ x₃))) , cast-IndInd x₁ (symConv↑Term Γ≡Δ x₂)
@@ -323,9 +263,6 @@ mutual
         B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
         U≡B = U≡A-whnf A≡B whnfB
     in ne (PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) U≡B (proj₂ (proj₂ (proj₂ (sym~↓! Γ≡Δ t~u)))))
-  symConv↓Term Γ≡Δ (ℕ-refl x) =
-    let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-    in  ℕ-refl ⊢Δ
   symConv↓Term Γ≡Δ (Ind-refl x i∈) =
     let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in  Ind-refl ⊢Δ i∈
@@ -342,10 +279,6 @@ mutual
         _ , ⊢H = syntacticEq (stabilityEq Γ≡Δ (univ F≡H))
     in  Π-cong PE.refl PE.refl PE.refl PE.refl l< l<' ⊢H (symConv↑Term Γ≡Δ A<>B)
                   (symConv↑Term (Γ≡Δ ∙ univ F≡H) A<>B₁)
-  symConv↓Term Γ≡Δ (ℕ-ins t~u) =
-    let B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
-        B≡ℕ = ℕ≡A A≡B whnfB
-    in  ℕ-ins (PE.subst (λ x → _ ⊢ _ ~ _ ↓! x ^ _) B≡ℕ u~t)
   symConv↓Term Γ≡Δ (Ind-ins t~u) =
     let B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
         B≡Ind = Ind≡A A≡B whnfB
@@ -353,10 +286,6 @@ mutual
   symConv↓Term Γ≡Δ (ne-ins t u x t~u) =
     let B , whnfB , A≡B , u~t = sym~↓! Γ≡Δ t~u
     in  ne-ins (stabilityTerm Γ≡Δ u) (stabilityTerm Γ≡Δ t) x u~t
-  symConv↓Term Γ≡Δ (zero-refl x) =
-    let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-    in  zero-refl ⊢Δ
-  symConv↓Term Γ≡Δ (suc-cong t<>u) = suc-cong (symConv↑Term Γ≡Δ t<>u)
   symConv↓Term Γ≡Δ (ctr-cong ⊢Γ ind∈ eq args) =
     let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in  ctr-cong ⊢Δ ind∈ eq (symAll₃ Γ≡Δ args)

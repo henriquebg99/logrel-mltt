@@ -46,7 +46,6 @@ mutual
             → Γ ⊩⟨ l ⟩  t ∷ A ^ r / [A]
             → Γ ⊩⟨ l′ ⟩ t ∷ B ^ r / [B]
 
-  convTermT₁ (ℕᵥ D D′) A≡B t = t
   convTermT₁ (Indᵥ D D′) A≡B t = t
   convTermT₁ (Emptyᵥ D D′) A≡B t = t
 
@@ -122,7 +121,6 @@ mutual
            → Γ ⊩⟨ l ⟩  A ≡ B ^ r / [A]
            → Γ ⊩⟨ l′ ⟩ t ∷ B ^ r / [B]
            → Γ ⊩⟨ l ⟩  t ∷ A ^ r / [A]
-  convTermT₂ (ℕᵥ D D′) A≡B t = t
   convTermT₂ (Indᵥ D D′) A≡B t = t
   convTermT₂ (Emptyᵥ D D′) A≡B t = t
   convTermT₂ {r = [ ! , ll ]} (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (ne₌ M D′ neM K≡M)
@@ -230,7 +228,6 @@ mutual
                → Γ ⊩⟨ l ⟩  A ≡ B ^ r / [A]
                → Γ ⊩⟨ l ⟩  t ≡ u ∷ A ^ r / [A]
                → Γ ⊩⟨ l′ ⟩ t ≡ u ∷ B ^ r / [B]
-  convEqTermT₁ (ℕᵥ D D′) A≡B t≡u = t≡u
   convEqTermT₁ (Indᵥ D D′) A≡B t≡u = t≡u
   convEqTermT₁ (Emptyᵥ D D′) A≡B t≡u = t≡u
   convEqTermT₁ {r = [ ! , ll ]} (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (ne₌ M D′ neM K≡M)
@@ -302,7 +299,6 @@ mutual
              → Γ ⊩⟨ l ⟩  A ≡ B ^ r / [A]
              → Γ ⊩⟨ l′ ⟩ t ≡ u ∷ B ^ r / [B]
              → Γ ⊩⟨ l ⟩  t ≡ u ∷ A ^ r / [A]
-  convEqTermT₂ (ℕᵥ D D′) A≡B t≡u = t≡u
   convEqTermT₂ (Indᵥ D D′) A≡B t≡u = t≡u
   convEqTermT₂ (Emptyᵥ D D′) A≡B t≡u = t≡u
   convEqTermT₂ {r = [ ! , ll ]} (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (ne₌ M D′ neM K≡M)

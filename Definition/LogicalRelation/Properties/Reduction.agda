@@ -28,9 +28,6 @@ redSubst* : ∀ {A B r l Γ}
 redSubst* {A = A} D (Uᵣ′ B .(next l′) rU l′ l< PE.refl [[ ⊢A , ⊢B , D' ]]) =
   let ⊢A = redFirst* D
   in  Uᵣ′ A (next l′) rU l′ l< PE.refl [[ ⊢A , ⊢B , D ⇨* D' ]] , D'
-redSubst* D (ℕᵣ [[ ⊢B , ⊢ℕ , D′ ]]) =
-  let ⊢A = redFirst* D
-  in  ℕᵣ ([[ ⊢A , ⊢ℕ , D ⇨* D′ ]]) , D′
 redSubst* D (Indᵣ [[ ⊢B , ⊢Ind , D′ ]]) =
   let ⊢A = redFirst* D
   in  Indᵣ ([[ ⊢A , ⊢Ind , D ⇨* D′ ]]) , D′
@@ -65,13 +62,6 @@ redSubst*Term⁰ : ∀ {A t u ll Γ} → let l = ι ⁰ in
               → Γ ⊩⟨ l ⟩ u ∷ A ^ [ ! , ll ] / [A]
               → Γ ⊩⟨ l ⟩ t ∷ A ^ [ ! , ll ] / [A]
               × Γ ⊩⟨ l ⟩ t ≡ u ∷ A ^ [ ! , ll ] / [A]
-redSubst*Term⁰ t⇒u (ℕᵣ D) (ℕₜ n [[ ⊢u , ⊢n , d ]] n≡n prop) =
-  let A≡ℕ  = subset* (red D)
-      ⊢t   = conv (redFirst*Term t⇒u) A≡ℕ
-      t⇒u′ = conv* t⇒u A≡ℕ
-  in  ℕₜ n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] n≡n prop
-  ,   ℕₜ₌ n n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] [[ ⊢u , ⊢n , d ]]
-          n≡n (reflNatural-prop prop)
 redSubst*Term⁰ t⇒u (Indᵣ D) (Indₜ n [[ ⊢u , ⊢n , d ]] n≡n prop) =
   let A≡Ind  = subset* (red D)
       ⊢t   = conv (redFirst*Term t⇒u) A≡Ind
@@ -123,13 +113,6 @@ redSubst*Term {t = t} {l = ∞} {Γ = Γ} t⇒u (Uᵣ′ A .(next ¹) rU ¹ l< P
     [[t]] = Uₜ K [[ ⊢t , ⊢K , t⇒u′ ⇨∷* d ]] typeA A≡A [t]
   in
   ([[t]] , Uₜ₌ [[t]] (Uₜ K [[ ⊢u , ⊢K , d ]] typeA A≡A [u]) A≡A [t≡u])
-redSubst*Term t⇒u (ℕᵣ D) (ℕₜ n [[ ⊢u , ⊢n , d ]] n≡n prop) =
-  let A≡ℕ  = subset* (red D)
-      ⊢t   = conv (redFirst*Term t⇒u) A≡ℕ
-      t⇒u′ = conv* t⇒u A≡ℕ
-  in  ℕₜ n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] n≡n prop
-  ,   ℕₜ₌ n n [[ ⊢t , ⊢n , t⇒u′ ⇨∷* d ]] [[ ⊢u , ⊢n , d ]]
-          n≡n (reflNatural-prop prop)
 redSubst*Term t⇒u (Indᵣ D) (Indₜ n [[ ⊢u , ⊢n , d ]] n≡n prop) =
   let A≡Ind  = subset* (red D)
       ⊢t   = conv (redFirst*Term t⇒u) A≡Ind

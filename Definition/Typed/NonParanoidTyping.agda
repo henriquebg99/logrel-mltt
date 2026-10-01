@@ -37,7 +37,6 @@ mutual
          → l < l'
          → ⊢⊢ Γ
          → Γ ⊢⊢ (Univ r l) ∷ (Univ ! l') ^ [ ! , next l' ]
-    ℕⱼ      : ⊢⊢ Γ → Γ ⊢⊢ ℕ ∷ U ⁰ ^ [ ! , ι ¹ ]
     Emptyⱼ : ⊢⊢ Γ → Γ ⊢⊢ sEmpty ∷ SProp ^ [ ! , ι ¹ ]
     Πⱼ_▹_▹_ : ∀ {F rF lF G lG r l}
            → (r PE.≡ ! → lF ≤ l × lG ≤ l)
@@ -65,16 +64,6 @@ mutual
            → Γ ⊢⊢ snd e ∷ Π A' ^ rA ° ⁰ ▹ Id (U ⁰)
                         (B [ cast ⁰ (wk1 A') (wk1 A) (Idsym (Univ rA ⁰) (wk1 A) (wk1 A') (fst (wk1 e))) (var 0) ]↑)
                         B' ° ⁰ ° ⁰ ^ % ^ [ % , ι ⁰ ]
-    zeroⱼ   : ⊢⊢ Γ
-           → Γ ⊢⊢ zero ∷ ℕ ^ [ ! ,  ι ⁰ ]
-    sucⱼ    : ∀ {n}
-           → Γ ⊢⊢ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-           → Γ ⊢⊢ suc n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-    natrecⱼ : ∀ {G rG lG s z n}
-           → Γ       ⊢⊢ z ∷ G [ zero ] ^ [ rG , ι lG ]
-           → Γ       ⊢⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (G ^ rG ° lG ▹▹ G [ suc (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ [ rG , ι lG ]
-           → Γ       ⊢⊢ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-           → Γ       ⊢⊢ natrec lG G z s n ∷ G [ n ] ^ [ rG , ι lG ]
     Emptyrecⱼ : ∀ {A lA rA e}
            → Γ ⊢⊢ A ^ [ rA , ι lA ] → Γ ⊢⊢ e ∷ sEmpty ^ [ % ,  ι ⁰ ] -> Γ ⊢⊢ Emptyrec lA ⁰ A e ∷ A ^ [ rA , ι lA ]
     Idⱼ : ∀ {A l t u}
@@ -154,25 +143,6 @@ mutual
                 → Γ     ⊢⊢ g ∷ Π F ^ rF ° lF ▹ G ° lG ° l ^ ! ^ [ ! , ι l ]
                 → Γ ∙ F ^ [ rF , ι lF ] ⊢⊢ wk1 f ∘ var Nat.zero ^ l ≡ wk1 g ∘ var Nat.zero ^ l ∷ G ^ [ ! , ι lG ]
                 → Γ     ⊢⊢ f ≡ g ∷ Π F ^ rF ° lF ▹ G ° lG ° l ^ ! ^ [ ! , ι l ]
-    suc-cong    : ∀ {m n}
-                → Γ ⊢⊢ m ≡ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-                → Γ ⊢⊢ suc m ≡ suc n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-    natrec-cong : ∀ {z z′ s s′ n n′ F F′ l}
-                → Γ ∙ ℕ ^ [ ! ,  ι ⁰ ] ⊢⊢ F ≡ F′ ^ [ ! , ι l ]
-                → Γ     ⊢⊢ z ≡ z′ ∷ F [ zero ] ^ [ ! , ι l ]
-                → Γ     ⊢⊢ s ≡ s′ ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l  ]
-                → Γ     ⊢⊢ n ≡ n′ ∷ ℕ ^ [ ! ,  ι ⁰ ]
-                → Γ     ⊢⊢ natrec l F z s n ≡ natrec l F′ z′ s′ n′ ∷ F [ n ] ^ [ ! , ι l ]
-    natrec-zero : ∀ {z s F l}
-                → Γ     ⊢⊢ z ∷ F [ zero ] ^ [ ! , ι l ]
-                → Γ     ⊢⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                → Γ     ⊢⊢ natrec l F z s zero ≡ z ∷ F [ zero ] ^ [ ! , ι l ]
-    natrec-suc  : ∀ {n z s F l}
-                → Γ     ⊢⊢ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-                → Γ     ⊢⊢ z ∷ F [ zero ] ^ [ ! , ι l ]
-                → Γ     ⊢⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                → Γ     ⊢⊢ natrec l F z s (suc n) ≡ (s ∘ n ^ l) ∘ (natrec l F z s n) ^ l
-                        ∷ F [ suc n ] ^ [ ! , ι l ]
     Emptyrec-cong : ∀ {A A' l e e'}
                 → Γ ⊢⊢ A ≡ A' ^ [ ! , ι l ]
                 → Γ ⊢⊢ e ∷ sEmpty ^ [ % , ι ⁰ ]
@@ -212,7 +182,6 @@ mutual
 mutual 
   wfTerm : ∀ {Γ A t r} → Γ ⊢⊢ t ∷ A ^ r → ⊢⊢ Γ
   wfTerm (univ <l ⊢⊢Γ) = ⊢⊢Γ
-  wfTerm (ℕⱼ ⊢⊢Γ) = ⊢⊢Γ
   wfTerm (Emptyⱼ ⊢⊢Γ) = ⊢⊢Γ
   wfTerm (Πⱼ <l ▹ <l' ▹ G) with wf G
   ... | ⊢Γ ∙ F = ⊢Γ
@@ -222,9 +191,6 @@ mutual
   wfTerm (g ∘ⱼ a) = wfTerm a
   wfTerm (fstⱼ e) = wfTerm e
   wfTerm (sndⱼ e) = wfTerm e
-  wfTerm (zeroⱼ ⊢⊢Γ) = ⊢⊢Γ
-  wfTerm (sucⱼ n) = wfTerm n
-  wfTerm (natrecⱼ z s n) = wfTerm z
   wfTerm (Emptyrecⱼ A e) = wfTerm e
   wfTerm (Idⱼ t u) = wfTerm t
   wfTerm (Idreflⱼ t) = wfTerm t
@@ -236,18 +202,7 @@ mutual
   wf (Uⱼ ⊢⊢Γ) = ⊢⊢Γ
   wf (univ A) = wfTerm A
 
-adm-cast-ℕ-0 : ∀ {Γ e}
-         → Γ ⊢⊢ e ∷ Id (U ⁰) ℕ ℕ ^ [ % , ι ⁰ ]
-         → Γ ⊢⊢ cast ⁰ ℕ ℕ e zero ≡ zero ∷ ℕ ^ [ ! , ι ⁰ ]
-adm-cast-ℕ-0 ⊢⊢e = let ⊢⊢Γ = wfTerm ⊢⊢e
-                   in cast-refl (refl (univ (ℕⱼ ⊢⊢Γ))) ⊢⊢e (zeroⱼ ⊢⊢Γ)
 
-adm-cast-ℕ-S : ∀ {Γ e n}
-               → Γ ⊢⊢ e ∷ Id (U ⁰) ℕ ℕ ^ [ % , ι ⁰ ]
-               → Γ ⊢⊢ n ∷ ℕ ^ [ ! , ι ⁰ ]
-               → Γ ⊢⊢ cast ⁰ ℕ ℕ e (suc n) ≡ suc (cast ⁰ ℕ ℕ e n) ∷ ℕ ^ [ ! , ι ⁰ ]
-adm-cast-ℕ-S ⊢⊢e ⊢⊢n = let ⊢⊢Γ = wfTerm ⊢⊢e
-                       in trans (cast-refl (refl (univ (ℕⱼ ⊢⊢Γ))) ⊢⊢e (sucⱼ ⊢⊢n)) (suc-cong (sym (cast-refl (refl (univ (ℕⱼ ⊢⊢Γ))) ⊢⊢e ⊢⊢n)))
 
 
 mutual
@@ -269,7 +224,6 @@ mutual
   ⊢is⊢⊢eq (trans X X₁) = trans (⊢is⊢⊢eq X) (⊢is⊢⊢eq X₁)
   
   ⊢is⊢⊢term (univ x ⊢Γ) = univ x (⊢is⊢⊢ctx ⊢Γ)
-  ⊢is⊢⊢term (ℕⱼ ⊢Γ) = ℕⱼ (⊢is⊢⊢ctx ⊢Γ)
   ⊢is⊢⊢term (Emptyⱼ ⊢Γ) = Emptyⱼ (⊢is⊢⊢ctx ⊢Γ)
   ⊢is⊢⊢term (Πⱼ x ▹ x₁ ▹ X ▹ X₁) = Πⱼ x ▹ x₁ ▹ univ (⊢is⊢⊢term X₁)
   ⊢is⊢⊢term (var ⊢Γ x) = var (⊢is⊢⊢ctx ⊢Γ) x
@@ -277,9 +231,6 @@ mutual
   ⊢is⊢⊢term (x ▹ X ▹ X₁ ▹ X₂ ∘ⱼ X₃) = ⊢is⊢⊢term X₂ ∘ⱼ ⊢is⊢⊢term X₃
   ⊢is⊢⊢term (fstⱼ X X₁ _ _ X₂) = fstⱼ (⊢is⊢⊢term X₂)
   ⊢is⊢⊢term (sndⱼ X X₁ _ _ X₂) = sndⱼ (⊢is⊢⊢term X₂)
-  ⊢is⊢⊢term (zeroⱼ x) = zeroⱼ (⊢is⊢⊢ctx x)
-  ⊢is⊢⊢term (sucⱼ X) = sucⱼ (⊢is⊢⊢term X)
-  ⊢is⊢⊢term (natrecⱼ x x₁ X X₁ X₂) = natrecⱼ (⊢is⊢⊢term X) (⊢is⊢⊢term X₁) (⊢is⊢⊢term X₂)
   ⊢is⊢⊢term (Emptyrecⱼ x X) = Emptyrecⱼ (⊢is⊢⊢ x) (⊢is⊢⊢term X)
   ⊢is⊢⊢term (Idⱼ X X₁ X₂) = Idⱼ (⊢is⊢⊢term X₁) (⊢is⊢⊢term X₂) 
   ⊢is⊢⊢term (Idreflⱼ X) = Idreflⱼ (⊢is⊢⊢term X)
@@ -295,18 +246,12 @@ mutual
   ⊢is⊢⊢eqterm (app-cong X X₁) = app-cong (⊢is⊢⊢eqterm X) (⊢is⊢⊢eqterm X₁)
   ⊢is⊢⊢eqterm (β-red x x₁ x₂ x₃ x₄) = β-red x x₁ (⊢is⊢⊢term x₃) (⊢is⊢⊢term x₄)
   ⊢is⊢⊢eqterm (η-eq x x₁ x₂ x₃ x₄ X) = η-eq (⊢is⊢⊢term x₃) (⊢is⊢⊢term x₄) (⊢is⊢⊢eqterm X)
-  ⊢is⊢⊢eqterm (suc-cong X) = suc-cong (⊢is⊢⊢eqterm X)
-  ⊢is⊢⊢eqterm (natrec-cong x X X₁ X₂) = natrec-cong (⊢is⊢⊢eq x) (⊢is⊢⊢eqterm X) (⊢is⊢⊢eqterm X₁) (⊢is⊢⊢eqterm X₂)
-  ⊢is⊢⊢eqterm (natrec-zero x x₁ x₂) = natrec-zero (⊢is⊢⊢term x₁) (⊢is⊢⊢term x₂)
-  ⊢is⊢⊢eqterm (natrec-suc x x₁ x₂ x₃) = natrec-suc (⊢is⊢⊢term x) (⊢is⊢⊢term x₂) (⊢is⊢⊢term x₃)
   ⊢is⊢⊢eqterm (Emptyrec-cong x x₁ x₂) = Emptyrec-cong (⊢is⊢⊢eq x) (⊢is⊢⊢term x₁) (⊢is⊢⊢term x₂)
   ⊢is⊢⊢eqterm (proof-irrelevance x x₁) = proof-irrelevance (⊢is⊢⊢term x) (⊢is⊢⊢term x₁)
   ⊢is⊢⊢eqterm (Id-cong X X₁ X₂) = Id-cong (univ (⊢is⊢⊢eqterm X)) (⊢is⊢⊢eqterm X₁) (⊢is⊢⊢eqterm X₂)
   ⊢is⊢⊢eqterm (cast-refl X x x₁) = cast-refl (univ (⊢is⊢⊢eqterm X)) (⊢is⊢⊢term x) (⊢is⊢⊢term x₁)
   ⊢is⊢⊢eqterm (cast-cong X X₁ X₂ x x₁) = cast-cong (univ (⊢is⊢⊢eqterm X)) (univ (⊢is⊢⊢eqterm X₁)) (⊢is⊢⊢eqterm X₂) (⊢is⊢⊢term x) (⊢is⊢⊢term x₁)
   ⊢is⊢⊢eqterm (cast-Π x x₁ x₂ x₃ x₄ x₅) = cast-Π (⊢is⊢⊢term x₄) (⊢is⊢⊢term x₅)
-  ⊢is⊢⊢eqterm (cast-ℕ-0 x) = adm-cast-ℕ-0 (⊢is⊢⊢term x)
-  ⊢is⊢⊢eqterm (cast-ℕ-S x x₁) = adm-cast-ℕ-S (⊢is⊢⊢term x) (⊢is⊢⊢term x₁)
 
 
 mutual
@@ -328,7 +273,6 @@ mutual
   ⊢⊢is⊢eq (trans X X₁) = trans (⊢⊢is⊢eq X) (⊢⊢is⊢eq X₁)
   
   ⊢⊢is⊢term (univ x ⊢Γ) = univ x (⊢⊢is⊢ctx ⊢Γ)
-  ⊢⊢is⊢term (ℕⱼ ⊢Γ) = ℕⱼ (⊢⊢is⊢ctx ⊢Γ)
   ⊢⊢is⊢term (Emptyⱼ ⊢Γ) = Emptyⱼ (⊢⊢is⊢ctx ⊢Γ)
   ⊢⊢is⊢term (Πⱼ x ▹ x₁ ▹ X₁) =
     let ⊢G = ⊢⊢is⊢ X₁
@@ -354,15 +298,6 @@ mutual
         rG , _ , _ , ⊢A , ⊢B , _ , req , _ = inversion-Π ⊢Π
         rG' , _ , _ , ⊢A' , ⊢B' , _ , req' , _ = inversion-Π ⊢Π'
     in sndⱼ ⊢A (PE.subst (λ rr → _ ⊢ _ ∷ Univ rr _ ^ [ ! , _ ]) req ⊢B) ⊢A' (PE.subst (λ rr → _ ⊢ _ ∷ Univ rr _ ^ [ ! , _ ]) req' ⊢B') ⊢e
-  ⊢⊢is⊢term (zeroⱼ x) = zeroⱼ (⊢⊢is⊢ctx x)
-  ⊢⊢is⊢term (sucⱼ X) = sucⱼ (⊢⊢is⊢term X)
-  ⊢⊢is⊢term (natrecⱼ X X₁ X₂) =
-    let ⊢s = ⊢⊢is⊢term X₁ 
-        ⊢Π = un-univ (syntacticTerm ⊢s)
-        rG , _ , l% , _ , ⊢GG , _ , req , _ = inversion-Π ⊢Π
-        rG , _ , l% , ⊢G , _ , _ , req , _ = inversion-Π ⊢GG
-        l% = PE.subst (λ rr → rr PE.≡ % → _ PE.≡ ⁰ × _ PE.≡ ⁰) req l%
-    in natrecⱼ (λ req → proj₁ (l% req)) (univ ⊢G) (⊢⊢is⊢term X) ⊢s (⊢⊢is⊢term X₂)
   ⊢⊢is⊢term (Emptyrecⱼ x X) = Emptyrecⱼ (⊢⊢is⊢ x) (⊢⊢is⊢term X)
   ⊢⊢is⊢term (Idⱼ X₁ X₂) =
     let ⊢t = (⊢⊢is⊢term X₁)
@@ -397,20 +332,6 @@ mutual
         ⊢Π = un-univ (syntacticTerm ⊢t)
         rG , l! , l% , ⊢F , ⊢G , _ , req , _ = inversion-Π ⊢Π
     in η-eq (proj₁ (l! req)) (proj₂ (l! req)) (univ ⊢F) ⊢t (⊢⊢is⊢term x₄) (⊢⊢is⊢eqterm X)
-  ⊢⊢is⊢eqterm (suc-cong X) = suc-cong (⊢⊢is⊢eqterm X)
-  ⊢⊢is⊢eqterm (natrec-cong x X X₁ X₂) = natrec-cong (⊢⊢is⊢eq x) (⊢⊢is⊢eqterm X) (⊢⊢is⊢eqterm X₁) (⊢⊢is⊢eqterm X₂)
-  ⊢⊢is⊢eqterm (natrec-zero x₁ x₂) =
-    let ⊢s = ⊢⊢is⊢term x₂
-        ⊢Π = un-univ (syntacticTerm ⊢s)
-        _ , _ , _ , _ , ⊢FF , _ = inversion-Π ⊢Π
-        _ , _ , _ , ⊢F , _  = inversion-Π ⊢FF
-    in natrec-zero (univ ⊢F) (⊢⊢is⊢term x₁) ⊢s
-  ⊢⊢is⊢eqterm (natrec-suc x x₂ x₃) =
-    let ⊢s = ⊢⊢is⊢term x₃
-        ⊢Π = un-univ (syntacticTerm ⊢s)
-        _ , _ , _ , _ , ⊢FF , _ = inversion-Π ⊢Π
-        _ , _ , _ , ⊢F , _  = inversion-Π ⊢FF
-    in natrec-suc (⊢⊢is⊢term x) (univ ⊢F) (⊢⊢is⊢term x₂) ⊢s
   ⊢⊢is⊢eqterm (Emptyrec-cong x x₁ x₂) = Emptyrec-cong (⊢⊢is⊢eq x) (⊢⊢is⊢term x₁) (⊢⊢is⊢term x₂)
   ⊢⊢is⊢eqterm (proof-irrelevance x x₁) = proof-irrelevance (⊢⊢is⊢term x) (⊢⊢is⊢term x₁)
   ⊢⊢is⊢eqterm (Id-cong X X₁ X₂) = Id-cong (un-univ≡ (⊢⊢is⊢eq X)) (⊢⊢is⊢eqterm X₁) (⊢⊢is⊢eqterm X₂)

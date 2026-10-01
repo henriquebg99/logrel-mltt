@@ -92,54 +92,6 @@ record _⊩neIrr_≡_∷_^_/_ (Γ : Con Term) (t u A : Term) (l : Level) ([A] : 
     d   : Γ ⊢ t ∷ A ^ [ % , ι l ]
     d′  : Γ ⊢ u ∷ A ^ [ % , ι l ]
 
--- Reducibility of natural numbers:
-
--- Natural number type
-_⊩ℕ_ : (Γ : Con Term) (A : Term) → Set
-Γ ⊩ℕ A = Γ ⊢ A :⇒*: ℕ ^ [ ! , ι ⁰ ]
-
--- Natural number type equality
-_⊩ℕ_≡_ : (Γ : Con Term) (A B : Term) → Set
-Γ ⊩ℕ A ≡ B = Γ ⊢ B ⇒* ℕ ^ [ ! , ι ⁰ ]
-
-mutual
-  -- Natural number term
-  data _⊩ℕ_∷ℕ (Γ : Con Term) (t : Term) : Set where
-    ℕₜ : (n : Term) (d : Γ ⊢ t :⇒*: n ∷ ℕ ^ ι ⁰) (n≡n : Γ ⊢ n ≅ n ∷ ℕ ^ [ ! , ι ⁰ ])
-         (prop : Natural-prop Γ n)
-       → Γ ⊩ℕ t ∷ℕ
-
-  -- WHNF property of natural number terms
-  data Natural-prop (Γ : Con Term) : (n : Term) → Set where
-    sucᵣ  : ∀ {n} → Γ ⊩ℕ n ∷ℕ → Natural-prop Γ (suc n)
-    zeroᵣ : Natural-prop Γ zero
-    ne    : ∀ {n} → Γ ⊩neNf n ∷ ℕ ^ [ ! , ι ⁰ ] → Natural-prop Γ n
-
-mutual
-  -- Natural number term equality
-  data _⊩ℕ_≡_∷ℕ (Γ : Con Term) (t u : Term) : Set where
-    ℕₜ₌ : (k k′ : Term) (d : Γ ⊢ t :⇒*: k  ∷ ℕ ^ ι ⁰) (d′ : Γ ⊢ u :⇒*: k′ ∷ ℕ ^ ι ⁰)
-          (k≡k′ : Γ ⊢ k ≅ k′ ∷ ℕ ^ [ ! , ι ⁰ ])
-          (prop : [Natural]-prop Γ k k′) → Γ ⊩ℕ t ≡ u ∷ℕ
-
-  -- WHNF property of Natural number term equality
-  data [Natural]-prop (Γ : Con Term) : (n n′ : Term) → Set where
-    sucᵣ  : ∀ {n n′} → Γ ⊩ℕ n ≡ n′ ∷ℕ → [Natural]-prop Γ (suc n) (suc n′)
-    zeroᵣ : [Natural]-prop Γ zero zero
-    ne    : ∀ {n n′} → Γ ⊩neNf n ≡ n′ ∷ ℕ ^ [ ! , ι ⁰ ] → [Natural]-prop Γ n n′
-
--- Natural extraction from term WHNF property
-natural : ∀ {Γ n} → Natural-prop Γ n → Natural n
-natural (sucᵣ x) = sucₙ
-natural zeroᵣ = zeroₙ
-natural (ne (neNfₜ neK ⊢k k≡k)) = ne neK
-
--- Natural extraction from term equality WHNF property
-split : ∀ {Γ a b} → [Natural]-prop Γ a b → Natural a × Natural b
-split (sucᵣ x) = sucₙ , sucₙ
-split zeroᵣ = zeroₙ , zeroₙ
-split (ne (neNfₜ₌ neK neM k≡m)) = ne neK , ne neM
-
 -- Reducibility of inductive types Ind i:
 
 -- Inductive type
@@ -446,7 +398,6 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
 
     data _⊩¹_^_ (Γ : Con Term) : Term → TypeInfo → Set where
       Uᵣ  : ∀ {A ll} → (UA : Γ ⊩¹U A ^ ll) → Γ ⊩¹ A ^ [ ! , ll ]
-      ℕᵣ  : ∀ {A} → Γ ⊩ℕ A → Γ ⊩¹ A ^ [ ! , ι ⁰ ]
       Indᵣ : ∀ {A i} → Γ ⊩Ind A ^ i → Γ ⊩¹ A ^ [ ! , ι ⁰ ]
       Emptyᵣ : ∀ {A} → Γ ⊩Empty A → Γ ⊩¹ A ^ [ % , ι ⁰ ]
       ne  : ∀ {A r l} → Γ ⊩ne A ^[ r , l ] → Γ ⊩¹ A ^ [ r , ι l ]
@@ -458,7 +409,6 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
 
     _⊩¹_≡_^_/_ : (Γ : Con Term) (A B : Term) (r : TypeInfo) → Γ ⊩¹ A ^ r  → Set
     Γ ⊩¹ A ≡ B ^ [ .! , l ] / Uᵣ UA = Γ ⊩¹U A ≡ B ^ l / UA
-    Γ ⊩¹ A ≡ B ^ [ .! , .ι ⁰ ] / ℕᵣ D = Γ ⊩ℕ A ≡ B
     Γ ⊩¹ A ≡ B ^ [ .! , .ι ⁰ ] / Indᵣ {i = i} D = Γ ⊩Ind A ≡ B ^ i
     Γ ⊩¹ A ≡ B ^ [ .% , .ι ⁰ ] / Emptyᵣ D = Γ ⊩Empty A ≡ B
     Γ ⊩¹ A ≡ B ^ [ r , ι l ] / ne neA = Γ ⊩ne A ≡ B ^[ r , l ]/ neA
@@ -470,7 +420,6 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
 
     _⊩¹_∷_^_/_ : (Γ : Con Term) (t A : Term) (r : TypeInfo) → Γ ⊩¹ A ^ r  → Set
     Γ ⊩¹ t ∷ A ^ [ .! , ll ] / Uᵣ UA = Γ ⊩¹U t ∷ A ^ ll / UA
-    Γ ⊩¹ t ∷ A ^ .([ ! , ι ⁰ ]) / ℕᵣ x = Γ ⊩ℕ t ∷ℕ
     Γ ⊩¹ t ∷ A ^ .([ ! , ι ⁰ ]) / Indᵣ {i = i} x = Γ ⊩Ind t ∷Ind i
     Γ ⊩¹ t ∷ A ^ [ .% , ι ⁰ ] / Emptyᵣ x =  Γ ⊩Empty t ∷Empty
     Γ ⊩¹ t ∷ A ^ .([ ! , ι l ]) / ne {r = !} {l} neA = Γ ⊩ne t ∷ A ^ l / neA
@@ -483,7 +432,6 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
 
     _⊩¹_≡_∷_^_/_ : (Γ : Con Term) (t u A : Term) (r : TypeInfo) → Γ ⊩¹ A ^ r → Set
     Γ ⊩¹ t ≡ u ∷ A ^ [ .! , ll ] / Uᵣ UA = Γ ⊩¹U t ≡ u ∷ A ^ ll / UA
-    Γ ⊩¹ t ≡ u ∷ A ^ .([ ! , ι ⁰ ]) / ℕᵣ D = Γ ⊩ℕ t ≡ u ∷ℕ
     Γ ⊩¹ t ≡ u ∷ A ^ .([ ! , ι ⁰ ]) / Indᵣ {i = i} D = Γ ⊩Ind t ≡ u ∷Ind i
     Γ ⊩¹ t ≡ u ∷ A ^ [ .% , ι ⁰ ] / Emptyᵣ D = Γ ⊩Empty t ≡ u ∷Empty
     Γ ⊩¹ t ≡ u ∷ A ^ .([ ! , ι l ]) / ne {r = !} {l} neA = Γ ⊩ne t ≡ u ∷ A ^  l / neA
@@ -497,7 +445,7 @@ module LogRel (l : TypeLevel) (rec : ∀ {l′} → l′ <∞ l → LogRelKit) w
     kit : LogRelKit
     kit = Kit _⊩¹U_^_ _⊩¹Π_^[_] _⊩¹_^_ _⊩¹_≡_^_/_ _⊩¹_∷_^_/_ _⊩¹_≡_∷_^_/_
 
-open LogRel public using (Uᵣ; ℕᵣ; Indᵣ; Emptyᵣ; ne; Πᵣ ; Πirrᵣ ; Idᵣ ; emb; Uₜ; Uₜ₌; Π₌)
+open LogRel public using (Uᵣ; Indᵣ; Emptyᵣ; ne; Πᵣ ; Πirrᵣ ; Idᵣ ; emb; Uₜ; Uₜ₌; Π₌)
 
 -- Patterns for the non-records of Π
 pattern Πₜ a b c d e f = a , b , c , d , e , f

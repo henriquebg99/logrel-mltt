@@ -56,8 +56,6 @@ neTypeEq (var x) (var x₁ x₂) (var x₃ x₄) =
 neTypeEq (∘ₙ neT) (_ ▹ _ ▹ _ ▹ t∷A ∘ⱼ t∷A₁) (_ ▹ _ ▹ _ ▹ t∷B ∘ⱼ t∷B₁) with neTypeEq neT t∷A t∷B
 ... | e , q = let _ , _ , _ , elG , w = injectivity q
               in PE.cong _ elG , substTypeEq w (genRefl t∷A₁)
-neTypeEq (natrecₙ neT) (natrecⱼ _ x t∷A t∷A₁ t∷A₂) (natrecⱼ _ x₁ t∷B t∷B₁ t∷B₂) =
-  PE.refl , refl (substType x₁ t∷B₂)
 neTypeEq Emptyrecₙ (Emptyrecⱼ x t∷A) (Emptyrecⱼ x₁ t∷B) =
   PE.refl , refl x₁
 neTypeEq (IndRectₙ neT) t∷A t∷B =
@@ -72,10 +70,6 @@ neTypeEq x t∷A (conv t∷B x₃) =
   let e , q = neTypeEq x t∷A t∷B
   in e , trans q (PE.subst (λ l → _ ⊢ _ ≡ _ ^ [ _ , l ]) (PE.sym e) x₃) 
 
-natTypeEq : ∀ {A rA lA Γ} → Γ ⊢ ℕ ∷ A ^ [ rA , lA ] → rA PE.≡ ! × lA PE.≡ ι ¹ × Γ ⊢ A ≡ U ⁰ ^ [ ! , ι ¹ ]
-natTypeEq (ℕⱼ x) = PE.refl , PE.refl , refl (univ (univ 0<1 x))
-natTypeEq (conv X x) = let eqrA , eqlA , eqAU = natTypeEq X in eqrA , eqlA ,
-  trans (sym (PE.subst (λ l → _ ⊢ _ ≡ _ ^ [ _ , l ] ) eqlA (PE.subst (λ r → _ ⊢ _ ≡ _ ^ [ r , _ ]) eqrA x))) eqAU 
 
 emptyTypeEq : ∀ {A rA lA Γ} → Γ ⊢ sEmpty ∷ A ^ [ rA , lA ] →
   rA PE.≡ ! × lA PE.≡ next ⁰ × Γ ⊢ A ≡ SProp ^ [ ! , next ⁰ ]

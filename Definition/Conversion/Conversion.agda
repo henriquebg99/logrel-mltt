@@ -38,10 +38,6 @@ mutual
                 → Whnf B
                 → Γ ⊢ t [conv↓] u ∷ A ^ l
                 → Δ ⊢ t [conv↓] u ∷ B ^ l
-  convConv↓Term Γ≡Δ A≡B whnfB (ℕ-ins x) =
-    let eqN = ℕ≡A A≡B whnfB 
-    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
-                (ℕ-ins (stability~↓! Γ≡Δ x))
   convConv↓Term Γ≡Δ A≡B whnfB (Ind-ins x) =
     let eqN = Ind≡A A≡B whnfB 
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
@@ -53,15 +49,6 @@ mutual
   convConv↓Term Γ≡Δ A≡B whnfB (ne-ins t u x x₁) | B , neB , PE.refl =
     ne-ins (stabilityTerm Γ≡Δ (conv t A≡B)) (stabilityTerm Γ≡Δ (conv u A≡B))
            neB (stability~↓! Γ≡Δ x₁)
-  convConv↓Term Γ≡Δ A≡B whnfB (zero-refl x) =
-    let eqN = ℕ≡A A≡B whnfB 
-        _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
-       (zero-refl ⊢Δ)
-  convConv↓Term Γ≡Δ A≡B whnfB (suc-cong x) =
-    let eqN = ℕ≡A A≡B whnfB 
-    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqN) 
-                (suc-cong (stabilityConv↑Term Γ≡Δ x))
   convConv↓Term Γ≡Δ A≡B whnfB (η-eq l< l<' x x₁ x₂ y y₁ x₃) =
     let F′ , G′ , eqΠ = Π≡A A≡B whnfB
         A≡B' = PE.subst (λ X → _ ⊢ _ ≡ X ^ _) eqΠ A≡B
@@ -76,10 +63,6 @@ mutual
     let eqU = U≡A-whnf A≡B whnfB
         _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ ∞) (PE.sym eqU) (U-refl  x ⊢Δ)
-  convConv↓Term Γ≡Δ A≡B whnfB (ℕ-refl x) =
-    let eqU = U≡A-whnf A≡B whnfB
-        _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-    in PE.subst (λ x → _ ⊢ _ [conv↓] _ ∷ x ^ _) (PE.sym eqU) (ℕ-refl ⊢Δ)
   convConv↓Term Γ≡Δ A≡B whnfB (Empty-refl _) =
     let eqU = U≡A-whnf A≡B whnfB
         _ , ⊢Δ , _ = contextConvSubst Γ≡Δ

@@ -28,12 +28,8 @@ data Kind : Set where
   Ukind : Relevance → Level → Kind
   Indkind : Nat → Kind
   Pikind : Relevance → Level → Level → Level → Relevance → Kind
-  Natkind : Kind
   Lamkind : Level → Kind
   Appkind : Level → Kind
-  Zerokind : Kind
-  Suckind : Kind
-  Natreckind : Level → Kind
   Emptykind : Level → Kind
   Emptyreckind : Level → Level → Kind
   Idkind : Kind
@@ -57,7 +53,6 @@ data Term : Set where
 
 -- We represent the expressions of our language as de Bruijn terms.
 -- Variables are natural numbers interpreted as de Bruijn indices.
--- Π, lam, ∃ , transp and natrec are binders.
 
 -- Type constructors.
 -- Universes of proof-relevant types
@@ -74,10 +69,6 @@ pattern Univ r l = gen (Ukind r l) []
 Π_^_°_▹_°_°_^_   : Term → Relevance → Level → Term → Level → Level → Relevance → Term  -- Dependent function type (B is a binder).
 Π A ^ r ° lA ▹ B ° lB ° lΠ ^ rΠ = gen (Pikind r lA lB lΠ rΠ) (⟦ 0 , A ⟧ ∷ ⟦ 1 , B ⟧ ∷ [])
 
--- Natural numbers
-ℕ      : Term
-ℕ = gen Natkind []
-
 -- Lambda-calculus.
 -- var    : (x : Nat)        → Term  -- Variable (de Bruijn index).
 -- var = var
@@ -93,16 +84,6 @@ fst t = gen Fstkind (⟦ 0 , t ⟧ ∷ [])
 
 snd : (t : Term) → Term -- Dependent pair elimination
 snd t = gen Sndkind (⟦ 0 , t ⟧ ∷ [])
-
--- Introduction and elimination of natural numbers.
-zero   : Term                     -- Natural number zero.
-zero = gen Zerokind []
-
-suc    : (t : Term)       → Term  -- Successor.
-suc t = gen Suckind (⟦ 0 , t ⟧ ∷ [])
-
-natrec : (l : Level) (A t u v : Term) → Term  -- Recursor (A is a binder).
-natrec l A t u v = gen (Natreckind l) (⟦ 1 , A ⟧ ∷ ⟦ 0 , t ⟧ ∷ ⟦ 0 , u ⟧ ∷ ⟦ 0 , v ⟧ ∷ [])
 
 -- Empty type
 Empty : Level → Term
@@ -166,12 +147,8 @@ emb_okind_kind : OKind → Kind
 emb_okind_kind (O.Ukind r l) = Ukind r l
 emb_okind_kind (O.Indkind i) = Indkind i
 emb_okind_kind (O.Pikind r lA lB lΠ rΠ) = Pikind r lA lB lΠ rΠ
-emb_okind_kind O.Natkind = Natkind
 emb_okind_kind (O.Lamkind l) = Lamkind l
 emb_okind_kind (O.Appkind l) = Appkind l
-emb_okind_kind O.Zerokind = Zerokind
-emb_okind_kind O.Suckind = Suckind
-emb_okind_kind (O.Natreckind l) = Natreckind l
 emb_okind_kind (O.Emptykind l) = Emptykind l
 emb_okind_kind (O.Emptyreckind l lEmpty) = Emptyreckind l lEmpty
 emb_okind_kind O.Idkind = Idkind
@@ -210,11 +187,6 @@ emb_con (Γ ∙ A ^ r) = emb_con Γ ∙ emb_oterm_term A ^ r
 Id-PE-injectivity : ∀ {F G t u t' u'} → Id F t u PE.≡ Id G t' u'
   → F PE.≡ G × t PE.≡ t' × u PE.≡ u'
 Id-PE-injectivity PE.refl = PE.refl , PE.refl , PE.refl
-
--- If  suc n = suc m  then  n = m.
-
-suc-PE-injectivity : ∀ {n m} → suc n PE.≡ suc m → n PE.≡ m
-suc-PE-injectivity PE.refl = PE.refl
 
 gen-PE-injectivity : ∀ {k k' ts ts'} → gen k ts PE.≡ gen k' ts' → k PE.≡ k' × ts PE.≡ ts'
 gen-PE-injectivity PE.refl = PE.refl , PE.refl
@@ -263,15 +235,9 @@ reprInd i = Eq.repr equivs i
 data Neutral : Term → Set where
   var     : ∀ n                     → Neutral (var n)
   ∘ₙ      : ∀ {k u l}     → Neutral k → Neutral (k ∘ u ^ l)
-  natrecₙ : ∀ {l C c g k} → Neutral k → Neutral (natrec l C c g k)
   castₙ : ∀ {l A B e t} → Neutral A → Neutral B → Neutral t → Neutral (cast l A B e t)
-  castnℕₙ : ∀ {l B e t} → Neutral B → Neutral (cast l B ℕ e t)
   castnΠₙ : ∀ {l A rA lA P lP r B e t} → Neutral B → Neutral (cast l B (Π A ^ rA ° lA ▹ P ° lP ° l ^ r) e t)
-  castℕₙ : ∀ {l B e t} → Neutral B → Neutral (cast l ℕ B e t)
   castΠₙ : ∀ {l A rA lA P lP r B e t} → Neutral B → Neutral (cast l (Π A ^ rA ° lA ▹ P ° lP ° l ^ r) B e t)
-  castℕℕₙ : ∀ {l e t} → Neutral t → Neutral (cast l ℕ ℕ e t)
-  castℕΠₙ : ∀ {l A rA r B e t} → Neutral (cast l ℕ (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) e t)
-  castΠℕₙ : ∀ {l A rA r B e t} → Neutral (cast l (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) ℕ e t)
   castnIndₙ : ∀ {l i B e t} → Neutral B → Neutral (cast l B (Ind i) e t)
   castIndₙ : ∀ {l i B e t} → Neutral B → Neutral (cast l (Ind i) B e t)
   -- Inductives with different representatives are not related by an
@@ -279,8 +245,6 @@ data Neutral : Term → Set where
   castIndInd≢ₙ : ∀ {l i j e t} → reprInd i PE.≢ reprInd j → Neutral (cast l (Ind i) (Ind j) e t)
   castIndΠₙ : ∀ {l i A rA r B e t} → Neutral (cast l (Ind i) (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) e t)
   castΠIndₙ : ∀ {l i A rA r B e t} → Neutral (cast l (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) (Ind i) e t)
-  castIndℕₙ : ∀ {l i e t} → Neutral (cast l (Ind i) ℕ e t)
-  castℕIndₙ : ∀ {l i e t} → Neutral (cast l ℕ (Ind i) e t)
   castΠΠ%!ₙ : ∀ {l A B A' B' r r' e t} → Neutral (cast l (Π A ^ % ° ⁰ ▹ B ° ⁰ ° l ^ r) (Π A' ^ ! ° ⁰ ▹ B' ° ⁰ ° l ^ r') e t)
   castΠΠ!%ₙ : ∀ {l A B A' B' r r' e t} → Neutral (cast l (Π A ^ ! ° ⁰ ▹ B ° ⁰ ° l ^ r) (Π A' ^ % ° ⁰ ▹ B' ° ⁰ ° l ^ r') e t)
   Emptyrecₙ : ∀ {l lEmpty A e} -> Neutral (Emptyrec l lEmpty A e)
@@ -295,14 +259,11 @@ data Whnf : Term → Set where
   Uₙ    : ∀ {r l} → Whnf (Univ r l)
   Πₙ    : ∀ {A r lA B lB l r'} → Whnf (Π A ^ r ° lA ▹ B ° lB ° l ^ r')
   Idₙ : ∀ {A t u} → Whnf (Id A t u)
-  ℕₙ    : Whnf ℕ
   Emptyₙ : ∀ {l} → Whnf (Empty l)
   Indₙ : ∀ {i} → Whnf (Ind i)
 
   -- Introductions are whnfs.
   lamₙ  : ∀ {A t l} → Whnf (lam A ▹ t ^ l)
-  zeroₙ : Whnf zero
-  sucₙ  : ∀ {t} → Whnf (suc t)
   ctrₙ : ∀ {i j ts} → Whnf (ctr i j ts)
 
   -- Neutrals are whnfs.
@@ -312,9 +273,6 @@ data Whnf : Term → Set where
 
 -- Different whnfs are trivially distinguished by propositional equality.
 -- (The following statements are sometimes called "no-confusion theorems".)
-
-U≢ℕ : ∀ {r l} → Univ r l PE.≢ ℕ
-U≢ℕ ()
 
 U≢Ind : ∀ {r l i} → Univ r l PE.≢ Ind i
 U≢Ind ()
@@ -331,26 +289,8 @@ U≢Id ()
 U≢ne : ∀ {r l K} → Neutral K → Univ r l PE.≢ K
 U≢ne () PE.refl
 
-ℕ≢Π : ∀ {F r lF G lG l r'} → ℕ PE.≢ Π F ^ r ° lF ▹ G ° lG ° l ^ r'
-ℕ≢Π ()
-
-ℕ≢Id : ∀ {F t u} → ℕ PE.≢ Id F t u
-ℕ≢Id ()
-
-ℕ≢Empty : ∀ {l} → ℕ PE.≢ Empty l
-ℕ≢Empty ()
-
-Empty≢ℕ : ∀ {l} → Empty l PE.≢ ℕ
-Empty≢ℕ ()
-
-ℕ≢Ind : ∀ {i} → ℕ PE.≢ Ind i
-ℕ≢Ind ()
-
 Empty≢Ind : ∀ {l i} → Empty l PE.≢ Ind i
 Empty≢Ind ()
-
-Ind≢ℕ : ∀ {i} → Ind i PE.≢ ℕ
-Ind≢ℕ ()
 
 Ind≢Empty : ∀ {i l} → Ind i PE.≢ Empty l
 Ind≢Empty ()
@@ -370,9 +310,6 @@ Ind≢Π ()
 Ind-inj : ∀ {i j} → Ind i PE.≡ Ind j → i PE.≡ j
 Ind-inj PE.refl = PE.refl
 
-ℕ≢ne : ∀ {K} → Neutral K → ℕ PE.≢ K
-ℕ≢ne () PE.refl
-
 Empty≢ne : ∀ {l K} → Neutral K → Empty l PE.≢ K
 Empty≢ne () PE.refl
 
@@ -391,15 +328,6 @@ Empty≢Id ()
 Id≢ne : ∀ {F t u K} → Neutral K → Id F t u PE.≢ K
 Id≢ne () PE.refl
 
-zero≢suc : ∀ {n} → zero PE.≢ suc n
-zero≢suc ()
-
-zero≢ne : ∀ {k} → Neutral k → zero PE.≢ k
-zero≢ne () PE.refl
-
-suc≢ne : ∀ {n k} → Neutral k → suc n PE.≢ k
-suc≢ne () PE.refl
-
 ctr≢ne : ∀ {i j args k} → Neutral k → ctr i j args PE.≢ k
 ctr≢ne () PE.refl
 
@@ -414,25 +342,19 @@ Ind≢Ctr ()
 
 -- Several views on whnfs (note: not recursive).
 
--- A whnf of type ℕ is either zero, suc t, or neutral.
-
-data Natural : Term → Set where
-  zeroₙ :                     Natural zero
-  sucₙ  : ∀ {t}             → Natural (suc t)
-  ne    : ∀ {n} → Neutral n → Natural n
-
 -- A whnf of type Ind i is a constructor of Ind i, or neutral.
 
 data Inductive (i : Nat) : Term → Set where
   ctrₙ : ∀ {j ts}           → Inductive i (ctr i j ts)
   ne   : ∀ {n} → Neutral n → Inductive i n
 
--- A type in whnf is either Π A B, ℕ, Ind i, or neutral.
+-- Large types could also be U.
+
+-- A type in whnf is either Π A B, Ind i, or neutral.
 -- Large types could also be U.
 
 data Type : Term → Set where
   Πₙ : ∀ {A r lA B lB l r'} → Type (Π A ^ r ° lA ▹ B ° lB ° l ^ r')
-  ℕₙ : Type ℕ
   Uₙ : ∀ {r l} → Type (Univ r l)
   Emptyₙ : ∀ {l} → Type (Empty l)
   Idₙ : ∀ {A t u} → Type (Id A t u)
@@ -446,12 +368,8 @@ data Function : Term → Set where
   ne : ∀{n} → Neutral n → Function n
 
 -- These views classify only whnfs.
--- Natural, Inductive, Type, and Function are subsets of Whnf.
 
-naturalWhnf : ∀ {n} → Natural n → Whnf n
-naturalWhnf sucₙ = sucₙ
-naturalWhnf zeroₙ = zeroₙ
-naturalWhnf (ne x) = ne x
+-- Inductive, Type, and Function are subsets of Whnf.
 
 inductiveWhnf : ∀ {i t} → Inductive i t → Whnf t
 inductiveWhnf ctrₙ = ctrₙ
@@ -459,7 +377,6 @@ inductiveWhnf (ne x) = ne x
 
 typeWhnf : ∀ {A} → Type A → Whnf A
 typeWhnf Πₙ = Πₙ
-typeWhnf ℕₙ = ℕₙ
 typeWhnf Uₙ  = Uₙ
 typeWhnf Idₙ = Idₙ
 typeWhnf Emptyₙ = Emptyₙ
@@ -570,35 +487,22 @@ wk-ctr ρ i j ts =
 wkNeutral : ∀ {t} ρ → Neutral t → Neutral (wk ρ t)
 wkNeutral ρ (var n)    = var (wkVar ρ n)
 wkNeutral ρ (∘ₙ n)    = ∘ₙ (wkNeutral ρ n)
-wkNeutral ρ (natrecₙ n) = natrecₙ (wkNeutral ρ n)
 wkNeutral ρ (IndRectₙ {i} {lG} {P} {t} {ms} n) =
   PE.subst Neutral (PE.sym (wk-IndRect ρ i lG P t ms))
     (IndRectₙ {P = wk (lift ρ) P} {ms = map (wk ρ) ms} (wkNeutral ρ n))
 wkNeutral ρ Emptyrecₙ = Emptyrecₙ
 wkNeutral ρ (castₙ A B t) = castₙ (wkNeutral ρ A) (wkNeutral ρ B) (wkNeutral ρ t)
-wkNeutral ρ (castnℕₙ A) = castnℕₙ (wkNeutral ρ A)
 wkNeutral ρ (castnΠₙ A) = castnΠₙ (wkNeutral ρ A)
-wkNeutral ρ (castℕₙ A) = castℕₙ (wkNeutral ρ A)
 wkNeutral ρ (castΠₙ A) = castΠₙ (wkNeutral ρ A)
-wkNeutral ρ (castℕℕₙ t) = castℕℕₙ (wkNeutral ρ t)
 wkNeutral ρ (castnIndₙ A) = castnIndₙ (wkNeutral ρ A)
 wkNeutral ρ (castIndₙ A) = castIndₙ (wkNeutral ρ A)
 wkNeutral ρ (castIndInd≢ₙ p) = castIndInd≢ₙ p
-wkNeutral ρ castℕΠₙ = castℕΠₙ
-wkNeutral ρ castΠℕₙ = castΠℕₙ
 wkNeutral ρ castIndΠₙ = castIndΠₙ
 wkNeutral ρ castΠIndₙ = castΠIndₙ
-wkNeutral ρ castIndℕₙ = castIndℕₙ
-wkNeutral ρ castℕIndₙ = castℕIndₙ
 wkNeutral ρ castΠΠ%!ₙ = castΠΠ%!ₙ
 wkNeutral ρ castΠΠ!%ₙ = castΠΠ!%ₙ
 
 -- Weakening can be applied to our whnf views.
-
-wkNatural : ∀ {t} ρ → Natural t → Natural (wk ρ t)
-wkNatural ρ sucₙ    = sucₙ
-wkNatural ρ zeroₙ   = zeroₙ
-wkNatural ρ (ne x) = ne (wkNeutral ρ x)
 
 wkInductive : ∀ {i t} ρ → Inductive i t → Inductive i (wk ρ t)
 wkInductive ρ (ctrₙ {j} {ts}) =
@@ -608,7 +512,6 @@ wkInductive ρ (ne x) = ne (wkNeutral ρ x)
 
 wkType : ∀ {t} ρ → Type t → Type (wk ρ t)
 wkType ρ Πₙ      = Πₙ
-wkType ρ ℕₙ      = ℕₙ
 wkType ρ Uₙ      = Uₙ
 wkType ρ Idₙ      = Idₙ
 wkType ρ Emptyₙ  = Emptyₙ
@@ -623,11 +526,8 @@ wkWhnf : ∀ {t} ρ → Whnf t → Whnf (wk ρ t)
 wkWhnf ρ Uₙ      = Uₙ
 wkWhnf ρ Πₙ      = Πₙ
 wkWhnf ρ Idₙ      = Idₙ
-wkWhnf ρ ℕₙ      = ℕₙ
 wkWhnf ρ Emptyₙ  = Emptyₙ
 wkWhnf ρ lamₙ    = lamₙ
-wkWhnf ρ zeroₙ   = zeroₙ
-wkWhnf ρ sucₙ    = sucₙ
 wkWhnf ρ (ne x) = ne (wkNeutral ρ x)
 wkWhnf ρ (ctrₙ {i} {j} {ts}) = PE.subst Whnf (PE.cong (gen (Ctrkind i j)) (map-map0-wkGen ρ ts)) (ctrₙ {ts = map (wk ρ) ts})
 wkWhnf ρ Indₙ = Indₙ
@@ -1075,32 +975,9 @@ emb-▹▹ A r lA B lB l r' =
   PE.trans (emb-Π A r lA (O.wk1 B) lB l r')
     (PE.cong (λ T → Π (emb_oterm_term A) ^ r ° lA ▹ T ° lB ° l ^ r') (emb-wk1 B))
 
-emb-sucvar0 : emb_oterm_term (O.suc (O.var Nat.zero)) PE.≡ suc (var Nat.zero)
-emb-sucvar0 = PE.refl
-
-emb-liftSubst-sucvar : ∀ G →
-  emb_oterm_term (G O.[ O.suc (O.var Nat.zero) ]↑) PE.≡ emb_oterm_term G [ suc (var Nat.zero) ]↑
-emb-liftSubst-sucvar G =
-  PE.trans (emb-liftSubst G (O.suc (O.var Nat.zero)))
-    (PE.cong (λ t → emb_oterm_term G [ t ]↑) emb-sucvar0)
-
 emb-wk1-liftSubst : ∀ G s →
   wk1 (emb_oterm_term (G O.[ s ]↑)) PE.≡ wk1 (emb_oterm_term G [ emb_oterm_term s ]↑)
 emb-wk1-liftSubst G s = PE.cong wk1 (emb-liftSubst G s)
-
-emb-natrec-inner-s-type : ∀ G rG lG →
-  emb_oterm_term (O.natrecStepInner G rG lG) PE.≡
-  emb_oterm_term G ^ rG ° lG ▹▹ emb_oterm_term G [ suc (var Nat.zero) ]↑ ° lG ° lG ^ rG
-emb-natrec-inner-s-type G rG lG =
-  PE.trans (emb-▹▹ G rG lG (G O.[ O.suc (O.var Nat.zero) ]↑) lG lG rG)
-    (PE.cong (λ B → emb_oterm_term G ^ rG ° lG ▹▹ B ° lG ° lG ^ rG) (emb-liftSubst-sucvar G))
-
-emb-natrec-s-type : ∀ G rG lG →
-  emb_oterm_term (O.natrecStepType G rG lG) PE.≡
-  Π ℕ ^ ! ° ⁰ ▹ (emb_oterm_term G ^ rG ° lG ▹▹ emb_oterm_term G [ suc (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG
-emb-natrec-s-type G rG lG =
-  PE.trans (emb-Π O.ℕ ! ⁰ (O.natrecStepInner G rG lG) lG lG rG)
-    (PE.cong (λ T → Π ℕ ^ ! ° ⁰ ▹ T ° lG ° lG ^ rG) (emb-natrec-inner-s-type G rG lG))
 
 emb-lam : ∀ A t l →
   emb_oterm_term (O.lam A ▹ t ^ l) PE.≡ lam (emb_oterm_term A) ▹ emb_oterm_term t ^ l
@@ -1116,26 +993,6 @@ emb-wk1∘var : ∀ f l →
 emb-wk1∘var f l =
   PE.trans (emb-∘ (O.wk1 f) (O.var Nat.zero) l)
     (PE.cong (λ t → t ∘ var Nat.zero ^ l) (emb-wk1 f))
-
-emb-natrec : ∀ lG G z s n →
-  emb_oterm_term (O.natrec lG G z s n) PE.≡
-  natrec lG (emb_oterm_term G) (emb_oterm_term z) (emb_oterm_term s) (emb_oterm_term n)
-emb-natrec lG G z s n = PE.refl
-
-emb-suc : ∀ n → emb_oterm_term (O.suc n) PE.≡ suc (emb_oterm_term n)
-emb-suc n = PE.refl
-
-emb-natrec-suc : ∀ l G z s n →
-  emb_oterm_term (O.natrec l G z s (O.suc n)) PE.≡
-  natrec l (emb_oterm_term G) (emb_oterm_term z) (emb_oterm_term s) (suc (emb_oterm_term n))
-emb-natrec-suc l G z s n = PE.refl
-
-emb-natrec-suc-rhs : ∀ l s n G z →
-  emb_oterm_term ((s O.∘ n ^ l) O.∘ (O.natrec l G z s n) ^ l) PE.≡
-  (emb_oterm_term s ∘ emb_oterm_term n ^ l) ∘ (natrec l (emb_oterm_term G) (emb_oterm_term z) (emb_oterm_term s) (emb_oterm_term n)) ^ l
-emb-natrec-suc-rhs l s n G z =
-  PE.trans (emb-∘ (s O.∘ n ^ l) (O.natrec l G z s n) l)
-    (PE.cong (λ t → t ∘ (emb_oterm_term (O.natrec l G z s n)) ^ l) (emb-∘ s n l))
 
 emb-cast : ∀ l A B e t →
   emb_oterm_term (O.cast l A B e t) PE.≡

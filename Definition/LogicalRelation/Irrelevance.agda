@@ -92,7 +92,6 @@ mutual
   irrelevanceEqT : ∀ {Γ A B r l l′} {p : Γ ⊩⟨ l ⟩ A ^ r} {q : Γ ⊩⟨ l′ ⟩ A ^ r}
                        → ShapeView Γ l l′ A A r r p q
                        → Γ ⊩⟨ l ⟩ A ≡ B ^ r / p → Γ ⊩⟨ l′ ⟩ A ≡ B ^ r / q
-  irrelevanceEqT (ℕᵥ D D′) A≡B = A≡B
   irrelevanceEqT (Indᵥ D D′) A≡B = A≡B
   irrelevanceEqT (Emptyᵥ D D′) A≡B = A≡B
   irrelevanceEqT (ne (ne K D neK _) (ne K₁ D₁ neK₁ K≡K₁)) (ne₌ M D′ neM K≡M)
@@ -140,7 +139,6 @@ mutual
                     → l <∞ l'
                     → Γ ⊩⟨ l ⟩ A ^ r
                     → Γ ⊩⟨ l' ⟩ A ^ r
-  irrelevance-level l< (ℕᵣ x) = ℕᵣ x
   irrelevance-level l< (Indᵣ x) = Indᵣ x
   irrelevance-level l< (Emptyᵣ x) = Emptyᵣ x
   irrelevance-level l< (ne x) = ne x
@@ -194,7 +192,6 @@ mutual
   irrelevanceTermT : ∀ {Γ A t r l l′} {p : Γ ⊩⟨ l ⟩ A ^ r} {q : Γ ⊩⟨ l′ ⟩ A ^ r}
                          → ShapeView Γ l l′ A A r r p q
                          → Γ ⊩⟨ l ⟩ t ∷ A ^ r / p → Γ ⊩⟨ l′ ⟩ t ∷ A ^ r / q
-  irrelevanceTermT (ℕᵥ D D′) t = t
   irrelevanceTermT (Indᵥ D D′) t = t
   irrelevanceTermT (Emptyᵥ D D′) t = t
   irrelevanceTermT { r = [ ! , ll ]  } (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (neₜ k d nf)
@@ -276,7 +273,6 @@ mutual
   irrelevanceEqTermT : ∀ {Γ A t u r} {l l′} {p : Γ ⊩⟨ l ⟩ A ^ r} {q : Γ ⊩⟨ l′ ⟩ A ^ r}
                            → ShapeView Γ l l′ A A r r p q
                            → Γ ⊩⟨ l ⟩ t ≡ u ∷ A ^ r / p → Γ ⊩⟨ l′ ⟩ t ≡ u ∷ A ^ r / q
-  irrelevanceEqTermT (ℕᵥ D D′) t≡u = t≡u
   irrelevanceEqTermT (Indᵥ D D′) t≡u = t≡u
   irrelevanceEqTermT (Emptyᵥ D D′) t≡u = t≡u
   irrelevanceEqTermT { r = [ ! , ll ] } (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (neₜ₌ k m d d′ nf)

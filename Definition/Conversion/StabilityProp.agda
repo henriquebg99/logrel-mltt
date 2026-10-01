@@ -37,11 +37,6 @@ mutual
   stabilitySize~↑! Γ≡Δ (app-cong {rF = %} x x₁) = PE.cong₂ (λ a b → 1+ (a + b))
              (stabilitySize~↓! Γ≡Δ x)
              PE.refl
-  stabilitySize~↑! Γ≡Δ (natrec-cong x x₁ x₂ x₃) = PE.cong₄ (λ a b c d → 1+ (a + b + c + d))
-             (stabilitySizeConv↑ _ x)
-             (stabilitySizeConv↑Term Γ≡Δ x₁)
-             (stabilitySizeConv↑Term Γ≡Δ x₂)
-             (stabilitySize~↓! Γ≡Δ x₃) 
   stabilitySize~↑! Γ≡Δ (Emptyrec-cong x x₁) = PE.cong (λ n → 1+ n) (stabilitySizeConv↑ Γ≡Δ x)
   stabilitySize~↑! Γ≡Δ (cast-cong x x₁ x₂ _ _) =  PE.cong₃ (λ a b c → 1+ (a + b + c))
              (stabilitySize~↓! Γ≡Δ x) 
@@ -50,17 +45,9 @@ mutual
   stabilitySize~↑! Γ≡Δ (cast-refl x x₁ _) = PE.cong₂ (λ a b → 1+ (a + b))
              (stabilitySize~↓! Γ≡Δ x)
              (stabilitySizeConv↓Term Γ≡Δ x₁)
-  stabilitySize~↑! Γ≡Δ (castℕ-refl x x₁) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
   stabilitySize~↑! Γ≡Δ (cast-refl' x x₁ _) = PE.cong₂ (λ a b → 1+ (a + b))
              (stabilitySize~↓! Γ≡Δ x)
              (stabilitySizeConv↓Term Γ≡Δ x₁)
-  stabilitySize~↑! Γ≡Δ (castℕ-refl' x x₁) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
-  stabilitySize~↑! Γ≡Δ (cast-neℕ x x₁ x₂ x₃) = PE.cong₂ (λ a b → 1+ (a + b))
-             (stabilitySize~↓! Γ≡Δ x)
-             (stabilitySizeConv↑Term Γ≡Δ x₁)
-  stabilitySize~↑! Γ≡Δ (cast-ℕ x x₁ x₂ x₃) = PE.cong₂ (λ a b → 1+ (a + b))
-             (stabilitySize~↓! Γ≡Δ x)
-             (stabilitySizeConv↑Term Γ≡Δ x₁)
   stabilitySize~↑! Γ≡Δ (cast-neΠ a x x₁ x₂ x₃) = PE.cong₃ (λ a b c → 1+ (a + b + c))
              (stabilitySizeConv↑Term Γ≡Δ a)
              (stabilitySize~↓! Γ≡Δ x)
@@ -69,8 +56,6 @@ mutual
              (stabilitySizeConv↑Term Γ≡Δ a)
              (stabilitySize~↓! Γ≡Δ x)
              (stabilitySizeConv↑Term Γ≡Δ x₁)
-  stabilitySize~↑! Γ≡Δ (cast-Πℕ a x x₁ x₂) = PE.cong₂ (λ a b → 1+ (a + b)) (stabilitySizeConv↑Term Γ≡Δ a) (stabilitySizeConv↑Term Γ≡Δ x)
-  stabilitySize~↑! Γ≡Δ (cast-ℕΠ a x x₁ x₂) = PE.cong₂ (λ a b → 1+ (a + b)) (stabilitySizeConv↑Term Γ≡Δ a) (stabilitySizeConv↑Term Γ≡Δ x)
   stabilitySize~↑! Γ≡Δ (cast-ΠΠ%! a b x x₁ x₂) = PE.cong₃ (λ a b c → 1+ (a + b + c))
              (stabilitySizeConv↑Term Γ≡Δ a)
              (stabilitySizeConv↑Term Γ≡Δ b)
@@ -91,8 +76,6 @@ mutual
              (stabilitySizeConv↑Term Γ≡Δ x₁)
   stabilitySize~↑! Γ≡Δ (cast-IndΠ a x x₁ x₂) = PE.cong₂ (λ a b → 1+ (a + b)) (stabilitySizeConv↑Term Γ≡Δ a) (stabilitySizeConv↑Term Γ≡Δ x)
   stabilitySize~↑! Γ≡Δ (cast-ΠInd a x x₁ x₂) = PE.cong₂ (λ a b → 1+ (a + b)) (stabilitySizeConv↑Term Γ≡Δ a) (stabilitySizeConv↑Term Γ≡Δ x)
-  stabilitySize~↑! Γ≡Δ (cast-Indℕ x x₁ x₂) = PE.cong 1+ (stabilitySizeConv↑Term Γ≡Δ x)
-  stabilitySize~↑! Γ≡Δ (cast-ℕInd x x₁ x₂) = PE.cong 1+ (stabilitySizeConv↑Term Γ≡Δ x)
   stabilitySize~↑! Γ≡Δ (cast-IndInd x x₁ x₂ x₃) = PE.cong 1+ (stabilitySizeConv↑Term Γ≡Δ x₁)
 
   stabilitySize~↓! : ∀ {k l A Γ Δ lA}
@@ -110,7 +93,6 @@ mutual
                 sizeConv↓Term t~u
   stabilitySizeConv↓Term Γ≡Δ (U-refl x x₁) = PE.refl
   stabilitySizeConv↓Term Γ≡Δ (ne x) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
-  stabilitySizeConv↓Term Γ≡Δ (ℕ-refl x) = PE.refl
   stabilitySizeConv↓Term Γ≡Δ (Empty-refl x) = PE.refl
   stabilitySizeConv↓Term Γ≡Δ (Π-cong PE.refl PE.refl PE.refl PE.refl l< l<' F A<>B A<>B₁) = PE.cong₂ (λ a b → 1 + (a + b))
                   (stabilitySizeConv↑Term Γ≡Δ A<>B)
@@ -119,12 +101,9 @@ mutual
              (stabilitySizeConv↑Term Γ≡Δ x) 
              (stabilitySizeConv↑Term Γ≡Δ x₁)
              (stabilitySizeConv↑Term Γ≡Δ x₂)
-  stabilitySizeConv↓Term Γ≡Δ (ℕ-ins x) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
   stabilitySizeConv↓Term Γ≡Δ (Ind-ins x) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x)
   stabilitySizeConv↓Term Γ≡Δ (Ind-refl x _) = PE.refl
   stabilitySizeConv↓Term Γ≡Δ (ne-ins x x₁ x₂ x₃) = PE.cong 1+ (stabilitySize~↓! Γ≡Δ x₃)
-  stabilitySizeConv↓Term Γ≡Δ (zero-refl x) = PE.refl
-  stabilitySizeConv↓Term Γ≡Δ (suc-cong x) = PE.cong 1+ (stabilitySizeConv↑Term Γ≡Δ x)
   stabilitySizeConv↓Term Γ≡Δ (η-eq l< l<' F x x₁ y y₁ t<>u) = PE.cong 1+ (stabilitySizeConv↑Term _ t<>u)
   stabilitySizeConv↓Term Γ≡Δ (ctr-cong x x₁ x₂ x₃) = PE.cong 1+ (stabilityAll₃Size Γ≡Δ x₃)
 

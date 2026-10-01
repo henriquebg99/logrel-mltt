@@ -44,7 +44,6 @@ mutual
          → l < l'
          → ⊢ Γ
          → Γ ⊢ (Univ r l) ∷ (Univ ! l') ^ [ ! , next l' ]
-    ℕⱼ      : ⊢ Γ → Γ ⊢ ℕ ∷ U ⁰ ^ [ ! , ι ¹ ]
     Emptyⱼ : ⊢ Γ → Γ ⊢ sEmpty ∷ SProp ^ [ ! , ι ¹ ]
     Πⱼ_▹_▹_▹_ : ∀ {F rF lF G lG r l}
            → (r PE.≡ ! → lF ≤ l × lG ≤ l)
@@ -85,18 +84,6 @@ mutual
            → Γ ⊢ snd e ∷ Π A' ^ rA ° ⁰ ▹ Id (U ⁰)
                         (B [ cast ⁰ (wk1 A') (wk1 A) (Idsym (Univ rA ⁰) (wk1 A) (wk1 A') (fst (wk1 e))) (var 0) ]↑)
                         B' ° ⁰ ° ⁰ ^ % ^ [ % , ι ⁰ ]
-    zeroⱼ   : ⊢ Γ
-           → Γ ⊢ zero ∷ ℕ ^ [ ! ,  ι ⁰ ]
-    sucⱼ    : ∀ {n}
-           → Γ ⊢ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-           → Γ ⊢ suc n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-    natrecⱼ : ∀ {G rG lG s z n}
-           → (rG PE.≡ % → lG PE.≡ ⁰)
-           → Γ ∙ ℕ ^ [ ! ,  ι ⁰ ] ⊢ G ^ [ rG , ι lG ]
-           → Γ       ⊢ z ∷ G [ zero ] ^ [ rG , ι lG ]
-           → Γ       ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (G ^ rG ° lG ▹▹ G [ suc (var Nat.zero) ]↑ ° lG ° lG ^ rG) ° lG ° lG ^ rG ^ [ rG , ι lG ]
-           → Γ       ⊢ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-           → Γ       ⊢ natrec lG G z s n ∷ G [ n ] ^ [ rG , ι lG ]
     Indⱼ    : ∀ {ind} → ⊢ Γ → ind ∈ₗ senv → Γ ⊢ Ind (SU.SInd.name ind) ∷ U ⁰ ^ [ ! , ι ¹ ]
     Ctrⱼ    : ∀ {ind j args Ts}
            → ⊢ Γ
@@ -206,27 +193,6 @@ mutual
                 → Γ     ⊢ g ∷ Π F ^ rF ° lF ▹ G ° lG ° l ^ ! ^ [ ! , ι l ]
                 → Γ ∙ F ^ [ rF , ι lF ] ⊢ wk1 f ∘ var Nat.zero ^ l ≡ wk1 g ∘ var Nat.zero ^ l ∷ G ^ [ ! , ι lG ]
                 → Γ     ⊢ f ≡ g ∷ Π F ^ rF ° lF ▹ G ° lG ° l ^ ! ^ [ ! , ι l ]
-    suc-cong    : ∀ {m n}
-                → Γ ⊢ m ≡ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-                → Γ ⊢ suc m ≡ suc n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-    natrec-cong : ∀ {z z′ s s′ n n′ F F′ l}
-                → Γ ∙ ℕ ^ [ ! ,  ι ⁰ ] ⊢ F ≡ F′ ^ [ ! , ι l ]
-                → Γ     ⊢ z ≡ z′ ∷ F [ zero ] ^ [ ! , ι l ]
-                → Γ     ⊢ s ≡ s′ ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l  ]
-                → Γ     ⊢ n ≡ n′ ∷ ℕ ^ [ ! ,  ι ⁰ ]
-                → Γ     ⊢ natrec l F z s n ≡ natrec l F′ z′ s′ n′ ∷ F [ n ] ^ [ ! , ι l ]
-    natrec-zero : ∀ {z s F l}
-                → Γ ∙ ℕ ^ [ ! ,  ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                → Γ     ⊢ z ∷ F [ zero ] ^ [ ! , ι l ]
-                → Γ     ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                → Γ     ⊢ natrec l F z s zero ≡ z ∷ F [ zero ] ^ [ ! , ι l ]
-    natrec-suc  : ∀ {n z s F l}
-                → Γ     ⊢ n ∷ ℕ ^ [ ! ,  ι ⁰ ]
-                → Γ ∙ ℕ ^ [ ! ,  ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                → Γ     ⊢ z ∷ F [ zero ] ^ [ ! , ι l ]
-                → Γ     ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                → Γ     ⊢ natrec l F z s (suc n) ≡ (s ∘ n ^ l) ∘ (natrec l F z s n) ^ l
-                        ∷ F [ suc n ] ^ [ ! , ι l ]
     Emptyrec-cong : ∀ {A A' l e e'}
                 → Γ ⊢ A ≡ A' ^ [ ! , ι l ]
                 → Γ ⊢ e ∷ sEmpty ^ [ % , ι ⁰ ]
@@ -266,17 +232,6 @@ mutual
                       cast l (B [ a ]↑) B' ((snd (wk1 e)) ∘ (var 0) ^ ⁰) ((wk1 f) ∘ a ^ l))
                       ^ l)
                    ∷ Π A' ^ rA ° lA ▹ B' ° lB ° l  ^ ! ^ [ ! , ι l ]
-    cast-ℕ-0 : ∀ {e}
-               → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ ^ [ % , ι ⁰ ]
-               → Γ ⊢ cast ⁰ ℕ ℕ e zero
-                   ≡ zero
-                   ∷ ℕ ^ [ ! , ι ⁰ ]
-    cast-ℕ-S : ∀ {e n}
-               → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ ^ [ % , ι ⁰ ]
-               → Γ ⊢ n ∷ ℕ ^ [ ! , ι ⁰ ]
-               → Γ ⊢ cast ⁰ ℕ ℕ e (suc n)
-                   ≡ suc (cast ⁰ ℕ ℕ e n)
-                   ∷ ℕ ^ [ ! , ι ⁰ ]
     cast-Ind-ctr : ∀ {ind e t}
                → ind ∈ₗ senv
                → Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ]
@@ -304,24 +259,6 @@ mutual
                  → Γ ∙ A ^ [ rA , ι lA ] ⊢ t ∷ B ^ [ ! , ι lB ]
                  → Γ     ⊢ a ∷ A ^ [ rA , ι lA ]
                  → Γ     ⊢ (lam A ▹ t ^ l) ∘ a ^ l ⇒ t [ a ] ∷ B [ a ] ^ ι lB
-    natrec-subst : ∀ {z s n n′ F l}
-                 → Γ ∙ ℕ ^ [ ! , ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                 → Γ     ⊢ z ∷ F [ zero ] ^ [ ! , ι l ]
-                 → Γ     ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                 → Γ     ⊢ n ⇒ n′ ∷ ℕ ^ ι ⁰
-                 → Γ     ⊢ natrec l F z s n ⇒ natrec l F z s n′ ∷ F [ n ] ^ ι l
-    natrec-zero  : ∀ {z s F l }
-                 → Γ ∙ ℕ ^ [ ! , ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                 → Γ     ⊢ z ∷ F [ zero ] ^ [ ! , ι l ]
-                 → Γ     ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                 → Γ     ⊢ natrec l F z s zero ⇒ z ∷ F [ zero ] ^ ι l
-    natrec-suc   : ∀ {n z s F l}
-                 → Γ     ⊢ n ∷ ℕ ^ [ ! , ι ⁰ ]
-                 → Γ ∙ ℕ ^ [ ! , ι ⁰ ] ⊢ F ^ [ ! , ι l ]
-                 → Γ     ⊢ z ∷ F [ zero ] ^ [ ! , ι l ]
-                 → Γ     ⊢ s ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° l ▹▹ F [ suc (var Nat.zero) ]↑ ° l ° l ^ !) ° l ° l ^ ! ^ [ ! , ι l ]
-                 → Γ     ⊢ natrec l F z s (suc n) ⇒ (s ∘ n ^ l) ∘ (natrec l F z s n) ^ l
-                         ∷ F [ suc n ] ^ ι l
     cast-subst : ∀ {A A' B e t} → let l = ⁰ in
                     Γ ⊢ A ⇒ A' ∷ U l ^ next l
                   → Γ ⊢ B ∷ U l ^ [ ! , next l ]
@@ -335,11 +272,6 @@ mutual
                   → Γ ⊢ e ∷ Id (U l) K B ^ [ % , ι ⁰ ]
                   → Γ ⊢ t ∷ K ^ [ ! , ι l ]
                   → Γ ⊢ cast l K B e t ⇒ cast l K B' e t ∷ B ^ ι l
-    cast-ℕ-subst : ∀ {B B' e t}
-                  → Γ ⊢ B ⇒ B' ∷ U ⁰ ^ next ⁰
-                  → Γ ⊢ e ∷ Id (U ⁰) ℕ B ^ [ % , ι ⁰ ]
-                  → Γ ⊢ t ∷ ℕ ^ [ ! , ι ⁰ ]
-                  → Γ ⊢ cast ⁰ ℕ B e t ⇒ cast ⁰ ℕ B' e t ∷ B ^ ι ⁰
     cast-Π-subst : ∀ {A rA P B B' e t} → let l = ⁰ in let lA = ⁰ in let lP = ⁰ in
                     Γ ⊢ A ∷ (Univ rA lA) ^ [ ! , next lA ]
                   → Γ ∙ A ^ [ rA , ι lA ] ⊢ P ∷ U lP ^ [ ! , next lA ]
@@ -360,24 +292,7 @@ mutual
                        in cast l (B [ a ]↑) B' ((snd (wk1 e)) ∘ (var 0) ^ ⁰) ((wk1 f) ∘ a ^ l))
                        ^ l )
                    ∷ Π A' ^ rA ° l ▹ B' ° l ° l ^ ! ^ ι l
-    cast-ℕ-0 : ∀ {e}
-               → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ ^ [ % , ι ⁰ ]
-               → Γ ⊢ cast ⁰ ℕ ℕ e zero
-                   ⇒ zero
-                   ∷ ℕ ^ ι ⁰
-    cast-ℕ-S : ∀ {e n}
-               → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ ^ [ % , ι ⁰ ]
-               → Γ ⊢ n ∷ ℕ ^ [ ! , ι ⁰ ]
-               → Γ ⊢ cast ⁰ ℕ ℕ e (suc n)
-                   ⇒ suc (cast ⁰ ℕ ℕ e n)
-                   ∷ ℕ ^ ι ⁰
 
-    cast-ℕ-cong : ∀ {e t u}
-               → Γ ⊢ e ∷ Id (U ⁰) ℕ ℕ ^ [ % , ι ⁰ ]
-               → Γ ⊢ t ⇒ u ∷ ℕ ^ ι ⁰
-               → Γ ⊢ cast ⁰ ℕ ℕ e t
-                   ⇒ cast ⁰ ℕ ℕ e u
-                   ∷ ℕ ^ ι ⁰
 
     cast-ne-cong : ∀ {K L e t u} → 
                  Γ ⊢ K ∷ U ⁰ ^ [ ! , next ⁰ ]

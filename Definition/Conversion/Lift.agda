@@ -49,9 +49,6 @@ mutual
   lift~toConv↓!′ (Uᵣ′ _ l r l' l< PE.refl d) D ([~] A D₁ whnfB k~l)
                 rewrite U≡A-whnf (trans (sym (subset* (red d))) (subset* D)) whnfB =
     ne ([~] A D₁ Uₙ k~l)
-  lift~toConv↓!′ (ℕᵣ D) D₁ ([~] A D₂ whnfB k~l)
-                rewrite PE.sym (whrDet* (red D , ℕₙ) (D₁ , whnfB)) =
-    ℕ-ins ([~] A D₂ ℕₙ k~l)
   lift~toConv↓!′ (Indᵣ D) D₁ ([~] A D₂ whnfB k~l)
                 rewrite PE.sym (whrDet* (red D , Indₙ) (D₁ , whnfB)) =
     Ind-ins ([~] A D₂ Indₙ k~l)

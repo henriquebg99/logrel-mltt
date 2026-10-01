@@ -17,7 +17,6 @@ open import Definition.Typed.Consequences.Injectivity senv swf equivs
 import Definition.Typed.Consequences.Inequality senv swf equivs as WF
 open import Definition.Typed.Consequences.Substitution senv swf equivs
 open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
-open import Definition.Typed.Consequences.SucCong senv swf equivs
 open import Definition.Typed.Consequences.RelevanceUnicity senv swf equivs
 open import Definition.Typed.Consequences.Equality senv swf equivs
 open import Definition.Typed.Consequences.Inversion senv swf equivs
@@ -44,8 +43,6 @@ whnfconv↑conv↓ whnfA whnft whnfu ([↑]ₜ B t′ u′ D d d′ whnfB whnft�
 neutralconv↓ : ∀ {t u l' l Γ} → Neutral t → Neutral u → Γ ⊢ t [conv↓] u ∷ U l' ^  l → Γ ⊢ t ~ u ↓! U l' ^ l
 neutralconv↓ net neu (ne x) = x
 
-neutralℕconv↓ : ∀ {t u l Γ} → Neutral t → Neutral u → Γ ⊢ t [conv↓] u ∷ ℕ ^  l → Γ ⊢ t ~ u ↓! ℕ ^ l
-neutralℕconv↓ net neu (ℕ-ins x) = x
 
 neutral↓↑ : ∀ {Γ t u A l} → Γ ⊢ t ~ u ↓! A ^ l → ∃ λ B → Γ ⊢ t ~ u ↑! B ^ l
 neutral↓↑ ([~] A D whnfB k~l) = _ , k~l

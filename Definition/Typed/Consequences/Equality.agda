@@ -79,25 +79,8 @@ U≡A-whnf : ∀ {A rU Γ lU nlU }
     → A PE.≡ Univ rU lU
 U≡A-whnf {A} X whnfA = whnfRed* (U≡A X) whnfA
 
-ℕ≡A′ : ∀ {A Γ l} ([ℕ] : Γ ⊩⟨ l ⟩ℕ ℕ)
-    → Γ ⊩⟨ l ⟩ ℕ ≡ A ^ [ ! , ι ⁰ ] / (ℕ-intr [ℕ])
-    → Whnf A
-    → A PE.≡ ℕ
-ℕ≡A′ (noemb x) [ℕ≡A] whnfA = whnfRed* [ℕ≡A] whnfA
-ℕ≡A′ (emb emb< [ℕ]) [ℕ≡A] whnfA = ℕ≡A′ [ℕ] [ℕ≡A] whnfA
-ℕ≡A′ (emb ∞< [ℕ]) [ℕ≡A] whnfA = ℕ≡A′ [ℕ] [ℕ≡A] whnfA
 
 -- If A in WHNF is judgmentally equal to ℕ, then A is propsitionally equal to ℕ.
-ℕ≡A : ∀ {A Γ}
-    → Γ ⊢ ℕ ≡ A ^ [ ! , ι ⁰ ]
-    → Whnf A
-    → A PE.≡ ℕ
-ℕ≡A {A} ℕ≡A whnfA =
-  let X = reducibleEq ℕ≡A
-      [ℕ] = proj₁ X
-      [A] = proj₁ (proj₂ X)
-      [ℕ≡A] = proj₂ (proj₂ X)
-  in ℕ≡A′ (ℕ-elim [ℕ]) (irrelevanceEq [ℕ] (ℕ-intr (ℕ-elim [ℕ])) [ℕ≡A]) whnfA
 
 Ind≡A′ : ∀ {A Γ l i} ([Ind] : Γ ⊩⟨ l ⟩Ind (Ind i) ^ i)
     → Γ ⊩⟨ l ⟩ Ind i ≡ A ^ [ ! , ι ⁰ ] / (Ind-intr [Ind])

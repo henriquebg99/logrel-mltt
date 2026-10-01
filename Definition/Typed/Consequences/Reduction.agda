@@ -14,7 +14,6 @@ open import Tools.Product
 whNorm′ : ∀ {A rA Γ l} ([A] : Γ ⊩⟨ l ⟩ A ^ rA)
                 → ∃ λ B → Whnf B × Γ ⊢ A :⇒*: B ^ rA
 whNorm′ (Uᵣ′ _ _ r l _ e d) = Univ r l , Uₙ , PE.subst (λ ll → _ ⊢ _ :⇒*: Univ r l ^ [ ! , ll ]) e d
-whNorm′ (ℕᵣ D) = ℕ , ℕₙ , D
 whNorm′ (Indᵣ {i = i} D) = Ind i , Indₙ , D
 whNorm′ (Emptyᵣ D) = sEmpty , Emptyₙ , D
 whNorm′ (ne′ K D neK K≡K) = K , ne neK , D
@@ -37,9 +36,6 @@ whNormTerm′ : ∀ {a A Γ l lA} ([A] : Γ ⊩⟨ l ⟩ A ^ [ ! , lA ]) → Γ 
 whNormTerm′ (Uᵣ′ _ _ r l _ e dU) (Uₜ A d typeA A≡A [t]) = A , typeWhnf typeA ,
   conv:⇒*: (PE.subst (λ ll → _ ⊢ _ :⇒*: _ ∷ _ ^ ll) e d)
     (sym (subset* (red (PE.subst (λ ll → _ ⊢ _ :⇒*: Univ r l ^ [ ! , ll ]) e dU))))
-whNormTerm′ (ℕᵣ x) (ℕₜ n d n≡n prop) =
-  let natN = natural prop
-  in  n , naturalWhnf natN , convRed:*: d (sym (subset* (red x)))
 whNormTerm′ (Indᵣ x) (Indₜ k d k≡k prop) =
   let indN = inductive′ prop
   in  k , inductiveWhnf indN , convRed:*: d (sym (subset* (red x)))

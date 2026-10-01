@@ -21,7 +21,6 @@ open import Definition.LogicalRelation.Substitution.Properties senv swf equivs {
 import Definition.LogicalRelation.Substitution.Irrelevance senv swf equivs {{eqrel}} as S
 open import Definition.LogicalRelation.Substitution.Reflexivity senv swf equivs {{eqrel}}
 open import Definition.LogicalRelation.Substitution.Weakening senv swf equivs {{eqrel}}
--- open import Definition.LogicalRelation.Substitution.Introductions.Nat
 open import Definition.LogicalRelation.Substitution.Introductions.Empty senv swf equivs {{eqrel}}
 -- open import Definition.LogicalRelation.Substitution.Introductions.Pi
 -- open import Definition.LogicalRelation.Substitution.Introductions.SingleSubst

@@ -14,8 +14,6 @@ mutual
   ne~↑! (var-refl x₁ x≡y) = var _ , var _
   ne~↑! (app-cong x x₁) = let _ , q , w = ne~↓! x
                          in  ∘ₙ q , ∘ₙ w
-  ne~↑! (natrec-cong x x₁ x₂ x₃) = let _ , q , w = ne~↓! x₃
-                                  in  natrecₙ q , natrecₙ w
   ne~↑! (Emptyrec-cong x x₁) = Emptyrecₙ , Emptyrecₙ
   ne~↑! (cast-cong X x x₁ x₂ x₃ neCast neCast') = neCast , neCast'
   ne~↑! (cast-refl x x₁ x₂ neCast neCast') =  neCast , neCast'
@@ -34,13 +32,10 @@ mutual
   whnfConv↓Term (ne t u x x₁) =
     let _ , neT , neU = ne~↓! x₁
     in posTypeWhnf x , ne neT , ne neU
-  whnfConv↓Term (ℕ-cong x) = Uₙ , ℕₙ , ℕₙ
   whnfConv↓Term (Empty-cong x) = Uₙ , Emptyₙ , Emptyₙ
   whnfConv↓Term (Π-cong _ _ _ _ _ _ x₁ x₂) = Uₙ , Πₙ , Πₙ
   whnfConv↓Term (Id-cong x x₁ x₂) = Uₙ , Idₙ , Idₙ
   whnfConv↓Term (U-cong _ _) = Uₙ , Uₙ , Uₙ
-  whnfConv↓Term (zero-cong x) = ℕₙ , zeroₙ , zeroₙ
-  whnfConv↓Term (suc-cong x) = ℕₙ , sucₙ , sucₙ
   -- whnfConv↓Term (lam-cong x₂ y y₁) = Πₙ , lamₙ , lamₙ
   whnfConv↓Term (η-eq _ x x₁ x₂ y y₁ x₃) = Πₙ , functionWhnf y , functionWhnf y₁
   

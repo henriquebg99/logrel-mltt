@@ -14,7 +14,6 @@ import Tools.PropositionalEquality as PE
 -- Reflexivity of reducible types.
 reflEq : ∀ {l Γ A r} ([A] : Γ ⊩⟨ l ⟩ A ^ r) → Γ ⊩⟨ l ⟩ A ≡ A ^ r / [A]
 reflEq (Uᵣ′ _ _ _ _ l< PE.refl D) = red D
-reflEq (ℕᵣ D) = red D
 reflEq (Indᵣ D) = red D
 reflEq (Emptyᵣ D) = red D
 reflEq (ne′ K [[ ⊢A , ⊢B , D ]] neK K≡K) =
@@ -30,14 +29,6 @@ reflEq (Idᵣ′ F G _ _ [[ ⊢A , ⊢B , D ]] ⊢F ⊢G _ A≡A) =
 reflEq {ι ¹} (emb X [A]) = reflEq [A]
 reflEq {∞} (emb X [A]) = reflEq [A]
 
-reflNatural-prop : ∀ {Γ n}
-                 → Natural-prop Γ n
-                 → [Natural]-prop Γ n n
-reflNatural-prop (sucᵣ (ℕₜ n d t≡t prop)) =
-  sucᵣ (ℕₜ₌ n n d d t≡t
-            (reflNatural-prop prop))
-reflNatural-prop zeroᵣ = zeroᵣ
-reflNatural-prop (ne (neNfₜ neK ⊢k k≡k)) = ne (neNfₜ₌ neK neK k≡k)
 
 mutual
   reflInductive-prop : ∀ {Γ i n}
@@ -65,9 +56,6 @@ reflEmpty-prop (ne x) = ne x x
 reflEqTerm⁰ : ∀ {Γ A t r} ([A] : Γ ⊩⟨ ι ⁰ ⟩ A ^ r)
            → Γ ⊩⟨ ι ⁰ ⟩ t ∷ A ^ r / [A]
            → Γ ⊩⟨ ι ⁰ ⟩ t ≡ t ∷ A ^ r / [A]
-reflEqTerm⁰ (ℕᵣ D) (ℕₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
-  ℕₜ₌ n n [[ ⊢t , ⊢u , d ]] [[ ⊢t , ⊢u , d ]] t≡t
-      (reflNatural-prop prop)
 reflEqTerm⁰ (Indᵣ D) (Indₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
   Indₜ₌ n n [[ ⊢t , ⊢u , d ]] [[ ⊢t , ⊢u , d ]] t≡t
       (reflInductive-prop prop)
@@ -90,9 +78,6 @@ reflEqTerm¹ (Uᵣ (Uᵣ r ⁰ X PE.refl D)) (Uₜ A d typeA A≡A [A]) =
   Uₜ₌ (Uₜ A d typeA A≡A [A]) (Uₜ A d typeA A≡A [A])
     A≡A (λ [ρ] ⊢Δ → reflEq ([A] [ρ] ⊢Δ))
 reflEqTerm¹ (Uᵣ (Uᵣ r ¹ () PE.refl D)) (Uₜ A d typeA A≡A [A])
-reflEqTerm¹ (ℕᵣ D) (ℕₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
-  ℕₜ₌ n n [[ ⊢t , ⊢u , d ]] [[ ⊢t , ⊢u , d ]] t≡t
-      (reflNatural-prop prop)
 reflEqTerm¹ (Indᵣ D) (Indₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
   Indₜ₌ n n [[ ⊢t , ⊢u , d ]] [[ ⊢t , ⊢u , d ]] t≡t
       (reflInductive-prop prop)
@@ -116,9 +101,6 @@ reflEqTerm∞ (Uᵣ (Uᵣ r ⁰ X eq D)) (Uₜ A d typeA A≡A [A]) =
   Uₜ₌ (Uₜ A d typeA A≡A [A]) (Uₜ A d typeA A≡A [A]) A≡A (λ [ρ] ⊢Δ → reflEq ([A] [ρ] ⊢Δ))
 reflEqTerm∞ (Uᵣ (Uᵣ r ¹ X eq D)) (Uₜ A d typeA A≡A [A]) =
   Uₜ₌ (Uₜ A d typeA A≡A [A]) (Uₜ A d typeA A≡A [A]) A≡A (λ [ρ] ⊢Δ → reflEq ([A] [ρ] ⊢Δ))
-reflEqTerm∞ (ℕᵣ D) (ℕₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
-  ℕₜ₌ n n [[ ⊢t , ⊢u , d ]] [[ ⊢t , ⊢u , d ]] t≡t
-      (reflNatural-prop prop)
 reflEqTerm∞ (Indᵣ D) (Indₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
   Indₜ₌ n n [[ ⊢t , ⊢u , d ]] [[ ⊢t , ⊢u , d ]] t≡t
       (reflInductive-prop prop)

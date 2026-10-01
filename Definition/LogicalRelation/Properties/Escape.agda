@@ -16,7 +16,6 @@ import Tools.PropositionalEquality as PE
 -- Reducible types are well-formed.
 escape : ∀ {l Γ A r} → Γ ⊩⟨ l ⟩ A ^ r → Γ ⊢ A ^ r
 escape (Uᵣ′ _ _ _ _ _ PE.refl [[ ⊢A , ⊢B , D ]]) = ⊢A
-escape (ℕᵣ [[ ⊢A , ⊢B , D ]]) = ⊢A
 escape (Indᵣ [[ ⊢A , ⊢B , D ]]) = ⊢A
 escape (Emptyᵣ [[ ⊢A , ⊢B , D ]]) = ⊢A
 escape (ne′ K [[ ⊢A , ⊢B , D ]] neK K≡K) = ⊢A
@@ -32,7 +31,6 @@ escapeEq : ∀ {l Γ A B r} → ([A] : Γ ⊩⟨ l ⟩ A ^ r)
             → Γ ⊢ A ≅ B ^ r
 escapeEq (Uᵣ′ _ _ _ ⁰ _ PE.refl [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ Uₙ Uₙ (≅-univ (≅-U⁰refl (wf ⊢A)))
 escapeEq (Uᵣ′ _ _ _ ¹ _ PE.refl [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ Uₙ Uₙ (≅-U¹refl (wf ⊢A))
-escapeEq (ℕᵣ [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ ℕₙ ℕₙ (≅-univ (≅ₜ-ℕrefl (wf ⊢A)))
 escapeEq (Indᵣ [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ Indₙ Indₙ (≅-univ (≅ₜ-Indrefl (wf ⊢A) (Ind-nameᵗ ⊢B)))
 escapeEq (Emptyᵣ [[ ⊢A , ⊢B , D ]]) D′ = ≅-red D D′ Emptyₙ Emptyₙ (≅-univ ((≅ₜ-Emptyrefl (wf ⊢A))))
 escapeEq (ne′ K D neK K≡K) (ne₌ M D′ neM K≡M) =
@@ -50,8 +48,6 @@ escapeTerm : ∀ {l Γ A t r} → ([A] : Γ ⊩⟨ l ⟩ A ^ r)
               → Γ ⊩⟨ l ⟩ t ∷ A ^ r / [A]
               → Γ ⊢ t ∷ A ^ r
 escapeTerm (Uᵣ′ _ _ _ _ l< PE.refl D) (Uₜ A [[ ⊢t , ⊢u , d ]] typeA A≡A [A]) = conv ⊢t (sym (subset* (red D)))
-escapeTerm (ℕᵣ D) (ℕₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
-  conv ⊢t (sym (subset* (red D)))
 escapeTerm (Indᵣ D) (Indₜ n [[ ⊢t , ⊢u , d ]] t≡t prop) =
   conv ⊢t (sym (subset* (red D)))
 escapeTerm (Emptyᵣ D) (Emptyₜ (ne ⊢t)) =
@@ -72,10 +68,6 @@ escapeTermEq : ∀ {l Γ A t u r} → ([A] : Γ ⊩⟨ l ⟩ A ^ r)
                 → Γ ⊩⟨ l ⟩ t ≡ u ∷ A ^ r / [A]
                 → Γ ⊢ t ≅ u ∷ A ^ r
 escapeTermEq (Uᵣ′ _ _ _ _ l< PE.refl D) (Uₜ₌ (Uₜ A d typeA A≡A [t]) (Uₜ B d′ typeB B≡B [u]) A≡B [A≡B]) = ≅ₜ-red (red D) (redₜ d) (redₜ d′) Uₙ (typeWhnf typeA) (typeWhnf typeB) A≡B
-escapeTermEq (ℕᵣ D) (ℕₜ₌ k k′ d d′ k≡k′ prop) =
-  let natK , natK′ = split prop
-  in  ≅ₜ-red (red D) (redₜ d) (redₜ d′) ℕₙ
-             (naturalWhnf natK) (naturalWhnf natK′) k≡k′
 escapeTermEq (Indᵣ D) (Indₜ₌ k k′ d d′ k≡k′ prop) =
   let indK , indK′ = splitInd prop
   in  ≅ₜ-red (red D) (redₜ d) (redₜ d′) Indₙ

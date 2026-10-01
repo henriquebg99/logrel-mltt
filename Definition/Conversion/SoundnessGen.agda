@@ -27,9 +27,6 @@ mutual
   soundness~↑! (var-refl x x≡y) = PE.subst (λ y → _ ⊢ _ ≡ var y ∷ _ ^ _) x≡y (refl x)
   soundness~↑! (app-cong {rF = !} k~l x₁) = app-cong (soundness~↓! k~l) (soundnessConv↑Term x₁)
   soundness~↑! (app-cong {rF = %} k~l x₁) = app-cong (soundness~↓! k~l) (let _ , _ , y = soundness~↑% x₁ in y)
-  soundness~↑! (natrec-cong x₁ x₂ x₃ k~l) =
-    natrec-cong (soundnessConv↑ x₁) (soundnessConv↑Term x₂)
-                (soundnessConv↑Term x₃) (soundness~↓! k~l)
   soundness~↑! (Emptyrec-cong x₁ k~l) = let ⊢k , ⊢l , _ = soundness~↑% k~l in
     Emptyrec-cong (soundnessConv↑ x₁) ⊢k ⊢l
   soundness~↑! (cast-cong X x x₁ x₂ x₃ neCast neCast') =
@@ -76,7 +73,6 @@ mutual
 
   -- Algorithmic equality of terms in WHNF is well-formed.
   soundnessConv↓Term : ∀ {a b A lA Γ} → Γ ⊢⊢ a [conv↓] b ∷ A ^ lA → Γ ⊢ a ≡ b ∷ A ^ [ ! , lA ]
-  soundnessConv↓Term (ℕ-cong ⊢Γ) = refl (ℕⱼ ⊢Γ)
   soundnessConv↓Term (Empty-cong ⊢Γ) = refl (Emptyⱼ ⊢Γ)
   soundnessConv↓Term (Π-cong PE.refl PE.refl PE.refl PE.refl l< l<' c c₁) =
     let F=F = soundnessConv↑Term c
@@ -90,8 +86,6 @@ mutual
         _ , t∷M , _ = syntacticEqTerm X
         _ , M≡A' = neTypeEq neA t∷M t -- soundnessConv↑ M≡A
     in conv X M≡A'
-  soundnessConv↓Term (zero-cong ⊢Γ) = refl (zeroⱼ ⊢Γ)
-  soundnessConv↓Term (suc-cong c) = suc-cong (soundnessConv↑Term c)
 {-  soundnessConv↓Term (lam-cong {G = G} l< l<' ⊢t' c) =
     let t=t' = soundnessConv↑Term c
         _ , ⊢t , ⊢t'' = syntacticEqTerm t=t'
@@ -128,13 +122,6 @@ app-cong′ : ∀ {Γ k l t v F rF lF G lG lΠ}
           → Γ ⊢⊢ k ∘ t ^ lΠ ~ l ∘ v ^ lΠ ↑ G [ t ] ^ [ ! , ι lG ]
 app-cong′ k~l t=v = ~↑! (app-cong k~l t=v)
 
-natrec-cong′ : ∀ {Γ k l h g a b F lF G}
-             → Γ ∙ ℕ ^ [ ! , ι ⁰ ]  ⊢⊢ F [conv↑] G ^ [ ! , ι lF ]
-             → Γ ⊢⊢ a [conv↑] b ∷ F [ zero ] ^ ι lF
-             → Γ ⊢⊢ h [conv↑] g ∷ Π ℕ ^ ! ° ⁰ ▹ (F ^ ! ° lF ▹▹ F [ suc (var 0) ]↑ ° lF ° lF ^ !) ° lF ° lF ^ ! ^ ι lF
-             → Γ ⊢⊢ k ~ l ↓! ℕ ^ ι ⁰
-             → Γ ⊢⊢ natrec lF F a h k ~ natrec lF G b g l ↑ F [ k ] ^ [ ! , ι lF ]
-natrec-cong′ F=G a=b h=g k~l = ~↑! (natrec-cong F=G a=b h=g k~l)
 
 Emptyrec-cong′ : ∀ {Γ k l F lF G}
                → Γ ⊢⊢ F [conv↑] G ^ [ ! , ι lF ]

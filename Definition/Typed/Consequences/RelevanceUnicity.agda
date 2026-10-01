@@ -2,8 +2,8 @@ import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.Consequences.RelevanceUnicity (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Typed.EqRelInstance senv swf equivs
-open import Definition.Untyped senv equivs hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
 open import Definition.Untyped.Properties senv equivs using (subst-Univ-either)
+open import Definition.Untyped senv equivs hiding (U≢Π; U≢ne; Π≢ne; U≢Empty; Empty≢Π; Empty≢ne)
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv swf equivs
 open import Definition.Typed.Weakening senv equivs
@@ -19,13 +19,7 @@ open import Tools.Product
 open import Tools.Empty
 open import Tools.Sum using (_⊎_; inj₁; inj₂)
 import Tools.PropositionalEquality as PE
-ℕ-relevant-term : ∀ {Γ A r} → Γ ⊢ ℕ ∷ A ^ r → Whnf A → A PE.≡ Univ ! ⁰
-ℕ-relevant-term [ℕ] whnfA = let [[N]] , e = inversion-ℕ [ℕ]
-                             in U≡A-whnf (sym (PE.subst (λ r → _ ⊢ _ ≡ _ ^ r) e [[N]])) whnfA
 
-ℕ-relevant : ∀ {Γ r} → Γ ⊢ ℕ ^ r → r PE.≡ [ ! , ι ⁰ ]
-ℕ-relevant (univ [ℕ]) = let er , el = Univ-PE-injectivity (ℕ-relevant-term [ℕ] Uₙ)
-                         in PE.cong₂ (λ x y → [ x , ι y ]) er el
 
 Empty-irrelevant-term : ∀ {Γ A r} → Γ ⊢ sEmpty ∷ A ^ r → Whnf A → A PE.≡ SProp
 Empty-irrelevant-term [Empty] whnfA = let [[Empty]] , e = inversion-Empty [Empty]
@@ -52,10 +46,6 @@ mutual
     let er₁ , _ = Uinjectivity e₁ 
         er₂ , _ = Uinjectivity e₂
     in PE.trans (PE.sym er₁) er₂ , PE.refl
-  Univ-uniq′ e₁ e₂ el₁ PE.refl w (ℕⱼ x) y =
-    let e₁′ , el₁′ , _ = Uinjectivity e₁
-        e₂′ , el₂′ , _ = Uinjectivity (trans (sym e₂) (proj₁ (inversion-ℕ y)) ) 
-    in PE.sym (PE.trans e₂′ e₁′) , PE.cong next (PE.sym el₂′)
   Univ-uniq′ e₁ e₂ el₁ PE.refl w (Indⱼ x _) y =
     let e₁′ , el₁′ , _ = Uinjectivity e₁
         e₂′ , el₂′ , _ = Uinjectivity (trans (sym e₂) (proj₁ (inversion-Ind y)) )
@@ -87,10 +77,7 @@ mutual
         r≡r , _ = Uinjectivity (trans (sym e₁) (trans (substitutionEq G≡G (substRefl (singleSubst x₁)) (wfEq F≡F))
                                                (PE.subst (λ lx → _ ⊢ _ ≡ _ ^ [ _ , ι lx ]) (PE.sym lG≡lG) e₂))) 
     in r≡r , PE.cong ι lG≡lG
-  Univ-uniq′ e₁ e₂ el₁ el₂ (ne ()) (zeroⱼ x) y 
-  Univ-uniq′ e₁ e₂ el₁ el₂ (ne ()) (sucⱼ X) y 
   Univ-uniq′ e₁ e₂ el₁ el₂ (ne ()) (Ctrⱼ _ _ _ _) y
-  Univ-uniq′ e₁ e₂ el₁ el₂ w (natrecⱼ _ x x₁ x₂ x₃) (natrecⱼ _ x₄ y y₁ y₂) = proj₁ (Uinjectivity (trans (sym e₁) e₂)) , PE.refl
   Univ-uniq′ e₁ e₂ el₁ el₂ w (Emptyrecⱼ x x₁) (Emptyrecⱼ y y₁) = proj₁ (Uinjectivity (trans (sym e₁) e₂)) , PE.refl
   -- IndRect gen-spine uses map: avoid IndRectₙ / IndRectⱼ–IndRectⱼ matching.
   Univ-uniq′ e₁ e₂ el₁ el₂ (ne n) ⊢i@(IndRectⱼ _ _ _ _ _) y =
@@ -121,11 +108,6 @@ relevance-unicity ⊢A₁ ⊢A₂ | B , nB , ⊢B , rB | C , nC , ⊢C , rC =
   in relevance-unicity′ nC (PE.subst _ e ⊢B) ⊢C
 
 -- inequalities at any relevance
-U≢ℕ : ∀ {r r′ l l′ Γ} → Γ ⊢ Univ r l ≡ ℕ ^ [ r′ , l′ ] → ⊥
-U≢ℕ U≡ℕ = Ineq.U≢ℕ! (PE.subst (λ rx → _ ⊢ _ ≡ _ ^ [ rx , _ ]) 
-                              (proj₁ (relevance-unicity (proj₂ (syntacticEq U≡ℕ))
-                                                 (univ (ℕⱼ (wfEq U≡ℕ)))))
-                              U≡ℕ)
           
 U≢Π : ∀ {rU lU  F rF G lF lG lΠ r Γ} → Γ ⊢ Univ rU lU ≡ Π F ^ rF ° lF ▹ G ° lG ° lΠ ^ r ^ [ r , ι lΠ ] → ⊥
 U≢Π U≡Π =
@@ -137,20 +119,12 @@ U≢ne neK U≡K =
   let r≡! , _ = relevance-unicity (proj₁ (syntacticEq U≡K)) (Ugenⱼ (wfEq U≡K))
   in Ineq.U≢ne! neK (PE.subst (λ rx → _ ⊢ _ ≡ _ ^ [ rx , _ ]) r≡! U≡K)
 
-ℕ≢Π : ∀ {F rF G lF lG r Γ} → Γ ⊢ ℕ ≡ Π F ^ rF ° lF ▹ G ° lG ° ⁰  ^ r ^ [ r , ι ⁰ ] → ⊥
-ℕ≢Π ℕ≡Π =
-  let r≡! , _ = relevance-unicity (proj₁ (syntacticEq ℕ≡Π)) (univ (ℕⱼ (wfEq ℕ≡Π)))
-  in Ineq.ℕ≢Π! (PE.subst (λ rx → _ ⊢ _ ≡ Π _ ^ _ ° _ ▹ _ ° _ ° _ ^ rx ^ [ rx , _ ]) r≡! ℕ≡Π)
 
 Empty≢Π : ∀ {F rF G lF r Γ} → Γ ⊢ sEmpty ≡ Π F ^ rF ° lF ▹ G ° ⁰ ° ⁰ ^ r ^ [ r , ι ⁰ ] → ⊥
 Empty≢Π Empty≡Π =
   let r≡% , _ = relevance-unicity (proj₁ (syntacticEq Empty≡Π)) (univ (Emptyⱼ (wfEq Empty≡Π)))
   in Ineq.Empty≢Π% (PE.subst (λ rx → _ ⊢ _ ≡ Π _ ^ _ ° _ ▹ _ ° _ ° _ ^ rx ^ [ rx , _ ]) r≡% Empty≡Π)
 
-ℕ≢ne : ∀ {K r Γ} → Neutral K → Γ ⊢ ℕ ≡ K ^ [ r , ι ⁰ ] → ⊥
-ℕ≢ne neK ℕ≡K =
-  let r≡! , _ = relevance-unicity (proj₁ (syntacticEq ℕ≡K)) (univ (ℕⱼ (wfEq ℕ≡K)))
-  in Ineq.ℕ≢ne! neK (PE.subst (λ rx → _ ⊢ _ ≡ _ ^ [ rx , _ ]) r≡! ℕ≡K)
 
 Empty≢ne : ∀ {K r Γ} → Neutral K → Γ ⊢ sEmpty ≡ K ^ [ r , ι ⁰ ] → ⊥
 Empty≢ne neK Empty≡K =
@@ -166,17 +140,10 @@ U≢Empty U≡Empty =
   in !≢% (PE.trans (PE.sym e₁) e₂)
 
 -- ℕ and Empty also by relevance
-ℕ≢Empty : ∀ {Γ r} → Γ ⊢ ℕ ≡ sEmpty ^ r → ⊥
-ℕ≢Empty ℕ≡Empty =
-  let ⊢ℕ , ⊢Empty = syntacticEq ℕ≡Empty
-      e₁ , _ = relevance-unicity ⊢ℕ (univ (ℕⱼ (wfEq ℕ≡Empty)))
-      e₂ , _ = relevance-unicity ⊢Empty (univ (Emptyⱼ (wfEq ℕ≡Empty)))
-  in !≢% (PE.trans (PE.sym e₁) e₂)
 
 relevance-uniq : ∀ {Γ t T₁ T₂ r₁ r₂ l₁ l₂} → Γ ⊢ t ∷ T₁ ^ [ r₁ , l₁ ] → Γ ⊢ t ∷ T₂ ^ [ r₂ , l₂ ] →
                  r₁ PE.≡ r₂
 relevance-uniq (univ 0<1 x) (univ 0<1 x') = PE.refl 
-relevance-uniq (ℕⱼ x) (ℕⱼ x₁) = PE.refl 
 relevance-uniq (Emptyⱼ x) (Emptyⱼ x₁) = PE.refl
 relevance-uniq (Πⱼ x ▹ x₁ ▹ X ▹ X₁) (Πⱼ x₂ ▹ x₃ ▹ Y ▹ Y₁) =
           PE.refl 
@@ -193,10 +160,7 @@ relevance-uniq (_ ▹ _ ▹ _ ▹ X ∘ⱼ X₁) (_ ▹ _ ▹ _ ▹ Y ∘ⱼ Y�
 relevance-uniq (fstⱼ X X₁ X₂ _ _) (fstⱼ Y Y₁ Y₂ _ _) =
     PE.refl 
 relevance-uniq (sndⱼ X X₁ X₂ _ _) (sndⱼ Y Y₁ Y₂ _ _) = PE.refl
-relevance-uniq (zeroⱼ x) (zeroⱼ x₁) = PE.refl 
-relevance-uniq (sucⱼ X) (sucⱼ Y) = PE.refl 
 relevance-uniq (Ctrⱼ _ _ _ _) Y = PE.sym (proj₁ (ctrTypeEq′ Y))
-relevance-uniq (natrecⱼ _ x X X₁ X₂) (natrecⱼ _ y Y Y₁ Y₂) = relevance-uniq X₁ Y₁
 relevance-uniq (Emptyrecⱼ x X) (Emptyrecⱼ y Y) = let er , el = relevance-unicity x y in er
 relevance-uniq (IndRectⱼ _ _ x _ _) Y = proj₁ (relevance-unicity x (proj₁ (IndRectTypeEq′ Y)))
 relevance-uniq (equiv-eqⱼ x _) (equiv-eqⱼ x₁ _) = PE.refl

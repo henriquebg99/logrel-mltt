@@ -24,7 +24,6 @@ mutual
          → ShapeView Γ l l′ A B r r [A] [B]
          → Γ ⊩⟨ l  ⟩ A ≡ B ^ r / [A]
          → Γ ⊩⟨ l′ ⟩ B ≡ A ^ r / [B]
-  symEqT (ℕᵥ D D′) A≡B = red D
   symEqT (Indᵥ D D′) A≡B = red D
   symEqT (Emptyᵥ D D′) A≡B = red D
   symEqT (ne (ne K D neK K≡K) (ne K₁ D₁ neK₁ K≡K₁)) (ne₌ M D′ neM K≡M)
@@ -95,13 +94,6 @@ symNeutralTerm : ∀ {t u A r Γ}
 symNeutralTerm {r = [ ! , ll ]} (neNfₜ₌ neK neM k≡m) = neNfₜ₌ neM neK (~-sym k≡m)
 symNeutralTerm {r = [ % , ll ]} (neNfₜ₌ neK neM k≡m) = neNfₜ₌ neM neK (~-sym k≡m)
 
-symNatural-prop : ∀ {Γ k k′}
-                → [Natural]-prop Γ k k′
-                → [Natural]-prop Γ k′ k
-symNatural-prop (sucᵣ (ℕₜ₌ k k′ d d′ t≡u prop)) =
-  sucᵣ (ℕₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural-prop prop))
-symNatural-prop zeroᵣ = zeroᵣ
-symNatural-prop (ne prop) = ne (symNeutralTerm prop)
 
 mutual
   symEqTermInd : ∀ {Γ i t u}
@@ -130,8 +122,6 @@ symEmpty-prop (ne t u ) = ne u t
 symEqTerm⁰ : ∀ {Γ A t u r} ([A] : Γ ⊩⟨ ι ⁰ ⟩ A ^ r)
           → Γ ⊩⟨ ι ⁰ ⟩ t ≡ u ∷ A ^ r / [A]
           → Γ ⊩⟨ ι ⁰ ⟩ u ≡ t ∷ A ^ r / [A]
-symEqTerm⁰ (ℕᵣ D) (ℕₜ₌ k k′ d d′ t≡u prop) =
-  ℕₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural-prop prop)
 symEqTerm⁰ (Indᵣ D) [t≡u] = symEqTermInd [t≡u]
 symEqTerm⁰ (Emptyᵣ D) (Emptyₜ₌ prop) = Emptyₜ₌ (symEmpty-prop prop)
 symEqTerm⁰ {r = [ ! , ll ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ nf) =
@@ -159,8 +149,6 @@ symEqTerm¹ {Γ} {A} {t} {u} (Uᵣ (Uᵣ r ⁰ l< el D)) (Uₜ₌ [A] [B] A≡B 
     u_to_t = λ [ρ] ⊢Δ [a] → convTerm₂ (LogRel._⊩¹U_∷_^_/_.[t] [A] [ρ] ⊢Δ) (LogRel._⊩¹U_∷_^_/_.[t] [B] [ρ] ⊢Δ) ([A≡B] [ρ] ⊢Δ) [a]
   in
   Uₜ₌ [B] [A] (≅ₜ-sym A≡B) [B≡A]
-symEqTerm¹ (ℕᵣ D) (ℕₜ₌ k k′ d d′ t≡u prop) =
-  ℕₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural-prop prop)
 symEqTerm¹ (Indᵣ D) [t≡u] = symEqTermInd [t≡u]
 symEqTerm¹ (Emptyᵣ D) (Emptyₜ₌ prop) = Emptyₜ₌ (symEmpty-prop prop)
 symEqTerm¹ {r = [ ! , ll ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ nf) =
@@ -192,8 +180,6 @@ symEqTerm∞ {Γ} {A} {t} {u} (Uᵣ (Uᵣ r ¹ l< el D)) (Uₜ₌ [A] [B] A≡B 
       symEq (LogRel._⊩¹U_∷_^_/_.[t] [A] [ρ] ⊢Δ) (LogRel._⊩¹U_∷_^_/_.[t] [B] [ρ] ⊢Δ) ([A≡B] [ρ] ⊢Δ)
   in
   Uₜ₌ [B] [A] (≅ₜ-sym A≡B) [B≡A]
-symEqTerm∞ (ℕᵣ D) (ℕₜ₌ k k′ d d′ t≡u prop) =
-  ℕₜ₌ k′ k d′ d (≅ₜ-sym t≡u) (symNatural-prop prop)
 symEqTerm∞ (Indᵣ D) [t≡u] = symEqTermInd [t≡u]
 symEqTerm∞ (Emptyᵣ D) (Emptyₜ₌ prop) = Emptyₜ₌ (symEmpty-prop prop)
 symEqTerm∞ {r = [ ! , ll ]} (ne′ K D neK K≡K) (neₜ₌ k m d d′ nf) =

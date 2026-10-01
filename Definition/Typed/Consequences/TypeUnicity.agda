@@ -1,8 +1,8 @@
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.Consequences.TypeUnicity (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
-open import Definition.Untyped senv equivs hiding (U≢ℕ; U≢Π; U≢ne; ℕ≢Π; ℕ≢ne; Π≢ne; U≢Empty; ℕ≢Empty; Empty≢Π; Empty≢ne)
 open import Definition.Untyped.Properties senv equivs using (subst-Univ-either)
+open import Definition.Untyped senv equivs hiding (U≢Π; U≢ne; Π≢ne; U≢Empty; Empty≢Π; Empty≢ne)
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv swf equivs
 open import Definition.Typed.Weakening senv equivs
@@ -23,7 +23,6 @@ import Tools.PropositionalEquality as PE
 type-uniq : ∀ {Γ t T₁ T₂ r₁ l₁ l₂} → Γ ⊢ t ∷ T₁ ^ [ r₁ , l₁ ] → Γ ⊢ t ∷ T₂ ^ [ r₁ , l₂ ] →
                  l₁ PE.≡ l₂ × Γ ⊢ T₁ ≡ T₂ ^ [ r₁ , l₁ ]
 type-uniq (univ 0<1 x) (univ 0<1 x') = PE.refl , refl (Ugenⱼ x)
-type-uniq (ℕⱼ x) (ℕⱼ x₁) = PE.refl , refl (Ugenⱼ x)
 type-uniq (Indⱼ x _) (Indⱼ x₁ _) = PE.refl , refl (Ugenⱼ x)
 type-uniq (Emptyⱼ x) (Emptyⱼ x₁) = PE.refl , refl (Ugenⱼ x)
 type-uniq (Πⱼ x ▹ x₁ ▹ X ▹ X₁) (Πⱼ x₂ ▹ x₃ ▹ Y ▹ Y₁) =
@@ -113,15 +112,9 @@ type-uniq {Γ = Γ} (sndⱼ {A} {A'} {rA = %} {B} {B'} X X₁ X₂ Z e) (sndⱼ 
         _ , _ , el = Uinjectivity U≡U
         A≡A , erA , elA , elB , B≡B = injectivity (univ (PE.subst (λ R → Γ ⊢ Π A ^ % ° ⁰ ▹ B ° ⁰ ° ⁰ ^ ! ≡ Π AA ^ ! ° ⁰ ▹ BB ° ⁰ ° ⁰ ^ ! ∷ U ⁰ ^ [ ! , R ]) (PE.sym el) Π≡Π))
     in ⊥-elim (!≢% (PE.sym erA))
-type-uniq (zeroⱼ x) (zeroⱼ x₁) = PE.refl , refl (univ (ℕⱼ x))
-type-uniq (sucⱼ X) (sucⱼ Y) = PE.refl , refl (univ (ℕⱼ (wfTerm X)))
 type-uniq (Ctrⱼ _ _ _ _) Y =
     let _ , el , eq = ctrTypeEq′ Y
     in PE.sym el , sym eq
-type-uniq (natrecⱼ _ x X X₁ X₂) (natrecⱼ _ y Y Y₁ Y₂) =
-    let _ , U≡U = type-uniq (un-univ x) (un-univ y)
-        er , _ = Uinjectivity U≡U
-    in PE.refl , refl (substitution x (singleSubst X₂) (wfTerm X) ) 
 type-uniq (equiv-eqⱼ x eq) (equiv-eqⱼ x₁ eq₁) with PE.trans (PE.sym eq) eq₁
 ... | PE.refl = PE.refl , refl (syntacticTerm (equiv-eqⱼ x eq))
 type-uniq (Emptyrecⱼ x X) (Emptyrecⱼ y Y) =
