@@ -14,7 +14,7 @@ open import Definition.LogicalRelation.Substitution.Introductions.IndRect senv s
   using (ctrArity; branchTy-nf; Πarg; Πih; ihFun; ihGo; ctrVars; concl; varIdx; rec-Ind)
 open import Tools.Nat
 open import Tools.Product
-open import Tools.List using (List; All; []ₐ; _∷ₐ_; map; length; length-range; range; range-suc; zip; foldr;
+open import Tools.List using (List; All; All₂; []ₐ; _∷ₐ_; map; length; length-range; range; range-suc; zip; foldr;
                               _∈ₗ_; ∈ₗ-map; ∈ₗ-range; all∈; zip-range-nth)
   renaming ([] to []ₗ; _∷_ to _∷ₗ_)
 open import Tools.Maybe using (just)
@@ -268,3 +268,28 @@ indRectBranchTyListCong : ∀ {Γ ind P P′ lG ms ms′}
 indRectBranchTyListCong {ind = ind} ind∈ P≡P′ motiveCong ⊢ms≡ =
   branchTyListCong ind (zip (range (SU.indCtrCount ind)) (SU.SInd.ctrArgsTypes ind)) ind∈
                    (all∈ (zip-range-nth (SU.SInd.ctrArgsTypes ind))) P≡P′ motiveCong ⊢ms≡
+
+private
+  branchTyListEq : ∀ {Γ P P′ lG} ind (js : List (Nat × List SU.Type))
+                 → ind ∈ₗ senv
+                 → All (λ jTs → SU.ctrArgsTypeList ind (proj₁ jTs) PE.≡ just (proj₂ jTs)) js
+                 → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P ≡ P′ ^ [ ! , ι lG ]
+                 → MotiveCong (SU.SInd.name ind) Γ P P′ lG
+                 → All₂ (λ A A′ → Γ ⊢ A ≡ A′ ^ [ ! , ι lG ])
+                        (map (λ jTs → indRectBranchTy (SU.SInd.name ind) (proj₁ jTs) (proj₂ jTs) P ! lG) js)
+                        (map (λ jTs → indRectBranchTy (SU.SInd.name ind) (proj₁ jTs) (proj₂ jTs) P′ ! lG) js)
+  branchTyListEq ind []ₗ ind∈ []ₐ P≡P′ motiveCong = []ₐ
+  branchTyListEq ind (jTs ∷ₗ js) ind∈ (eqTs ∷ₐ eqs) P≡P′ motiveCong =
+    indRectBranchTyCong ind (proj₁ jTs) ind∈ eqTs P≡P′ motiveCong
+    ∷ₐ branchTyListEq ind js ind∈ eqs P≡P′ motiveCong
+
+-- Pointwise equality of the types of the methods, under equality of the motive.
+indRectBranchTyListEq : ∀ {Γ ind P P′ lG}
+  → ind ∈ₗ senv
+  → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P ≡ P′ ^ [ ! , ι lG ]
+  → MotiveCong (SU.SInd.name ind) Γ P P′ lG
+  → All₂ (λ A A′ → Γ ⊢ A ≡ A′ ^ [ ! , ι lG ])
+         (indRectBranchTyList ind P ! lG) (indRectBranchTyList ind P′ ! lG)
+indRectBranchTyListEq {ind = ind} ind∈ P≡P′ motiveCong =
+  branchTyListEq ind (zip (range (SU.indCtrCount ind)) (SU.SInd.ctrArgsTypes ind)) ind∈
+                 (all∈ (zip-range-nth (SU.SInd.ctrArgsTypes ind))) P≡P′ motiveCong

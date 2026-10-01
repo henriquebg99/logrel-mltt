@@ -18,7 +18,7 @@ open import Definition.Typed.Consequences.SucCong senv swf equivs hiding (sucCon
 open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
 open import Definition.Typed.Consequences.Inversion senv swf equivs using (Ind∈Idʳ)
 open import Definition.Typed.Consequences.RelevanceUnicity senv swf equivs
-open import Definition.Typed.Consequences.IndRectCong senv swf equivs using (indRectBranchTyListCong)
+open import Definition.Typed.Consequences.IndRectCong senv swf equivs using (indRectBranchTyListEq)
 open import Tools.Product
 open import Tools.List using (All₃; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
@@ -134,8 +134,7 @@ mutual
     in  _ , substTypeEq (soundnessConv↑ x) (soundness~↓! x₁)
     ,   IndRect-cong ind∈ (symConv↑ (Γ≡Δ ∙ (refl (univ (Indⱼ ⊢Γ ind∈)))) x)
                      (PE.subst (λ A → _ ⊢ _ ~ _ ↓! A ^ _) B≡Ind t'~t)
-                     (symAll (indRectBranchTyListCong ind∈ P≡P'
-                                                (stabilityAll≡ Γ≡Δ x₂)))
+                     (convConvTermAll (symAll₃ Γ≡Δ x₂) (indRectBranchTyListEq ind∈ P≡P'))
   sym~↑! Γ≡Δ (Emptyrec-cong x t~u) =
     let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
         u~t = sym~↑% Γ≡Δ t~u
@@ -365,9 +364,9 @@ mutual
     η-eq l<  l<' (stability Γ≡Δ x) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₁)
          y₁ y (symConv↑Term (Γ≡Δ ∙ refl x) t<>u)
 
-  symAll₃ : ∀ {Γ Δ args args' As} → ⊢ Γ ≡ Δ
-          → All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' As
-          → All₃ (λ a a' A → Δ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args' args As
+  symAll₃ : ∀ {Γ Δ args args' As l} → ⊢ Γ ≡ Δ
+          → All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) args args' As
+          → All₃ (λ a a' A → Δ ⊢ a [conv↑] a' ∷ A ^ l) args' args As
   symAll₃ Γ≡Δ []ₐ = []ₐ
   symAll₃ Γ≡Δ (p ∷ₐ ps) = symConv↑Term Γ≡Δ p ∷ₐ symAll₃ Γ≡Δ ps
 

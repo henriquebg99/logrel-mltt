@@ -10,6 +10,7 @@ open import Definition.Typed.Consequences.Syntactic senv swf equivs
 open import Definition.Typed.Consequences.Injectivity senv swf equivs
 open import Definition.Typed.Consequences.Substitution senv swf equivs
 open import Tools.Product
+import Tools.List as TL
 import Tools.PropositionalEquality as PE
 -- to be moved in Untyped
 typelevel-injectivity : ∀ {r r' l l'} → [ r , l ] PE.≡ [ r' , l' ] → r PE.≡ r' × l PE.≡ l'
@@ -32,12 +33,19 @@ varTypeEq A B x∷A x∷B with varTypeEq′ x∷A x∷B
 -- The same neutral term have equal types.
 -- to use this with different relevances rA rB we need unicity of relevance for types
 
-postulate
-  neTypeEq-IndRect : ∀ {i lG P t ms A B lA lA' Γ} →
-    Neutral t →
-    Γ ⊢ IndRect i lG P t ms ∷ A ^ [ ! , lA ] →
-    Γ ⊢ IndRect i lG P t ms ∷ B ^ [ ! , lA' ] →
-    lA PE.≡ lA' × Γ ⊢ A ≡ B ^ [ ! , lA ]
+-- ctr and IndRect are gen-spines built with map, so dual Ctrⱼ / IndRectⱼ matching
+-- does not unify. We therefore state their inversions over an arbitrary spine xs.
+ctrTypeEq′ : ∀ {i j xs T r l Γ} → Γ ⊢ gen (Ctrkind i j) xs ∷ T ^ [ r , l ] →
+  r PE.≡ ! × l PE.≡ ι ⁰ × Γ ⊢ T ≡ Ind i ^ [ ! , ι ⁰ ]
+ctrTypeEq′ (Ctrⱼ ⊢Γ ind∈ _ _) = PE.refl , PE.refl , refl (univ (Indⱼ ⊢Γ ind∈))
+ctrTypeEq′ (conv X x) = let er , el , eq = ctrTypeEq′ X in er , el ,
+  trans (sym (PE.subst (λ l → _ ⊢ _ ≡ _ ^ [ _ , l ] ) el (PE.subst (λ r → _ ⊢ _ ≡ _ ^ [ r , _ ]) er x))) eq
+
+IndRectTypeEq′ : ∀ {i lG P t xs T r l Γ} → Γ ⊢ gen (IndRectkind i lG) (⟦ 1 , P ⟧ TL.∷ ⟦ 0 , t ⟧ TL.∷ xs) ∷ T ^ [ r , l ] →
+  Γ ∙ Ind i ^ [ ! , ι ⁰ ] ⊢ P ^ [ r , ι lG ] × l PE.≡ ι lG × Γ ⊢ T ≡ P [ t ] ^ [ r , ι lG ]
+IndRectTypeEq′ (IndRectⱼ _ _ ⊢P ⊢t _) = ⊢P , PE.refl , refl (substType ⊢P ⊢t)
+IndRectTypeEq′ (conv X x) = let ⊢P , el , eq = IndRectTypeEq′ X in ⊢P , el ,
+  trans (sym (PE.subst (λ l → _ ⊢ _ ≡ _ ^ [ _ , l ] ) el x)) eq
 
 neTypeEq : ∀ {t A B lA lA' Γ} → Neutral t → Γ ⊢ t ∷ A ^ [ ! , lA ] → Γ ⊢ t ∷ B ^ [ ! , lA' ] →
   lA PE.≡ lA' × Γ ⊢ A ≡ B ^ [ ! , lA ]
@@ -52,7 +60,10 @@ neTypeEq (natrecₙ neT) (natrecⱼ _ x t∷A t∷A₁ t∷A₂) (natrecⱼ _ x�
   PE.refl , refl (substType x₁ t∷B₂)
 neTypeEq Emptyrecₙ (Emptyrecⱼ x t∷A) (Emptyrecⱼ x₁ t∷B) =
   PE.refl , refl x₁
-neTypeEq (IndRectₙ n) d e = neTypeEq-IndRect n d e
+neTypeEq (IndRectₙ neT) t∷A t∷B =
+  let _ , elA , eqA = IndRectTypeEq′ t∷A
+      _ , elB , eqB = IndRectTypeEq′ t∷B
+  in PE.trans elA (PE.sym elB) , PE.subst (λ l → _ ⊢ _ ≡ _ ^ [ ! , l ]) (PE.sym elA) (trans eqA (sym eqB))
 neTypeEq X (castⱼ Y Y₁ Y₂ Y₃)  (castⱼ Z Z₁ Z₂ Z₃) = PE.refl , refl (univ Y₁) 
 neTypeEq x (conv t∷A x₁) t∷B = 
   let e , q = neTypeEq x t∷A t∷B

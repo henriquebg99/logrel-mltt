@@ -20,11 +20,6 @@ open import Tools.Empty
 open import Tools.Sum using (_⊎_; inj₁; inj₂)
 import Tools.PropositionalEquality as PE
 
--- ctr / IndRect gen-spines use map (same issue as relevance-uniq-map-spine).
-postulate
-  type-uniq-map-spine : ∀ {Γ t T₁ T₂ r₁ l₁ l₂} →
-    Γ ⊢ t ∷ T₁ ^ [ r₁ , l₁ ] → Γ ⊢ t ∷ T₂ ^ [ r₁ , l₂ ] → l₁ PE.≡ l₂ × Γ ⊢ T₁ ≡ T₂ ^ [ r₁ , l₁ ]
-
 type-uniq : ∀ {Γ t T₁ T₂ r₁ l₁ l₂} → Γ ⊢ t ∷ T₁ ^ [ r₁ , l₁ ] → Γ ⊢ t ∷ T₂ ^ [ r₁ , l₂ ] →
                  l₁ PE.≡ l₂ × Γ ⊢ T₁ ≡ T₂ ^ [ r₁ , l₁ ]
 type-uniq (univ 0<1 x) (univ 0<1 x') = PE.refl , refl (Ugenⱼ x)
@@ -120,7 +115,9 @@ type-uniq {Γ = Γ} (sndⱼ {A} {A'} {rA = %} {B} {B'} X X₁ X₂ Z e) (sndⱼ 
     in ⊥-elim (!≢% (PE.sym erA))
 type-uniq (zeroⱼ x) (zeroⱼ x₁) = PE.refl , refl (univ (ℕⱼ x))
 type-uniq (sucⱼ X) (sucⱼ Y) = PE.refl , refl (univ (ℕⱼ (wfTerm X)))
-type-uniq ⊢t@(Ctrⱼ _ _ _ _) ⊢u = type-uniq-map-spine ⊢t ⊢u
+type-uniq (Ctrⱼ _ _ _ _) Y =
+    let _ , el , eq = ctrTypeEq′ Y
+    in PE.sym el , sym eq
 type-uniq (natrecⱼ _ x X X₁ X₂) (natrecⱼ _ y Y Y₁ Y₂) =
     let _ , U≡U = type-uniq (un-univ x) (un-univ y)
         er , _ = Uinjectivity U≡U
@@ -138,7 +135,9 @@ type-uniq (transpⱼ x x₁ X X₁ X₂ X₃) (transpⱼ x₂ x₃ Y Y₁ Y₂ Y
 type-uniq (castⱼ X X₁ X₂ X₃) (castⱼ Y Y₁ Y₂ Y₃) =
     let _ , _ = type-uniq X₃ Y₃
     in PE.refl , refl (univ X₁)
-type-uniq ⊢t@(IndRectⱼ _ _ _ _ _) ⊢u = type-uniq-map-spine ⊢t ⊢u
+type-uniq (IndRectⱼ _ _ _ _ _) Y =
+    let _ , el , eq = IndRectTypeEq′ Y
+    in PE.sym el , sym eq
 type-uniq (conv X x) Y = let el , eA = type-uniq X Y in el , trans (sym x) eA
 type-uniq X (conv Y y) =
     let el , eA = type-uniq X Y

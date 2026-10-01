@@ -16,7 +16,7 @@ open import Definition.Typed.Consequences.Injectivity senv swf equivs
 open import Definition.Typed.Consequences.Equality senv swf equivs
 open import Definition.Typed.Consequences.Reduction senv swf equivs
 open import Tools.Product
-open import Tools.List using (All₃; []ₐ; _∷ₐ_)
+open import Tools.List using (All₂; All₃; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
 open import Tools.Nat as Nat
 sizeSubst-gen :  ∀ {A a b}
@@ -85,3 +85,12 @@ mutual
     convAll₃ConvSize Γ≡Δ []ₐ = PE.refl
     convAll₃ConvSize Γ≡Δ (p ∷ₐ ps) =
       PE.cong₂ _+_ (stabilitySizeConv↑Term Γ≡Δ p) (convAll₃ConvSize Γ≡Δ ps)
+
+-- Pointwise conversion preserves the size.
+convConvTermAllSize : ∀ {ms ms' As Bs Γ l}
+                    → (ps : All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) ms ms' As)
+                    → (eqs : All₂ (λ A B → Γ ⊢ A ≡ B ^ [ ! , l ]) As Bs)
+                    → sizeConv↑TermAll (convConvTermAll ps eqs) PE.≡ sizeConv↑TermAll ps
+convConvTermAllSize []ₐ []ₐ = PE.refl
+convConvTermAllSize (p ∷ₐ ps) (A≡B ∷ₐ eqs) =
+  PE.cong₂ _+_ (convConv↑TermSize (reflConEq (wfEq A≡B)) A≡B p) (convConvTermAllSize ps eqs)

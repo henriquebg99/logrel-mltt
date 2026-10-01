@@ -12,7 +12,7 @@ open import Definition.Typed.Consequences.Injectivity senv swf equivs
 open import Definition.Typed.Consequences.Equality senv swf equivs
 open import Definition.Typed.Consequences.Reduction senv swf equivs
 open import Tools.Product
-open import Tools.List using (All₃; []ₐ; _∷ₐ_)
+open import Tools.List using (All₂; All₃; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
 mutual
 
@@ -115,6 +115,14 @@ convConvTerm : ∀ {t u A B Γ l}
               → Γ ⊢ A ≡ B ^ [ ! , l ]
               → Γ ⊢ t [conv↑] u ∷ B ^ l
 convConvTerm t<>u A≡B = convConv↑Term (reflConEq (wfEq A≡B)) A≡B t<>u
+
+-- Pointwise conversion of lists of algorithmic equalities of terms.
+convConvTermAll : ∀ {ms ms' As Bs Γ l}
+                → All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) ms ms' As
+                → All₂ (λ A B → Γ ⊢ A ≡ B ^ [ ! , l ]) As Bs
+                → All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) ms ms' Bs
+convConvTermAll []ₐ []ₐ = []ₐ
+convConvTermAll (p ∷ₐ ps) (A≡B ∷ₐ eqs) = convConvTerm p A≡B ∷ₐ convConvTermAll ps eqs
 
 conv~↑% : ∀ {t u A B Γ l}
               → Γ ⊢ t ~ u ↑% A ^ l

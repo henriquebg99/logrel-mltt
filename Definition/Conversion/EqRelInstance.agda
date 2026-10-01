@@ -27,7 +27,7 @@ open import Definition.Conversion.Symmetry senv swf equivs
 -- open import Definition.Conversion.HelperDecidable
 open import Tools.Nat
 open import Tools.Product
-open import Tools.List using (_∈ₗ_)
+open import Tools.List using (All₃; _∈ₗ_)
 import Definition.SUntyped as SU
 import Tools.PropositionalEquality as PE
 open import Tools.Function
@@ -113,7 +113,7 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
          → ind ∈ₗ senv
          → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P [conv↑] P' ^ [ ! , ι lG ]
          → Γ ⊢ t ~ t' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
-         → Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
+         → All₃ (λ m m' A → Γ ⊢ m [conv↑] m' ∷ A ^ ι lG) ms ms' (indRectBranchTyList ind P ! lG)
          → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ~ IndRect (SU.SInd.name ind) lG P' t' ms'
                ∷ (P [ t ]) ^ [ ! , ι lG ]
 ~-IndRect {t = t} {t' = t'} ind∈ x (↑ A≡B (~↑! x₄)) ms =

@@ -59,9 +59,9 @@ mutual
       (IndRect-cong ind∈
                     (wkConv↑ (lift [ρ]) (⊢Δ ∙ (univ (Indⱼ ⊢Δ ind∈))) x)
                     (wk~↓! [ρ] ⊢Δ x₁)
-                    (PE.subst (λ As → Δ ⊢All map (U.wk ρ) ms ≡ map (U.wk ρ) ms' ∷ As ^ [ ! , ι lG ])
+                    (PE.subst (All₃ (λ m m' A → Δ ⊢ m [conv↑] m' ∷ A ^ ι lG) (map (U.wk ρ) ms) (map (U.wk ρ) ms'))
                               (wk-indRectBranchTyList ρ ind P ! lG)
-                              (wkAllEq [ρ] ⊢Δ x₂)))
+                              (wkAll₃Conv′ [ρ] ⊢Δ x₂)))
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-neInd x x₁ x₂ x₃) =
     cast-neInd (wk~↓! [ρ] ⊢Δ x) (wkConv↑Term [ρ] ⊢Δ x₁) (wkTerm [ρ] ⊢Δ x₂) (wkTerm [ρ] ⊢Δ x₃)
   wk~↑! {ρ} {Δ = Δ} [ρ] ⊢Δ (cast-Ind x x₁ x₂ x₃) =
@@ -166,3 +166,9 @@ mutual
   wkAll₃Conv {ρ = ρ} {Ts = T List∷ Ts} [ρ] ⊢Δ (p ∷ₐ ps) =
     PE.subst (λ A → _ ⊢ _ [conv↑] _ ∷ A ^ ι ⁰) (wk-emb-stype ρ T) (wkConv↑Term [ρ] ⊢Δ p)
     ∷ₐ wkAll₃Conv [ρ] ⊢Δ ps
+
+  wkAll₃Conv′ : ∀ {ρ ms ms' As Γ Δ l} ([ρ] : ρ ∷ Δ ⊆ Γ) → ⊢ Δ →
+    All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) ms ms' As →
+    All₃ (λ a a' A → Δ ⊢ a [conv↑] a' ∷ A ^ l) (map (U.wk ρ) ms) (map (U.wk ρ) ms') (map (U.wk ρ) As)
+  wkAll₃Conv′ [ρ] ⊢Δ []ₐ = []ₐ
+  wkAll₃Conv′ [ρ] ⊢Δ (p ∷ₐ ps) = wkConv↑Term [ρ] ⊢Δ p ∷ₐ wkAll₃Conv′ [ρ] ⊢Δ ps

@@ -8,7 +8,7 @@ open import Definition.Typed.Consequences.Syntactic senv swf equivs
 open import Definition.Typed.Consequences.Substitution senv swf equivs
 import Definition.Typed.IndRectCong senv swf equivs as I
 open import Tools.Product
-open import Tools.List using (_∈ₗ_)
+open import Tools.List using (All₂; _∈ₗ_)
 import Definition.SUntyped as SU
 
 -- Congruence of the type of the methods in IndRect.  The induction over the
@@ -25,3 +25,14 @@ indRectBranchTyListCong ind∈ P≡P′ ⊢ms≡ =
     (λ d ⊢Δ [σ] ⊢u → let Pu≡P′u = substitutionEq P≡P′ (substRefl ([σ] , ⊢u)) ⊢Δ
                      in  proj₁ (syntacticEq Pu≡P′u) , Pu≡P′u)
     ⊢ms≡
+
+-- Pointwise equality of the types of the methods in IndRect.
+indRectBranchTyListEq : ∀ {Γ ind P P′ lG}
+  → ind ∈ₗ senv
+  → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P ≡ P′ ^ [ ! , ι lG ]
+  → All₂ (λ A A′ → Γ ⊢ A ≡ A′ ^ [ ! , ι lG ])
+         (indRectBranchTyList ind P ! lG) (indRectBranchTyList ind P′ ! lG)
+indRectBranchTyListEq ind∈ P≡P′ =
+  I.indRectBranchTyListEq ind∈ P≡P′
+    (λ d ⊢Δ [σ] ⊢u → let Pu≡P′u = substitutionEq P≡P′ (substRefl ([σ] , ⊢u)) ⊢Δ
+                     in  proj₁ (syntacticEq Pu≡P′u) , Pu≡P′u)

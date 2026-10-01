@@ -79,9 +79,10 @@ mutual
              (stabilitySizeConv↑Term Γ≡Δ a)
              (stabilitySizeConv↑Term Γ≡Δ b)
              (stabilitySizeConv↑Term Γ≡Δ x)
-  stabilitySize~↑! Γ≡Δ (IndRect-cong _ x x₁ x₂) = PE.cong₂ (λ a b → 1+ (a + b))
+  stabilitySize~↑! Γ≡Δ (IndRect-cong _ x x₁ x₂) = PE.cong₃ (λ a b c → 1+ (a + b + c))
              (stabilitySizeConv↑ _ x)
              (stabilitySize~↓! Γ≡Δ x₁)
+             (stabilityAll₃Size Γ≡Δ x₂)
   stabilitySize~↑! Γ≡Δ (cast-neInd x x₁ x₂ x₃) = PE.cong₂ (λ a b → 1+ (a + b))
              (stabilitySize~↓! Γ≡Δ x)
              (stabilitySizeConv↑Term Γ≡Δ x₁)
@@ -126,14 +127,14 @@ mutual
   stabilitySizeConv↓Term Γ≡Δ (suc-cong x) = PE.cong 1+ (stabilitySizeConv↑Term Γ≡Δ x)
   stabilitySizeConv↓Term Γ≡Δ (η-eq l< l<' F x x₁ y y₁ t<>u) = PE.cong 1+ (stabilitySizeConv↑Term _ t<>u)
   stabilitySizeConv↓Term Γ≡Δ (ctr-cong x x₁ x₂ x₃) = PE.cong 1+ (stabilityAll₃Size Γ≡Δ x₃)
-    where
-    stabilityAll₃Size : ∀ {args args' As Γ Δ}
-                       → (Γ≡Δ : ⊢ Γ ≡ Δ)
-                       → (ps : All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' As)
-                       → sizeConv↑TermAll (All₃-stab Γ≡Δ ps) PE.≡ sizeConv↑TermAll ps
-    stabilityAll₃Size Γ≡Δ []ₐ = PE.refl
-    stabilityAll₃Size Γ≡Δ (p ∷ₐ ps) =
-      PE.cong₂ _+_ (stabilitySizeConv↑Term Γ≡Δ p) (stabilityAll₃Size Γ≡Δ ps)
+
+  stabilityAll₃Size : ∀ {args args' As Γ Δ l}
+                     → (Γ≡Δ : ⊢ Γ ≡ Δ)
+                     → (ps : All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) args args' As)
+                     → sizeConv↑TermAll (All₃-stab Γ≡Δ ps) PE.≡ sizeConv↑TermAll ps
+  stabilityAll₃Size Γ≡Δ []ₐ = PE.refl
+  stabilityAll₃Size Γ≡Δ (p ∷ₐ ps) =
+    PE.cong₂ _+_ (stabilitySizeConv↑Term Γ≡Δ p) (stabilityAll₃Size Γ≡Δ ps)
 
   stabilitySizeConv↓ : ∀ {k l Γ Δ lA}
               → (Γ≡Δ : ⊢ Γ ≡ Δ)

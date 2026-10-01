@@ -69,6 +69,34 @@ private
   reflAllEq′ (consⱼ {r = [ ! , l ]} ⊢t ⊢ts) = consⱼ (refl ⊢t) (reflAllEq′ ⊢ts)
   reflAllEq′ (consⱼ {r = [ % , l ]} ⊢t ⊢ts) = consⱼ (proof-irrelevance ⊢t ⊢t) (reflAllEq′ ⊢ts)
 
+  -- Reducible methods are reflexively ≅.
+  escapeMethods≅ : ∀ {Δ As ms rG lG l}
+    → All₂ (λ A m → ∃ λ ([A] : Δ ⊩⟨ l ⟩ A ^ [ rG , ι lG ])
+                      → Δ ⊩⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [A]) As ms
+    → All₃ (λ m m′ A → Δ ⊢ m ≅ m′ ∷ A ^ [ rG , ι lG ]) ms ms As
+  escapeMethods≅ []ₐ = []ₐ
+  escapeMethods≅ (([A] , [m]) ∷ₐ ps) = escapeTermEq [A] (reflEqTerm [A] [m]) ∷ₐ escapeMethods≅ ps
+
+  -- The left methods of a reducible equality of methods are reflexively ≅.
+  escapeMethodsˡ≅ : ∀ {Δ As ms ms′ rG lG l}
+    → All₃ (λ A m m′ → ∃ λ ([A] : Δ ⊩⟨ l ⟩ A ^ [ rG , ι lG ])
+                         → (Δ ⊩⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [A])
+                         × (Δ ⊩⟨ l ⟩ m′ ∷ A ^ [ rG , ι lG ] / [A])
+                         × (Δ ⊩⟨ l ⟩ m ≡ m′ ∷ A ^ [ rG , ι lG ] / [A])) As ms ms′
+    → All₃ (λ m m′ A → Δ ⊢ m ≅ m′ ∷ A ^ [ rG , ι lG ]) ms ms As
+  escapeMethodsˡ≅ []ₐ = []ₐ
+  escapeMethodsˡ≅ (([A] , [m] , _ , _) ∷ₐ ps) = escapeTermEq [A] (reflEqTerm [A] [m]) ∷ₐ escapeMethodsˡ≅ ps
+
+  -- Escape of a reducible equality of methods.
+  escapeMethodsEq≅ : ∀ {Δ As ms ms′ rG lG l}
+    → All₃ (λ A m m′ → ∃ λ ([A] : Δ ⊩⟨ l ⟩ A ^ [ rG , ι lG ])
+                         → (Δ ⊩⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [A])
+                         × (Δ ⊩⟨ l ⟩ m′ ∷ A ^ [ rG , ι lG ] / [A])
+                         × (Δ ⊩⟨ l ⟩ m ≡ m′ ∷ A ^ [ rG , ι lG ] / [A])) As ms ms′
+    → All₃ (λ m m′ A → Δ ⊢ m ≅ m′ ∷ A ^ [ rG , ι lG ]) ms ms′ As
+  escapeMethodsEq≅ []ₐ = []ₐ
+  escapeMethodsEq≅ (([A] , _ , _ , [m≡]) ∷ₐ ps) = escapeTermEq [A] [m≡] ∷ₐ escapeMethodsEq≅ ps
+
 escapeMethodsσ : ∀ {Γ Δ σ ind P rG lG ms l}
   → ([Γ] : ⊩ᵛ Γ)
   → (⊢Δ : ⊢ Δ)
@@ -937,7 +965,7 @@ mutual
         [Pk]    = [Pu] [k]
         [Pt≡Pk] = [Pu≡] [t] [k] [t≡k]
         IndRectK = neuTerm [Pk] (IndRectₙ neK) (IndRectⱼ rGlG ind∈ ⊢P ⊢k ⊢ms)
-                           (~-IndRect ind∈ ⊢P≅P k~k (reflAllEq′ ⊢ms))
+                           (~-IndRect ind∈ ⊢P≅P k~k (escapeMethods≅ [ms]))
         reduction = IndRect-subst* ind∈ ⊢P (redₜ d) ⊢ms [Ind] [k]
                       (λ [u] [u′] [u≡u′] →
                          ≅-eq (escapeEq ([Pu] [u]) ([Pu≡] [u] [u′] [u≡u′])))
@@ -1090,9 +1118,9 @@ mutual
         [Pt≡P′t′]   = [PP′u] [t] [t′] [t≡t′]
         [Pk≡P′k′]   = [PP′u] [k] [k′] [k≡k′]
         IndRectK    = neuTerm [Pk] (IndRectₙ neK) (IndRectⱼ rGlG ind∈ ⊢P ⊢k ⊢ms)
-                              (~-IndRect ind∈ ⊢P≅P k~k (reflAllEq′ ⊢ms))
+                              (~-IndRect ind∈ ⊢P≅P k~k (escapeMethodsˡ≅ [ms≡]))
         IndRectK′   = neuTerm [P′k′] (IndRectₙ neK′) (IndRectⱼ rGlG ind∈ ⊢P′ ⊢k′ ⊢ms′)
-                              (~-IndRect ind∈ ⊢P′≅P′ k′~k′ (reflAllEq′ ⊢ms′))
+                              (~-IndRect ind∈ ⊢P′≅P′ k′~k′ (escapeMethods≅ [ms′]))
         IndRectK≡K′ = convEqTerm₂ [Pt] [Pk] [Pt≡Pk]
                         (neuEqTerm [Pk] (IndRectₙ neK) (IndRectₙ neK′)
                           (IndRectⱼ rGlG ind∈ ⊢P ⊢k ⊢ms)
@@ -1101,7 +1129,7 @@ mutual
                           (~-IndRect ind∈ ⊢P≅P′
                             (PE.subst₂ (λ x y → _ ⊢ x ~ y ∷ _ ^ [ ! , ι ⁰ ])
                                        k₁≡k k₁′≡k′ k₁~k₁′)
-                            ⊢ms≡))
+                            (escapeMethodsEq≅ [ms≡])))
         reduction₁  = IndRect-subst* ind∈ ⊢P (redₜ d) ⊢ms [Ind] [k]
                         (λ [u] [u′] [u≡u′] →
                            ≅-eq (escapeEq ([Pu] [u]) ([Pu≡] [u] [u′] [u≡u′])))
@@ -1725,23 +1753,206 @@ IndRect-ctr-rhsᵛ {Γ = Γ} {ind = ind} {j = j} {P = P} {lG = lG} {args = args}
 
 ------------------------------------------------------------------------
 -- Validity of IndRect congruence.
--- ⊢ms' is under P (as in Typed IndRect-cong / ⊢All equality), not P'.
-postulate
-  IndRect-congᵛ : ∀ {ind P P' rG lG t t' ms ms' Γ l}
-              (rGlG : rG PE.≡ % → lG PE.≡ ⁰)
-              ([Γ] : ⊩ᵛ Γ)
-              ([Ind] : Γ ⊩ᵛ⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ])
-              ([P] : Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ l ⟩ P ^ [ rG , ι lG ] / [Γ] ∙ [Ind])
-              ([P'] : Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ l ⟩ P' ^ [ rG , ι lG ] / [Γ] ∙ [Ind])
-              ([P≡P'] : Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ l ⟩ P ≡ P' ^ [ rG , ι lG ] / [Γ] ∙ [Ind] / [P])
-              ([t] : Γ ⊩ᵛ⟨ l ⟩ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
-              ([t'] : Γ ⊩ᵛ⟨ l ⟩ t' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
-              ([t≡t'] : Γ ⊩ᵛ⟨ l ⟩ t ≡ t' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
-              ([Pt] : Γ ⊩ᵛ⟨ l ⟩ P [ t ] ^ [ rG , ι lG ] / [Γ])
-              (⊢ms : Γ ⊢All ms ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ])
-              (⊢ms' : Γ ⊢All ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ])
-              (⊢ms≡ : Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ])
-              (rG≡! : rG PE.≡ !)
-            → Γ ⊩ᵛ⟨ l ⟩ IndRect (SU.SInd.name ind) lG P t ms ≡ IndRect (SU.SInd.name ind) lG P' t' ms' ∷ P [ t ] ^ [ rG , ι lG ] / [Γ] / [Pt]
+
+private
+  -- The left methods of a valid equality of methods.
+  methodsˡ : ∀ {Γ rG lG ms ms′ As l} {[Γ] : ⊩ᵛ Γ}
+    → All₃ (λ m m′ A → ∃ λ ([A] : Γ ⊩ᵛ⟨ l ⟩ A ^ [ rG , ι lG ] / [Γ])
+                         → (Γ ⊩ᵛ⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
+                         × (Γ ⊩ᵛ⟨ l ⟩ m′ ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
+                         × (Γ ⊩ᵛ⟨ l ⟩ m ≡ m′ ∷ A ^ [ rG , ι lG ] / [Γ] / [A])) ms ms′ As
+    → All₂ (λ m A → ∃ λ ([A] : Γ ⊩ᵛ⟨ l ⟩ A ^ [ rG , ι lG ] / [Γ])
+                      → Γ ⊩ᵛ⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [Γ] / [A]) ms As
+  methodsˡ []ₐ = []ₐ
+  methodsˡ (([A] , [m] , _ , _) ∷ₐ ps) = ([A] , [m]) ∷ₐ methodsˡ ps
+
+  -- Reducible equality of the methods at a substitution.
+  methodsEqσ : ∀ {Γ Δ σ ind P rG lG ms ms′ l}
+    → ([Γ] : ⊩ᵛ Γ)
+    → (⊢Δ : ⊢ Δ)
+    → ([σ] : Δ ⊩ˢ σ ∷ Γ / [Γ] / ⊢Δ)
+    → All₃ (λ m m′ A → ∃ λ ([A] : Γ ⊩ᵛ⟨ l ⟩ A ^ [ rG , ι lG ] / [Γ])
+                         → (Γ ⊩ᵛ⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
+                         × (Γ ⊩ᵛ⟨ l ⟩ m′ ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
+                         × (Γ ⊩ᵛ⟨ l ⟩ m ≡ m′ ∷ A ^ [ rG , ι lG ] / [Γ] / [A]))
+           ms ms′ (indRectBranchTyList ind P rG lG)
+    → All₃ (λ A m m′ → ∃ λ ([A] : Δ ⊩⟨ l ⟩ A ^ [ rG , ι lG ])
+                         → (Δ ⊩⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [A])
+                         × (Δ ⊩⟨ l ⟩ m′ ∷ A ^ [ rG , ι lG ] / [A])
+                         × (Δ ⊩⟨ l ⟩ m ≡ m′ ∷ A ^ [ rG , ι lG ] / [A]))
+           (indRectBranchTyList ind (subst (liftSubst σ) P) rG lG)
+           (map (subst σ) ms) (map (subst σ) ms′)
+  methodsEqσ {Δ = Δ} {σ = σ} {ind = ind} {P = P} {rG = rG} {lG = lG} {ms = ms} {ms′ = ms′} {l = l}
+             [Γ] ⊢Δ [σ] [ms≡] =
+    PE.subst (λ As → All₃ (λ A m m′ → ∃ λ ([A] : Δ ⊩⟨ l ⟩ A ^ [ rG , ι lG ])
+                                       → (Δ ⊩⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [A])
+                                       × (Δ ⊩⟨ l ⟩ m′ ∷ A ^ [ rG , ι lG ] / [A])
+                                       × (Δ ⊩⟨ l ⟩ m ≡ m′ ∷ A ^ [ rG , ι lG ] / [A]))
+                          As (map (subst σ) ms) (map (subst σ) ms′))
+             (subst-indRectBranchTyList σ ind P rG lG)
+             (go ms ms′ (indRectBranchTyList ind P rG lG) [ms≡])
+    where
+      go : ∀ ns ns′ As →
+        All₃ (λ m m′ A → ∃ λ ([A] : _ ⊩ᵛ⟨ l ⟩ A ^ [ rG , ι lG ] / [Γ])
+                           → (_ ⊩ᵛ⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
+                           × (_ ⊩ᵛ⟨ l ⟩ m′ ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
+                           × (_ ⊩ᵛ⟨ l ⟩ m ≡ m′ ∷ A ^ [ rG , ι lG ] / [Γ] / [A])) ns ns′ As
+        → All₃ (λ A m m′ → ∃ λ ([A] : Δ ⊩⟨ l ⟩ A ^ [ rG , ι lG ])
+                            → (Δ ⊩⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [A])
+                            × (Δ ⊩⟨ l ⟩ m′ ∷ A ^ [ rG , ι lG ] / [A])
+                            × (Δ ⊩⟨ l ⟩ m ≡ m′ ∷ A ^ [ rG , ι lG ] / [A]))
+               (map (subst σ) As) (map (subst σ) ns) (map (subst σ) ns′)
+      go []ₗ []ₗ []ₗ []ₐ = []ₐ
+      go (m ∷ₗ ns) (m′ ∷ₗ ns′) (A ∷ₗ As′) (([A] , [m] , [m′] , [m≡]) ∷ₐ ps) =
+        (proj₁ ([A] ⊢Δ [σ]) , proj₁ ([m] ⊢Δ [σ]) , proj₁ ([m′] ⊢Δ [σ]) , [m≡] ⊢Δ [σ])
+        ∷ₐ go ns ns′ As′ ps
+
+  -- Judgemental equality of the methods at a substitution.
+  escapeMethodsEqσ : ∀ {Γ Δ σ ind P rG lG ms ms′ l}
+    → ([Γ] : ⊩ᵛ Γ)
+    → (⊢Δ : ⊢ Δ)
+    → ([σ] : Δ ⊩ˢ σ ∷ Γ / [Γ] / ⊢Δ)
+    → All₃ (λ m m′ A → ∃ λ ([A] : Γ ⊩ᵛ⟨ l ⟩ A ^ [ rG , ι lG ] / [Γ])
+                         → (Γ ⊩ᵛ⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
+                         × (Γ ⊩ᵛ⟨ l ⟩ m′ ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
+                         × (Γ ⊩ᵛ⟨ l ⟩ m ≡ m′ ∷ A ^ [ rG , ι lG ] / [Γ] / [A]))
+           ms ms′ (indRectBranchTyList ind P rG lG)
+    → Δ ⊢All map (subst σ) ms ≡ map (subst σ) ms′
+        ∷ indRectBranchTyList ind (subst (liftSubst σ) P) rG lG ^ [ rG , ι lG ]
+  escapeMethodsEqσ {Δ = Δ} {σ = σ} {ind = ind} {P = P} {rG = rG} {lG = lG} {ms = ms} {ms′ = ms′} {l = l}
+                   [Γ] ⊢Δ [σ] [ms≡] =
+    PE.subst (λ As → Δ ⊢All map (subst σ) ms ≡ map (subst σ) ms′ ∷ As ^ [ rG , ι lG ])
+             (subst-indRectBranchTyList σ ind P rG lG)
+             (go ms ms′ (indRectBranchTyList ind P rG lG) [ms≡])
+    where
+      go : ∀ ns ns′ As →
+        All₃ (λ m m′ A → ∃ λ ([A] : _ ⊩ᵛ⟨ l ⟩ A ^ [ rG , ι lG ] / [Γ])
+                           → (_ ⊩ᵛ⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
+                           × (_ ⊩ᵛ⟨ l ⟩ m′ ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
+                           × (_ ⊩ᵛ⟨ l ⟩ m ≡ m′ ∷ A ^ [ rG , ι lG ] / [Γ] / [A])) ns ns′ As
+        → Δ ⊢All map (subst σ) ns ≡ map (subst σ) ns′ ∷ map (subst σ) As ^ [ rG , ι lG ]
+      go []ₗ []ₗ []ₗ []ₐ = εⱼ
+      go (m ∷ₗ ns) (m′ ∷ₗ ns′) (A ∷ₗ As′) (([A] , [m] , [m′] , [m≡]) ∷ₐ ps) =
+        consⱼ (≅ₜ-eq (escapeTermEq (proj₁ ([A] ⊢Δ [σ])) ([m≡] ⊢Δ [σ])))
+              (go ns ns′ As′ ps)
+
+IndRect-congᵛ : ∀ {Γ ind P P′ rG lG t t′ ms ms′ l}
+              → (rGlG : rG PE.≡ % → lG PE.≡ ⁰)
+              → ([Γ] : ⊩ᵛ Γ)
+              → (ind∈ : ind ∈ₗ senv)
+              → ([Ind] : Γ ⊩ᵛ⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ])
+              → ([P] : Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ l ⟩ P ^ [ rG , ι lG ] / [Γ] ∙ [Ind])
+              → ([P′] : Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ l ⟩ P′ ^ [ rG , ι lG ] / [Γ] ∙ [Ind])
+              → ([P≡P′] : Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ l ⟩ P ≡ P′ ^ [ rG , ι lG ]
+                          / [Γ] ∙ [Ind] / [P])
+              → ([t] : Γ ⊩ᵛ⟨ l ⟩ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
+              → ([t′] : Γ ⊩ᵛ⟨ l ⟩ t′ ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
+              → ([t≡t′] : Γ ⊩ᵛ⟨ l ⟩ t ≡ t′ ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind])
+              → ([Pt] : Γ ⊩ᵛ⟨ l ⟩ P [ t ] ^ [ rG , ι lG ] / [Γ])
+              → All₃ (λ m m′ A → ∃ λ ([A] : Γ ⊩ᵛ⟨ l ⟩ A ^ [ rG , ι lG ] / [Γ])
+                                   → (Γ ⊩ᵛ⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
+                                   × (Γ ⊩ᵛ⟨ l ⟩ m′ ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
+                                   × (Γ ⊩ᵛ⟨ l ⟩ m ≡ m′ ∷ A ^ [ rG , ι lG ] / [Γ] / [A]))
+                     ms ms′ (indRectBranchTyList ind P rG lG)
+              → All₂ (λ m A → ∃ λ ([A] : Γ ⊩ᵛ⟨ l ⟩ A ^ [ rG , ι lG ] / [Γ])
+                                → Γ ⊩ᵛ⟨ l ⟩ m ∷ A ^ [ rG , ι lG ] / [Γ] / [A])
+                     ms′ (indRectBranchTyList ind P′ rG lG)
+              → Γ ⊩ᵛ⟨ l ⟩ IndRect (SU.SInd.name ind) lG P t ms ≡ IndRect (SU.SInd.name ind) lG P′ t′ ms′
+                  ∷ P [ t ] ^ [ rG , ι lG ] / [Γ] / [Pt]
+IndRect-congᵛ {Γ = Γ} {ind = ind} {P = P} {P′ = P′} {rG = rG} {lG = lG} {t = t} {t′ = t′}
+              {ms = ms} {ms′ = ms′} {l = l}
+              rGlG [Γ] ind∈ [Ind] [P] [P′] [P≡P′] [t] [t′] [t≡t′] [Pt] [ms≡] [ms′] {Δ = Δ} {σ = σ} ⊢Δ [σ] =
+  let [σt]   = ⟦v⟧ {v = t} [t] ⊢Δ [σ]
+      [σt′]  = ⟦v⟧ {v = t′} [t′] ⊢Δ [σ]
+      [σt≡]  = irrelevanceEqTerm (proj₁ ([Ind] ⊢Δ [σ])) (⟦Ind⟧ ⊢Δ) ([t≡t′] ⊢Δ [σ])
+      eqPrf  = PE.trans (singleSubstComp (subst σ t) σ P)
+                 (PE.sym (PE.trans (substCompEq P) (substConcatSingleton′ P)))
+      [ms]   = methodsˡ [ms≡]
+      [res]  = irrelevanceEqTerm′ eqPrf PE.refl PE.refl
+                 (Qu {Q = P} [P] ⊢Δ [σ] [σt]) (proj₁ ([Pt] ⊢Δ [σ]))
+                 (IndRect-congTerm rGlG ⊢Δ ind∈ (Q∙ {Q = P} [P] ⊢Δ [σ]) (Q∙ {Q = P′} [P′] ⊢Δ [σ])
+                    ([P≡P′] (⊢Δ ∙ escape (proj₁ ([Ind] ⊢Δ [σ])))
+                            (liftSubstS {F = Ind (SU.SInd.name ind)} [Γ] ⊢Δ [Ind] [σ]))
+                    (Qu {Q = P} [P] ⊢Δ [σ]) (Qu≡ {Q = P} [P] ⊢Δ [σ]) (Qu {Q = P′} [P′] ⊢Δ [σ]) (Qu≡ {Q = P′} [P′] ⊢Δ [σ])
+                    (PP′u ⊢Δ [σ])
+                    (escapeMethodsσ {ind = ind} {P = P} [Γ] ⊢Δ [σ] [ms])
+                    (escapeMethodsσ {ind = ind} {P = P′} [Γ] ⊢Δ [σ] [ms′])
+                    (escapeMethodsEqσ {ind = ind} {P = P} [Γ] ⊢Δ [σ] [ms≡])
+                    (methodsσ {ind = ind} {P = P′} [Γ] ⊢Δ [σ] [ms′])
+                    (methodsEqσ {ind = ind} {P = P} [Γ] ⊢Δ [σ] [ms≡])
+                    [σt] [σt′] [σt≡])
+  in  PE.subst₂ (λ x y → Δ ⊩⟨ l ⟩ x ≡ y ∷ subst σ (P [ t ]) ^ [ rG , ι lG ] / proj₁ ([Pt] ⊢Δ [σ]))
+                (PE.sym (subst-IndRect σ (SU.SInd.name ind) lG P t ms))
+                (PE.sym (subst-IndRect σ (SU.SInd.name ind) lG P′ t′ ms′)) [res]
+  where
+  -- The inductive type and the motives read off [Ind] / [P] / [P′] at an
+  -- arbitrary substitution (as in IndRectᵛ, for any valid motive Q).
+  ⟦Ind⟧ : ∀ {Δ₁} (⊢Δ₁ : ⊢ Δ₁) → Δ₁ ⊩⟨ l ⟩ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+  ⟦Ind⟧ ⊢Δ₁ = Indᵣ {l = l} (idRed:*: (univ (Indⱼ ⊢Δ₁ ind∈)))
+
+  ⟦v⟧ : ∀ {v Δ₁ σ₁} → Γ ⊩ᵛ⟨ l ⟩ v ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] / [Γ] / [Ind]
+      → (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+      → Δ₁ ⊩Ind subst σ₁ v ∷Ind SU.SInd.name ind
+  ⟦v⟧ [v] ⊢Δ₁ [σ₁] = irrelevanceTerm (proj₁ ([Ind] ⊢Δ₁ [σ₁])) (⟦Ind⟧ ⊢Δ₁)
+                       (proj₁ ([v] ⊢Δ₁ [σ₁]))
+
+  ⟦u⟧ : ∀ {Δ₁ σ₁ u} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+      → Δ₁ ⊩Ind u ∷Ind SU.SInd.name ind
+      → Δ₁ ⊩⟨ l ⟩ u ∷ subst σ₁ (Ind (SU.SInd.name ind)) ^ [ ! , ι ⁰ ]
+          / proj₁ ([Ind] ⊢Δ₁ [σ₁])
+  ⟦u⟧ ⊢Δ₁ [σ₁] [u] = irrelevanceTerm (⟦Ind⟧ ⊢Δ₁) (proj₁ ([Ind] ⊢Δ₁ [σ₁])) [u]
+
+  ⟦u≡⟧ : ∀ {Δ₁ σ₁ u u′} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+       → Δ₁ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+       → Δ₁ ⊩⟨ l ⟩ u ≡ u′ ∷ subst σ₁ (Ind (SU.SInd.name ind)) ^ [ ! , ι ⁰ ]
+           / proj₁ ([Ind] ⊢Δ₁ [σ₁])
+  ⟦u≡⟧ ⊢Δ₁ [σ₁] [u≡u′] = irrelevanceEqTerm (⟦Ind⟧ ⊢Δ₁) (proj₁ ([Ind] ⊢Δ₁ [σ₁])) [u≡u′]
+
+  Q∙ : ∀ {Q Δ₁ σ₁}
+     → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ l ⟩ Q ^ [ rG , ι lG ] / [Γ] ∙ [Ind]
+     → (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+     → Δ₁ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩⟨ l ⟩ subst (liftSubst σ₁) Q ^ [ rG , ι lG ]
+  Q∙ [Q] ⊢Δ₁ [σ₁] = proj₁ ([Q] (⊢Δ₁ ∙ escape (proj₁ ([Ind] ⊢Δ₁ [σ₁])))
+                               (liftSubstS {F = Ind (SU.SInd.name ind)} [Γ] ⊢Δ₁ [Ind] [σ₁]))
+
+  Qu : ∀ {Q Δ₁ σ₁ u}
+     → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ l ⟩ Q ^ [ rG , ι lG ] / [Γ] ∙ [Ind]
+     → (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+     → Δ₁ ⊩Ind u ∷Ind SU.SInd.name ind
+     → Δ₁ ⊩⟨ l ⟩ subst (liftSubst σ₁) Q [ u ] ^ [ rG , ι lG ]
+  Qu {Q = Q} {σ₁ = σ₁} {u = u} [Q] ⊢Δ₁ [σ₁] [u] =
+    irrelevance′ (PE.sym (singleSubstComp u σ₁ Q))
+      (proj₁ ([Q] ⊢Δ₁ ([σ₁] , ⟦u⟧ ⊢Δ₁ [σ₁] [u])))
+
+  Qu≡ : ∀ {Q Δ₁ σ₁}
+      → ([Q] : Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊩ᵛ⟨ l ⟩ Q ^ [ rG , ι lG ] / [Γ] ∙ [Ind])
+      → (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+      → ∀ {u u′} ([u] : Δ₁ ⊩Ind u ∷Ind SU.SInd.name ind)
+          ([u′] : Δ₁ ⊩Ind u′ ∷Ind SU.SInd.name ind)
+      → Δ₁ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+      → Δ₁ ⊩⟨ l ⟩ subst (liftSubst σ₁) Q [ u ] ≡ subst (liftSubst σ₁) Q [ u′ ]
+          ^ [ rG , ι lG ] / Qu {Q = Q} [Q] ⊢Δ₁ [σ₁] [u]
+  Qu≡ {Q = Q} {σ₁ = σ₁} [Q] ⊢Δ₁ [σ₁] {u} {u′} [u] [u′] [u≡u′] =
+    irrelevanceEq″ (PE.sym (singleSubstComp u σ₁ Q)) (PE.sym (singleSubstComp u′ σ₁ Q))
+      PE.refl PE.refl
+      (proj₁ ([Q] ⊢Δ₁ ([σ₁] , ⟦u⟧ ⊢Δ₁ [σ₁] [u]))) (Qu {Q = Q} [Q] ⊢Δ₁ [σ₁] [u])
+      (proj₂ ([Q] ⊢Δ₁ ([σ₁] , ⟦u⟧ ⊢Δ₁ [σ₁] [u]))
+             ([σ₁] , ⟦u⟧ ⊢Δ₁ [σ₁] [u′])
+             (reflSubst [Γ] ⊢Δ₁ [σ₁] , ⟦u≡⟧ ⊢Δ₁ [σ₁] [u≡u′]))
+
+  -- P [ u ] ≡ P′ [ u ] by the equality of the motives, then P′ [ u ] ≡ P′ [ u′ ].
+  PP′u : ∀ {Δ₁ σ₁} (⊢Δ₁ : ⊢ Δ₁) ([σ₁] : Δ₁ ⊩ˢ σ₁ ∷ Γ / [Γ] / ⊢Δ₁)
+           {u u′} ([u] : Δ₁ ⊩Ind u ∷Ind SU.SInd.name ind)
+           ([u′] : Δ₁ ⊩Ind u′ ∷Ind SU.SInd.name ind)
+         → Δ₁ ⊩Ind u ≡ u′ ∷Ind SU.SInd.name ind
+         → Δ₁ ⊩⟨ l ⟩ subst (liftSubst σ₁) P [ u ] ≡ subst (liftSubst σ₁) P′ [ u′ ]
+             ^ [ rG , ι lG ] / Qu {Q = P} [P] ⊢Δ₁ [σ₁] [u]
+  PP′u {σ₁ = σ₁} ⊢Δ₁ [σ₁] {u} {u′} [u] [u′] [u≡u′] =
+    transEq (Qu {Q = P} [P] ⊢Δ₁ [σ₁] [u]) (Qu {Q = P′} [P′] ⊢Δ₁ [σ₁] [u]) (Qu {Q = P′} [P′] ⊢Δ₁ [σ₁] [u′])
+      (irrelevanceEq″ (PE.sym (singleSubstComp u σ₁ P)) (PE.sym (singleSubstComp u σ₁ P′))
+         PE.refl PE.refl
+         (proj₁ ([P] ⊢Δ₁ ([σ₁] , ⟦u⟧ ⊢Δ₁ [σ₁] [u]))) (Qu {Q = P} [P] ⊢Δ₁ [σ₁] [u])
+         ([P≡P′] ⊢Δ₁ ([σ₁] , ⟦u⟧ ⊢Δ₁ [σ₁] [u])))
+      (Qu≡ {Q = P′} [P′] ⊢Δ₁ [σ₁] [u] [u′] [u≡u′])
 
 ------------------------------------------------------------------------

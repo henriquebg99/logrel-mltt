@@ -39,7 +39,7 @@ mutual
                 → ind ∈ₗ senv
                 → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P [conv↑] P' ^ [ ! , ι lG ]
                 → Γ ⊢ t ~ t' ↓! Ind (SU.SInd.name ind) ^ ι ⁰
-                → Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
+                → All₃ (λ m m' A → Γ ⊢ m [conv↑] m' ∷ A ^ ι lG) ms ms' (indRectBranchTyList ind P ! lG)
                 → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ~ IndRect (SU.SInd.name ind) lG P' t' ms'
                       ↑! (P [ t ]) ^ ι lG
     Emptyrec-cong : ∀ {k l F G ll}

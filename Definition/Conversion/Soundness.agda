@@ -55,7 +55,7 @@ mutual
   soundness~↑! (cast-neℕ x x₁ x₂ x₃) = cast-cong (soundness~↓! x) (refl (ℕⱼ (wfTerm x₂))) (soundnessConv↑Term x₁) x₂ x₃
   soundness~↑! (cast-neΠ x x₁ x₂ x₃ x₄) = cast-cong (soundness~↓! x₁) (sym (soundnessConv↑Term x)) (soundnessConv↑Term x₂) x₃ x₄
   soundness~↑! (IndRect-cong ind∈ x x₁ x₂) =
-    IndRect-cong ind∈ (soundnessConv↑ x) (soundness~↓! x₁) x₂
+    IndRect-cong ind∈ (soundnessConv↑ x) (soundness~↓! x₁) (All₃-soundAll x₂)
   soundness~↑! (cast-neInd x x₁ x₂ x₃) = cast-cong (soundness~↓! x) (refl (Indⱼ′ (wfTerm x₂) (Ind∈Idʳ x₂))) (soundnessConv↑Term x₁) x₂ x₃
   soundness~↑! (cast-Ind x x₁ x₂ x₃) = let XX = sym (soundness~↓! x) in cast-cong (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idˡ x₂))) XX (soundnessConv↑Term x₁) x₂ x₃
   soundness~↑! (cast-IndΠ x x₁ x₂ x₃) = let XX = (soundnessConv↑Term x) in cast-cong (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idˡ x₂))) XX (soundnessConv↑Term x₁) x₂ x₃
@@ -124,6 +124,12 @@ mutual
   All₃-sound []ₐ = []ₐ
   All₃-sound (p ∷ₐ ps) = soundnessConv↑Term p ∷ₐ All₃-sound ps
 
+  All₃-soundAll : ∀ {Γ ms ms' As l} →
+    All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) ms ms' As →
+    Γ ⊢All ms ≡ ms' ∷ As ^ [ ! , l ]
+  All₃-soundAll []ₐ = εⱼ
+  All₃-soundAll (p ∷ₐ ps) = consⱼ (soundnessConv↑Term p) (All₃-soundAll ps)
+
 app-cong′ : ∀ {Γ k l t v F rF lF G lG lΠ}
           → Γ ⊢ k ~ l ↓! Π F ^ rF ° lF ▹ G ° lG ° lΠ ^ ! ^ ι lΠ
           → Γ ⊢ t [genconv↑] v ∷ F ^ [ rF , ι lF ]
@@ -142,7 +148,7 @@ IndRect-cong′ : ∀ {Γ ind P P' t t' ms ms' lG}
              → ind ∈ₗ senv
              → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P [conv↑] P' ^ [ ! , ι lG ]
              → Γ ⊢ t ~ t' ↓! Ind (SU.SInd.name ind) ^ ι ⁰
-             → Γ ⊢All ms ≡ ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
+             → All₃ (λ m m' A → Γ ⊢ m [conv↑] m' ∷ A ^ ι lG) ms ms' (indRectBranchTyList ind P ! lG)
              → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ~ IndRect (SU.SInd.name ind) lG P' t' ms'
                    ↑ (P [ t ]) ^ [ ! , ι lG ]
 IndRect-cong′ ind∈ x x₁ x₂ = ~↑! (IndRect-cong ind∈ x x₁ x₂)

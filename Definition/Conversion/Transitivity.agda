@@ -14,7 +14,7 @@ open import Definition.Conversion.ConvSize senv equivs
 open import Definition.Conversion.ConversionProp senv swf equivs
 open import Definition.Conversion.StabilityProp senv swf equivs
 open import Definition.Conversion.Inversion senv swf equivs
-open import Definition.Typed.Consequences.IndRectCong senv swf equivs using (indRectBranchTyListCong)
+open import Definition.Typed.Consequences.IndRectCong senv swf equivs using (indRectBranchTyListEq)
 open import Definition.Conversion.Whnf senv swf equivs
 open import Definition.Conversion.TransitivityHelper
 open import Definition.Typed.Consequences.Syntactic senv swf equivs
@@ -28,7 +28,7 @@ open import Definition.Typed.Consequences.RelevanceUnicity senv swf equivs
 open import Definition.Typed.Consequences.Equality senv swf equivs
 open import Definition.Typed.Consequences.Inversion senv swf equivs
 open import Tools.Nat
-open import Tools.List using (All₃; []ₐ; _∷ₐ_)
+open import Tools.List using (All₂; All₃; []ₐ; _∷ₐ_)
 open import Tools.Product
 open import Tools.Sum using (_⊎_ ; inj₁ ; inj₂)
 open import Tools.Empty
@@ -182,13 +182,24 @@ abstract
     trans~↑! {n = 1+ n} {Γ = Γ} {Δ = Δ} PE.refl Γ≡Δ (IndRect-cong {ind} {P} {P'} {t} {t'} {ms} {ms'} {lG = ⁰} ind∈ x x₁ x₂) u~v sz =
       go u~v PE.refl sz
       where
-        transAll : ∀ {Γ ts ts' ts'' As l}
-                 → Γ ⊢All ts ≡ ts' ∷ As ^ [ ! , l ]
-                 → Γ ⊢All ts' ≡ ts'' ∷ As ^ [ ! , l ]
-                 → Γ ⊢All ts ≡ ts'' ∷ As ^ [ ! , l ]
-        transAll εⱼ εⱼ = εⱼ
-        transAll (consⱼ t≡t' ts≡ts') (consⱼ t'≡t'' ts'≡ts'') =
-          consⱼ (trans t≡t' t'≡t'') (transAll ts≡ts' ts'≡ts'')
+        transBranches : ∀ {ms₁ ms₂ ms₃ As Bs l}
+                      → All₂ (λ A B → Γ ⊢ A ≡ B ^ [ ! , l ]) As Bs
+                      → (ps : All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) ms₁ ms₂ As)
+                      → (qs : All₃ (λ a a' A → Δ ⊢ a [conv↑] a' ∷ A ^ l) ms₂ ms₃ Bs)
+                      → (sizeConv↑TermAll ps + sizeConv↑TermAll qs) << n
+                      → ∃ λ (rs : All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) ms₁ ms₃ As)
+                          → sizeConv↑TermAll rs <= (sizeConv↑TermAll ps + sizeConv↑TermAll qs)
+        transBranches []ₐ []ₐ []ₐ _ = []ₐ , le0
+        transBranches (A≡B ∷ₐ eqs) (p ∷ₐ ps) (q ∷ₐ qs) fuel =
+          let r , sizeR = transConv↑Term {n = n} PE.refl Γ≡Δ A≡B p q
+                            (<<-trans (<=-help-All-hd {a = sizeConv↑Term p} {b = sizeConv↑TermAll ps}
+                                                      {c = sizeConv↑Term q} {d = sizeConv↑TermAll qs}) fuel)
+              rs , sizeRs = transBranches eqs ps qs
+                              (<<-trans (<=-help-All-tl {a = sizeConv↑Term p} {b = sizeConv↑TermAll ps}
+                                                        {c = sizeConv↑Term q} {d = sizeConv↑TermAll qs}) fuel)
+          in  r ∷ₐ rs , <=-trans (<=-cong-+ sizeR sizeRs)
+                                 (<=-help-All {a = sizeConv↑Term p} {b = sizeConv↑TermAll ps}
+                                              {c = sizeConv↑Term q} {d = sizeConv↑TermAll qs})
   
         go : ∀ {u v B} (e' : Δ ⊢ u ~ v ↑! B ^ ι ⁰)
            → u PE.≡ IndRect (SI.SInd.name ind) ⁰ P' t' ms'
@@ -203,20 +214,24 @@ abstract
         ... | PE.refl =
           let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
               P<>P'' , sizeP<>P'' = transConv↑ {n = n} (Γ≡Δ ∙ (refl (univ (Indⱼ ⊢Γ ind∈)))) x y
-                                               (<<-trans (<=-help-ab' {a = sizeConv↑ x} {b = sizeConv↑ y} {c = size~↓! x₁} {d = size~↓! y₁}) e)
+                                               (<<-trans (<=-help-id-cong {a = sizeConv↑ x} {b = sizeConv↑ y} {b' = size~↓! x₁} {b'' = sizeConv↑TermAll x₂}
+                                                                          {c' = size~↓! y₁} {c'' = sizeConv↑TermAll y₂}) e)
               C , wC , t~t'' , Ind≡C , _ , sizet~t'' = trans~↓! {n = n} PE.refl Γ≡Δ x₁ y₁
-                                                               (<<-trans (<=-help-ab'' {a = sizeConv↑ x} {b = size~↓! x₁} {c = sizeConv↑ y} {d = size~↓! y₁}) e)
+                                                               (<<-trans (<=-help-b'c' {a = sizeConv↑ x} {b = sizeConv↑ y} {b' = size~↓! x₁} {b'' = sizeConv↑TermAll x₂}
+                                                                                       {c' = size~↓! y₁} {c'' = sizeConv↑TermAll y₂}) e)
               t~tInd = [~] (_⊢_~_↓!_^_.A t~t'')
                            (PE.subst (λ X → Γ ⊢ _⊢_~_↓!_^_.A t~t'' ⇒* X ^ [ ! , ι ⁰ ])
                                      (Ind≡A Ind≡C wC) (_⊢_~_↓!_^_.D t~t''))
                            Indₙ (_⊢_~_↓!_^_.k~l t~t'')
-              ms≡ms'' = transAll x₂ (indRectBranchTyListCong ind∈ (sym (soundnessConv↑ x))
-                                                                  (stabilityAll≡ (symConEq Γ≡Δ) y₂))
+              ms<>ms'' , sizems<>ms'' = transBranches (indRectBranchTyListEq ind∈ (soundnessConv↑ x)) x₂ y₂
+                                              (<<-trans (<=-help-b''c'' {a = sizeConv↑ x} {b = sizeConv↑ y} {b' = size~↓! x₁} {b'' = sizeConv↑TermAll x₂}
+                                                                        {c' = size~↓! y₁} {c'' = sizeConv↑TermAll y₂}) e)
               Pt≡P't' = substTypeEq (soundnessConv↑ x) (soundness~↓! x₁)
-          in  _ , IndRect-cong ind∈ P<>P'' t~tInd ms≡ms'' ,
+          in  _ , IndRect-cong ind∈ P<>P'' t~tInd ms<>ms'' ,
               refl (proj₁ (syntacticEq Pt≡P't')) , Pt≡P't' ,
-              leS (<=-trans (<=-cong-+ sizeP<>P'' sizet~t'')
-                            (<=-help-3-abcd {a = sizeConv↑ x} {b = sizeConv↑ y} {c = size~↓! x₁} {d = size~↓! y₁}))
+              leS (<=-trans (<=-cong-+3 sizeP<>P'' sizet~t'' sizems<>ms'')
+                            (<=-help-id-cong' {a = sizeConv↑ x} {b = sizeConv↑ y} {b' = size~↓! x₁} {b'' = sizeConv↑TermAll x₂}
+                                              {c' = size~↓! y₁} {c'' = sizeConv↑TermAll y₂}))
   
         go (cast-refl' A~B c x₄) PE.refl (leS e) with neIns (proj₂ (proj₂ (ne~↓! A~B))) c
         ... | isNeIns x' x₁' x₂' ([~] K D whK u~v) =
@@ -274,13 +289,24 @@ abstract
     trans~↑! {n = 1+ n} {Γ = Γ} {Δ = Δ} PE.refl Γ≡Δ (IndRect-cong {ind} {P} {P'} {t} {t'} {ms} {ms'} {lG = ¹} ind∈ x x₁ x₂) u~v sz =
       go u~v PE.refl sz
       where
-        transAll : ∀ {Γ ts ts' ts'' As l}
-                 → Γ ⊢All ts ≡ ts' ∷ As ^ [ ! , l ]
-                 → Γ ⊢All ts' ≡ ts'' ∷ As ^ [ ! , l ]
-                 → Γ ⊢All ts ≡ ts'' ∷ As ^ [ ! , l ]
-        transAll εⱼ εⱼ = εⱼ
-        transAll (consⱼ t≡t' ts≡ts') (consⱼ t'≡t'' ts'≡ts'') =
-          consⱼ (trans t≡t' t'≡t'') (transAll ts≡ts' ts'≡ts'')
+        transBranches : ∀ {ms₁ ms₂ ms₃ As Bs l}
+                      → All₂ (λ A B → Γ ⊢ A ≡ B ^ [ ! , l ]) As Bs
+                      → (ps : All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) ms₁ ms₂ As)
+                      → (qs : All₃ (λ a a' A → Δ ⊢ a [conv↑] a' ∷ A ^ l) ms₂ ms₃ Bs)
+                      → (sizeConv↑TermAll ps + sizeConv↑TermAll qs) << n
+                      → ∃ λ (rs : All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) ms₁ ms₃ As)
+                          → sizeConv↑TermAll rs <= (sizeConv↑TermAll ps + sizeConv↑TermAll qs)
+        transBranches []ₐ []ₐ []ₐ _ = []ₐ , le0
+        transBranches (A≡B ∷ₐ eqs) (p ∷ₐ ps) (q ∷ₐ qs) fuel =
+          let r , sizeR = transConv↑Term {n = n} PE.refl Γ≡Δ A≡B p q
+                            (<<-trans (<=-help-All-hd {a = sizeConv↑Term p} {b = sizeConv↑TermAll ps}
+                                                      {c = sizeConv↑Term q} {d = sizeConv↑TermAll qs}) fuel)
+              rs , sizeRs = transBranches eqs ps qs
+                              (<<-trans (<=-help-All-tl {a = sizeConv↑Term p} {b = sizeConv↑TermAll ps}
+                                                        {c = sizeConv↑Term q} {d = sizeConv↑TermAll qs}) fuel)
+          in  r ∷ₐ rs , <=-trans (<=-cong-+ sizeR sizeRs)
+                                 (<=-help-All {a = sizeConv↑Term p} {b = sizeConv↑TermAll ps}
+                                              {c = sizeConv↑Term q} {d = sizeConv↑TermAll qs})
   
         go : ∀ {u v B} (e' : Δ ⊢ u ~ v ↑! B ^ ι ¹)
            → u PE.≡ IndRect (SI.SInd.name ind) ¹ P' t' ms'
@@ -295,20 +321,24 @@ abstract
         ... | PE.refl =
           let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
               P<>P'' , sizeP<>P'' = transConv↑ {n = n} (Γ≡Δ ∙ (refl (univ (Indⱼ ⊢Γ ind∈)))) x y
-                                               (<<-trans (<=-help-ab' {a = sizeConv↑ x} {b = sizeConv↑ y} {c = size~↓! x₁} {d = size~↓! y₁}) e)
+                                               (<<-trans (<=-help-id-cong {a = sizeConv↑ x} {b = sizeConv↑ y} {b' = size~↓! x₁} {b'' = sizeConv↑TermAll x₂}
+                                                                          {c' = size~↓! y₁} {c'' = sizeConv↑TermAll y₂}) e)
               C , wC , t~t'' , Ind≡C , _ , sizet~t'' = trans~↓! {n = n} PE.refl Γ≡Δ x₁ y₁
-                                                               (<<-trans (<=-help-ab'' {a = sizeConv↑ x} {b = size~↓! x₁} {c = sizeConv↑ y} {d = size~↓! y₁}) e)
+                                                               (<<-trans (<=-help-b'c' {a = sizeConv↑ x} {b = sizeConv↑ y} {b' = size~↓! x₁} {b'' = sizeConv↑TermAll x₂}
+                                                                                       {c' = size~↓! y₁} {c'' = sizeConv↑TermAll y₂}) e)
               t~tInd = [~] (_⊢_~_↓!_^_.A t~t'')
                            (PE.subst (λ X → Γ ⊢ _⊢_~_↓!_^_.A t~t'' ⇒* X ^ [ ! , ι ⁰ ])
                                      (Ind≡A Ind≡C wC) (_⊢_~_↓!_^_.D t~t''))
                            Indₙ (_⊢_~_↓!_^_.k~l t~t'')
-              ms≡ms'' = transAll x₂ (indRectBranchTyListCong ind∈ (sym (soundnessConv↑ x))
-                                                                  (stabilityAll≡ (symConEq Γ≡Δ) y₂))
+              ms<>ms'' , sizems<>ms'' = transBranches (indRectBranchTyListEq ind∈ (soundnessConv↑ x)) x₂ y₂
+                                              (<<-trans (<=-help-b''c'' {a = sizeConv↑ x} {b = sizeConv↑ y} {b' = size~↓! x₁} {b'' = sizeConv↑TermAll x₂}
+                                                                        {c' = size~↓! y₁} {c'' = sizeConv↑TermAll y₂}) e)
               Pt≡P't' = substTypeEq (soundnessConv↑ x) (soundness~↓! x₁)
-          in  _ , IndRect-cong ind∈ P<>P'' t~tInd ms≡ms'' ,
+          in  _ , IndRect-cong ind∈ P<>P'' t~tInd ms<>ms'' ,
               refl (proj₁ (syntacticEq Pt≡P't')) , Pt≡P't' ,
-              leS (<=-trans (<=-cong-+ sizeP<>P'' sizet~t'')
-                            (<=-help-3-abcd {a = sizeConv↑ x} {b = sizeConv↑ y} {c = size~↓! x₁} {d = size~↓! y₁}))
+              leS (<=-trans (<=-cong-+3 sizeP<>P'' sizet~t'' sizems<>ms'')
+                            (<=-help-id-cong' {a = sizeConv↑ x} {b = sizeConv↑ y} {b' = size~↓! x₁} {b'' = sizeConv↑TermAll x₂}
+                                              {c' = size~↓! y₁} {c'' = sizeConv↑TermAll y₂}))
   
         go (var-refl _ _) ()
         go (app-cong _ _) ()

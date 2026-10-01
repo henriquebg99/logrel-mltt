@@ -174,7 +174,7 @@ mutual
   stability~↑! Γ≡Δ (IndRect-cong ind∈ x x₁ x₂) =
     let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
     in IndRect-cong ind∈ (stabilityConv↑ (Γ≡Δ ∙ (refl (univ (Indⱼ ⊢Γ ind∈)))) x)
-                    (stability~↓! Γ≡Δ x₁) (stabilityAll≡ Γ≡Δ x₂)
+                    (stability~↓! Γ≡Δ x₁) (All₃-stab Γ≡Δ x₂)
   stability~↑! Γ≡Δ (cast-neInd x x₁ x₂ x₃) = cast-neInd (stability~↓! Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
   stability~↑! Γ≡Δ (cast-Ind x x₁ x₂ x₃) = cast-Ind (stability~↓! Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
   stability~↑! Γ≡Δ (cast-IndΠ x x₁ x₂ x₃) = cast-IndΠ (stabilityConv↑Term Γ≡Δ x) (stabilityConv↑Term Γ≡Δ x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
@@ -271,9 +271,9 @@ mutual
     let _ , ⊢Δ , _ = contextConvSubst Γ≡Δ
     in  ctr-cong ⊢Δ ind∈ eq (All₃-stab Γ≡Δ args<>args')
 
-  All₃-stab : ∀ {args args' As Γ Δ} →
+  All₃-stab : ∀ {args args' As Γ Δ l} →
     ⊢ Γ ≡ Δ →
-    All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' As →
-    All₃ (λ a a' A → Δ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' As
+    All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) args args' As →
+    All₃ (λ a a' A → Δ ⊢ a [conv↑] a' ∷ A ^ l) args args' As
   All₃-stab Γ≡Δ []ₐ = []ₐ
   All₃-stab Γ≡Δ (p ∷ₐ ps) = stabilityConv↑Term Γ≡Δ p ∷ₐ All₃-stab Γ≡Δ ps

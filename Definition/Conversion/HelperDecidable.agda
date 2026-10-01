@@ -186,6 +186,14 @@ decConv↓Term-ℕ-ins (suc-cong x) ([~] .ℕ D whnfB (castℕ-refl' x₁ x₂))
   with ne~↓! x₁
 ... | _ , () , _
 
+decConv↓Term-Ind-ins : ∀ {t u v i Γ l}
+ → Γ ⊢ t [conv↓] u ∷ Ind i ^ l
+ → Γ ⊢ t ~ v ↓! Ind i ^ l
+ → Γ ⊢ t ~ u ↓! Ind i ^ l
+decConv↓Term-Ind-ins (Ind-ins x) t~t = x
+decConv↓Term-Ind-ins (ne-ins x x₁ () x₃) t~t
+decConv↓Term-Ind-ins (ctr-cong x x₁ x₂ x₃) t~t = ⊥-elim (Ctr≢ne (proj₁ (proj₂ (ne~↓! t~t))) PE.refl)
+
 decConv↓Term-U-ins : ∀ {t u v Γ r lU l}
   → Γ ⊢ t [conv↓] u ∷ Univ r lU ^ l
   → Γ ⊢ t ~ v ↓! Univ r lU ^ l

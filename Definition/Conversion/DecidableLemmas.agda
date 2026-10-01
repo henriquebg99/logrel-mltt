@@ -33,7 +33,9 @@ open import Definition.Conversion.HelperDecidable senv swf equivs
 open import Tools.Nat
 open import Tools.Product
 open import Tools.Empty
-open import Tools.Nullary
+open import Tools.Nullary hiding (map)
+open import Tools.List using (All₂; All₃; []ₐ; _∷ₐ_; map; _∈ₗ_)
+open import Tools.Maybe using (just)
 import Tools.PropositionalEquality as PE
 abstract
   ~atU' : ∀ {Γ t v u r lU l}
@@ -709,6 +711,120 @@ abstract
   ... | yes tu = yes (_ , _ , cast-neΠ ΠΠ′ (~atU' A (_ , _ , AB)) tu eℕA (stabilityTerm (symConEq Γ≡Δ) eℕB))
   ... | no ¬tu = no λ { (_ , _ , cast-neΠ _ x x₁ x₂ x₃) → ¬tu x₁ }
 
+  dec-castneInd-castneInd : ∀ {Γ Δ i j A A' t t' e B B' v v' e'}
+              → ⊢ Γ ≡ Δ
+              → Γ ⊢ A ~ A' ↓! U ⁰ ^ next ⁰
+              → Γ ⊢ t [conv↑] t' ∷ A ^ ι ⁰
+              → Γ ⊢ e ∷ (Id (U ⁰) A (Ind i)) ^ [ % , ι ⁰ ]
+              → Δ ⊢ B ~ B' ↓! U ⁰ ^ next ⁰
+              → Δ ⊢ v [conv↑] v' ∷ B ^ ι ⁰
+              → Δ ⊢ e' ∷ (Id (U ⁰) B (Ind j)) ^ [ % , ι ⁰ ]
+              → Dec (∃ λ U → ∃ λ lA → Γ ⊢ A ~ B ↓! U ^ lA)
+              → ((∃ λ U → ∃ λ lA → Γ ⊢ A ~ B ↓! U ^ lA) → Dec (Γ ⊢ t [conv↑] v ∷ A ^ ι ⁰))
+              → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ A (Ind i) e t ~ cast ⁰ B (Ind j) e' v ↑! U ^ lA)
+  dec-castneInd-castneInd {i = i} {j = j} Γ≡Δ A t eIndA B u eIndB decAB dectu with i ≟ j
+  ... | no ¬p = no λ { (_ , _ , cast-neInd x x₁ x₂ x₃) → ¬p PE.refl }
+  ... | yes PE.refl with decAB
+  ... | no ¬AB = no λ { (_ , _ , cast-neInd x x₁ x₂ x₃) → ¬AB (_ , _ , x) }
+  ... | yes AB with dectu AB
+  ... | yes tu = yes (_ , _ , cast-neInd (~atU' A AB) tu eIndA (stabilityTerm (symConEq Γ≡Δ) eIndB))
+  ... | no ¬tu = no λ { (_ , _ , cast-neInd x x₁ x₂ x₃) → ¬tu x₁ }
+
+  dec-castInd-castInd : ∀ {Γ Δ i j A A' t t' u u' B B' e e'}
+              → ⊢ Γ ≡ Δ
+              → Γ ⊢ A' ~ A ↓! U ⁰ ^ next ⁰
+              → Γ ⊢ t [conv↑] t' ∷ Ind i ^ ι ⁰
+              → Γ ⊢ e ∷ (Id (U ⁰) (Ind i) A) ^ [ % , ι ⁰ ]
+              → Δ ⊢ B' ~ B ↓! U ⁰ ^ next ⁰
+              → Δ ⊢ u [conv↑] u' ∷ Ind j ^ ι ⁰
+              → Δ ⊢ e' ∷ (Id (U ⁰) (Ind j) B) ^ [ % , ι ⁰ ]
+              → Dec (∃ λ U → ∃ λ lA → Δ ⊢ B ~ A ↓! U ^ lA)
+              → ((i PE.≡ j) → Dec (Γ ⊢ t [conv↑] u ∷ Ind i ^ ι ⁰))
+              → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ (Ind i) A e t ~ cast ⁰ (Ind j) B e' u ↑! U ^ lA)
+  dec-castInd-castInd {i = i} {j = j} Γ≡Δ A t eIndA B u eIndB decAB dectu with i ≟ j
+  ... | no ¬p = no λ { (_ , _ , cast-Ind x x₁ x₂ x₃) → ¬p PE.refl }
+  ... | yes PE.refl with decAB | dectu PE.refl
+  ... | yes (_ , _ , AB) | yes tu = yes (_ , _ , cast-Ind (~atU-' A (_ , _ , stability~↓! (symConEq Γ≡Δ) AB)) tu eIndA (stabilityTerm (symConEq Γ≡Δ) eIndB))
+  ... | yes AB | no ¬tu = no λ { (_ , _ , cast-Ind x x₁ x₂ x₃) → ¬tu x₁ }
+  ... | no ¬AB | _ = no λ { (_ , _ , cast-Ind x x₁ x₂ x₃) → ¬AB (_ , _ , stability~↓! Γ≡Δ x) }
+
+  dec-castIndΠ-castIndΠ : ∀ {Γ Δ i j X rX Y t t' u u' Z rZ W e e'}
+              → ⊢ Γ ≡ Δ
+              → Γ ⊢ t [conv↑] t' ∷ Ind i ^ ι ⁰
+              → Γ ⊢ e ∷ (Id (U ⁰) (Ind i) (Π X ^ rX ° ⁰ ▹ Y ° ⁰ ° ⁰  ^ !)) ^ [ % , ι ⁰ ]
+              → Δ ⊢ u [conv↑] u' ∷ Ind j ^ ι ⁰
+              → Δ ⊢ e' ∷ (Id (U ⁰) (Ind j) (Π Z ^ rZ ° ⁰ ▹ W ° ⁰ ° ⁰  ^ !)) ^ [ % , ι ⁰ ]
+              → Dec (Γ ⊢ Π X ^ rX ° ⁰ ▹ Y ° ⁰ ° ⁰ ^ ! [conv↑] Π Z ^ rZ ° ⁰ ▹ W ° ⁰ ° ⁰ ^ ! ∷ U ⁰ ^ ι ¹)
+              → ((i PE.≡ j) → Dec (Γ ⊢ t [conv↑] u ∷ Ind i ^ ι ⁰))
+              → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ (Ind i) (Π X ^ rX ° ⁰ ▹ Y ° ⁰ ° ⁰ ^ !) e t ~ cast ⁰ (Ind j) (Π Z ^ rZ ° ⁰ ▹ W ° ⁰ ° ⁰  ^ !) e' u ↑! U ^ lA)
+  dec-castIndΠ-castIndΠ {i = i} {j = j} {rX = rX} {rZ = rZ} Γ≡Δ t eIndΠ u eIndΠ′ decΠΠ dectu with i ≟ j | dec-relevance rX rZ | decΠΠ
+  ... | no ¬p | _ | _ = no λ { (_ , _ , cast-IndΠ x x₁ x₂ x₃) → ¬p PE.refl }
+  ... | yes PE.refl | no ¬p | _ = no λ { (_ , _ , cast-IndΠ x x₁ x₂ x₃) → ¬p PE.refl }
+  ... | yes PE.refl | yes PE.refl | no ¬ΠΠ′ = no λ { (_ , _ , cast-IndΠ x x₁ x₂ x₃) → ¬ΠΠ′ x }
+  ... | yes PE.refl | yes PE.refl | yes ΠΠ′ with dectu PE.refl
+  ... | yes p = yes (_ , _ , cast-IndΠ ΠΠ′ p eIndΠ (stabilityTerm (symConEq Γ≡Δ) eIndΠ′))
+  ... | no ¬p = no λ { (_ , _ , cast-IndΠ x x₁ x₂ x₃) → ¬p x₁ }
+
+  dec-castΠInd-castΠInd : ∀ {Γ Δ i j X rX Y t t' u u' Z rZ W e e'}
+              → ⊢ Γ ≡ Δ
+              → Γ ⊢ t [conv↑] t' ∷ Π X ^ rX ° ⁰ ▹ Y ° ⁰ ° ⁰  ^ ! ^ ι ⁰
+              → Γ ⊢ e ∷ (Id (U ⁰) (Π X ^ rX ° ⁰ ▹ Y ° ⁰ ° ⁰  ^ !) (Ind i)) ^ [ % , ι ⁰ ]
+              → Δ ⊢ u [conv↑] u' ∷ Π Z ^ rZ ° ⁰ ▹ W ° ⁰ ° ⁰  ^ ! ^ ι ⁰
+              → Δ ⊢ e' ∷ (Id (U ⁰) (Π Z ^ rZ ° ⁰ ▹ W ° ⁰ ° ⁰  ^ !) (Ind j)) ^ [ % , ι ⁰ ]
+              → Dec (Δ ⊢ Π Z ^ rZ ° ⁰ ▹ W ° ⁰ ° ⁰ ^ ! [conv↑] Π X ^ rX ° ⁰ ▹ Y ° ⁰ ° ⁰ ^ ! ∷ U ⁰ ^ ι ¹)
+              → ((Δ ⊢ Π Z ^ rZ ° ⁰ ▹ W ° ⁰ ° ⁰ ^ ! [conv↑] Π X ^ rX ° ⁰ ▹ Y ° ⁰ ° ⁰ ^ ! ∷ U ⁰ ^ ι ¹) → Dec (Γ ⊢ t [conv↑] u ∷ Π X ^ rX ° ⁰ ▹ Y ° ⁰ ° ⁰  ^ ! ^ ι ⁰))
+              → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ (Π X ^ rX ° ⁰ ▹ Y ° ⁰ ° ⁰ ^ !) (Ind i) e t ~ cast ⁰ (Π Z ^ rZ ° ⁰ ▹ W ° ⁰ ° ⁰  ^ !) (Ind j) e' u ↑! U ^ lA)
+  dec-castΠInd-castΠInd {i = i} {j = j} {rX = rX} {rZ = rZ} Γ≡Δ t eΠInd u eΠInd′ decΠΠ dectu with i ≟ j | dec-relevance rX rZ | decΠΠ
+  ... | no ¬p | _ | _ = no λ { (_ , _ , cast-ΠInd x x₁ x₂ x₃) → ¬p PE.refl }
+  ... | yes PE.refl | no ¬p | _ = no λ { (_ , _ , cast-ΠInd x x₁ x₂ x₃) → ¬p PE.refl }
+  ... | yes PE.refl | yes PE.refl | no ¬ΠΠ′ = no λ { (_ , _ , cast-ΠInd x x₁ x₂ x₃) → ¬ΠΠ′ (stabilityConv↑Term Γ≡Δ x) }
+  ... | yes PE.refl | yes PE.refl | yes ΠΠ′ with dectu ΠΠ′
+  ... | yes p = yes (_ , _ , cast-ΠInd (stabilityConv↑Term (symConEq Γ≡Δ) ΠΠ′) p eΠInd (stabilityTerm (symConEq Γ≡Δ) eΠInd′))
+  ... | no ¬p = no λ { (_ , _ , cast-ΠInd x x₁ x₂ x₃) → ¬p x₁ }
+
+  dec-castIndℕ-castIndℕ : ∀ {Γ Δ i j t t' u u' e e'}
+              → ⊢ Γ ≡ Δ
+              → Γ ⊢ t [conv↑] t' ∷ Ind i ^ ι ⁰
+              → Γ ⊢ e ∷ (Id (U ⁰) (Ind i) ℕ) ^ [ % , ι ⁰ ]
+              → Δ ⊢ u [conv↑] u' ∷ Ind j ^ ι ⁰
+              → Δ ⊢ e' ∷ (Id (U ⁰) (Ind j) ℕ) ^ [ % , ι ⁰ ]
+              → ((i PE.≡ j) → Dec (Γ ⊢ t [conv↑] u ∷ Ind i ^ ι ⁰))
+              → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ (Ind i) ℕ e t ~ cast ⁰ (Ind j) ℕ e' u ↑! U ^ lA)
+  dec-castIndℕ-castIndℕ {i = i} {j = j} Γ≡Δ t eIndℕ u eIndℕ′ dectu with i ≟ j
+  ... | no ¬p = no λ { (_ , _ , cast-Indℕ x x₁ x₂) → ¬p PE.refl }
+  ... | yes PE.refl with dectu PE.refl
+  ... | yes p = yes (_ , _ , cast-Indℕ p eIndℕ (stabilityTerm (symConEq Γ≡Δ) eIndℕ′))
+  ... | no ¬p = no λ { (_ , _ , cast-Indℕ x x₁ x₂) → ¬p x }
+
+  dec-castℕInd-castℕInd : ∀ {Γ Δ i j t t' u u' e e'}
+              → ⊢ Γ ≡ Δ
+              → Γ ⊢ t [conv↑] t' ∷ ℕ ^ ι ⁰
+              → Γ ⊢ e ∷ (Id (U ⁰) ℕ (Ind i)) ^ [ % , ι ⁰ ]
+              → Δ ⊢ u [conv↑] u' ∷ ℕ ^ ι ⁰
+              → Δ ⊢ e' ∷ (Id (U ⁰) ℕ (Ind j)) ^ [ % , ι ⁰ ]
+              → Dec (Γ ⊢ t [conv↑] u ∷ ℕ ^ ι ⁰)
+              → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ ℕ (Ind i) e t ~ cast ⁰ ℕ (Ind j) e' u ↑! U ^ lA)
+  dec-castℕInd-castℕInd {i = i} {j = j} Γ≡Δ t eℕInd u eℕInd′ dectu with i ≟ j | dectu
+  ... | no ¬p | _ = no λ { (_ , _ , cast-ℕInd x x₁ x₂) → ¬p PE.refl }
+  ... | yes PE.refl | yes p = yes (_ , _ , cast-ℕInd p eℕInd (stabilityTerm (symConEq Γ≡Δ) eℕInd′))
+  ... | yes PE.refl | no ¬p = no λ { (_ , _ , cast-ℕInd x x₁ x₂) → ¬p x }
+
+  dec-castIndInd-castIndInd : ∀ {Γ Δ i j k l t t' u u' e e'}
+              → ⊢ Γ ≡ Δ
+              → reprInd i PE.≢ reprInd k
+              → Γ ⊢ t [conv↑] t' ∷ Ind i ^ ι ⁰
+              → Γ ⊢ e ∷ (Id (U ⁰) (Ind i) (Ind k)) ^ [ % , ι ⁰ ]
+              → Δ ⊢ u [conv↑] u' ∷ Ind j ^ ι ⁰
+              → Δ ⊢ e' ∷ (Id (U ⁰) (Ind j) (Ind l)) ^ [ % , ι ⁰ ]
+              → ((i PE.≡ j) → Dec (Γ ⊢ t [conv↑] u ∷ Ind i ^ ι ⁰))
+              → Dec (∃ λ U → ∃ λ lA → Γ ⊢ cast ⁰ (Ind i) (Ind k) e t ~ cast ⁰ (Ind j) (Ind l) e' u ↑! U ^ lA)
+  dec-castIndInd-castIndInd {i = i} {j = j} {k = k} {l = l} Γ≡Δ i≢k t eIndInd u eIndInd′ dectu with i ≟ j | k ≟ l
+  ... | no ¬p | _ = no λ { (_ , _ , cast-IndInd x x₁ x₂ x₃) → ¬p PE.refl }
+  ... | yes PE.refl | no ¬p = no λ { (_ , _ , cast-IndInd x x₁ x₂ x₃) → ¬p PE.refl }
+  ... | yes PE.refl | yes PE.refl with dectu PE.refl
+  ... | yes p = yes (_ , _ , cast-IndInd i≢k p eIndInd (stabilityTerm (symConEq Γ≡Δ) eIndInd′))
+  ... | no ¬p = no λ { (_ , _ , cast-IndInd x x₁ x₂ x₃) → ¬p x₁ }
+
 abstract
   dec-natrec-natrec : ∀ {Γ Δ k l h g a₀ b₀ F G lF k' l' h' g' a₀' b₀' F' G' lF'}
               → ⊢ Γ ≡ Δ
@@ -754,3 +870,127 @@ abstract
                     ⊢Γ = wfTerm ⊢k
                 in yes (_ , _ , Emptyrec-cong p (%~↑ ⊢k (stabilityTerm (symConEq Γ≡Δ) ⊢k₀)))
   ... | no ¬p = no (λ { (_ , .(ι lF) , Emptyrec-cong x x₁) → ¬p x })
+
+
+-- IndRect uses a map-spine, so we invert IndRect-cong through propositional
+-- equations instead of matching on dual IndRect-cong derivations.
+IndRect-inv-head : ∀ {Γ i i' lG lG' P Q t u ms ns k k' A lA}
+                 → Γ ⊢ k ~ k' ↑! A ^ lA
+                 → k PE.≡ IndRect i lG P t ms
+                 → k' PE.≡ IndRect i' lG' Q u ns
+                 → i PE.≡ i' × lG PE.≡ lG'
+IndRect-inv-head (IndRect-cong _ _ _ _) eq eq' with IndRect-PE-injectivity eq | IndRect-PE-injectivity eq'
+... | PE.refl , PE.refl , _ | PE.refl , PE.refl , _ = PE.refl , PE.refl
+IndRect-inv-head (var-refl _ _) () _
+IndRect-inv-head (app-cong _ _) () _
+IndRect-inv-head (natrec-cong _ _ _ _) () _
+IndRect-inv-head (Emptyrec-cong _ _) () _
+IndRect-inv-head (cast-cong _ _ _ _ _) () _
+IndRect-inv-head (cast-refl _ _ _) () _
+IndRect-inv-head (castℕ-refl _ _) () _
+IndRect-inv-head (cast-refl' _ _ _) _ ()
+IndRect-inv-head (castℕ-refl' _ _) _ ()
+IndRect-inv-head (cast-neℕ _ _ _ _) () _
+IndRect-inv-head (cast-ℕ _ _ _ _) () _
+IndRect-inv-head (cast-neΠ _ _ _ _ _) () _
+IndRect-inv-head (cast-Π _ _ _ _ _) () _
+IndRect-inv-head (cast-Πℕ _ _ _ _) () _
+IndRect-inv-head (cast-ℕΠ _ _ _ _) () _
+IndRect-inv-head (cast-ΠΠ%! _ _ _ _ _) () _
+IndRect-inv-head (cast-ΠΠ!% _ _ _ _ _) () _
+IndRect-inv-head (cast-neInd _ _ _ _) () _
+IndRect-inv-head (cast-Ind _ _ _ _) () _
+IndRect-inv-head (cast-IndΠ _ _ _ _) () _
+IndRect-inv-head (cast-ΠInd _ _ _ _) () _
+IndRect-inv-head (cast-Indℕ _ _ _) () _
+IndRect-inv-head (cast-ℕInd _ _ _) () _
+IndRect-inv-head (cast-IndInd _ _ _ _) () _
+
+IndRect-inv : ∀ {Γ ind lG P Q t u ms ns k k' A lA}
+            → ind ∈ₗ senv
+            → Γ ⊢ k ~ k' ↑! A ^ lA
+            → k PE.≡ IndRect (SI.SInd.name ind) lG P t ms
+            → k' PE.≡ IndRect (SI.SInd.name ind) lG Q u ns
+            → (Γ ∙ Ind (SI.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P [conv↑] Q ^ [ ! , ι lG ])
+              × (Γ ⊢ t ~ u ↓! Ind (SI.SInd.name ind) ^ ι ⁰)
+              × All₃ (λ m m' B → Γ ⊢ m [conv↑] m' ∷ B ^ ι lG) ms ns (indRectBranchTyList ind P ! lG)
+IndRect-inv ind∈ (IndRect-cong ind∈′ x x₁ x₂) eq eq' with IndRect-PE-injectivity eq | IndRect-PE-injectivity eq'
+... | name≡ , PE.refl , PE.refl , PE.refl , PE.refl | _ , _ , PE.refl , PE.refl , PE.refl with SI.name-inj senv (proj₁ swf) ind∈′ ind∈ name≡
+... | PE.refl = x , x₁ , x₂
+IndRect-inv _ (var-refl _ _) () _
+IndRect-inv _ (app-cong _ _) () _
+IndRect-inv _ (natrec-cong _ _ _ _) () _
+IndRect-inv _ (Emptyrec-cong _ _) () _
+IndRect-inv _ (cast-cong _ _ _ _ _) () _
+IndRect-inv _ (cast-refl _ _ _) () _
+IndRect-inv _ (castℕ-refl _ _) () _
+IndRect-inv _ (cast-refl' _ _ _) _ ()
+IndRect-inv _ (castℕ-refl' _ _) _ ()
+IndRect-inv _ (cast-neℕ _ _ _ _) () _
+IndRect-inv _ (cast-ℕ _ _ _ _) () _
+IndRect-inv _ (cast-neΠ _ _ _ _ _) () _
+IndRect-inv _ (cast-Π _ _ _ _ _) () _
+IndRect-inv _ (cast-Πℕ _ _ _ _) () _
+IndRect-inv _ (cast-ℕΠ _ _ _ _) () _
+IndRect-inv _ (cast-ΠΠ%! _ _ _ _ _) () _
+IndRect-inv _ (cast-ΠΠ!% _ _ _ _ _) () _
+IndRect-inv _ (cast-neInd _ _ _ _) () _
+IndRect-inv _ (cast-Ind _ _ _ _) () _
+IndRect-inv _ (cast-IndΠ _ _ _ _) () _
+IndRect-inv _ (cast-ΠInd _ _ _ _) () _
+IndRect-inv _ (cast-Indℕ _ _ _) () _
+IndRect-inv _ (cast-ℕInd _ _ _) () _
+IndRect-inv _ (cast-IndInd _ _ _ _) () _
+
+abstract
+  dec-IndRect-IndRect : ∀ {Γ ind ind' lG lG' P Q t t' u ms ns}
+              → ind ∈ₗ senv
+              → ind' ∈ₗ senv
+              → Γ ⊢ t ~ t' ↓! Ind (SI.SInd.name ind) ^ ι ⁰
+              → ((ind PE.≡ ind') → (lG PE.≡ lG') → Dec (Γ ∙ Ind (SI.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P [conv↑] Q ^ [ ! , ι lG ]))
+              → ((ind PE.≡ ind') → (lG PE.≡ lG') → Dec (∃ λ U → ∃ λ lA → Γ ⊢ t ~ u ↓! U ^ lA))
+              → ((ind PE.≡ ind') → (lG PE.≡ lG') → (Γ ∙ Ind (SI.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢ P [conv↑] Q ^ [ ! , ι lG ]) →
+                     Dec (All₃ (λ m m' B → Γ ⊢ m [conv↑] m' ∷ B ^ ι lG) ms ns (indRectBranchTyList ind P ! lG)))
+              → Dec (∃ λ U → ∃ λ lA → Γ ⊢ IndRect (SI.SInd.name ind) lG P t ms ~ IndRect (SI.SInd.name ind') lG' Q u ns ↑! U ^ lA)
+  dec-IndRect-IndRect {ind = ind} {ind' = ind'} {lG = lG} {lG' = lG'} ind∈ ind∈' t~ decP dect decms
+    with SI.SInd.name ind ≟ SI.SInd.name ind' | dec-level lG lG'
+  ... | no ¬p | _ = no (λ (_ , _ , X) → ¬p (proj₁ (IndRect-inv-head X PE.refl PE.refl)))
+  ... | yes _ | no ¬p = no (λ (_ , _ , X) → ¬p (proj₂ (IndRect-inv-head X PE.refl PE.refl)))
+  ... | yes name≡ | yes PE.refl with SI.name-inj senv (proj₁ swf) ind∈ ind∈' name≡
+  ... | PE.refl with decP PE.refl PE.refl
+  ... | no ¬P = no (λ (_ , _ , X) → ¬P (proj₁ (IndRect-inv ind∈ X PE.refl PE.refl)))
+  ... | yes P~ with dect PE.refl PE.refl | decms PE.refl PE.refl P~
+  ... | yes tu | yes ms~ = yes (_ , _ , let _ , ⊢t , _ = syntacticEqTerm (soundness~↓! t~) in IndRect-cong ind∈ P~ (~atInd ⊢t tu) ms~)
+  ... | yes _ | no ¬ms = no (λ (_ , _ , X) → ¬ms (proj₂ (proj₂ (IndRect-inv ind∈ X PE.refl PE.refl))))
+  ... | no ¬tu | _ = no (λ (_ , _ , X) → ¬tu (_ , _ , proj₁ (proj₂ (IndRect-inv ind∈ X PE.refl PE.refl))))
+
+-- Inversion of algorithmic equality of constructors (cf. IndRect-inv).
+-- The type index is generalized, since dual ctr-cong matching does not unify.
+ctr-inv : ∀ {Γ ind j j' as bs Ts t u i'}
+        → ind ∈ₗ senv
+        → SI.ctrArgsTypeList ind j PE.≡ just Ts
+        → Γ ⊢ t [conv↓] u ∷ Ind i' ^ ι ⁰
+        → t PE.≡ ctr (SI.SInd.name ind) j as
+        → u PE.≡ ctr (SI.SInd.name ind) j' bs
+        → j PE.≡ j' × All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) as bs (map emb-stype Ts)
+ctr-inv ind∈ argsTy (ctr-cong _ ind∈′ argsTy′ ps) eq eq' with ctr-PE-injectivity eq | ctr-PE-injectivity eq'
+... | name≡ , PE.refl , PE.refl | _ , PE.refl , PE.refl with SI.name-inj senv (proj₁ swf) ind∈′ ind∈ name≡
+... | PE.refl with PE.trans (PE.sym argsTy) argsTy′
+... | PE.refl = PE.refl , ps
+ctr-inv _ _ (Ind-ins x) eq _ = ⊥-elim (Ctr≢ne (proj₁ (proj₂ (ne~↓! x))) (PE.sym eq))
+ctr-inv _ _ (ne-ins _ _ () _) _ _
+
+reflAll₂ : ∀ {Γ as as' As l}
+         → All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) as as' As
+         → All₂ (λ A B → Γ ⊢ A ≡ B ^ [ ! , l ]) As As
+reflAll₂ []ₐ = []ₐ
+reflAll₂ (p ∷ₐ ps) = refl (proj₁ (syntacticEqTerm (soundnessConv↑Term p))) ∷ₐ reflAll₂ ps
+
+ctr-ne-inv : ∀ {Γ i j as t u i'}
+           → Γ ⊢ t [conv↓] u ∷ Ind i' ^ ι ⁰
+           → t PE.≡ ctr i j as
+           → Neutral u
+           → ⊥
+ctr-ne-inv (ctr-cong _ _ _ _) _ neU = Ctr≢ne neU PE.refl
+ctr-ne-inv (Ind-ins x) eq _ = Ctr≢ne (proj₁ (proj₂ (ne~↓! x))) (PE.sym eq)
+ctr-ne-inv (ne-ins _ _ () _) _ _

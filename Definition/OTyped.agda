@@ -538,6 +538,151 @@ _∙ˢ_ : Con Term → ST.Con → Con Term
 emb-scon : ST.Con → Con Term
 emb-scon Δ = ε ∙ˢ Δ
 
+Π⁰ : Term → Term → Term
+Π⁰ A B = Π A ^ ! ° ⁰ ▹ B ° ⁰ ° ⁰ ^ !
+
+-- The types of simple terms in a declared context are declared
+st-var-inds : ∀ {x A Γ} → TL.All (SU.indsInSEnv senv) Γ → x ST.∷ A ∈ Γ → SU.indsInSEnv senv A
+st-var-inds (A∈ TL.∷ₐ _) ST.here = A∈
+st-var-inds (_ TL.∷ₐ Γ∈) (ST.there h) = st-var-inds Γ∈ h
+
+st-type-inds : ∀ {Γ t A} → TL.All (SU.indsInSEnv senv) Γ → Γ ST.⊢ t ∷ A → SU.indsInSEnv senv A
+st-type-inds Γ∈ (ST.varⱼ h) = st-var-inds Γ∈ h
+st-type-inds Γ∈ (ST.appⱼ f∈ _) = proj₂ (st-type-inds Γ∈ f∈)
+st-type-inds Γ∈ (ST.lamⱼ A∈ t∈) = A∈ , st-type-inds (A∈ TL.∷ₐ Γ∈) t∈
+st-type-inds Γ∈ (ST.ctrⱼ ind∈ _ _ _) = TL.∈ₗ-map SU.SInd.name ind∈
+st-type-inds Γ∈ (ST.indRectⱼ _ P∈ _ _) = P∈
+
+length-ctrRecIndices : ∀ i Ss →
+  length (ctrRecIndices i Ss) PE.≡ SU.recCountList i Ss
+length-ctrRecIndices i Ss =
+  let as = Ss
+  in PE.trans (length-map proj₁
+                 (filter (λ jT → SU.ctrArgIsRecursive i (proj₂ jT))
+                   (zip (range (length as)) as)))
+       (length-filter-rec i as)
+  where
+  length-filter-rec : ∀ i (as : List SU.Type) →
+    length (filter (λ p → SU.ctrArgIsRecursive i (proj₂ p)) (zip (range (length as)) as))
+    PE.≡ SU.recCountList i as
+  length-filter-rec i TL.[] = PE.refl
+  length-filter-rec i (T TL.∷ Ts)
+    rewrite zip-range-cons T Ts
+    with SU.ctrArgIsRecursive i T
+  length-filter-rec i (T TL.∷ Ts) | true
+    rewrite filter-map (λ p → SU.ctrArgIsRecursive i (proj₂ p))
+                       (λ p → (1+ (proj₁ p) , proj₂ p))
+                       (zip (range (length Ts)) Ts)
+    = PE.cong 1+
+        (PE.trans (length-map (λ p → (1+ (proj₁ p) , proj₂ p))
+                     (filter (λ p → SU.ctrArgIsRecursive i (proj₂ p))
+                       (zip (range (length Ts)) Ts)))
+          (length-filter-rec i Ts))
+  length-filter-rec i (T TL.∷ Ts) | false
+    rewrite filter-map (λ p → SU.ctrArgIsRecursive i (proj₂ p))
+                       (λ p → (1+ (proj₁ p) , proj₂ p))
+                       (zip (range (length Ts)) Ts)
+    = PE.trans (length-map (λ p → (1+ (proj₁ p) , proj₂ p))
+                   (filter (λ p → SU.ctrArgIsRecursive i (proj₂ p))
+                     (zip (range (length Ts)) Ts)))
+        (length-filter-rec i Ts)
+
+method≡branch : ∀ ind P j Ss → ind ∈ₗ senv → SU.ctrArgsTypeList ind j PE.≡ just Ss →
+  emb-stype-oterm (SU.indRectBranchTy (SU.SInd.name ind) Ss P)
+    PE.≡ indRectBranchTy (SU.SInd.name ind) j Ss (wk1 (emb-stype-oterm P)) ! ⁰
+method≡branch ind P j Ss ind∈ ctr≡ = eq
+  where
+  as = Ss
+  Pemb = emb-stype-oterm P
+  n = length (ctrArgsTypeList Ss)
+  recs = ctrRecIndices (SU.SInd.name ind) Ss
+  k = length recs
+  concR = wk1 Pemb [ ctr (SU.SInd.name ind) j (map (λ j → var (((k + n) - 1) - j)) (range n)) ]↑^ (k + n)
+  ihFun : Nat × Nat → Term
+  ihFun pj = wk1 Pemb [ var (((n - 1) - proj₁ pj) + proj₂ pj) ]↑^ (n + proj₂ pj)
+  ihTys = map ihFun (zip recs (range k))
+  innerL = foldr Π⁰ Pemb (replicate k Pemb)
+  innerR = foldr Π⁰ concR ihTys
+  rhs≡ : indRectBranchTy (SU.SInd.name ind) j Ss (wk1 Pemb) ! ⁰ PE.≡ foldr Π⁰ innerR (map emb-stype-oterm as)
+  rhs≡ = PE.cong (foldr Π⁰ innerR)
+           (map-map proj₁ (λ T → (emb-stype-oterm T , 0)) (Ss))
+  emb-indRectBranchTy-stype : ∀ i Ss P →
+    emb-stype-oterm (SU.indRectBranchTy i Ss P) PE.≡
+    foldr Π⁰ (foldr Π⁰ (emb-stype-oterm P)
+                (replicate (SU.recCountList i Ss) (emb-stype-oterm P)))
+      (map emb-stype-oterm Ss)
+  emb-indRectBranchTy-stype i Ss P =
+    PE.trans (emb-arrows Ts (SU.arrowRepeat k′ P P))
+      (PE.cong (λ B → foldr Π⁰ B (map emb-stype-oterm Ts))
+        (emb-arrowRepeat k′ P P))
+    where
+    Ts = Ss
+    k′  = SU.recCountList i Ss
+    emb-arrows : ∀ As B →
+      emb-stype-oterm (SU.arrows As B) PE.≡
+      foldr Π⁰ (emb-stype-oterm B) (map emb-stype-oterm As)
+    emb-arrows TL.[] B = PE.refl
+    emb-arrows (A TL.∷ As) B =
+      PE.cong (Π⁰ (emb-stype-oterm A)) (emb-arrows As B)
+    emb-arrowRepeat : ∀ n A B →
+      emb-stype-oterm (SU.arrowRepeat n A B) PE.≡
+      foldr Π⁰ (emb-stype-oterm B) (replicate n (emb-stype-oterm A))
+    emb-arrowRepeat 0 A B = PE.refl
+    emb-arrowRepeat (1+ n) A B =
+      PE.cong (Π⁰ (emb-stype-oterm A)) (emb-arrowRepeat n A B)
+  -- The motive of the embedding is a weakening of a simple type, so every
+  -- substitution performed by a method type leaves it unchanged.
+  P↑-const : ∀ d u → wk1 Pemb [ u ]↑^ d PE.≡ Pemb
+  P↑-const d u =
+    PE.trans (PE.cong (λ t → t [ u ]↑^ d) (emb-stype-wk-id P (step id)))
+      (emb-stype-subst-id P (consSubst (wk1^Subst d idSubst) u))
+  inner≡ : innerL PE.≡ innerR
+  inner≡ =
+    PE.trans (PE.cong (λ m → foldr Π⁰ Pemb (replicate m Pemb)) (PE.sym lenzip))
+      (go (zip recs (range k)))
+    where
+    lenzip : length (zip recs (range k)) PE.≡ k
+    lenzip = TL.length-zip-eq recs (range k) (PE.sym (TL.length-range k))
+    go : ∀ xs → foldr Π⁰ Pemb (replicate (length xs) Pemb)
+                  PE.≡ foldr Π⁰ concR (map ihFun xs)
+    go TL.[] =
+      PE.sym (P↑-const (k + n)
+               (ctr (SU.SInd.name ind) j (map (λ j → var (((k + n) - 1) - j)) (range n))))
+    go (x TL.∷ xs) =
+      PE.cong₂ Π⁰
+        (PE.sym (P↑-const (n + proj₂ x) (var (((n - 1) - proj₁ x) + proj₂ x))))
+        (go xs)
+  eq : emb-stype-oterm (SU.indRectBranchTy (SU.SInd.name ind) Ss P) PE.≡
+       indRectBranchTy (SU.SInd.name ind) j Ss (wk1 Pemb) ! ⁰
+  eq = PE.trans (emb-indRectBranchTy-stype (SU.SInd.name ind) Ss P)
+         (PE.trans
+           (PE.cong (λ m → foldr Π⁰ (foldr Π⁰ Pemb (replicate m Pemb))
+                             (map emb-stype-oterm as))
+             (PE.sym (length-ctrRecIndices (SU.SInd.name ind) Ss)))
+           (PE.trans (PE.cong (λ B → foldr Π⁰ B (map emb-stype-oterm as)) inner≡)
+             (PE.sym rhs≡)))
+
+emb-indRectBranchTyList-stype : ∀ ind P → ind ∈ₗ senv →
+  map emb-stype-oterm (SU.indRectBranchTypeList ind P)
+    PE.≡ indRectBranchTyList ind (wk1 (emb-stype-oterm P)) ! ⁰
+emb-indRectBranchTyList-stype ind P ind∈ =
+  PE.trans
+    (PE.trans
+      (map-map emb-stype-oterm (λ Ts → SU.indRectBranchTy (SU.SInd.name ind) Ts P) Tss)
+      (TL.map-zip-range (λ Ts → emb-stype-oterm (SU.indRectBranchTy (SU.SInd.name ind) Ts P)) Tss))
+    (map-≡ ctrs
+      (λ jTs jTs∈ → method≡branch ind P (proj₁ jTs) (proj₂ jTs) ind∈
+                      (TL.zip-range-nth Tss jTs jTs∈)))
+  where
+  Tss = SU.SInd.ctrArgsTypes ind
+  ctrs = zip (range (SU.indCtrCount ind)) Tss
+  map-≡ : ∀ {A : Set} {f g : A → Term} ns →
+    (∀ j → j TL.∈ₗ ns → f j PE.≡ g j) →
+    map f ns PE.≡ map g ns
+  map-≡ TL.[] _ = PE.refl
+  map-≡ (n TL.∷ ns) h =
+    PE.cong₂ TL._∷_ (h n TL.hereₗ) (map-≡ ns (λ j j∈ → h j (TL.thereₗ j∈)))
+
 -- Simple terms typed in [Δ] are typed in any well-formed context extended by [Δ]
 emb-sterm-oterm-preserves-typing′ : ∀ {Γ Δ t A} → ⊢ Γ
   → TL.All (SU.indsInSEnv senv) Δ
@@ -545,24 +690,9 @@ emb-sterm-oterm-preserves-typing′ : ∀ {Γ Δ t A} → ⊢ Γ
   → (Γ ∙ˢ Δ) ⊢ emb-sterm-oterm t ∷ emb-stype-oterm A ^ [ ! , ι ⁰ ]
 emb-sterm-oterm-preserves-typing′ {Γ₀} ⊢Γ₀ = go
   where
-  Π⁰ : Term → Term → Term
-  Π⁰ A B = Π A ^ ! ° ⁰ ▹ B ° ⁰ ° ⁰ ^ !
-
   emb-scon-wf : ∀ Γ → TL.All (SU.indsInSEnv senv) Γ → ⊢ (Γ₀ ∙ˢ Γ)
   emb-scon-wf TL.[] TL.[]ₐ = ⊢Γ₀
   emb-scon-wf (A TL.∷ Γ) (A∈ TL.∷ₐ Γ∈) = emb-scon-wf Γ Γ∈ ∙ univ (emb-stype-oterm-has-type A A∈ (emb-scon-wf Γ Γ∈))
-
-  -- The types of simple terms in a declared context are declared
-  st-var-inds : ∀ {x A Γ} → TL.All (SU.indsInSEnv senv) Γ → x ST.∷ A ∈ Γ → SU.indsInSEnv senv A
-  st-var-inds (A∈ TL.∷ₐ _) ST.here = A∈
-  st-var-inds (_ TL.∷ₐ Γ∈) (ST.there h) = st-var-inds Γ∈ h
-
-  st-type-inds : ∀ {Γ t A} → TL.All (SU.indsInSEnv senv) Γ → Γ ST.⊢ t ∷ A → SU.indsInSEnv senv A
-  st-type-inds Γ∈ (ST.varⱼ h) = st-var-inds Γ∈ h
-  st-type-inds Γ∈ (ST.appⱼ f∈ _) = proj₂ (st-type-inds Γ∈ f∈)
-  st-type-inds Γ∈ (ST.lamⱼ A∈ t∈) = A∈ , st-type-inds (A∈ TL.∷ₐ Γ∈) t∈
-  st-type-inds Γ∈ (ST.ctrⱼ ind∈ _ _ _) = TL.∈ₗ-map SU.SInd.name ind∈
-  st-type-inds Γ∈ (ST.indRectⱼ _ P∈ _ _) = P∈
 
   emb-stype-wk1n-id : ∀ A n → repeat wk1 (emb-stype-oterm A) n PE.≡ emb-stype-oterm A
   emb-stype-wk1n-id A 0 = PE.refl
@@ -619,136 +749,6 @@ emb-sterm-oterm-preserves-typing′ {Γ₀} ⊢Γ₀ = go
         (PE.trans (PE.cong (wk (lift (step id))) (emb-stype-wk-id P (step id)))
           (PE.trans (emb-stype-wk-id P (lift (step id)))
             (PE.sym (emb-stype-wk-id P (step id))))))
-
-  length-ctrRecIndices : ∀ i Ss →
-    length (ctrRecIndices i Ss) PE.≡ SU.recCountList i Ss
-  length-ctrRecIndices i Ss =
-    let as = Ss
-    in PE.trans (length-map proj₁
-                   (filter (λ jT → SU.ctrArgIsRecursive i (proj₂ jT))
-                     (zip (range (length as)) as)))
-         (length-filter-rec i as)
-    where
-    length-filter-rec : ∀ i (as : List SU.Type) →
-      length (filter (λ p → SU.ctrArgIsRecursive i (proj₂ p)) (zip (range (length as)) as))
-      PE.≡ SU.recCountList i as
-    length-filter-rec i TL.[] = PE.refl
-    length-filter-rec i (T TL.∷ Ts)
-      rewrite zip-range-cons T Ts
-      with SU.ctrArgIsRecursive i T
-    length-filter-rec i (T TL.∷ Ts) | true
-      rewrite filter-map (λ p → SU.ctrArgIsRecursive i (proj₂ p))
-                         (λ p → (1+ (proj₁ p) , proj₂ p))
-                         (zip (range (length Ts)) Ts)
-      = PE.cong 1+
-          (PE.trans (length-map (λ p → (1+ (proj₁ p) , proj₂ p))
-                       (filter (λ p → SU.ctrArgIsRecursive i (proj₂ p))
-                         (zip (range (length Ts)) Ts)))
-            (length-filter-rec i Ts))
-    length-filter-rec i (T TL.∷ Ts) | false
-      rewrite filter-map (λ p → SU.ctrArgIsRecursive i (proj₂ p))
-                         (λ p → (1+ (proj₁ p) , proj₂ p))
-                         (zip (range (length Ts)) Ts)
-      = PE.trans (length-map (λ p → (1+ (proj₁ p) , proj₂ p))
-                     (filter (λ p → SU.ctrArgIsRecursive i (proj₂ p))
-                       (zip (range (length Ts)) Ts)))
-          (length-filter-rec i Ts)
-
-  method≡branch : ∀ ind P j Ss → ind ∈ₗ senv → SU.ctrArgsTypeList ind j PE.≡ just Ss →
-    emb-stype-oterm (SU.indRectBranchTy (SU.SInd.name ind) Ss P)
-      PE.≡ indRectBranchTy (SU.SInd.name ind) j Ss (wk1 (emb-stype-oterm P)) ! ⁰
-  method≡branch ind P j Ss ind∈ ctr≡ = eq
-    where
-    as = Ss
-    Pemb = emb-stype-oterm P
-    n = length (ctrArgsTypeList Ss)
-    recs = ctrRecIndices (SU.SInd.name ind) Ss
-    k = length recs
-    concR = wk1 Pemb [ ctr (SU.SInd.name ind) j (map (λ j → var (((k + n) - 1) - j)) (range n)) ]↑^ (k + n)
-    ihFun : Nat × Nat → Term
-    ihFun pj = wk1 Pemb [ var (((n - 1) - proj₁ pj) + proj₂ pj) ]↑^ (n + proj₂ pj)
-    ihTys = map ihFun (zip recs (range k))
-    innerL = foldr Π⁰ Pemb (replicate k Pemb)
-    innerR = foldr Π⁰ concR ihTys
-    rhs≡ : indRectBranchTy (SU.SInd.name ind) j Ss (wk1 Pemb) ! ⁰ PE.≡ foldr Π⁰ innerR (map emb-stype-oterm as)
-    rhs≡ = PE.cong (foldr Π⁰ innerR)
-             (map-map proj₁ (λ T → (emb-stype-oterm T , 0)) (Ss))
-    emb-indRectBranchTy-stype : ∀ i Ss P →
-      emb-stype-oterm (SU.indRectBranchTy i Ss P) PE.≡
-      foldr Π⁰ (foldr Π⁰ (emb-stype-oterm P)
-                  (replicate (SU.recCountList i Ss) (emb-stype-oterm P)))
-        (map emb-stype-oterm Ss)
-    emb-indRectBranchTy-stype i Ss P =
-      PE.trans (emb-arrows Ts (SU.arrowRepeat k′ P P))
-        (PE.cong (λ B → foldr Π⁰ B (map emb-stype-oterm Ts))
-          (emb-arrowRepeat k′ P P))
-      where
-      Ts = Ss
-      k′  = SU.recCountList i Ss
-      emb-arrows : ∀ As B →
-        emb-stype-oterm (SU.arrows As B) PE.≡
-        foldr Π⁰ (emb-stype-oterm B) (map emb-stype-oterm As)
-      emb-arrows TL.[] B = PE.refl
-      emb-arrows (A TL.∷ As) B =
-        PE.cong (Π⁰ (emb-stype-oterm A)) (emb-arrows As B)
-      emb-arrowRepeat : ∀ n A B →
-        emb-stype-oterm (SU.arrowRepeat n A B) PE.≡
-        foldr Π⁰ (emb-stype-oterm B) (replicate n (emb-stype-oterm A))
-      emb-arrowRepeat 0 A B = PE.refl
-      emb-arrowRepeat (1+ n) A B =
-        PE.cong (Π⁰ (emb-stype-oterm A)) (emb-arrowRepeat n A B)
-    -- The motive of the embedding is a weakening of a simple type, so every
-    -- substitution performed by a method type leaves it unchanged.
-    P↑-const : ∀ d u → wk1 Pemb [ u ]↑^ d PE.≡ Pemb
-    P↑-const d u =
-      PE.trans (PE.cong (λ t → t [ u ]↑^ d) (emb-stype-wk-id P (step id)))
-        (emb-stype-subst-id P (consSubst (wk1^Subst d idSubst) u))
-    inner≡ : innerL PE.≡ innerR
-    inner≡ =
-      PE.trans (PE.cong (λ m → foldr Π⁰ Pemb (replicate m Pemb)) (PE.sym lenzip))
-        (go (zip recs (range k)))
-      where
-      lenzip : length (zip recs (range k)) PE.≡ k
-      lenzip = TL.length-zip-eq recs (range k) (PE.sym (TL.length-range k))
-      go : ∀ xs → foldr Π⁰ Pemb (replicate (length xs) Pemb)
-                    PE.≡ foldr Π⁰ concR (map ihFun xs)
-      go TL.[] =
-        PE.sym (P↑-const (k + n)
-                 (ctr (SU.SInd.name ind) j (map (λ j → var (((k + n) - 1) - j)) (range n))))
-      go (x TL.∷ xs) =
-        PE.cong₂ Π⁰
-          (PE.sym (P↑-const (n + proj₂ x) (var (((n - 1) - proj₁ x) + proj₂ x))))
-          (go xs)
-    eq : emb-stype-oterm (SU.indRectBranchTy (SU.SInd.name ind) Ss P) PE.≡
-         indRectBranchTy (SU.SInd.name ind) j Ss (wk1 Pemb) ! ⁰
-    eq = PE.trans (emb-indRectBranchTy-stype (SU.SInd.name ind) Ss P)
-           (PE.trans
-             (PE.cong (λ m → foldr Π⁰ (foldr Π⁰ Pemb (replicate m Pemb))
-                               (map emb-stype-oterm as))
-               (PE.sym (length-ctrRecIndices (SU.SInd.name ind) Ss)))
-             (PE.trans (PE.cong (λ B → foldr Π⁰ B (map emb-stype-oterm as)) inner≡)
-               (PE.sym rhs≡)))
-
-  emb-indRectBranchTyList-stype : ∀ ind P → ind ∈ₗ senv →
-    map emb-stype-oterm (SU.indRectBranchTypeList ind P)
-      PE.≡ indRectBranchTyList ind (wk1 (emb-stype-oterm P)) ! ⁰
-  emb-indRectBranchTyList-stype ind P ind∈ =
-    PE.trans
-      (PE.trans
-        (map-map emb-stype-oterm (λ Ts → SU.indRectBranchTy (SU.SInd.name ind) Ts P) Tss)
-        (TL.map-zip-range (λ Ts → emb-stype-oterm (SU.indRectBranchTy (SU.SInd.name ind) Ts P)) Tss))
-      (map-≡ ctrs
-        (λ jTs jTs∈ → method≡branch ind P (proj₁ jTs) (proj₂ jTs) ind∈
-                        (TL.zip-range-nth Tss jTs jTs∈)))
-    where
-    Tss = SU.SInd.ctrArgsTypes ind
-    ctrs = zip (range (SU.indCtrCount ind)) Tss
-    map-≡ : ∀ {A : Set} {f g : A → Term} ns →
-      (∀ j → j TL.∈ₗ ns → f j PE.≡ g j) →
-      map f ns PE.≡ map g ns
-    map-≡ TL.[] _ = PE.refl
-    map-≡ (n TL.∷ ns) h =
-      PE.cong₂ TL._∷_ (h n TL.hereₗ) (map-≡ ns (λ j j∈ → h j (TL.thereₗ j∈)))
 
   mutual
     go-all : ∀ {Γ args As}

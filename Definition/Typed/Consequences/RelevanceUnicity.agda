@@ -173,11 +173,6 @@ U≢Empty U≡Empty =
       e₂ , _ = relevance-unicity ⊢Empty (univ (Emptyⱼ (wfEq ℕ≡Empty)))
   in !≢% (PE.trans (PE.sym e₁) e₂)
 
--- ctr / IndRect gen-spines use map (same issue as neTypeEq-IndRect).
-postulate
-  relevance-uniq-map-spine : ∀ {Γ t T₁ T₂ r₁ r₂ l₁ l₂} →
-    Γ ⊢ t ∷ T₁ ^ [ r₁ , l₁ ] → Γ ⊢ t ∷ T₂ ^ [ r₂ , l₂ ] → r₁ PE.≡ r₂
-
 relevance-uniq : ∀ {Γ t T₁ T₂ r₁ r₂ l₁ l₂} → Γ ⊢ t ∷ T₁ ^ [ r₁ , l₁ ] → Γ ⊢ t ∷ T₂ ^ [ r₂ , l₂ ] →
                  r₁ PE.≡ r₂
 relevance-uniq (univ 0<1 x) (univ 0<1 x') = PE.refl 
@@ -200,10 +195,10 @@ relevance-uniq (fstⱼ X X₁ X₂ _ _) (fstⱼ Y Y₁ Y₂ _ _) =
 relevance-uniq (sndⱼ X X₁ X₂ _ _) (sndⱼ Y Y₁ Y₂ _ _) = PE.refl
 relevance-uniq (zeroⱼ x) (zeroⱼ x₁) = PE.refl 
 relevance-uniq (sucⱼ X) (sucⱼ Y) = PE.refl 
-relevance-uniq ⊢t@(Ctrⱼ _ _ _ _) ⊢u = relevance-uniq-map-spine ⊢t ⊢u
+relevance-uniq (Ctrⱼ _ _ _ _) Y = PE.sym (proj₁ (ctrTypeEq′ Y))
 relevance-uniq (natrecⱼ _ x X X₁ X₂) (natrecⱼ _ y Y Y₁ Y₂) = relevance-uniq X₁ Y₁
 relevance-uniq (Emptyrecⱼ x X) (Emptyrecⱼ y Y) = let er , el = relevance-unicity x y in er
-relevance-uniq ⊢t@(IndRectⱼ _ _ _ _ _) ⊢u = relevance-uniq-map-spine ⊢t ⊢u
+relevance-uniq (IndRectⱼ _ _ x _ _) Y = proj₁ (relevance-unicity x (proj₁ (IndRectTypeEq′ Y)))
 relevance-uniq (equiv-eqⱼ x _) (equiv-eqⱼ x₁ _) = PE.refl
 relevance-uniq (Idreflⱼ X) (Idreflⱼ Y) =
     PE.refl 

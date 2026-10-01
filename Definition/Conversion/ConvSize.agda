@@ -31,7 +31,7 @@ mutual
   size~↑! (cast-ℕΠ x x₁ x₂ x₃) = 1 + sizeConv↑Term x + sizeConv↑Term x₁
   size~↑! (cast-ΠΠ%! x x₁ x₂ x₃ x₄) = 1 + sizeConv↑Term x + sizeConv↑Term x₁ + sizeConv↑Term x₂
   size~↑! (cast-ΠΠ!% x x₁ x₂ x₃ x₄) = 1 + sizeConv↑Term x + sizeConv↑Term x₁ + sizeConv↑Term x₂
-  size~↑! (IndRect-cong _ x x₁ x₂) = 1 + sizeConv↑ x + size~↓! x₁
+  size~↑! (IndRect-cong _ x x₁ x₂) = 1 + sizeConv↑ x + size~↓! x₁ + sizeConv↑TermAll x₂
   size~↑! (cast-neInd x x₁ x₂ x₃) = 1 + size~↓! x + sizeConv↑Term x₁
   size~↑! (cast-Ind x x₁ x₂ x₃) = 1 + size~↓! x + sizeConv↑Term x₁
   size~↑! (cast-IndΠ x x₁ x₂ x₃) = 1 + sizeConv↑Term x + sizeConv↑Term x₁
@@ -73,7 +73,7 @@ mutual
   sizeConv↓Term (Ind-refl x _) = 1
   sizeConv↓Term (ctr-cong x x₁ x₂ x₃) = 1 + sizeConv↑TermAll x₃
 
-  sizeConv↑TermAll : ∀ {As args args' Γ} → All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' As → Nat
+  sizeConv↑TermAll : ∀ {As args args' Γ l} → All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) args args' As → Nat
   sizeConv↑TermAll []ₐ = 0
   sizeConv↑TermAll (p ∷ₐ ps) = sizeConv↑Term p + sizeConv↑TermAll ps
 

@@ -125,6 +125,21 @@ abstract
           [ var 0 + [ var 1 + var 2 ] ]
           [ [ var 0 + var 1 ] + [ var 0 + var 2 ] ] PE.refl
 
+        <=-help-All-hd :  ∀ {a b c d : Nat} → (a + c) <= (a + b + (c + d))
+        <=-help-All-hd {a} {b} {c} {d} = inequality (vars (1 ∷ a ∷ b ∷ c ∷ d ∷ []))
+          [ var 1 + var 3 ]
+          [ [ var 1 + var 2 ] + [ var 3 + var 4 ] ] PE.refl
+
+        <=-help-All-tl :  ∀ {a b c d : Nat} → (b + d) <= (a + b + (c + d))
+        <=-help-All-tl {a} {b} {c} {d} = inequality (vars (1 ∷ a ∷ b ∷ c ∷ d ∷ []))
+          [ var 2 + var 4 ]
+          [ [ var 1 + var 2 ] + [ var 3 + var 4 ] ] PE.refl
+
+        <=-help-All :  ∀ {a b c d : Nat} → (a + c + (b + d)) <= (a + b + (c + d))
+        <=-help-All {a} {b} {c} {d} = inequality (vars (1 ∷ a ∷ b ∷ c ∷ d ∷ []))
+          [ [ var 1 + var 3 ] + [ var 2 + var 4 ] ]
+          [ [ var 1 + var 2 ] + [ var 3 + var 4 ] ] PE.refl
+
         <=-help-ab' :  ∀ {a b c d : Nat} → (a + b) <= (a + c + 1+ (b + d))
         <=-help-ab' {a} {b} {c} {d} = inequality (vars (1 ∷ a ∷ b ∷ c ∷ d ∷ []))
           [ var 1 + var 2 ]

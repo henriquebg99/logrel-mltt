@@ -43,7 +43,7 @@ import Definition.SUntyped as SU
 
 import Definition.Equiv senv as Eq
 import Definition.LogicalRelation.EquivRed senv swf equivs {{eqrel}} as ERd
-postulate equivRed : ERd.EquivRed
+open import Definition.LogicalRelation.Fundamental.SimpleTerm senv swf equivs {{eqrel}} using (equivRed)
 
 ~-irrelevanceTerm : ∀ {t t' u u' A A' r Γ} (eqA : A PE.≡ A') (eqt : t PE.≡ t') (equ : u PE.≡ u')
                   → Γ ⊢ t ~ u ∷ A ^ r

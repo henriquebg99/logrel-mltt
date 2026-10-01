@@ -19,6 +19,7 @@ open import Definition.Typed.Consequences.Reduction senv swf equivs
 open import Definition.Typed.Consequences.Injectivity senv swf equivs
 open import Definition.Typed.Consequences.Substitution senv swf equivs hiding (substTypeEq)
 open import Definition.Typed.Consequences.SucCong senv swf equivs hiding (sucCong)
+open import Definition.Typed.Consequences.IndRectCong senv swf equivs using (indRectBranchTyListEq)
 open import Tools.Product
 open import Tools.List using (All₃; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
@@ -196,7 +197,10 @@ mutual
         B≡Ind = Ind≡A Ind≡B whnfB
         a = size-symConv↑ (Γ≡Δ ∙ (refl (univ (Indⱼ ⊢Γ ind∈)))) x
         b = PE.trans (size-subst B≡Ind t'~t) (size-sym~↓! Γ≡Δ x₁)
-    in PE.cong₂ (λ X Y → 1 + X + Y) a b
+        P≡P' = stabilityEq (Γ≡Δ ∙ refl (univ (Indⱼ ⊢Γ ind∈))) (soundnessConv↑ x)
+        c = PE.trans (convConvTermAllSize (symAll₃ Γ≡Δ x₂) (indRectBranchTyListEq ind∈ P≡P'))
+                     (symAll₃Size Γ≡Δ x₂)
+    in PE.cong₃ (λ X Y Z → 1 + X + Y + Z) a b c
 
   size-sym~↓! : ∀ {t u A Γ Δ l} (Γ≡Δ : ⊢ Γ ≡ Δ)
         (t~u : Γ ⊢ t ~ u ↓! A ^ l) → size~↓! (proj₂ (proj₂ (proj₂ (sym~↓! Γ≡Δ t~u)))) PE.≡ size~↓! t~u
@@ -246,17 +250,17 @@ mutual
   size-symConv↓Term Γ≡Δ (zero-refl x) = PE.refl
   size-symConv↓Term Γ≡Δ (Ind-refl x _) = PE.refl
   size-symConv↓Term Γ≡Δ (ctr-cong x x₁ x₂ x₃) = PE.cong 1+ (symAll₃Size Γ≡Δ x₃)
-    where
-    symAll₃Size : ∀ {args args' As Γ Δ}
-                → (Γ≡Δ : ⊢ Γ ≡ Δ)
-                → (ps : All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' As)
-                → sizeConv↑TermAll (symAll₃ Γ≡Δ ps) PE.≡ sizeConv↑TermAll ps
-    symAll₃Size Γ≡Δ []ₐ = PE.refl
-    symAll₃Size Γ≡Δ (p ∷ₐ ps) =
-      PE.cong₂ _+_ (size-symConv↑Term Γ≡Δ p) (symAll₃Size Γ≡Δ ps)
   size-symConv↓Term Γ≡Δ (suc-cong x) = PE.cong (λ X → 1 + X) (size-symConv↑Term Γ≡Δ x)
   size-symConv↓Term Γ≡Δ (η-eq l< l<' x x₁ x₂ y y₁ t<>u) =
     PE.cong (λ X → 1 + X) (size-symConv↑Term (Γ≡Δ ∙ refl x) t<>u)
+
+  symAll₃Size : ∀ {args args' As Γ Δ l}
+              → (Γ≡Δ : ⊢ Γ ≡ Δ)
+              → (ps : All₃ (λ a a' A → Γ ⊢ a [conv↑] a' ∷ A ^ l) args args' As)
+              → sizeConv↑TermAll (symAll₃ Γ≡Δ ps) PE.≡ sizeConv↑TermAll ps
+  symAll₃Size Γ≡Δ []ₐ = PE.refl
+  symAll₃Size Γ≡Δ (p ∷ₐ ps) =
+    PE.cong₂ _+_ (size-symConv↑Term Γ≡Δ p) (symAll₃Size Γ≡Δ ps)
 
   size-symConv↓ : ∀ {A B Γ Δ l} (Γ≡Δ : ⊢ Γ ≡ Δ)
         (A~B : Γ ⊢ A [conv↓] B ^ l) → sizeConv↓ (symConv↓ Γ≡Δ A~B) PE.≡ sizeConv↓ A~B

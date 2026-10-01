@@ -72,7 +72,6 @@ wkIndex (lift ρ) ⊢Δ here =
                (wk1-wk≡lift-wk1 _ _)
                here
 
-{-# TERMINATING #-}
 mutual
   wk : ∀ {Γ Δ A r ρ} → ρ ∷ Δ ⊆ Γ →
      let ρA = U.wk ρ A

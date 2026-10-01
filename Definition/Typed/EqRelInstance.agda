@@ -8,6 +8,15 @@ open import Definition.Typed.Weakening senv equivs
 open import Definition.Typed.Reduction senv swf equivs
 open import Definition.Typed.EqualityRelation senv equivs
 open import Tools.Function
+open import Tools.List using (All₃; []ₐ; _∷ₐ_)
+
+-- Pointwise equality of lists of terms, as a judgement.
+All₃-⊢All : ∀ {Γ ms ms' As r}
+          → All₃ (λ m m' A → Γ ⊢ m ≡ m' ∷ A ^ r) ms ms' As
+          → Γ ⊢All ms ≡ ms' ∷ As ^ r
+All₃-⊢All []ₐ = εⱼ
+All₃-⊢All (p ∷ₐ ps) = consⱼ p (All₃-⊢All ps)
+
 Urefl   : ∀ {r l Γ} → ⊢ Γ → Γ ⊢ (Univ r l) ≡ (Univ r l) ^ [ ! , next l ]
 Urefl {l = ⁰} ⊢Γ = refl (univ (univ 0<1 ⊢Γ))
 Urefl {l = ¹} ⊢Γ = refl (Uⱼ ⊢Γ)
@@ -22,7 +31,7 @@ eqRelInstance = eqRel _⊢_≡_^_ _⊢_≡_∷_^_ _⊢_≡_∷_^_
                       Π-cong (refl ∘ᶠ zeroⱼ) suc-cong
                       ctr-cong
                       (λ lF lG x x₁ x₂ x₃ x₄ x₅ → η-eq lF lG x x₁ x₂ x₅)
-                      genVar app-cong natrec-cong IndRect-cong Emptyrec-cong
+                      genVar app-cong natrec-cong (λ ind∈ P≡P′ t≡t′ ms≡ms′ → IndRect-cong ind∈ P≡P′ t≡t′ (All₃-⊢All ms≡ms′)) Emptyrec-cong
                       Id-cong
                       cast-cong (λ A≡A t≡t e e' → cast-cong A≡A (refl (ℕⱼ (wfTerm e))) t≡t e e')
                       (λ {i} i∈ A≡A t≡t e e' → cast-cong A≡A (refl (Indⱼ′ (wfTerm e) i∈)) t≡t e e')
