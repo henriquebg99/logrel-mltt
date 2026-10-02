@@ -4,6 +4,8 @@
 -- and eliminators of inductive types only, so their validity does not depend
 -- on the validity of cast (which itself needs the functions to be reducible).
 
+{-# OPTIONS --safe #-}
+
 import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
@@ -51,7 +53,7 @@ _∙ˢ_ : Con Term → ST.Con → Con Term
 Γ ∙ˢ (A TL.∷ Δ) = (Γ ∙ˢ Δ) ∙ emb-stype A ^ [ ! , ι ⁰ ]
 
 embˢ : SU.Term → Term
-embˢ t = emb_oterm_term (O.emb-sterm-oterm t)
+embˢ t = emb-oterm (O.emb-sterm-oterm t)
 
 embAllˢ : List SU.Term → List Term
 embAllˢ ts = emb-oterm-all (O.emb-sterm-oterm-all ts)
@@ -65,7 +67,7 @@ embVar {Γ} {B TL.∷ Δ} {A = A} (ST.there {x = x} h) =
            (wk-emb-stype (step id) A) (there (embVar h))
 
 -- The motive of an embedded eliminator is a weakened simple type
-wk1-emb-stype : ∀ P → emb_oterm_term (O.wk1 (O.emb-stype-oterm P)) PE.≡ emb-stype P
+wk1-emb-stype : ∀ P → emb-oterm (O.wk1 (O.emb-stype-oterm P)) PE.≡ emb-stype P
 wk1-emb-stype P =
   PE.trans (emb-wk1 (O.emb-stype-oterm P))
     (PE.trans (PE.cong wk1 (emb-stype-hom P)) (wk-emb-stype (step id) P))
@@ -84,8 +86,8 @@ embˢ-IndRect i P t ms =
 embˢ-branchTys : ∀ ind P → ind ∈ₗ senv →
   TL.map emb-stype (SU.indRectBranchTypeList ind P) PE.≡ indRectBranchTyList ind (emb-stype P) ! ⁰
 embˢ-branchTys ind P ind∈ =
-  PE.trans (PE.sym (PE.trans (map-map emb_oterm_term O.emb-stype-oterm Bs) (map-cong Bs emb-stype-hom)))
-    (PE.trans (PE.cong (TL.map emb_oterm_term) (OT.emb-indRectBranchTyList-stype ind P ind∈))
+  PE.trans (PE.sym (PE.trans (map-map emb-oterm O.emb-stype-oterm Bs) (map-cong Bs emb-stype-hom)))
+    (PE.trans (PE.cong (TL.map emb-oterm) (OT.emb-indRectBranchTyList-stype ind P ind∈))
       (PE.trans (emb-indRectBranchTyList ind (O.wk1 (O.emb-stype-oterm P)) ! ⁰)
         (PE.cong (λ Q → indRectBranchTyList ind Q ! ⁰) (wk1-emb-stype P))))
   where
@@ -93,13 +95,13 @@ embˢ-branchTys ind P ind∈ =
 
 -- Embedded simple terms only depend on the variables of their context
 private
-  subst-emb-stype-oterm : ∀ A σ → subst σ (emb_oterm_term (O.emb-stype-oterm A)) PE.≡ emb_oterm_term (O.emb-stype-oterm A)
+  subst-emb-stype-oterm : ∀ A σ → subst σ (emb-oterm (O.emb-stype-oterm A)) PE.≡ emb-oterm (O.emb-stype-oterm A)
   subst-emb-stype-oterm A σ =
     PE.trans (PE.cong (subst σ) (emb-stype-hom A))
       (PE.trans (subst-emb-stype σ A) (PE.sym (emb-stype-hom A)))
 
-  subst-wk1-emb-stype : ∀ P σ → subst σ (emb_oterm_term (O.wk1 (O.emb-stype-oterm P)))
-                                  PE.≡ emb_oterm_term (O.wk1 (O.emb-stype-oterm P))
+  subst-wk1-emb-stype : ∀ P σ → subst σ (emb-oterm (O.wk1 (O.emb-stype-oterm P)))
+                                  PE.≡ emb-oterm (O.wk1 (O.emb-stype-oterm P))
   subst-wk1-emb-stype P σ =
     PE.trans (PE.cong (subst σ) (wk1-emb-stype P))
       (PE.trans (subst-emb-stype σ P) (PE.sym (wk1-emb-stype P)))
@@ -127,8 +129,8 @@ mutual
   subst-embGenˢ-fix : ∀ {Δ ts As σ}
     → (∀ {x B} → x ST.∷ B ∈ Δ → σ x PE.≡ var x)
     → Δ ST.⊢All ts ∷ As
-    → substGen σ (emb_otermGen (TL.map (λ t → ⟦ 0 , t ⟧) (O.emb-sterm-oterm-all ts)))
-      PE.≡ emb_otermGen (TL.map (λ t → ⟦ 0 , t ⟧) (O.emb-sterm-oterm-all ts))
+    → substGen σ (emb-otermGen (TL.map (λ t → ⟦ 0 , t ⟧) (O.emb-sterm-oterm-all ts)))
+      PE.≡ emb-otermGen (TL.map (λ t → ⟦ 0 , t ⟧) (O.emb-sterm-oterm-all ts))
   subst-embGenˢ-fix fix ST.εⱼ = PE.refl
   subst-embGenˢ-fix fix (ST.consⱼ ⊢t ⊢ts) =
     PE.cong₂ TL._∷_ (PE.cong (λ t → ⟦ 0 , t ⟧) (subst-embˢ-fix fix ⊢t))
@@ -267,7 +269,7 @@ repr-fwd-appᵛ : ∀ {Γ i j t} (i∈ : i ∈ₗ SU.indNames senv) (j∈ : j �
                 ([Indi] : Γ ⊩ᵛ⟨ ∞ ⟩ Ind i ^ [ ! , ι ⁰ ] / [Γ])
                 ([Indj] : Γ ⊩ᵛ⟨ ∞ ⟩ Ind j ^ [ ! , ι ⁰ ] / [Γ])
               → Γ ⊩ᵛ⟨ ∞ ⟩ t ∷ Ind i ^ [ ! , ι ⁰ ] / [Γ] / [Indi]
-              → Γ ⊩ᵛ⟨ ∞ ⟩ emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs i j i∈ j∈ H)) ∘ t ^ ⁰
+              → Γ ⊩ᵛ⟨ ∞ ⟩ emb-oterm (Eq.fwdₒ (Eq.repr-equiv equivs i j i∈ j∈ H)) ∘ t ^ ⁰
                   ∷ Ind j ^ [ ! , ι ⁰ ] / [Γ] / [Indj]
 repr-fwd-appᵛ {Γ} {i} {j} {t} i∈ j∈ H [Γ] [Indi] [Indj] [t] =
   let f = embˢ (Eq.Equiv.fwd (Eq.repr-equiv equivs i j i∈ j∈ H))
@@ -281,9 +283,5 @@ repr-fwd-appᵛ {Γ} {i} {j} {t} i∈ j∈ H [Γ] [Indi] [Indj] [t] =
 
 equivRed : EquivRed
 equivRed = record
-  { [fwd] = λ {Γ} {e} ⊢Γ _ →
-      closedFunRed ⊢Γ (Eq.Equiv.indA∈ e) (Eq.Equiv.indB∈ e) (Eq.Equiv.⊢fwd e)
-  ; [bwd] = λ {Γ} {e} ⊢Γ _ →
-      closedFunRed ⊢Γ (Eq.Equiv.indB∈ e) (Eq.Equiv.indA∈ e) (Eq.Equiv.⊢bwd e)
-  ; [repr-fwd] = λ ⊢Γ i∈ j∈ H → closedFunRed ⊢Γ i∈ j∈ (⊢repr-fwd i∈ j∈ H)
+  { [repr-fwd] = λ ⊢Γ i∈ j∈ H → closedFunRed ⊢Γ i∈ j∈ (⊢repr-fwd i∈ j∈ H)
   }

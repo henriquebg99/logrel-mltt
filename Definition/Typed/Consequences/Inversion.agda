@@ -1,5 +1,7 @@
 -- Inversion of contexts
 
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.Consequences.Inversion (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
@@ -14,7 +16,10 @@ open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
 open import Tools.Product
 import Tools.PropositionalEquality as PE
 import Definition.SUntyped as SU
-open import Tools.List using (_∈ₗ_)
+open import Tools.List using (_∈ₗ_; map)
+open import Tools.Maybe using (just)
+
+-- Inversion of contexts
 inversion-ctx : ∀ {Γ A r} → ⊢ Γ ∙ A ^ r → ⊢ Γ  × Γ ⊢ A ^ r
 inversion-ctx (X ∙ x) = X , x
 
@@ -27,7 +32,7 @@ inversion-U (conv x x₁) with inversion-U x
 typeinfo-PE-injectivity : ∀ {r r' l l'} → [ r , l ] PE.≡ [ r' , l' ] → r PE.≡ r' × l PE.≡ l'
 typeinfo-PE-injectivity PE.refl = PE.refl , PE.refl
 
--- Inversion of contexts
+-- Inversion of neutral terms at a neutral type
 
 inversion-ne' : ∀ {Γ t A ll l} → Neutral A
                 → ([A] : Γ ⊩⟨ l ⟩ A ^ [ ! , ll ])
@@ -47,8 +52,6 @@ inversion-ne' neA (emb ∞< [A]) [t] whnft = inversion-ne' neA [A] [t] whnft
 
 inversion-ne : ∀ {Γ t A l} → Neutral A → Whnf t → Γ ⊢ t ∷ A ^ [ ! , l ] → Neutral t
 inversion-ne neA whnft ⊢t =  let [A] , [t] = reducibleTerm ⊢t in inversion-ne' neA [A] [t] whnft
-
--- Inversion of natural number type.
 
 -- Inversion of inductive type formers.
 inversion-Ind : ∀ {Γ n C r} → Γ ⊢ Ind n ∷ C ^ r → Γ ⊢ C ≡ U ⁰ ^ r × r PE.≡ [ ! , next ⁰ ]
@@ -79,11 +82,54 @@ inversion-Empty (conv x x₁) =
   let C≡SProp , r = inversion-Empty x
   in trans (sym x₁) C≡SProp , r
 
--- Inversion of zero.
+-- Inversion of constructors.
+inversion-ctr′ : ∀ {Γ t i j args C r} → Γ ⊢ t ∷ C ^ r → t PE.≡ ctr i j args
+  → ∃ λ ind → ∃ λ Ts → SU.SInd.name ind PE.≡ i
+  × ind ∈ₗ senv
+  × SU.ctrArgsTypeList ind j PE.≡ just Ts
+  × Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+  × Γ ⊢ C ≡ Ind i ^ [ ! , ι ⁰ ]
+  × r PE.≡ [ ! , ι ⁰ ]
+inversion-ctr′ (Ctrⱼ {ind = ind} x ind∈ eq args) e with ctr-PE-injectivity e
+... | PE.refl , PE.refl , PE.refl = ind , _ , PE.refl , ind∈ , eq , args , univ (refl (Indⱼ x ind∈)) , PE.refl
+inversion-ctr′ (conv x x₁) e with inversion-ctr′ x e
+... | ind , Ts , n≡ , ind∈ , eq , args , [C≡Ind] , PE.refl = ind , Ts , n≡ , ind∈ , eq , args , trans (sym x₁) [C≡Ind] , PE.refl
 
--- Inversion of successor.
+inversion-ctr : ∀ {Γ i j args C r} → Γ ⊢ ctr i j args ∷ C ^ r
+  → ∃ λ ind → ∃ λ Ts → SU.SInd.name ind PE.≡ i
+  × ind ∈ₗ senv
+  × SU.ctrArgsTypeList ind j PE.≡ just Ts
+  × Γ ⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+  × Γ ⊢ C ≡ Ind i ^ [ ! , ι ⁰ ]
+  × r PE.≡ [ ! , ι ⁰ ]
+inversion-ctr d = inversion-ctr′ d PE.refl
 
--- Inversion of natural recursion.
+-- Inversion of the eliminator of inductive types.
+inversion-IndRect′ : ∀ {Γ u i lG P t ms A rlA} → Γ ⊢ u ∷ A ^ rlA → u PE.≡ IndRect i lG P t ms
+  → ∃ λ ind → ∃ λ rG → SU.SInd.name ind PE.≡ i
+  × (rG PE.≡ % → lG PE.≡ ⁰)
+  × ind ∈ₗ senv
+  × Γ ∙ Ind i ^ [ ! , ι ⁰ ] ⊢ P ^ [ rG , ι lG ]
+  × Γ ⊢ t ∷ Ind i ^ [ ! , ι ⁰ ]
+  × Γ ⊢All ms ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ]
+  × Γ ⊢ A ≡ P [ t ] ^ [ rG , ι lG ]
+  × rlA PE.≡ [ rG , ι lG ]
+inversion-IndRect′ (IndRectⱼ {ind = ind} rGlG ind∈ ⊢P ⊢t ⊢ms) e with IndRect-PE-injectivity e
+... | PE.refl , PE.refl , PE.refl , PE.refl , PE.refl = ind , _ , PE.refl , rGlG , ind∈ , ⊢P , ⊢t , ⊢ms , refl (substType ⊢P ⊢t) , PE.refl
+inversion-IndRect′ (conv d x) e =
+  let ind , rG , n≡ , rGlG , ind∈ , ⊢P , ⊢t , ⊢ms , A≡ , r≡ = inversion-IndRect′ d e
+  in  ind , rG , n≡ , rGlG , ind∈ , ⊢P , ⊢t , ⊢ms , trans (sym (PE.subst (λ rx → _ ⊢ _ ≡ _ ^ rx) r≡ x)) A≡ , r≡
+
+inversion-IndRect : ∀ {Γ i lG P t ms A rlA} → Γ ⊢ IndRect i lG P t ms ∷ A ^ rlA
+  → ∃ λ ind → ∃ λ rG → SU.SInd.name ind PE.≡ i
+  × (rG PE.≡ % → lG PE.≡ ⁰)
+  × ind ∈ₗ senv
+  × Γ ∙ Ind i ^ [ ! , ι ⁰ ] ⊢ P ^ [ rG , ι lG ]
+  × Γ ⊢ t ∷ Ind i ^ [ ! , ι ⁰ ]
+  × Γ ⊢All ms ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ]
+  × Γ ⊢ A ≡ P [ t ] ^ [ rG , ι lG ]
+  × rlA PE.≡ [ rG , ι lG ]
+inversion-IndRect d = inversion-IndRect′ d PE.refl
 
 inversion-Emptyrec : ∀ {Γ e A C rlC lEmpty lC} → Γ ⊢ Emptyrec lC lEmpty C e ∷ A ^ rlC
   → ∃ λ rC → Γ ⊢ C ^ [ rC , ι lC ]

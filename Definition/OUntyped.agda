@@ -1,5 +1,7 @@
 -- Raw terms, weakening (renaming) and substitution.
 
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 module Definition.OUntyped (senv : SI.SEnv) where
 open import Tools.Nat
@@ -77,8 +79,6 @@ fst t = gen Fstkind (⟦ 0 , t ⟧ ∷ [])
 snd : (t : Term) → Term -- Dependent pair elimination
 snd t = gen Sndkind (⟦ 0 , t ⟧ ∷ [])
 
--- Introduction and elimination of natural numbers.
-
 -- Empty type
 Empty : Level → Term
 Empty l = gen (Emptykind l) []
@@ -151,13 +151,19 @@ Univ-PE-injectivity PE.refl = PE.refl , PE.refl
 -- either it has a variable in head position that blocks reduction.
 -- either it is of the form Emptyrec (or terms that should reduce to emptyrec, such as incompatible casts)
 
--- FIXME add missing cases
+-- Unlike Definition.Untyped, there is no neutral cast between inductive types
+-- with different representatives (castIndInd≢ₙ): representatives are computed
+-- from the equivalences, which are defined on top of this syntax.
 data Neutral : Term → Set where
   var     : ∀ n                     → Neutral (var n)
   ∘ₙ      : ∀ {k u l}     → Neutral k → Neutral (k ∘ u ^ l)
   castₙ : ∀ {l A B e t} → Neutral A → Neutral B → Neutral t → Neutral (cast l A B e t)
   castnΠₙ : ∀ {l A rA lA P lP r B e t} → Neutral B → Neutral (cast l B (Π A ^ rA ° lA ▹ P ° lP ° l ^ r) e t)
   castΠₙ : ∀ {l A rA lA P lP r B e t} → Neutral B → Neutral (cast l (Π A ^ rA ° lA ▹ P ° lP ° l ^ r) B e t)
+  castnIndₙ : ∀ {l i B e t} → Neutral B → Neutral (cast l B (Ind i) e t)
+  castIndₙ : ∀ {l i B e t} → Neutral B → Neutral (cast l (Ind i) B e t)
+  castIndΠₙ : ∀ {l i A rA r B e t} → Neutral (cast l (Ind i) (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) e t)
+  castΠIndₙ : ∀ {l i A rA r B e t} → Neutral (cast l (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ r) (Ind i) e t)
   castΠΠ%!ₙ : ∀ {l A B A' B' r r' e t} → Neutral (cast l (Π A ^ % ° ⁰ ▹ B ° ⁰ ° l ^ r) (Π A' ^ ! ° ⁰ ▹ B' ° ⁰ ° l ^ r') e t)
   castΠΠ!%ₙ : ∀ {l A B A' B' r r' e t} → Neutral (cast l (Π A ^ ! ° ⁰ ▹ B ° ⁰ ° l ^ r) (Π A' ^ % ° ⁰ ▹ B' ° ⁰ ° l ^ r') e t)
   Emptyrecₙ : ∀ {l lEmpty A e} -> Neutral (Emptyrec l lEmpty A e)
@@ -186,8 +192,6 @@ data Whnf : Term → Set where
 
 -- Different whnfs are trivially distinguished by propositional equality.
 -- (The following statements are sometimes called "no-confusion theorems".)
-
--- FIXME not of them are necessary
 
 U≢Empty : ∀ {r l l'} → Univ r l PE.≢ Empty l'
 U≢Empty ()
@@ -222,11 +226,11 @@ Id≢ne () PE.refl
 Ind≢ne : ∀ {i K} → Neutral K → Ind i PE.≢ K
 Ind≢ne () PE.refl
 
-Ctr≢ne : ∀ {i j ts K} → Neutral K → ctr i j ts PE.≢ K
-Ctr≢ne () PE.refl
+ctr≢ne : ∀ {i j ts K} → Neutral K → ctr i j ts PE.≢ K
+ctr≢ne () PE.refl
 
-Ind≢Ctr : ∀ {i j k ts} → Ind i PE.≢ ctr j k ts
-Ind≢Ctr ()
+Ind≢ctr : ∀ {i j k ts} → Ind i PE.≢ ctr j k ts
+Ind≢ctr ()
 
 -- Several views on whnfs (note: not recursive).
 
@@ -377,6 +381,10 @@ wkNeutral ρ Emptyrecₙ = Emptyrecₙ
 wkNeutral ρ (castₙ A B t) = castₙ (wkNeutral ρ A) (wkNeutral ρ B) (wkNeutral ρ t)
 wkNeutral ρ (castnΠₙ A) = castnΠₙ (wkNeutral ρ A)
 wkNeutral ρ (castΠₙ A) = castΠₙ (wkNeutral ρ A)
+wkNeutral ρ (castnIndₙ A) = castnIndₙ (wkNeutral ρ A)
+wkNeutral ρ (castIndₙ A) = castIndₙ (wkNeutral ρ A)
+wkNeutral ρ castIndΠₙ = castIndΠₙ
+wkNeutral ρ castΠIndₙ = castΠIndₙ
 wkNeutral ρ castΠΠ%!ₙ = castΠΠ%!ₙ
 wkNeutral ρ castΠΠ!%ₙ = castΠΠ!%ₙ
 

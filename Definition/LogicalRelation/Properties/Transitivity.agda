@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
@@ -173,14 +175,14 @@ mutual
   transInductive-prop (ne [k≡k′]) (ne [k′≡k″]) =
     ne (transEqTermNe [k≡k′] [k′≡k″])
   transInductive-prop (ne (neNfₜ₌ _ neM _)) (ctrᵣ _ _ _ _) =
-    ⊥-elim (Ctr≢ne neM PE.refl)
+    ⊥-elim (ctr≢ne neM PE.refl)
   transInductive-prop {Γ} {i} (ctrᵣ {j = j} {args = args} {args' = mids} ind∈ name≡ eq ps) q =
     go q PE.refl
     where
     go : ∀ {n n′} → [Inductive]-prop Γ i n n′
        → n PE.≡ ctr i j mids
        → [Inductive]-prop Γ i (ctr i j args) n′
-    go (ne (neNfₜ₌ neK _ _)) eq = ⊥-elim (Ctr≢ne neK (PE.sym eq))
+    go (ne (neNfₜ₌ neK _ _)) eq = ⊥-elim (ctr≢ne neK (PE.sym eq))
     go (ctrᵣ ind∈′ name≡′ eq′ qs) e with ctr-PE-injectivity e
     ... | PE.refl , PE.refl , PE.refl
       with SU.name-inj senv (proj₁ swf) ind∈ ind∈′ (PE.trans name≡ (PE.sym name≡′))

@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.Soundness (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
@@ -43,8 +45,8 @@ mutual
     IndRect-cong ind∈ (soundnessConv↑ x) (soundness~↓! x₁) (All₃-soundAll x₂)
   soundness~↑! (cast-neInd x x₁ x₂ x₃) = cast-cong (soundness~↓! x) (refl (Indⱼ′ (wfTerm x₂) (Ind∈Idʳ x₂))) (soundnessConv↑Term x₁) x₂ x₃
   soundness~↑! (cast-Ind x x₁ x₂ x₃) = let XX = sym (soundness~↓! x) in cast-cong (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idˡ x₂))) XX (soundnessConv↑Term x₁) x₂ x₃
-  soundness~↑! (cast-IndΠ x x₁ x₂ x₃) = let XX = (soundnessConv↑Term x) in cast-cong (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idˡ x₂))) XX (soundnessConv↑Term x₁) x₂ x₃
-  soundness~↑! (cast-ΠInd x x₁ x₂ x₃) = let XX = (sym (soundnessConv↑Term x)) in cast-cong XX (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idʳ x₂))) (soundnessConv↑Term x₁) x₂ x₃
+  soundness~↑! (cast-IndΠ x x₁ x₂ x₃) = let XX = sym (soundnessConv↑Term x) in cast-cong (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idˡ x₂))) XX (soundnessConv↑Term x₁) x₂ x₃
+  soundness~↑! (cast-ΠInd x x₁ x₂ x₃) = let XX = soundnessConv↑Term x in cast-cong XX (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idʳ x₂))) (soundnessConv↑Term x₁) x₂ x₃
   soundness~↑! (cast-IndInd x x₁ x₂ x₃) = let XX = soundnessConv↑Term x₁ in cast-cong (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idˡ x₂))) (refl (Indⱼ′ (wfEqTerm XX) (Ind∈Idʳ x₂))) (soundnessConv↑Term x₁) x₂ x₃
   
   soundness~↑% : ∀ {k l A lA Γ} → Γ ⊢ k ~ l ↑% A ^ lA  →  Γ ⊢ k ∷ A ^ [ % , lA ] × Γ ⊢ l ∷ A ^ [ % , lA ] × Γ ⊢ k ≡ l ∷ A ^ [ % , lA ]

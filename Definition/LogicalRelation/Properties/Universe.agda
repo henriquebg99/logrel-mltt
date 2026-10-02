@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
@@ -167,7 +169,7 @@ un-univEq : ∀ {l Γ A r }
           → let [U] : Γ ⊩⟨ next l ⟩ Univ r l ^ [ ! , next l ]
                 [U] = Ugen (wf (escape [A]))
             in Γ ⊩⟨ next l ⟩ A ∷ Univ r l ^ [ ! , next l ] / [U]
-un-univEq {⁰} {Γ} {A} {.!} (Indᵣ {i = i} [[ ⊢A , ⊢Ind , D ]] ) = Uₜ (Ind i) (un-univ:⇒*: [[ ⊢A , ⊢Ind , D ]]) Indₙ (≅ₜ-Indrefl (wf ⊢A) (Ind-nameᵗ ⊢Ind)) (λ [ρ] ⊢Δ → Lwk.wk [ρ] ⊢Δ (Indᵣ [[ ⊢A , ⊢Ind , D ]] ))
+un-univEq {⁰} {Γ} {A} {.!} (Indᵣ {i = i} [[ ⊢A , ⊢Ind , D ]] ) = Uₜ (Ind i) (un-univ:⇒*: [[ ⊢A , ⊢Ind , D ]]) Indₙ (≅ₜ-Indrefl (wf ⊢A) (Ind∈ ⊢Ind)) (λ [ρ] ⊢Δ → Lwk.wk [ρ] ⊢Δ (Indᵣ [[ ⊢A , ⊢Ind , D ]] ))
 un-univEq {⁰} {Γ} {A} {.%} (Emptyᵣ [[ ⊢A , ⊢Empty , D ]]) = Uₜ (Empty ⁰) (un-univ:⇒*: [[ ⊢A , ⊢Empty , D ]]) Emptyₙ (≅ₜ-Emptyrefl (wf ⊢A))
                                                                                 (λ [ρ] ⊢Δ → Lwk.wk [ρ] ⊢Δ (Emptyᵣ [[ ⊢A , ⊢Empty , D ]] ))
 un-univEq {⁰} {Γ} {A} {r} (ne′ K D neK K≡K) = Uₜ K (un-univ:⇒*: D) (ne neK) (~-to-≅ₜ K≡K) (λ [ρ] ⊢Δ → Lwk.wk [ρ] ⊢Δ (ne′ K D neK K≡K))
@@ -197,7 +199,7 @@ un-univEqEq-Shape {⁰} {Γ} {A} {B} {.!} _ _ (Indᵥ {i = i} [[ ⊢A , ⊢Ind ,
   let [A] = Indᵣ [[ ⊢A , ⊢Ind , D ]]
       [B] = Indᵣ [[ redFirst* [A≡B] , ⊢Ind , [A≡B] ]]
   in Uₜ₌ (un-univEq [A]) (irrelevanceTerm {l = next ⁰} (Ugen (wf (escape [B]))) (Ugen (wf (escape [A]))) (un-univEq [B]))
-         (≅ₜ-Indrefl (wf ⊢A) (Ind-nameᵗ ⊢Ind)) λ [ρ] ⊢Δ → Lwk.wkEq [ρ] ⊢Δ [A] [A≡B]
+         (≅ₜ-Indrefl (wf ⊢A) (Ind∈ ⊢Ind)) λ [ρ] ⊢Δ → Lwk.wkEq [ρ] ⊢Δ [A] [A≡B]
 un-univEqEq-Shape {⁰} {Γ} {A} {B} {.%} _ _ (Emptyᵥ [[ ⊢A , ⊢Empty , D ]] EmptyB) [A≡B] =
   let [A] = Emptyᵣ [[ ⊢A , ⊢Empty , D ]]
       [B] = Emptyᵣ [[ redFirst* [A≡B] , ⊢Empty , [A≡B] ]]

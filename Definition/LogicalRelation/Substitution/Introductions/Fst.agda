@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI

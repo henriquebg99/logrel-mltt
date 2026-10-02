@@ -1,5 +1,8 @@
 -- Sorts (level and relevance) of types.
 -- Contexts Con
+
+{-# OPTIONS --safe #-}
+
 module Definition.Sort where
 open import Tools.Nat
 open import Tools.Product

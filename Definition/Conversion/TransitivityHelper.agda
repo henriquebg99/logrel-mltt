@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 module Definition.Conversion.TransitivityHelper where
 open import Tools.Nat as Nat
 open import Tools.List

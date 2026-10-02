@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 module Definition.OTyped (senv : SI.SEnv) where
 open import Definition.OUntyped senv
@@ -232,7 +234,7 @@ mutual
                       cast l (B [ a ]↑) B' ((snd (wk1 e)) ∘ (var 0) ^ ⁰) ((wk1 f) ∘ a ^ l))
                       ^ l)
                    ∷ Π A' ^ rA ° lA ▹ B' ° lB ° l  ^ ! ^ [ ! , ι l ]
-    cast-Ind-ctr : ∀ {ind e t}
+    cast-Ind-refl : ∀ {ind e t}
                → ind ∈ₗ senv
                → Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ]
                → Γ ⊢ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
@@ -305,7 +307,7 @@ mutual
                    ⇒ cast ⁰ K L e u
                    ∷ L ^ ι ⁰
 
-    cast-Ind-ctr : ∀ {ind e t}
+    cast-Ind-refl : ∀ {ind e t}
             → ind ∈ₗ senv
             → Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ]
             → Γ ⊢ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]

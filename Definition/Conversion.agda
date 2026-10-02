@@ -1,5 +1,7 @@
 -- Algorithmic equality.
 
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion (senv : SI.SEnv) (equivs : E.Equivs senv) where
@@ -100,13 +102,13 @@ mutual
                → Γ ⊢ e' ∷ (Id (U ⁰) (Ind i) A') ^ [ % , ι ⁰ ]
                → Γ ⊢ cast ⁰ (Ind i) A e t ~ cast ⁰ (Ind i) A' e' t' ↑! A ^ ι ⁰
     cast-IndΠ : ∀ {i A rA P A' P' t t' e e'}
-               → Γ ⊢ Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰  ^ ! [conv↑] Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰  ^ ! ∷ U ⁰ ^ ι ¹
+               → Γ ⊢ Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰  ^ ! [conv↑] Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰  ^ ! ∷ U ⁰ ^ ι ¹
                → Γ ⊢ t [conv↑] t' ∷ (Ind i) ^ ι ⁰
                → Γ ⊢ e ∷ (Id (U ⁰) (Ind i) (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !)) ^ [ % , ι ⁰ ]
                → Γ ⊢ e' ∷ (Id (U ⁰) (Ind i) (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !)) ^ [ % , ι ⁰ ]
                → Γ ⊢ cast ⁰ (Ind i) (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ ! ) e t ~ cast ⁰ (Ind i) (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ ! ) e' t' ↑! (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ ! ) ^ ι ⁰
     cast-ΠInd : ∀ {i A rA P A' P' t t' e e'}
-               → Γ ⊢ Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰  ^ ! [conv↑] Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !  ∷ U ⁰ ^ ι ¹
+               → Γ ⊢ Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰  ^ ! [conv↑] Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !  ∷ U ⁰ ^ ι ¹
                → Γ ⊢ t [conv↑] t' ∷ Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !  ^ ι ⁰
                → Γ ⊢ e ∷ (Id (U ⁰) (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ ! ) (Ind i)) ^ [ % , ι ⁰ ]
                → Γ ⊢ e' ∷ (Id (U ⁰) (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ ! ) (Ind i)) ^ [ % , ι ⁰ ]

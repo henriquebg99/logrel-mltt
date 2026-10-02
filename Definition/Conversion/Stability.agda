@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.Stability (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
@@ -100,7 +102,7 @@ stabilityRedTerm Γ≡Δ (cast-Π-subst x x₁ X x₂ x₃) =
   cast-Π-subst (stabilityTerm Γ≡Δ x) (stabilityTerm (Γ≡Δ ∙ refl (univ x)) x₁) (stabilityRedTerm Γ≡Δ X) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₃)
 stabilityRedTerm Γ≡Δ (cast-Π x x₁ x₂ x₃ x₄ x₅) =
   cast-Π (stabilityTerm Γ≡Δ x) (stabilityTerm (Γ≡Δ ∙ refl (univ x)) x₁) (stabilityTerm Γ≡Δ x₂) (stabilityTerm (Γ≡Δ ∙ refl (univ x₂)) x₃) (stabilityTerm Γ≡Δ x₄) (stabilityTerm Γ≡Δ x₅)
-stabilityRedTerm Γ≡Δ (cast-Ind-ctr ind∈ x x₁) = cast-Ind-ctr ind∈ (stabilityTerm Γ≡Δ x) (stabilityTerm Γ≡Δ x₁)
+stabilityRedTerm Γ≡Δ (cast-Ind-refl ind∈ x x₁) = cast-Ind-refl ind∈ (stabilityTerm Γ≡Δ x) (stabilityTerm Γ≡Δ x₁)
 stabilityRedTerm Γ≡Δ (cast-ne-subst x₁ x₂ x₃ x₄ x₅) = cast-ne-subst (stabilityTerm Γ≡Δ x₁) x₂ (stabilityRedTerm Γ≡Δ x₃) (stabilityTerm Γ≡Δ x₄) (stabilityTerm Γ≡Δ x₅)
 stabilityRedTerm Γ≡Δ (cast-ne-cong x₁ x₂ x₃ x₄ x₅ x₆) = cast-ne-cong (stabilityTerm Γ≡Δ x₁) x₂ (stabilityTerm Γ≡Δ x₃) x₄ (stabilityTerm Γ≡Δ x₅) (stabilityRedTerm Γ≡Δ x₆)
 stabilityRedTerm Γ≡Δ (cast-equiv A∈ B∈ A≢B H ⊢e ⊢t) = cast-equiv A∈ B∈ A≢B H (stabilityTerm Γ≡Δ ⊢e) (stabilityTerm Γ≡Δ ⊢t)

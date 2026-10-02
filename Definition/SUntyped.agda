@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 module Definition.SUntyped where
 
 open import Tools.Nat
@@ -19,7 +21,10 @@ indNotInType : Nat → Type → Set
 indNotInType i (Ind j)     = i ≢ j
 indNotInType i (Arrow A B) = indNotInType i A × indNotInType i B
 
--- TODO explain why we rule out arrows
+-- The constructor argument types allowed for now: only inductive types, not
+-- arrows. Arrow arguments (as in W-types) would need function-valued induction
+-- hypotheses (λ x → IndRect … (f x)) in the β rule of IndRect and in the
+-- reducibility of inductive terms, which are not formalized yet.
 isPositive : Nat → Type → Set
 isPositive ind (Ind _)  = ⊤
 isPositive ind (Arrow _ _) = ⊥

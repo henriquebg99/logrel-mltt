@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.EqRelInstance (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
@@ -262,7 +264,7 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
     Γ ⊢ cast ⁰ (Ind i) (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) e t ~
     cast ⁰ (Ind i) (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !) e' t' ∷
     Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ]
-~-castIndΠ _ ⊢A ⊢P X Y ⊢e ⊢e' = ↑ (refl (univ (Πⱼ (λ x → ≡is≤ PE.refl , ≡is≤ PE.refl) ▹ (λ x → ⊥-elim (!≢% x)) ▹ ⊢A ▹ ⊢P))) (~↑! (cast-IndΠ X Y ⊢e ⊢e'))
+~-castIndΠ _ ⊢A ⊢P X Y ⊢e ⊢e' = ↑ (refl (univ (Πⱼ (λ x → ≡is≤ PE.refl , ≡is≤ PE.refl) ▹ (λ x → ⊥-elim (!≢% x)) ▹ ⊢A ▹ ⊢P))) (~↑! (cast-IndΠ (symConv↑Term (reflConEq (wfTerm ⊢e)) X) Y ⊢e ⊢e'))
 
 
 ~-castΠInd : ∀ {i} {A A' : Term} {rA : Relevance} {P P' e e' t t' : Term}
@@ -278,7 +280,7 @@ data _⊢_~_∷_^_ (Γ : Con Term) (k l A : Term) (r : TypeInfo) : Set where
     [ % , ι ⁰ ] →
     Γ ⊢ cast ⁰ (Π A ^ rA ° ⁰ ▹ P ° ⁰ ° ⁰ ^ !) (Ind i) e t ~
     cast ⁰ (Π A' ^ rA ° ⁰ ▹ P' ° ⁰ ° ⁰ ^ !) (Ind i) e' t' ∷ Ind i ^ [ ! , ι ⁰ ]
-~-castΠInd i∈ ⊢A ⊢P X Y ⊢e ⊢e' = ↑ (refl (univ (Indⱼ′ (wfTerm ⊢A) i∈))) (~↑! (cast-ΠInd (symConv↑Term (reflConEq (wfTerm ⊢e)) X) Y ⊢e ⊢e'))
+~-castΠInd i∈ ⊢A ⊢P X Y ⊢e ⊢e' = ↑ (refl (univ (Indⱼ′ (wfTerm ⊢A) i∈))) (~↑! (cast-ΠInd X Y ⊢e ⊢e'))
 
 
 

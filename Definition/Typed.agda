@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed (senv : SI.SEnv) (equivs : E.Equivs senv) where
@@ -266,7 +268,11 @@ mutual
                       cast l (B [ a ]↑) B' ((snd (wk1 e)) ∘ (var 0) ^ ⁰) ((wk1 f) ∘ a ^ l))
                       ^ l)
                    ∷ Π A' ^ rA ° lA ▹ B' ° lB ° l  ^ ! ^ [ ! , ι l ]
-    cast-Ind-ctr : ∀ {ind e t}
+    -- Casting from an inductive type to itself is the identity, for any
+    -- term (not only constructors). Unlike ℕ, whose cast computed
+    -- structurally on zero/suc (cast-ℕ-0, cast-ℕ-S, cast-ℕ-cong), there is
+    -- therefore no neutral cast between equal inductive types.
+    cast-Ind-refl : ∀ {ind e t}
                → ind ∈ₗ senv
                → Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ]
                → Γ ⊢ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
@@ -282,7 +288,7 @@ mutual
                → Γ ⊢ e ∷ Id (U ⁰) (Ind A) (Ind B) ^ [ % , ι ⁰ ]
                → Γ ⊢ t ∷ Ind A ^ [ ! , ι ⁰ ]
                → Γ ⊢ cast ⁰ (Ind A) (Ind B) e t
-                   ≡ emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs A B A∈ B∈ H)) ∘ t ^ ⁰
+                   ≡ emb-oterm (Eq.fwdₒ (Eq.repr-equiv equivs A B A∈ B∈ H)) ∘ t ^ ⁰
                    ∷ Ind B ^ [ ! , ι ⁰ ]
 
 mutual
@@ -311,7 +317,8 @@ mutual
                  → Γ ⊢ t ⇒ t' ∷ Ind (SU.SInd.name ind) ^ ι ⁰
                  → Γ ⊢All ms ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
                  → Γ ⊢ IndRect (SU.SInd.name ind) lG P t ms ⇒ IndRect (SU.SInd.name ind) lG P t' ms ∷ P [ t ] ^ ι lG
-    -- β: positivity ⇒ all ctor args are recursive Ind (SU.SInd.name ind)
+    -- β: the j-th method applied to the constructor arguments, followed by
+    -- the recursive calls on the arguments of type Ind (SU.SInd.name ind)
     IndRect-ctr : ∀ {ind j P lG args ms m Ts}
                  → ind ∈ₗ senv
                  → SU.ctrArgsTypeList ind j PE.≡ just Ts
@@ -365,7 +372,11 @@ mutual
                    ∷ Π A' ^ rA ° l ▹ B' ° l ° l ^ ! ^ ι l
 
 
-    cast-Ind-ctr : ∀ {ind e t}
+    -- Casting from an inductive type to itself is the identity, for any
+    -- term (not only constructors). Unlike ℕ, whose cast computed
+    -- structurally on zero/suc (cast-ℕ-0, cast-ℕ-S, cast-ℕ-cong), there is
+    -- therefore no neutral cast between equal inductive types.
+    cast-Ind-refl : ∀ {ind e t}
                → ind ∈ₗ senv
                → Γ ⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ]
                → Γ ⊢ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
@@ -392,7 +403,7 @@ mutual
                → Γ ⊢ e ∷ Id (U ⁰) (Ind A) (Ind B) ^ [ % , ι ⁰ ]
                → Γ ⊢ t ∷ Ind A ^ [ ! , ι ⁰ ]
                → Γ ⊢ cast ⁰ (Ind A) (Ind B) e t
-                   ⇒ emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs A B A∈ B∈ H)) ∘ t ^ ⁰
+                   ⇒ emb-oterm (Eq.fwdₒ (Eq.repr-equiv equivs A B A∈ B∈ H)) ∘ t ^ ⁰
                    ∷ Ind B ^ ι ⁰
     
   -- Type reduction
@@ -484,241 +495,3 @@ Unitⱼ ⊢Γ = Πⱼ (λ abs → ⊥-elim (!≢% (PE.sym abs))) ▹ (λ _ → P
 Ugenⱼ : ∀ {r Γ l} → ⊢ Γ → Γ ⊢ Univ r l ^ [ ! , next l ]
 Ugenⱼ {l = ⁰} ⊢Γ = univ (univ 0<1 ⊢Γ)
 Ugenⱼ {l = ¹} ⊢Γ = Uⱼ ⊢Γ
-
-import Definition.OTyped senv as OT
-emb-∈ : ∀ {x A r Γ} (h : OT._∷_^_∈_ x A r Γ) →
-  x ∷ emb_oterm_term A ^ r ∈ emb_con Γ
-emb-∈ (OT.here {Γ = Γ} {A = A} {r = r}) =
-  PE.subst (λ t → _∷_^_∈_ 0 t r (_∙_^_ (emb_con Γ) (emb_oterm_term A) r))
-    (PE.sym (emb-wk1 A)) here
-emb-∈ (OT.there {Γ = Γ} {A = A} {rA = rA} {B = B} {rB = rB} {x = x} h) =
-  PE.subst (λ t → _∷_^_∈_ (Nat.suc x) t rA (_∙_^_ (emb_con Γ) (emb_oterm_term B) rB))
-    (PE.sym (emb-wk1 A)) (there (emb-∈ h))
-
-mutual
-  emb-⊢∷-sgType : ∀ {Γ t G r s} (⊢t : OT._⊢_∷_^_ Γ t (G OU.[ s ]) r) →
-    emb_con Γ ⊢ emb_oterm_term t ∷ emb_oterm_term G [ emb_oterm_term s ] ^ r
-  emb-⊢∷-sgType {Γ} {t} {G} {r} {s} ⊢t =
-    PE.subst (λ B → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term t) B r)
-      (emb-sgSubst G s) (emb-⊢∷ ⊢t)
-
-
-  emb-⊢All : ∀ {Γ args As r} → OT._⊢All_∷_^_ Γ args As r
-    → emb_con Γ ⊢All emb-oterm-all args ∷ map emb_oterm_term As ^ r
-  emb-⊢All OT.εⱼ = εⱼ
-  emb-⊢All (OT.consⱼ ⊢t ⊢ts) = consⱼ (emb-⊢∷ ⊢t) (emb-⊢All ⊢ts)
-
-  emb-⊢ : ∀ {Γ} → OT.⊢ Γ → ⊢ emb_con Γ
-  emb-⊢ OT.ε = ε
-  emb-⊢ (OT._∙_ ⊢Γ ⊢A) = emb-⊢ ⊢Γ ∙ emb-⊢ty ⊢A
-
-  emb-⊢ty : ∀ {Γ A r} → OT._⊢_^_ Γ A r → emb_con Γ ⊢ (emb_oterm_term A) ^ r
-  emb-⊢ty (OT.Uⱼ ⊢Γ) = Uⱼ (emb-⊢ ⊢Γ)
-  emb-⊢ty (OT.univ A) = univ (emb-⊢∷ A)
-
-  emb-⊢∷ : ∀ {Γ t A r} → OT._⊢_∷_^_ Γ t A r
-         → emb_con Γ ⊢ emb_oterm_term t ∷ (emb_oterm_term A) ^ r
-  emb-⊢∷ (OT.univ <l ⊢Γ) = univ <l (emb-⊢ ⊢Γ)
-  emb-⊢∷ (OT.Emptyⱼ ⊢Γ) = Emptyⱼ (emb-⊢ ⊢Γ)
-  emb-⊢∷ (OT.Πⱼ abs₁ ▹ abs₂ ▹ dom ▹ cod) =
-    Πⱼ abs₁ ▹ abs₂ ▹ (emb-⊢∷ dom) ▹ (emb-⊢∷ cod)
-  emb-⊢∷ (OT.var ⊢Γ x∈Γ) = var (emb-⊢ ⊢Γ) (emb-∈ x∈Γ)
-  emb-⊢∷ (OT.lamⱼ abs₁ abs₂ dom t) =
-    lamⱼ abs₁ abs₂ (emb-⊢ty dom) (emb-⊢∷ t)
-  emb-⊢∷ {Γ = Γ} (OT._▹_▹_▹_∘ⱼ_ {g = g} {a = a} {F = F} {G = Gₜ} {lG = lG} {r = r} {lΠ = lΠ} abs ⊢F ⊢Gderiv ⊢gderiv ⊢aderiv) =
-    PE.subst (λ (A : Term) → emb_con Γ ⊢ emb_oterm_term (g OU.∘ a ^ lΠ) ∷ A ^ [ r , ι lG ])
-         (PE.sym (emb-sgSubst Gₜ a))
-         (PE.subst (λ (t : Term) → emb_con Γ ⊢ t ∷ emb_oterm_term Gₜ [ emb_oterm_term a ] ^ [ r , ι lG ])
-           (emb-∘ g a lΠ)
-           (_▹_▹_▹_∘ⱼ_ {G = emb_oterm_term Gₜ} abs (emb-⊢∷ ⊢F) (emb-⊢∷ ⊢Gderiv) (emb-⊢∷ ⊢gderiv) (emb-⊢∷ ⊢aderiv)))
-  emb-⊢∷ (OT.fstⱼ A B A' B' e) =
-    fstⱼ (emb-⊢∷ A) (emb-⊢∷ B) (emb-⊢∷ A') (emb-⊢∷ B') (emb-⊢∷ e)
-  emb-⊢∷ {Γ = Γ} (OT.sndⱼ {A = Aₒ} {A' = A'ₒ} {rA = rA} {B = Bₒ} {B' = B'ₒ} {e = e} ⊢A ⊢B ⊢A' ⊢B' ⊢e) =
-    PE.subst (λ (A : Term) → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term (OU.snd e)) A ([ % , ι ⁰ ]))
-      (emb-snd-Π-type {Aₒ} {A'ₒ} {rA} {Bₒ} {B'ₒ} e)
-      (PE.subst (λ (t : Term) → _⊢_∷_^_ (emb_con Γ) t
-                   (Π (emb_oterm_term A'ₒ) ^ rA ° ⁰ ▹ Id (U ⁰)
-                     (emb_oterm_term Bₒ [ cast ⁰ (wk1 (emb_oterm_term A'ₒ)) (wk1 (emb_oterm_term Aₒ))
-                       (Idsym (Univ rA ⁰) (wk1 (emb_oterm_term Aₒ)) (wk1 (emb_oterm_term A'ₒ))
-                         (fst (wk1 (emb_oterm_term e)))) (var 0) ]↑)
-                     (emb_oterm_term B'ₒ) ° ⁰ ° ⁰ ^ %)
-                   ([ % , ι ⁰ ]))
-        (PE.sym (emb-snd e))
-        (sndⱼ (emb-⊢∷ ⊢A) (emb-⊢∷ ⊢B) (emb-⊢∷ ⊢A') (emb-⊢∷ ⊢B') (emb-⊢∷ ⊢e)))
-  emb-⊢∷ (OT.Indⱼ ⊢Γ ind∈) = Indⱼ (emb-⊢ ⊢Γ) ind∈
-  emb-⊢∷ {Γ = Γ} (OT.Ctrⱼ {ind} {j} {args} {Ts} ⊢Γ ind∈ eq args∈) =
-    PE.subst (λ t → _⊢_∷_^_ (emb_con Γ) t (Ind (SU.SInd.name ind)) ([ ! , ι ⁰ ]))
-      (PE.sym (emb-ctr (SU.SInd.name ind) j args))
-      (Ctrⱼ (emb-⊢ ⊢Γ) ind∈ eq (PE.subst (λ As → emb_con Γ ⊢All map emb_oterm_term args ∷ As ^ [ ! , ι ⁰ ])
-                     (PE.trans (map-map emb_oterm_term OU.emb-stype-oterm (Ts))
-                       (map-cong (Ts) emb-stype-hom))
-                     (PE.subst (λ ts → emb_con Γ ⊢All ts ∷ map emb_oterm_term (map OU.emb-stype-oterm (Ts)) ^ [ ! , ι ⁰ ])
-                              (emb-oterm-all-map args)
-                              (emb-⊢All args∈))))
-  emb-⊢∷ {Γ = Γ} (OT.IndRectⱼ {ind} {P} {rG} {lG} {t} {ms} abs ind∈ ⊢P ⊢t ⊢ms) =
-    PE.subst (λ Ty → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term (OU.IndRect (SU.SInd.name ind) lG P t ms)) Ty ([ rG , ι lG ]))
-      (PE.sym (emb-sgSubst P t))
-      (PE.subst (λ tm → _⊢_∷_^_ (emb_con Γ) tm (emb_oterm_term P [ emb_oterm_term t ]) ([ rG , ι lG ]))
-        (PE.sym (emb-IndRect (SU.SInd.name ind) lG P t ms))
-        (IndRectⱼ abs ind∈ (emb-⊢ty ⊢P) (emb-⊢∷ ⊢t)
-          (PE.subst (λ As → emb_con Γ ⊢All emb-oterm-all ms ∷ As ^ [ rG , ι lG ])
-                    (emb-indRectBranchTyList ind P rG lG)
-                    (emb-⊢All ⊢ms))))
-  emb-⊢∷ (OT.Emptyrecⱼ A e) = Emptyrecⱼ (emb-⊢ty A) (emb-⊢∷ e)
-  emb-⊢∷ (OT.Idⱼ A t u) = Idⱼ (emb-⊢∷ A) (emb-⊢∷ t) (emb-⊢∷ u)
-  emb-⊢∷ (OT.Idreflⱼ t) = Idreflⱼ (emb-⊢∷ t)
-  emb-⊢∷ {Γ = Γ} (OT.transpⱼ {A = A} {P = P} {t = t} {s = s} {u = u} {e = e} ⊢A ⊢P ⊢t ⊢s ⊢u ⊢e) =
-    PE.subst (λ Ty → _⊢_∷_^_ (emb_con Γ) (emb_oterm_term (OU.transp A P t s u e)) Ty ([ % , ι ⁰ ]))
-      (PE.sym (emb-sgSubst P u))
-      (PE.subst (λ tm → _⊢_∷_^_ (emb_con Γ) tm (emb_oterm_term P [ emb_oterm_term u ]) ([ % , ι ⁰ ]))
-        (PE.sym (emb-transp A P t s u e))
-        (transpⱼ (emb-⊢ty ⊢A) (emb-⊢ty ⊢P) (emb-⊢∷ ⊢t) (emb-⊢∷-sgType {G = P} {s = t} ⊢s) (emb-⊢∷ ⊢u) (emb-⊢∷ ⊢e)))
-  emb-⊢∷ (OT.castⱼ A B e t) =
-    castⱼ (emb-⊢∷ A) (emb-⊢∷ B) (emb-⊢∷ e) (emb-⊢∷ t)
-  emb-⊢∷ (OT.conv t pAB) = conv (emb-⊢∷ t) (emb-⊢≡ pAB)
-
-  emb-⊢≡ : ∀ {Γ A B r} → OT._⊢_≡_^_ Γ A B r → emb_con Γ ⊢ emb_oterm_term A ≡ emb_oterm_term B ^ r
-  emb-⊢≡ (OT.refl A) = refl (emb-⊢ty A)
-  emb-⊢≡ (OT.sym pAB) = sym (emb-⊢≡ pAB)
-  emb-⊢≡ (OT.trans pAB pBC) = trans (emb-⊢≡ pAB) (emb-⊢≡ pBC)
-  emb-⊢≡ (OT.univ pAB) = univ (emb-⊢≡∷ pAB)
-
-  emb-⊢≡∷-sgType : ∀ {Γ t u G s r} (⊢tu : OT._⊢_≡_∷_^_ Γ t u (G OU.[ s ]) r) →
-    emb_con Γ ⊢ emb_oterm_term t ≡ emb_oterm_term u ∷ emb_oterm_term G [ emb_oterm_term s ] ^ r
-  emb-⊢≡∷-sgType {Γ} {t} {u} {G} {s} {r} ⊢tu =
-    PE.subst (λ B → _⊢_≡_∷_^_ (emb_con Γ) (emb_oterm_term t) (emb_oterm_term u) B r)
-      (emb-sgSubst G s) (emb-⊢≡∷ ⊢tu)
-
-
-
-
-
-  emb-⊢≡∷-ηPremise : ∀ {Γ' f g G l lG} (pf0g0 : OT._⊢_≡_∷_^_ Γ' (OU.wk1 f OU.∘ OU.var Nat.zero ^ l) (OU.wk1 g OU.∘ OU.var Nat.zero ^ l) G ([ ! , ι lG ])) →
-    emb_con Γ' ⊢ wk1 (emb_oterm_term f) ∘ var Nat.zero ^ l
-      ≡ wk1 (emb_oterm_term g) ∘ var Nat.zero ^ l ∷ emb_oterm_term G ^ [ ! , ι lG ]
-  emb-⊢≡∷-ηPremise {Γ' = Γ'} {f = f} {g = g} {G = G} {l = l} {lG = lG} pf0g0 =
-    let x' = wk1 (emb_oterm_term f) ∘ var Nat.zero ^ l
-    in PE.subst (λ u → emb_con Γ' ⊢ x' ≡ u ∷ emb_oterm_term G ^ [ ! , ι lG ])
-         (emb-wk1∘var g l)
-         (PE.subst (λ t → emb_con Γ' ⊢ t ≡ emb_oterm_term (OU.wk1 g OU.∘ OU.var Nat.zero ^ l) ∷ emb_oterm_term G ^ [ ! , ι lG ])
-           (emb-wk1∘var f l)
-           (emb-⊢≡∷ pf0g0))
-
-  emb-⊢≡∷ : ∀ {Γ t u A r} → OT._⊢_≡_∷_^_ Γ t u A r
-           → emb_con Γ ⊢ emb_oterm_term t ≡ emb_oterm_term u ∷ (emb_oterm_term A) ^ r
-  emb-⊢≡∷ (OT.refl t) = refl (emb-⊢∷ t)
-  emb-⊢≡∷ (OT.sym ptu) = sym (emb-⊢≡∷ ptu)
-  emb-⊢≡∷ (OT.trans ptu puv) = trans (emb-⊢≡∷ ptu) (emb-⊢≡∷ puv)
-  emb-⊢≡∷ (OT.conv ptu pAB) = conv (emb-⊢≡∷ ptu) (emb-⊢≡ pAB)
-  emb-⊢≡∷ (OT.Π-cong abs₁ abs₂ dom⊢ pDomH pCodE) =
-    Π-cong abs₁ abs₂ (emb-⊢ty dom⊢) (emb-⊢≡∷ pDomH) (emb-⊢≡∷ pCodE)
-  emb-⊢≡∷ {Γ = Γ} (OT.app-cong {a = a} {G = G} {lG = lG} pfg pab) =
-    let pf = app-cong (emb-⊢≡∷ pfg) (emb-⊢≡∷ pab)
-    in PE.subst (λ (B : Term) → emb_con Γ ⊢ _ ≡ _ ∷ B ^ [ ! , ι lG ])
-         (PE.sym (emb-sgSubst G a))
-         pf
-  emb-⊢≡∷ {Γ = Γ} (OT.β-red {a = a} {t = t} {G = G} {lG = lG} lF≤l lG≤l dom⊢ t₁ a₁) =
-    let pf = β-red lF≤l lG≤l (emb-⊢ty dom⊢) (emb-⊢∷ t₁) (emb-⊢∷ a₁)
-        lhs = (lam _ ▹ emb_oterm_term t ^ _) ∘ emb_oterm_term a ^ _
-    in PE.subst (λ (B : Term) → emb_con Γ ⊢ lhs ≡ emb_oterm_term (t OU.[ a ]) ∷ B ^ [ ! , ι lG ])
-         (PE.sym (emb-sgSubst G a))
-         (PE.subst (λ (u : Term) → emb_con Γ ⊢ lhs ≡ u ∷ emb_oterm_term G [ emb_oterm_term a ] ^ [ ! , ι lG ])
-           (PE.sym (emb-sgSubst t a))
-           pf)
-  emb-⊢≡∷ (OT.η-eq lF≤l lG≤l dom⊢ f g pf0g0) =
-    η-eq lF≤l lG≤l (emb-⊢ty dom⊢) (emb-⊢∷ f) (emb-⊢∷ g) (emb-⊢≡∷-ηPremise pf0g0)
-  emb-⊢≡∷ (OT.Emptyrec-cong pAA' e e') =
-    Emptyrec-cong (emb-⊢≡ pAA') (emb-⊢∷ e) (emb-⊢∷ e')
-  emb-⊢≡∷ (OT.proof-irrelevance t u) =
-    proof-irrelevance (emb-⊢∷ t) (emb-⊢∷ u)
-  emb-⊢≡∷ (OT.Id-cong pAA' ptt' puu') =
-    Id-cong (emb-⊢≡∷ pAA') (emb-⊢≡∷ ptt') (emb-⊢≡∷ puu')
-  emb-⊢≡∷ (OT.cast-refl pAB e t) =
-    cast-refl (emb-⊢≡∷ pAB) (emb-⊢∷ e) (emb-⊢∷ t)
-  emb-⊢≡∷ (OT.cast-cong pAA' pBB' ptt' e e') =
-    cast-cong (emb-⊢≡∷ pAA') (emb-⊢≡∷ pBB') (emb-⊢≡∷ ptt') (emb-⊢∷ e) (emb-⊢∷ e')
-  emb-⊢≡∷ {Γ = Γ} (OT.cast-Π {A = A} {A' = A'} {rA = rA} {B = B} {B' = B'} {e = e} {f = f} ⊢A ⊢B ⊢A' ⊢B' ⊢e ⊢f) =
-    let l   = ⁰
-        LHS = emb_oterm_term (OU.cast l (OU.Π A ^ rA ° l ▹ B ° l ° l ^ !) (OU.Π A' ^ rA ° l ▹ B' ° l ° l ^ !) e f)
-        pf  = cast-Π (emb-⊢∷ ⊢A) (emb-⊢∷ ⊢B) (emb-⊢∷ ⊢A') (emb-⊢∷ ⊢B') (emb-⊢∷ ⊢e) (emb-⊢∷ ⊢f)
-    in PE.subst (λ rhs → emb_con Γ ⊢ LHS ≡ rhs ∷ (emb_oterm_term (OU.Π A' ^ rA ° l ▹ B' ° l ° l ^ !)) ^ [ ! , ι l ])
-         (PE.sym (emb-castΠ-lamBody {A} {A'} {rA} {B} {B'} {e} {f}))
-         pf
-  emb-⊢≡∷ (OT.cast-Ind-ctr ind∈ ⊢e ⊢t) = cast-Ind-ctr ind∈ (emb-⊢∷ ⊢e) (emb-⊢∷ ⊢t)
-
--- Nat as a generic inductive, matching Uniquevalence.uty NatExample.
--- Motive P is a function Γ ⊢ P ∷ Π (Ind nat_ind) (Univ rG lG).
-module NatExample
-  (nat_ind : SU.SInd)
-  (nat∈ : nat_ind ∈ₗ senv)
-  (nat_ctrs : SU.SInd.ctrArgsTypes nat_ind
-              PE.≡ TL.[] TL.∷ (SU.Ind (SU.SInd.name nat_ind) TL.∷ TL.[]) TL.∷ TL.[])
-  where
-
-  open import Tools.Nat using (_≟_; 1+; _+_; _-_)
-  open import Tools.Nullary using (yes; no)
-  open TL using (range)
-
-  natName : Nat
-  natName = SU.SInd.name nat_ind
-
-  Zero : Term
-  Zero = ctr natName 0 TL.[]
-
-  -- Method type for O: just P [ Zero ].
-  nat-method-ty-Zero : ∀ P rG lG →
-    indRectBranchTy natName 0 TL.[] P rG lG PE.≡ P [ Zero ]
-  nat-method-ty-Zero P rG lG = PE.refl
-
-  ≟-refl : (n : Nat) → (n ≟ n) PE.≡ yes PE.refl
-  ≟-refl 0 = PE.refl
-  ≟-refl (1+ n) with n ≟ n | ≟-refl n
-  ... | yes PE.refl | PE.refl = PE.refl
-  ... | no p | _ = ⊥-elim (p PE.refl)
-
-  -- Method type for S: Π (n : Ind). Π (ih : P [ n ]). P [ S n ].
-  nat-method-ty-Succ : ∀ P rG lG →
-    indRectBranchTy natName 1 (SU.Ind natName TL.∷ TL.[]) P rG lG PE.≡
-    Π Ind natName ^ ! ° ⁰ ▹
-      (Π (P [ var 0 ]↑) ^ rG ° lG ▹
-         P [ ctr natName 1 (var 1 TL.∷ TL.[]) ]↑^ 2
-       ° lG ° lG ^ rG)
-    ° lG ° lG ^ rG
-  nat-method-ty-Succ P rG lG rewrite ≟-refl natName = PE.refl
-
-  indRectBranchTyList-nat : ∀ P rG lG →
-    indRectBranchTyList nat_ind P rG lG PE.≡
-    (P [ Zero ]) TL.∷
-    (Π Ind natName ^ ! ° ⁰ ▹
-      (Π (P [ var 0 ]↑) ^ rG ° lG ▹
-         P [ ctr natName 1 (var 1 TL.∷ TL.[]) ]↑^ 2
-       ° lG ° lG ^ rG)
-     ° lG ° lG ^ rG) TL.∷
-    TL.[]
-  indRectBranchTyList-nat P rG lG =
-    PE.trans
-      (PE.cong
-        (λ Tss → map (λ jTs → indRectBranchTy natName (proj₁ jTs) (proj₂ jTs) P rG lG)
-                     (TL.zip (range (length Tss)) Tss))
-        nat_ctrs)
-      (PE.cong₂ TL._∷_ (nat-method-ty-Zero P rG lG)
-        (PE.cong (λ A → A TL.∷ TL.[] ) (nat-method-ty-Succ P rG lG)))
-
-  ⊢-nat-IndRect : ∀ {Γ P rG lG t z s} →
-    (rG PE.≡ % → lG PE.≡ ⁰) →
-    Γ ∙ Ind natName ^ [ ! , ι ⁰ ] ⊢ P ^ [ rG , ι lG ] →
-    Γ ⊢ t ∷ Ind natName ^ [ ! , ι ⁰ ] →
-    Γ ⊢ z ∷ (P [ Zero ]) ^ [ rG , ι lG ] →
-    Γ ⊢ s ∷
-      Π Ind natName ^ ! ° ⁰ ▹
-        (Π (P [ var 0 ]↑) ^ rG ° lG ▹
-           P [ ctr natName 1 (var 1 TL.∷ TL.[]) ]↑^ 2
-         ° lG ° lG ^ rG)
-      ° lG ° lG ^ rG
-      ^ [ rG , ι lG ] →
-    Γ ⊢ IndRect natName lG P t (z TL.∷ s TL.∷ TL.[]) ∷ P [ t ] ^ [ rG , ι lG ]
-  ⊢-nat-IndRect {Γ} {P} {rG} {lG} {t} {z} {s} abs ⊢P ⊢t ⊢z ⊢s =
-    IndRectⱼ abs nat∈ ⊢P ⊢t
-      (PE.subst (λ As → Γ ⊢All (z TL.∷ s TL.∷ TL.[]) ∷ As ^ [ rG , ι lG ])
-        (PE.sym (indRectBranchTyList-nat P rG lG))
-        (consⱼ ⊢z (consⱼ ⊢s εⱼ)))

@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
@@ -51,8 +53,7 @@ open import Tools.Maybe using (just)
 import Tools.PropositionalEquality as PE
 open import Tools.Empty using (⊥; ⊥-elim)
 import Definition.SUntyped as SU
-open import Definition.LogicalRelation.EquivRed senv swf equivs
-open import Definition.LogicalRelation.Fundamental.SimpleTerm senv swf equivs using (⊢repr-fwd; repr-fwd-appᵛ; subst-embˢ-closed)
+open import Definition.LogicalRelation.Fundamental.SimpleTerm senv swf equivs using (⊢repr-fwd; repr-fwd-appᵛ; subst-embˢ-closed; escapeAllᵛ)
 open import Definition.LogicalRelation.Substitution.Introductions.IndRectBranch senv swf equivs
   using (indRectBranchTyListConvᵛ)
 import Definition.Equiv senv as Eq
@@ -94,7 +95,7 @@ cast-equivᵛ : ∀ {Γ A B e t}
             → Γ ⊢ t ∷ Ind A ^ [ ! , ι ⁰ ]
             → ∃ λ ([Γ] : ⊩ᵛ Γ)
             → [ Γ ⊩ᵛ⟨ ∞ ⟩ cast ⁰ (Ind A) (Ind B) e t
-                  ≡ emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs A B A∈ B∈ H)) ∘ t ^ ⁰
+                  ≡ emb-oterm (Eq.fwdₒ (Eq.repr-equiv equivs A B A∈ B∈ H)) ∘ t ^ ⁰
                   ∷ Ind B ^ [ ! , ι ⁰ ] / [Γ] ]
 
 abstract
@@ -104,7 +105,7 @@ abstract
   -- Validity of cast along an equivalence.
   cast-equivᵛ {Γ} {A} {B} {e} {t} A∈ B∈ A≢B H ⊢e ⊢t with fundamentalTerm ⊢e | fundamentalTerm ⊢t
   ... | [Γ] , [Id] , [e]ₜ | [Γ]₁ , [IndA] , [t]ₜ =
-    let f = emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs A B A∈ B∈ H))
+    let f = emb-oterm (Eq.fwdₒ (Eq.repr-equiv equivs A B A∈ B∈ H))
         ⊢fwd = ⊢repr-fwd {[]} A∈ B∈ H
         [Id]′  = S.irrelevance {A = Id (U _) (Ind A) (Ind B)} [Γ] [Γ]₁ [Id]
         [e]ₜ′ = S.irrelevanceTerm {A = Id (U _) (Ind A) (Ind B)} {t = e} [Γ] [Γ]₁ [Id] [Id]′ [e]ₜ
@@ -565,13 +566,6 @@ abstract
                                                  (indArgsEq (ctrArgsPos {ind = ind} {j = j} eq) [eqs]σ)))
     where
 
-      escapeAllᵛ : ∀ {as As} ([Γ] : ⊩ᵛ Γ)
-                 → All₂ (λ a A → ∃ λ ([A] : Γ ⊩ᵛ⟨ ∞ ⟩ A ^ [ ! , ι ⁰ ] / [Γ])
-                                 → Γ ⊩ᵛ⟨ ∞ ⟩ a ∷ A ^ [ ! , ι ⁰ ] / [Γ] / [A]) as As
-                 → Γ ⊢All as ∷ As ^ [ ! , ι ⁰ ]
-      escapeAllᵛ [Γ] []ₐ = εⱼ
-      escapeAllᵛ [Γ] (([A] , [a]) ∷ₐ ps) = consⱼ (escapeTermᵛ [Γ] [A] [a]) (escapeAllᵛ [Γ] ps)
-
       go : ∀ {args args'} (Ts : List SU.Type)
          → All₃ (λ a a' A → Γ ⊢ a ≡ a' ∷ A ^ [ ! , ι ⁰ ]) args args' (map emb-stype Ts)
          → Σ (⊩ᵛ Γ) (λ [Γ] →
@@ -837,14 +831,14 @@ abstract
                                        [IdAB]′ [e]ₜ′ [IdAB']′ [e']ₜ′)
 
   fundamentalTermEq (cast-equiv A∈ B∈ A≢B H ⊢e ⊢t) = cast-equivᵛ A∈ B∈ A≢B H ⊢e ⊢t
-  fundamentalTermEq (cast-Ind-ctr {ind} {e} {t} ind∈ ⊢e ⊢t) with fundamentalTerm ⊢e | fundamentalTerm ⊢t
+  fundamentalTermEq (cast-Ind-refl {ind} {e} {t} ind∈ ⊢e ⊢t) with fundamentalTerm ⊢e | fundamentalTerm ⊢t
   ... | [Γ] , [Id] , [e]ₜ | [Γ]₁ , [Ind] , [t]ₜ =
     let [Id]′  = S.irrelevance {A = Id (U _) (Ind n) (Ind n)} [Γ] [Γ]₁ [Id]
         [e]ₜ′ = S.irrelevanceTerm {A = Id (U _) (Ind n) (Ind n)} {t = e} [Γ] [Γ]₁ [Id] [Id]′ [e]ₜ
         ⊢eΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([Id]′ {Δ} {σ} ⊢Δ [σ])) (proj₁ ([e]ₜ′ {Δ} {σ} ⊢Δ [σ]))
         ⊢tΔ = λ {Δ} {σ} ⊢Δ [σ] → escapeTerm (proj₁ ([Ind] {Δ} {σ} ⊢Δ [σ])) (proj₁ ([t]ₜ {Δ} {σ} ⊢Δ [σ]))
         [id] , [eq] = redSubstTermᵛ {Ind n} {cast ⁰ (Ind n) (Ind n) e t} {t} {∞} [Γ]₁
-                                    (λ {Δ} {σ} ⊢Δ [σ] → cast-Ind-ctr ind∈ (⊢eΔ {Δ} {σ} ⊢Δ [σ]) (⊢tΔ {Δ} {σ} ⊢Δ [σ]))
+                                    (λ {Δ} {σ} ⊢Δ [σ] → cast-Ind-refl ind∈ (⊢eΔ {Δ} {σ} ⊢Δ [σ]) (⊢tΔ {Δ} {σ} ⊢Δ [σ]))
                                     [Ind] [t]ₜ
     in [Γ]₁ , modelsTermEq [Ind] [id] [t]ₜ [eq]
     where

@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 module Definition.STyped (senv : SI.SEnv) where
 

@@ -1,5 +1,7 @@
 -- Raw terms, weakening (renaming) and substitution.
 
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Untyped (senv : SI.SEnv) (equivs : E.Equivs senv) where
@@ -143,38 +145,38 @@ IndRect i lG P t ms = gen (IndRectkind i lG) (⟦ 1 , P ⟧ ∷ ⟦ 0 , t ⟧ �
 ------------------------------------------------------------------------
 -- Embedding of OTerms into Terms
 
-emb_okind_kind : OKind → Kind
-emb_okind_kind (O.Ukind r l) = Ukind r l
-emb_okind_kind (O.Indkind i) = Indkind i
-emb_okind_kind (O.Pikind r lA lB lΠ rΠ) = Pikind r lA lB lΠ rΠ
-emb_okind_kind (O.Lamkind l) = Lamkind l
-emb_okind_kind (O.Appkind l) = Appkind l
-emb_okind_kind (O.Emptykind l) = Emptykind l
-emb_okind_kind (O.Emptyreckind l lEmpty) = Emptyreckind l lEmpty
-emb_okind_kind O.Idkind = Idkind
-emb_okind_kind O.Idreflkind = Idreflkind
-emb_okind_kind O.Idpikind = Idpikind
-emb_okind_kind O.Idspropkind = Idspropkind
-emb_okind_kind O.Transpkind = Transpkind
-emb_okind_kind (O.Castkind l) = Castkind l
-emb_okind_kind O.Castreflkind = Castreflkind
-emb_okind_kind O.Fstkind = Fstkind
-emb_okind_kind O.Sndkind = Sndkind
-emb_okind_kind (O.Ctrkind i j) = Ctrkind i j
-emb_okind_kind (O.IndRectkind i l) = IndRectkind i l
+emb-okind : OKind → Kind
+emb-okind (O.Ukind r l) = Ukind r l
+emb-okind (O.Indkind i) = Indkind i
+emb-okind (O.Pikind r lA lB lΠ rΠ) = Pikind r lA lB lΠ rΠ
+emb-okind (O.Lamkind l) = Lamkind l
+emb-okind (O.Appkind l) = Appkind l
+emb-okind (O.Emptykind l) = Emptykind l
+emb-okind (O.Emptyreckind l lEmpty) = Emptyreckind l lEmpty
+emb-okind O.Idkind = Idkind
+emb-okind O.Idreflkind = Idreflkind
+emb-okind O.Idpikind = Idpikind
+emb-okind O.Idspropkind = Idspropkind
+emb-okind O.Transpkind = Transpkind
+emb-okind (O.Castkind l) = Castkind l
+emb-okind O.Castreflkind = Castreflkind
+emb-okind O.Fstkind = Fstkind
+emb-okind O.Sndkind = Sndkind
+emb-okind (O.Ctrkind i j) = Ctrkind i j
+emb-okind (O.IndRectkind i l) = IndRectkind i l
 
 mutual
-  emb_otermGen : List (GenT OTerm) → List (GenT Term)
-  emb_otermGen [] = []
-  emb_otermGen (⟦ l , t ⟧ ∷ gs) = ⟦ l , emb_oterm_term t ⟧ ∷ emb_otermGen gs
+  emb-otermGen : List (GenT OTerm) → List (GenT Term)
+  emb-otermGen [] = []
+  emb-otermGen (⟦ l , t ⟧ ∷ gs) = ⟦ l , emb-oterm t ⟧ ∷ emb-otermGen gs
 
-  emb_oterm_term : OTerm → Term
-  emb_oterm_term (O.var x) = var x
-  emb_oterm_term (O.gen k gs) = gen (emb_okind_kind k) (emb_otermGen gs)
+  emb-oterm : OTerm → Term
+  emb-oterm (O.var x) = var x
+  emb-oterm (O.gen k gs) = gen (emb-okind k) (emb-otermGen gs)
 
-emb_con : Con OTerm → Con Term
-emb_con ε = ε
-emb_con (Γ ∙ A ^ r) = emb_con Γ ∙ emb_oterm_term A ^ r
+emb-con : Con OTerm → Con Term
+emb-con ε = ε
+emb-con (Γ ∙ A ^ r) = emb-con Γ ∙ emb-oterm A ^ r
 
 -- Injectivity of term constructors w.r.t. propositional equality.
 
@@ -187,6 +189,12 @@ emb_con (Γ ∙ A ^ r) = emb_con Γ ∙ emb_oterm_term A ^ r
 Id-PE-injectivity : ∀ {F G t u t' u'} → Id F t u PE.≡ Id G t' u'
   → F PE.≡ G × t PE.≡ t' × u PE.≡ u'
 Id-PE-injectivity PE.refl = PE.refl , PE.refl , PE.refl
+
+-- If  cast l A B e t = cast l' A' B' e' t'  then all the arguments are equal.
+
+cast-PE-injectivity : ∀ {A A' B B' e e' t t' l l'} → cast l A B e t PE.≡ cast l' A' B' e' t'
+  → l PE.≡ l' × A PE.≡ A' × B PE.≡ B' × e PE.≡ e' × t PE.≡ t'
+cast-PE-injectivity PE.refl = PE.refl , PE.refl , PE.refl , PE.refl , PE.refl
 
 gen-PE-injectivity : ∀ {k k' ts ts'} → gen k ts PE.≡ gen k' ts' → k PE.≡ k' × ts PE.≡ ts'
 gen-PE-injectivity PE.refl = PE.refl , PE.refl
@@ -334,11 +342,8 @@ ctr≢ne () PE.refl
 Ind≢ne : ∀ {i K} → Neutral K → Ind i PE.≢ K
 Ind≢ne () PE.refl
 
-Ctr≢ne : ∀ {i j ts K} → Neutral K → ctr i j ts PE.≢ K
-Ctr≢ne () PE.refl
-
-Ind≢Ctr : ∀ {i j k ts} → Ind i PE.≢ ctr j k ts
-Ind≢Ctr ()
+Ind≢ctr : ∀ {i j k ts} → Ind i PE.≢ ctr j k ts
+Ind≢ctr ()
 
 -- Several views on whnfs (note: not recursive).
 
@@ -347,8 +352,6 @@ Ind≢Ctr ()
 data Inductive (i : Nat) : Term → Set where
   ctrₙ : ∀ {j ts}           → Inductive i (ctr i j ts)
   ne   : ∀ {n} → Neutral n → Inductive i n
-
--- Large types could also be U.
 
 -- A type in whnf is either Π A B, Ind i, or neutral.
 -- Large types could also be U.
@@ -804,7 +807,7 @@ subst-IndRect-ctr-rhs σ i Ts lG P m args ms =
 -- Constructor argument types as (type, level), embedding of simple signatures.
 ctrArgsTypeList : List SU.Type → List (Term × Nat)
 ctrArgsTypeList Ss =
-  map (λ p → (emb_oterm_term (proj₁ p) , proj₂ p)) (O.ctrArgsTypeList Ss)
+  map (λ p → (emb-oterm (proj₁ p) , proj₂ p)) (O.ctrArgsTypeList Ss)
 
 -- Indices of recursive arguments in a constructor (left-to-right).
 ctrRecIndices : Nat → List SU.Type → List Nat
@@ -842,38 +845,38 @@ indRectBranchTyList ind P rG lG =
 -- Embedding homomorphism lemmas
 
 emb-substσ : O.Subst → Subst
-emb-substσ σ x = emb_oterm_term (σ x)
+emb-substσ σ x = emb-oterm (σ x)
 
-emb_wk : O.Wk → Wk
-emb_wk O.id = id
-emb_wk (O.step ρ) = step (emb_wk ρ)
-emb_wk (O.lift ρ) = lift (emb_wk ρ)
+emb-Wk : O.Wk → Wk
+emb-Wk O.id = id
+emb-Wk (O.step ρ) = step (emb-Wk ρ)
+emb-Wk (O.lift ρ) = lift (emb-Wk ρ)
 
-emb_wk-repeat-lift : ∀ ρ l → emb_wk (O.repeat O.lift ρ l) PE.≡ repeat lift (emb_wk ρ) l
-emb_wk-repeat-lift ρ 0 = PE.refl
-emb_wk-repeat-lift ρ (1+ l) = PE.cong lift (emb_wk-repeat-lift ρ l)
+emb-Wk-repeat-lift : ∀ ρ l → emb-Wk (O.repeat O.lift ρ l) PE.≡ repeat lift (emb-Wk ρ) l
+emb-Wk-repeat-lift ρ 0 = PE.refl
+emb-Wk-repeat-lift ρ (1+ l) = PE.cong lift (emb-Wk-repeat-lift ρ l)
 
-emb_wkVar : ∀ ρ x → O.wkVar ρ x PE.≡ wkVar (emb_wk ρ) x
-emb_wkVar O.id x = PE.refl
-emb_wkVar (O.step ρ) x = PE.cong 1+ (emb_wkVar ρ x)
-emb_wkVar (O.lift ρ) 0 = PE.refl
-emb_wkVar (O.lift ρ) (1+ x) = PE.cong 1+ (emb_wkVar ρ x)
+emb-wkVar : ∀ ρ x → O.wkVar ρ x PE.≡ wkVar (emb-Wk ρ) x
+emb-wkVar O.id x = PE.refl
+emb-wkVar (O.step ρ) x = PE.cong 1+ (emb-wkVar ρ x)
+emb-wkVar (O.lift ρ) 0 = PE.refl
+emb-wkVar (O.lift ρ) (1+ x) = PE.cong 1+ (emb-wkVar ρ x)
 
 mutual
-  emb-wkGen : ∀ ρ gs → emb_otermGen (O.wkGen ρ gs) PE.≡ wkGen (emb_wk ρ) (emb_otermGen gs)
+  emb-wkGen : ∀ ρ gs → emb-otermGen (O.wkGen ρ gs) PE.≡ wkGen (emb-Wk ρ) (emb-otermGen gs)
   emb-wkGen ρ [] = PE.refl
   emb-wkGen ρ (⟦ l , t ⟧ ∷ gs) =
     PE.cong₂ _∷_
       (PE.cong (⟦_,_⟧ l)
         (PE.trans (emb-wk (O.repeat O.lift ρ l) t)
-          (PE.cong (λ ρ' → wk ρ' (emb_oterm_term t)) (emb_wk-repeat-lift ρ l))))
+          (PE.cong (λ ρ' → wk ρ' (emb-oterm t)) (emb-Wk-repeat-lift ρ l))))
       (emb-wkGen ρ gs)
 
-  emb-wk : ∀ ρ t → emb_oterm_term (O.wk ρ t) PE.≡ wk (emb_wk ρ) (emb_oterm_term t)
-  emb-wk ρ (O.var x) = PE.cong var (emb_wkVar ρ x)
-  emb-wk ρ (O.gen k gs) = PE.cong (gen (emb_okind_kind k)) (emb-wkGen ρ gs)
+  emb-wk : ∀ ρ t → emb-oterm (O.wk ρ t) PE.≡ wk (emb-Wk ρ) (emb-oterm t)
+  emb-wk ρ (O.var x) = PE.cong var (emb-wkVar ρ x)
+  emb-wk ρ (O.gen k gs) = PE.cong (gen (emb-okind k)) (emb-wkGen ρ gs)
 
-emb-wk1 : ∀ t → emb_oterm_term (O.wk1 t) PE.≡ wk1 (emb_oterm_term t)
+emb-wk1 : ∀ t → emb-oterm (O.wk1 t) PE.≡ wk1 (emb-oterm t)
 emb-wk1 t = emb-wk (O.step O.id) t
 
 emb-substσ-repeat-liftSubst : ∀ σ l x →
@@ -894,7 +897,7 @@ emb-substσ-repeat-liftSubst-eq σ σ' (1+ l) (1+ x) eq =
 
 mutual
   emb-substGen-eq : ∀ {σ σ'} → (∀ x → emb-substσ σ x PE.≡ σ' x) → ∀ gs →
-    emb_otermGen (O.substGen σ gs) PE.≡ substGen σ' (emb_otermGen gs)
+    emb-otermGen (O.substGen σ gs) PE.≡ substGen σ' (emb-otermGen gs)
   emb-substGen-eq eq [] = PE.refl
   emb-substGen-eq {σ} {σ'} eq (⟦ l , t ⟧ ∷ gs) =
     PE.cong₂ _∷_
@@ -907,12 +910,12 @@ mutual
 
   emb-substσ-eq : ∀ {σ : O.Subst} {σ' : Subst} →
     (∀ x → emb-substσ σ x PE.≡ σ' x) → ∀ (t : OTerm) →
-    emb_oterm_term (O.subst σ t) PE.≡ subst σ' (emb_oterm_term t)
+    emb-oterm (O.subst σ t) PE.≡ subst σ' (emb-oterm t)
   emb-substσ-eq eq (O.var x) = eq x
   emb-substσ-eq {σ} {σ'} eq (O.gen k gs) =
-    PE.cong (gen (emb_okind_kind k)) (emb-substGen-eq eq gs)
+    PE.cong (gen (emb-okind k)) (emb-substGen-eq eq gs)
 
-  emb-substGen : ∀ σ gs → emb_otermGen (O.substGen σ gs) PE.≡ substGen (emb-substσ σ) (emb_otermGen gs)
+  emb-substGen : ∀ σ gs → emb-otermGen (O.substGen σ gs) PE.≡ substGen (emb-substσ σ) (emb-otermGen gs)
   emb-substGen σ [] = PE.refl
   emb-substGen σ (⟦ l , t ⟧ ∷ gs) =
     PE.cong₂ _∷_
@@ -923,27 +926,27 @@ mutual
       (emb-substGen σ gs)
 
   emb-subst : ∀ (σ : O.Subst) (t : OTerm) →
-    emb_oterm_term (O.subst σ t) PE.≡ subst (emb-substσ σ) (emb_oterm_term t)
+    emb-oterm (O.subst σ t) PE.≡ subst (emb-substσ σ) (emb-oterm t)
   emb-subst σ (O.var x) = PE.refl
-  emb-subst σ (O.gen k gs) = PE.cong (gen (emb_okind_kind k)) (emb-substGen σ gs)
+  emb-subst σ (O.gen k gs) = PE.cong (gen (emb-okind k)) (emb-substGen σ gs)
 
 emb-substσ-wk1Subst : ∀ σ x → emb-substσ (O.wk1Subst σ) x PE.≡ wk1 (emb-substσ σ x)
 emb-substσ-wk1Subst σ x = emb-wk1 (σ x)
 
-emb-substσ-consSubst : ∀ σ t x → emb-substσ (O.consSubst σ t) x PE.≡ consSubst (emb-substσ σ) (emb_oterm_term t) x
+emb-substσ-consSubst : ∀ σ t x → emb-substσ (O.consSubst σ t) x PE.≡ consSubst (emb-substσ σ) (emb-oterm t) x
 emb-substσ-consSubst σ t 0 = PE.refl
 emb-substσ-consSubst σ t (1+ x) = PE.refl
 
 emb-substσ-consSubst-wk1 : ∀ s n →
   emb-substσ (O.consSubst (O.wk1Subst O.idSubst) s) n
-  PE.≡ consSubst (wk1Subst idSubst) (emb_oterm_term s) n
+  PE.≡ consSubst (wk1Subst idSubst) (emb-oterm s) n
 emb-substσ-consSubst-wk1 s 0 = PE.refl
 emb-substσ-consSubst-wk1 s (1+ n) = emb-substσ-wk1Subst O.idSubst n
 
-emb-sgSubst : ∀ t s → emb_oterm_term (t O.[ s ]) PE.≡ emb_oterm_term t [ emb_oterm_term s ]
+emb-sgSubst : ∀ t s → emb-oterm (t O.[ s ]) PE.≡ emb-oterm t [ emb-oterm s ]
 emb-sgSubst t s = emb-substσ-eq (emb-substσ-consSubst O.idSubst s) t
 
-emb-liftSubst : ∀ t s → emb_oterm_term (t O.[ s ]↑) PE.≡ emb_oterm_term t [ emb_oterm_term s ]↑
+emb-liftSubst : ∀ t s → emb-oterm (t O.[ s ]↑) PE.≡ emb-oterm t [ emb-oterm s ]↑
 emb-liftSubst t s = emb-substσ-eq (λ n → emb-substσ-consSubst-wk1 s n) t
 
 emb-substσ-wk1^Subst : ∀ d σ x →
@@ -955,95 +958,95 @@ emb-substσ-wk1^Subst (1+ d) σ x =
 
 emb-substσ-consSubst-wk1^ : ∀ d s n →
   emb-substσ (O.consSubst (O.wk1^Subst d O.idSubst) s) n
-  PE.≡ consSubst (wk1^Subst d idSubst) (emb_oterm_term s) n
+  PE.≡ consSubst (wk1^Subst d idSubst) (emb-oterm s) n
 emb-substσ-consSubst-wk1^ d s 0 = PE.refl
 emb-substσ-consSubst-wk1^ d s (1+ n) = emb-substσ-wk1^Subst d O.idSubst n
 
 emb-liftSubst^ : ∀ t s d →
-  emb_oterm_term (t O.[ s ]↑^ d) PE.≡ emb_oterm_term t [ emb_oterm_term s ]↑^ d
+  emb-oterm (t O.[ s ]↑^ d) PE.≡ emb-oterm t [ emb-oterm s ]↑^ d
 emb-liftSubst^ t s d = emb-substσ-eq (λ n → emb-substσ-consSubst-wk1^ d s n) t
 
 emb-Π : ∀ A r lA B lB l r' →
-  emb_oterm_term (O.Π A ^ r ° lA ▹ B ° lB ° l ^ r') PE.≡
-  Π (emb_oterm_term A) ^ r ° lA ▹ (emb_oterm_term B) ° lB ° l ^ r'
+  emb-oterm (O.Π A ^ r ° lA ▹ B ° lB ° l ^ r') PE.≡
+  Π (emb-oterm A) ^ r ° lA ▹ (emb-oterm B) ° lB ° l ^ r'
 emb-Π A r lA B lB l r' = PE.refl
 
 emb-▹▹ : ∀ A r lA B lB l r' →
-  emb_oterm_term (O.Π A ^ r ° lA ▹ O.wk1 B ° lB ° l ^ r') PE.≡
-  emb_oterm_term A ^ r ° lA ▹▹ emb_oterm_term B ° lB ° l ^ r'
+  emb-oterm (O.Π A ^ r ° lA ▹ O.wk1 B ° lB ° l ^ r') PE.≡
+  emb-oterm A ^ r ° lA ▹▹ emb-oterm B ° lB ° l ^ r'
 emb-▹▹ A r lA B lB l r' =
   PE.trans (emb-Π A r lA (O.wk1 B) lB l r')
-    (PE.cong (λ T → Π (emb_oterm_term A) ^ r ° lA ▹ T ° lB ° l ^ r') (emb-wk1 B))
+    (PE.cong (λ T → Π (emb-oterm A) ^ r ° lA ▹ T ° lB ° l ^ r') (emb-wk1 B))
 
 emb-wk1-liftSubst : ∀ G s →
-  wk1 (emb_oterm_term (G O.[ s ]↑)) PE.≡ wk1 (emb_oterm_term G [ emb_oterm_term s ]↑)
+  wk1 (emb-oterm (G O.[ s ]↑)) PE.≡ wk1 (emb-oterm G [ emb-oterm s ]↑)
 emb-wk1-liftSubst G s = PE.cong wk1 (emb-liftSubst G s)
 
 emb-lam : ∀ A t l →
-  emb_oterm_term (O.lam A ▹ t ^ l) PE.≡ lam (emb_oterm_term A) ▹ emb_oterm_term t ^ l
+  emb-oterm (O.lam A ▹ t ^ l) PE.≡ lam (emb-oterm A) ▹ emb-oterm t ^ l
 emb-lam A t l = PE.refl
 
 emb-∘ : ∀ t u l →
-  emb_oterm_term (t O.∘ u ^ l) PE.≡ emb_oterm_term t ∘ emb_oterm_term u ^ l
+  emb-oterm (t O.∘ u ^ l) PE.≡ emb-oterm t ∘ emb-oterm u ^ l
 emb-∘ t u l = PE.refl
 
 emb-wk1∘var : ∀ f l →
-  emb_oterm_term (O.wk1 f O.∘ O.var Nat.zero ^ l) PE.≡
-  wk1 (emb_oterm_term f) ∘ var Nat.zero ^ l
+  emb-oterm (O.wk1 f O.∘ O.var Nat.zero ^ l) PE.≡
+  wk1 (emb-oterm f) ∘ var Nat.zero ^ l
 emb-wk1∘var f l =
   PE.trans (emb-∘ (O.wk1 f) (O.var Nat.zero) l)
     (PE.cong (λ t → t ∘ var Nat.zero ^ l) (emb-wk1 f))
 
 emb-cast : ∀ l A B e t →
-  emb_oterm_term (O.cast l A B e t) PE.≡
-  cast l (emb_oterm_term A) (emb_oterm_term B) (emb_oterm_term e) (emb_oterm_term t)
+  emb-oterm (O.cast l A B e t) PE.≡
+  cast l (emb-oterm A) (emb-oterm B) (emb-oterm e) (emb-oterm t)
 emb-cast l A B e t = PE.refl
 
 emb-Id : ∀ A t u →
-  emb_oterm_term (O.Id A t u) PE.≡ Id (emb_oterm_term A) (emb_oterm_term t) (emb_oterm_term u)
+  emb-oterm (O.Id A t u) PE.≡ Id (emb-oterm A) (emb-oterm t) (emb-oterm u)
 emb-Id A t u = PE.refl
 
 emb-Idrefl : ∀ A t →
-  emb_oterm_term (O.Idrefl A t) PE.≡ Idrefl (emb_oterm_term A) (emb_oterm_term t)
+  emb-oterm (O.Idrefl A t) PE.≡ Idrefl (emb-oterm A) (emb-oterm t)
 emb-Idrefl A t = PE.refl
 
 emb-transp : ∀ A P t s u e →
-  emb_oterm_term (O.transp A P t s u e) PE.≡
-  transp (emb_oterm_term A) (emb_oterm_term P) (emb_oterm_term t)
-         (emb_oterm_term s) (emb_oterm_term u) (emb_oterm_term e)
+  emb-oterm (O.transp A P t s u e) PE.≡
+  transp (emb-oterm A) (emb-oterm P) (emb-oterm t)
+         (emb-oterm s) (emb-oterm u) (emb-oterm e)
 emb-transp A P t s u e = PE.refl
 
-emb-fst : ∀ e → emb_oterm_term (O.fst e) PE.≡ fst (emb_oterm_term e)
+emb-fst : ∀ e → emb-oterm (O.fst e) PE.≡ fst (emb-oterm e)
 emb-fst e = PE.refl
 
-emb-snd : ∀ e → emb_oterm_term (O.snd e) PE.≡ snd (emb_oterm_term e)
+emb-snd : ∀ e → emb-oterm (O.snd e) PE.≡ snd (emb-oterm e)
 emb-snd e = PE.refl
 
 emb-Emptyrec : ∀ lA A e →
-  emb_oterm_term (O.Emptyrec lA ⁰ A e) PE.≡ Emptyrec lA ⁰ (emb_oterm_term A) (emb_oterm_term e)
+  emb-oterm (O.Emptyrec lA ⁰ A e) PE.≡ Emptyrec lA ⁰ (emb-oterm A) (emb-oterm e)
 emb-Emptyrec lA A e = PE.refl
 
-emb-Ind : ∀ i → emb_oterm_term (O.Ind i) PE.≡ Ind i
+emb-Ind : ∀ i → emb-oterm (O.Ind i) PE.≡ Ind i
 emb-Ind i = PE.refl
 
 emb-otermGen-map0 : ∀ ts →
-  emb_otermGen (map (λ t → ⟦ 0 , t ⟧) ts) PE.≡ map (λ t → ⟦ 0 , emb_oterm_term t ⟧) ts
+  emb-otermGen (map (λ t → ⟦ 0 , t ⟧) ts) PE.≡ map (λ t → ⟦ 0 , emb-oterm t ⟧) ts
 emb-otermGen-map0 [] = PE.refl
-emb-otermGen-map0 (t ∷ ts) = PE.cong (⟦ 0 , emb_oterm_term t ⟧ ∷_) (emb-otermGen-map0 ts)
+emb-otermGen-map0 (t ∷ ts) = PE.cong (⟦ 0 , emb-oterm t ⟧ ∷_) (emb-otermGen-map0 ts)
 
 emb-oterm-all : List OTerm → List Term
 emb-oterm-all [] = []
-emb-oterm-all (t ∷ ts) = emb_oterm_term t ∷ emb-oterm-all ts
+emb-oterm-all (t ∷ ts) = emb-oterm t ∷ emb-oterm-all ts
 
-emb-oterm-all-map : ∀ ts → emb-oterm-all ts PE.≡ map emb_oterm_term ts
+emb-oterm-all-map : ∀ ts → emb-oterm-all ts PE.≡ map emb-oterm ts
 emb-oterm-all-map [] = PE.refl
-emb-oterm-all-map (t ∷ ts) = PE.cong (emb_oterm_term t ∷_) (emb-oterm-all-map ts)
+emb-oterm-all-map (t ∷ ts) = PE.cong (emb-oterm t ∷_) (emb-oterm-all-map ts)
 
 emb-stype : SU.Type → Term
 emb-stype (SU.Ind i) = Ind i
 emb-stype (SU.Arrow A B) = Π (emb-stype A) ^ ! ° ⁰ ▹ emb-stype B ° ⁰ ° ⁰ ^ !
 
-emb-stype-hom : ∀ T → emb_oterm_term (O.emb-stype-oterm T) PE.≡ emb-stype T
+emb-stype-hom : ∀ T → emb-oterm (O.emb-stype-oterm T) PE.≡ emb-stype T
 emb-stype-hom (SU.Ind i) = PE.refl
 emb-stype-hom (SU.Arrow A B) =
   PE.cong₂ (λ A′ B′ → Π A′ ^ ! ° ⁰ ▹ B′ ° ⁰ ° ⁰ ^ !)
@@ -1074,28 +1077,28 @@ map-subst-emb-stype σ (A ∷ As) =
   PE.cong₂ _∷_ (subst-emb-stype σ A) (map-subst-emb-stype σ As)
 
 emb-ctr : ∀ i j ts →
-  emb_oterm_term (O.ctr i j ts) PE.≡ ctr i j (map emb_oterm_term ts)
+  emb-oterm (O.ctr i j ts) PE.≡ ctr i j (map emb-oterm ts)
 emb-ctr i j ts =
   PE.cong (gen (Ctrkind i j))
     (PE.trans (emb-otermGen-map0 ts)
-              (PE.sym (map-map (λ t → ⟦ 0 , t ⟧) emb_oterm_term ts)))
+              (PE.sym (map-map (λ t → ⟦ 0 , t ⟧) emb-oterm ts)))
 
-emb-map-Ind : ∀ ns → map emb_oterm_term (map O.Ind ns) PE.≡ map Ind ns
+emb-map-Ind : ∀ ns → map emb-oterm (map O.Ind ns) PE.≡ map Ind ns
 emb-map-Ind [] = PE.refl
 emb-map-Ind (n ∷ ns) = PE.cong (Ind n ∷_) (emb-map-Ind ns)
 
 emb-IndRect : ∀ i lG P t ms →
-  emb_oterm_term (O.IndRect i lG P t ms) PE.≡
-  IndRect i lG (emb_oterm_term P) (emb_oterm_term t) (emb-oterm-all ms)
+  emb-oterm (O.IndRect i lG P t ms) PE.≡
+  IndRect i lG (emb-oterm P) (emb-oterm t) (emb-oterm-all ms)
 emb-IndRect i lG P t ms =
-  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 1 , emb_oterm_term P ⟧ ∷ ⟦ 0 , emb_oterm_term t ⟧ ∷ gs))
+  PE.cong (λ gs → gen (IndRectkind i lG) (⟦ 1 , emb-oterm P ⟧ ∷ ⟦ 0 , emb-oterm t ⟧ ∷ gs))
     (PE.trans (emb-otermGen-map0 ms)
-              (PE.trans (PE.sym (map-map (λ m → ⟦ 0 , m ⟧) emb_oterm_term ms))
+              (PE.trans (PE.sym (map-map (λ m → ⟦ 0 , m ⟧) emb-oterm ms))
                         (PE.cong (map (λ m → ⟦ 0 , m ⟧)) (PE.sym (emb-oterm-all-map ms)))))
 
 emb-indRectBranchTy : ∀ ind index Ss P rG lG →
-  emb_oterm_term (O.indRectBranchTy ind index Ss P rG lG) PE.≡
-  indRectBranchTy ind index Ss (emb_oterm_term P) rG lG
+  emb-oterm (O.indRectBranchTy ind index Ss P rG lG) PE.≡
+  indRectBranchTy ind index Ss (emb-oterm P) rG lG
 emb-indRectBranchTy ind index Ss P rG lG =
   PE.trans
     (emb-foldr-Π ! ⁰ lG rG (map proj₁ (O.ctrArgsTypeList Ss))
@@ -1107,35 +1110,35 @@ emb-indRectBranchTy ind index Ss P rG lG =
             (PE.trans (emb-liftSubst^ P
                           (O.ctr ind index (map (λ j → O.var (((k + n) - 1) - j)) (range n)))
                           (k + n))
-              (PE.cong (λ t → emb_oterm_term P [ t ]↑^ (k + n))
+              (PE.cong (λ t → emb-oterm P [ t ]↑^ (k + n))
                 (PE.trans (emb-ctr ind index (map (λ j → O.var (((k + n) - 1) - j)) (range n)))
                   (PE.cong (ctr ind index)
                     (PE.trans
-                      (PE.cong (map emb_oterm_term)
+                      (PE.cong (map emb-oterm)
                         (PE.sym (map-map O.var (λ j → ((k + n) - 1) - j) (range n))))
                       (PE.trans (emb-map-var (map (λ j → ((k + n) - 1) - j) (range n)))
                         (map-map var (λ j → ((k + n) - 1) - j) (range n))))))))
-            (PE.trans (map-map emb_oterm_term
+            (PE.trans (map-map emb-oterm
                           (λ pj → P O.[ O.var (((n - 1) - proj₁ pj) + proj₂ pj) ]↑^ (n + proj₂ pj))
                           (zip recs (range (length recs))))
               (map-cong (zip recs (range (length recs)))
                 (λ pj → emb-liftSubst^ P (O.var (((n - 1) - proj₁ pj) + proj₂ pj))
                                          (n + proj₂ pj))))))
-        (PE.trans (map-map emb_oterm_term proj₁ (O.ctrArgsTypeList Ss))
-          (PE.trans (PE.sym (map-map proj₁ (λ p → (emb_oterm_term (proj₁ p) , proj₂ p))
+        (PE.trans (map-map emb-oterm proj₁ (O.ctrArgsTypeList Ss))
+          (PE.trans (PE.sym (map-map proj₁ (λ p → (emb-oterm (proj₁ p) , proj₂ p))
                                (O.ctrArgsTypeList Ss)))
             PE.refl)))
       (PE.cong₂ (λ n′ recs′ →
           foldr (λ A B → Π A ^ ! ° ⁰ ▹ B ° lG ° lG ^ rG)
             (foldr (λ A B → Π A ^ rG ° lG ▹ B ° lG ° lG ^ rG)
-              (emb_oterm_term P
+              (emb-oterm P
                 [ ctr ind index (map (λ j → var (((length recs′ + n′) - 1) - j))
                                     (range n′)) ]↑^ (length recs′ + n′))
-              (map (λ pj → emb_oterm_term P
+              (map (λ pj → emb-oterm P
                               [ var (((n′ - 1) - proj₁ pj) + proj₂ pj) ]↑^ (n′ + proj₂ pj))
                    (zip recs′ (range (length recs′)))))
             (map proj₁ (ctrArgsTypeList Ss)))
-        (PE.sym (length-map (λ p → (emb_oterm_term (proj₁ p) , proj₂ p))
+        (PE.sym (length-map (λ p → (emb-oterm (proj₁ p) , proj₂ p))
                    (O.ctrArgsTypeList Ss)))
         emb-ctrRecIndices))
   where
@@ -1147,14 +1150,14 @@ emb-indRectBranchTy ind index Ss P rG lG =
   concO = P O.[ O.ctr ind index (map (λ j → O.var (((k + n) - 1) - j)) (range n)) ]↑^ (k + n)
 
   emb-foldr-Π : ∀ rA lA l r As B →
-    emb_oterm_term (foldr (λ A B → O.Π A ^ rA ° lA ▹ B ° l ° l ^ r) B As) PE.≡
-    foldr (λ A B → Π A ^ rA ° lA ▹ B ° l ° l ^ r) (emb_oterm_term B) (map emb_oterm_term As)
+    emb-oterm (foldr (λ A B → O.Π A ^ rA ° lA ▹ B ° l ° l ^ r) B As) PE.≡
+    foldr (λ A B → Π A ^ rA ° lA ▹ B ° l ° l ^ r) (emb-oterm B) (map emb-oterm As)
   emb-foldr-Π rA lA l r [] B = PE.refl
   emb-foldr-Π rA lA l r (A ∷ As) B =
-    PE.cong (λ B′ → Π emb_oterm_term A ^ rA ° lA ▹ B′ ° l ° l ^ r)
+    PE.cong (λ B′ → Π emb-oterm A ^ rA ° lA ▹ B′ ° l ° l ^ r)
       (emb-foldr-Π rA lA l r As B)
 
-  emb-map-var : ∀ ns → map emb_oterm_term (map O.var ns) PE.≡ map var ns
+  emb-map-var : ∀ ns → map emb-oterm (map O.var ns) PE.≡ map var ns
   emb-map-var [] = PE.refl
   emb-map-var (n ∷ ns) = PE.cong (var n ∷_) (emb-map-var ns)
 
@@ -1162,10 +1165,10 @@ emb-indRectBranchTy ind index Ss P rG lG =
   emb-ctrRecIndices = PE.refl
 
 emb-indRectBranchTyList : ∀ ind P rG lG →
-  map emb_oterm_term (O.indRectBranchTyList ind P rG lG)
-  PE.≡ indRectBranchTyList ind (emb_oterm_term P) rG lG
+  map emb-oterm (O.indRectBranchTyList ind P rG lG)
+  PE.≡ indRectBranchTyList ind (emb-oterm P) rG lG
 emb-indRectBranchTyList ind P rG lG =
-  PE.trans (map-map emb_oterm_term
+  PE.trans (map-map emb-oterm
               (λ jTs → O.indRectBranchTy (SU.SInd.name ind) (proj₁ jTs) (proj₂ jTs) P rG lG)
               ctrs)
     (map-cong ctrs
@@ -1182,82 +1185,82 @@ Idsym : (A x y e : Term) → Term
 Idsym A x y e = transp A (Id (wk1 A) (var 0) (wk1 x)) x (Idrefl A x) y e
 
 emb-Idsym : ∀ A x y e →
-  emb_oterm_term (O.Idsym A x y e) PE.≡
-  Idsym (emb_oterm_term A) (emb_oterm_term x) (emb_oterm_term y) (emb_oterm_term e)
+  emb-oterm (O.Idsym A x y e) PE.≡
+  Idsym (emb-oterm A) (emb-oterm x) (emb-oterm y) (emb-oterm e)
 emb-Idsym A x y e =
-  PE.cong (λ P → transp (emb_oterm_term A) P (emb_oterm_term x)
-             (Idrefl (emb_oterm_term A) (emb_oterm_term x))
-             (emb_oterm_term y) (emb_oterm_term e))
+  PE.cong (λ P → transp (emb-oterm A) P (emb-oterm x)
+             (Idrefl (emb-oterm A) (emb-oterm x))
+             (emb-oterm y) (emb-oterm e))
     (emb-Id-wk1-wk1 A x)
   where
   emb-Id-wk1-wk1 : ∀ A x →
-    emb_oterm_term (O.Id (O.wk1 A) (O.var 0) (O.wk1 x)) PE.≡
-    Id (wk1 (emb_oterm_term A)) (var 0) (wk1 (emb_oterm_term x))
+    emb-oterm (O.Id (O.wk1 A) (O.var 0) (O.wk1 x)) PE.≡
+    Id (wk1 (emb-oterm A)) (var 0) (wk1 (emb-oterm x))
   emb-Id-wk1-wk1 A x =
     PE.trans (emb-Id (O.wk1 A) (O.var 0) (O.wk1 x))
       (PE.cong₂ (λ a b → Id a (var 0) b) (emb-wk1 A) (emb-wk1 x))
 
 -- Helpers for embedding fst∘wk1 and Univ
-emb-fst-wk1 : ∀ e → emb_oterm_term (O.fst (O.wk1 e)) PE.≡ fst (wk1 (emb_oterm_term e))
+emb-fst-wk1 : ∀ e → emb-oterm (O.fst (O.wk1 e)) PE.≡ fst (wk1 (emb-oterm e))
 emb-fst-wk1 e = PE.trans (emb-fst (O.wk1 e)) (PE.cong fst (emb-wk1 e))
 
-emb-Univ : ∀ r → emb_oterm_term (O.gen (O.Ukind r ⁰) []) PE.≡ Univ r ⁰
+emb-Univ : ∀ r → emb-oterm (O.gen (O.Ukind r ⁰) []) PE.≡ Univ r ⁰
 emb-Univ r = PE.refl
 
 -- Embedding of the cast expression used as the substitution argument in snd and cast-Π
 emb-cast-arg : ∀ {A A' rA e} l →
-  emb_oterm_term (O.cast l (O.wk1 A') (O.wk1 A)
+  emb-oterm (O.cast l (O.wk1 A') (O.wk1 A)
     (O.Idsym (O.gen (O.Ukind rA ⁰) []) (O.wk1 A) (O.wk1 A') (O.fst (O.wk1 e))) (O.var 0)) PE.≡
-  cast l (wk1 (emb_oterm_term A')) (wk1 (emb_oterm_term A))
-    (Idsym (Univ rA ⁰) (wk1 (emb_oterm_term A)) (wk1 (emb_oterm_term A')) (fst (wk1 (emb_oterm_term e))))
+  cast l (wk1 (emb-oterm A')) (wk1 (emb-oterm A))
+    (Idsym (Univ rA ⁰) (wk1 (emb-oterm A)) (wk1 (emb-oterm A')) (fst (wk1 (emb-oterm e))))
     (var 0)
 emb-cast-arg {A} {A'} {rA} {e} l =
   let oId = O.Idsym (O.gen (O.Ukind rA ⁰) []) (O.wk1 A) (O.wk1 A') (O.fst (O.wk1 e))
       pId = PE.trans (emb-Idsym (O.gen (O.Ukind rA ⁰) []) (O.wk1 A) (O.wk1 A') (O.fst (O.wk1 e)))
-                (PE.trans (PE.cong (λ u → Idsym u (emb_oterm_term (O.wk1 A)) (emb_oterm_term (O.wk1 A'))
-                                    (emb_oterm_term (O.fst (O.wk1 e)))) (emb-Univ rA))
-                  (PE.trans (PE.cong (λ x → Idsym (Univ rA ⁰) x (emb_oterm_term (O.wk1 A'))
-                                      (emb_oterm_term (O.fst (O.wk1 e)))) (emb-wk1 A))
-                    (PE.trans (PE.cong (λ y → Idsym (Univ rA ⁰) (wk1 (emb_oterm_term A)) y
-                                        (emb_oterm_term (O.fst (O.wk1 e)))) (emb-wk1 A'))
-                      (PE.cong (λ t → Idsym (Univ rA ⁰) (wk1 (emb_oterm_term A)) (wk1 (emb_oterm_term A')) t)
+                (PE.trans (PE.cong (λ u → Idsym u (emb-oterm (O.wk1 A)) (emb-oterm (O.wk1 A'))
+                                    (emb-oterm (O.fst (O.wk1 e)))) (emb-Univ rA))
+                  (PE.trans (PE.cong (λ x → Idsym (Univ rA ⁰) x (emb-oterm (O.wk1 A'))
+                                      (emb-oterm (O.fst (O.wk1 e)))) (emb-wk1 A))
+                    (PE.trans (PE.cong (λ y → Idsym (Univ rA ⁰) (wk1 (emb-oterm A)) y
+                                        (emb-oterm (O.fst (O.wk1 e)))) (emb-wk1 A'))
+                      (PE.cong (λ t → Idsym (Univ rA ⁰) (wk1 (emb-oterm A)) (wk1 (emb-oterm A')) t)
                         (emb-fst-wk1 e)))))
   in  PE.trans (emb-cast l (O.wk1 A') (O.wk1 A) oId (O.var 0))
-       (PE.trans (PE.cong (λ a → cast l a (emb_oterm_term (O.wk1 A)) (emb_oterm_term oId) (var 0)) (emb-wk1 A'))
-         (PE.trans (PE.cong (λ b → cast l (wk1 (emb_oterm_term A')) b (emb_oterm_term oId) (var 0)) (emb-wk1 A))
-           (PE.cong (λ t → cast l (wk1 (emb_oterm_term A')) (wk1 (emb_oterm_term A)) t (var 0)) pId)))
+       (PE.trans (PE.cong (λ a → cast l a (emb-oterm (O.wk1 A)) (emb-oterm oId) (var 0)) (emb-wk1 A'))
+         (PE.trans (PE.cong (λ b → cast l (wk1 (emb-oterm A')) b (emb-oterm oId) (var 0)) (emb-wk1 A))
+           (PE.cong (λ t → cast l (wk1 (emb-oterm A')) (wk1 (emb-oterm A)) t (var 0)) pId)))
 
 -- Embedding of (snd (wk1 e)) ∘ (var 0)
 emb-snd-wk1-∘var : ∀ e l →
-  emb_oterm_term ((O.snd (O.wk1 e)) O.∘ (O.var 0) ^ l) PE.≡
-  (snd (wk1 (emb_oterm_term e))) ∘ (var 0) ^ l
+  emb-oterm ((O.snd (O.wk1 e)) O.∘ (O.var 0) ^ l) PE.≡
+  (snd (wk1 (emb-oterm e))) ∘ (var 0) ^ l
 emb-snd-wk1-∘var e l =
   PE.trans (emb-∘ (O.snd (O.wk1 e)) (O.var 0) l)
     (PE.cong (λ t → t ∘ var 0 ^ l)
       (PE.trans (emb-snd (O.wk1 e)) (PE.cong snd (emb-wk1 e))))
 
 emb-snd-subst : ∀ {A A' rA B e} →
-  emb_oterm_term (B O.[ O.cast ⁰ (O.wk1 A') (O.wk1 A)
+  emb-oterm (B O.[ O.cast ⁰ (O.wk1 A') (O.wk1 A)
     (O.Idsym (O.gen (O.Ukind rA ⁰) []) (O.wk1 A) (O.wk1 A') (O.fst (O.wk1 e))) (O.var 0) ]↑)
   PE.≡
-  emb_oterm_term B [ cast ⁰ (wk1 (emb_oterm_term A')) (wk1 (emb_oterm_term A))
-    (Idsym (Univ rA ⁰) (wk1 (emb_oterm_term A)) (wk1 (emb_oterm_term A')) (fst (wk1 (emb_oterm_term e))))
+  emb-oterm B [ cast ⁰ (wk1 (emb-oterm A')) (wk1 (emb-oterm A))
+    (Idsym (Univ rA ⁰) (wk1 (emb-oterm A)) (wk1 (emb-oterm A')) (fst (wk1 (emb-oterm e))))
     (var 0) ]↑
 emb-snd-subst {A} {A'} {rA} {B} {e} =
   PE.trans (emb-liftSubst B (O.cast ⁰ (O.wk1 A') (O.wk1 A)
     (O.Idsym (O.gen (O.Ukind rA ⁰) []) (O.wk1 A) (O.wk1 A') (O.fst (O.wk1 e))) (O.var 0)))
-    (PE.cong (λ t → emb_oterm_term B [ t ]↑) (emb-cast-arg {A} {A'} {rA} {e} ⁰))
+    (PE.cong (λ t → emb-oterm B [ t ]↑) (emb-cast-arg {A} {A'} {rA} {e} ⁰))
 
 -- Embedding of (wk1 f) ∘ a
 emb-wk1-∘a : ∀ {A A' rA e} f l →
-  emb_oterm_term ((O.wk1 f) O.∘
+  emb-oterm ((O.wk1 f) O.∘
     (O.cast l (O.wk1 A') (O.wk1 A)
       (O.Idsym (O.gen (O.Ukind rA ⁰) []) (O.wk1 A) (O.wk1 A') (O.fst (O.wk1 e))) (O.var 0))
     ^ l)
   PE.≡
-  (wk1 (emb_oterm_term f)) ∘
-    (cast l (wk1 (emb_oterm_term A')) (wk1 (emb_oterm_term A))
-      (Idsym (Univ rA ⁰) (wk1 (emb_oterm_term A)) (wk1 (emb_oterm_term A')) (fst (wk1 (emb_oterm_term e))))
+  (wk1 (emb-oterm f)) ∘
+    (cast l (wk1 (emb-oterm A')) (wk1 (emb-oterm A))
+      (Idsym (Univ rA ⁰) (wk1 (emb-oterm A)) (wk1 (emb-oterm A')) (fst (wk1 (emb-oterm e))))
       (var 0))
     ^ l
 emb-wk1-∘a {A} {A'} {rA} {e} f l =
@@ -1266,44 +1269,44 @@ emb-wk1-∘a {A} {A'} {rA} {e} f l =
 
 -- Embedding of the lam body in the cast-Π equality rule
 emb-castΠ-lamBody : ∀ {A A' rA B B' e f} → let l = ⁰ in
-  let aₜ = cast l (wk1 (emb_oterm_term A')) (wk1 (emb_oterm_term A))
-              (Idsym (Univ rA l) (wk1 (emb_oterm_term A)) (wk1 (emb_oterm_term A'))
-                (fst (wk1 (emb_oterm_term e))))
+  let aₜ = cast l (wk1 (emb-oterm A')) (wk1 (emb-oterm A))
+              (Idsym (Univ rA l) (wk1 (emb-oterm A)) (wk1 (emb-oterm A'))
+                (fst (wk1 (emb-oterm e))))
               (var 0)
   in
-  emb_oterm_term (O.lam A' ▹ O.cast l (B O.[ O.cast l (O.wk1 A') (O.wk1 A)
+  emb-oterm (O.lam A' ▹ O.cast l (B O.[ O.cast l (O.wk1 A') (O.wk1 A)
     (O.Idsym (O.gen (O.Ukind rA l) []) (O.wk1 A) (O.wk1 A') (O.fst (O.wk1 e))) (O.var 0) ]↑)
     B' ((O.snd (O.wk1 e)) O.∘ (O.var 0) ^ l)
     ((O.wk1 f) O.∘ O.cast l (O.wk1 A') (O.wk1 A)
       (O.Idsym (O.gen (O.Ukind rA l) []) (O.wk1 A) (O.wk1 A') (O.fst (O.wk1 e))) (O.var 0) ^ l)
     ^ l)
   PE.≡
-  lam (emb_oterm_term A') ▹ cast l (emb_oterm_term B [ aₜ ]↑) (emb_oterm_term B')
-      ((snd (wk1 (emb_oterm_term e))) ∘ (var 0) ^ l)
-      ((wk1 (emb_oterm_term f)) ∘ aₜ ^ l)
+  lam (emb-oterm A') ▹ cast l (emb-oterm B [ aₜ ]↑) (emb-oterm B')
+      ((snd (wk1 (emb-oterm e))) ∘ (var 0) ^ l)
+      ((wk1 (emb-oterm f)) ∘ aₜ ^ l)
     ^ l
 emb-castΠ-lamBody {A} {A'} {rA} {B} {B'} {e} {f} = body
   where
   l = ⁰
-  body : emb_oterm_term (O.lam A' ▹ O.cast l (B O.[ O.cast l (O.wk1 A') (O.wk1 A)
+  body : emb-oterm (O.lam A' ▹ O.cast l (B O.[ O.cast l (O.wk1 A') (O.wk1 A)
           (O.Idsym (O.gen (O.Ukind rA l) []) (O.wk1 A) (O.wk1 A') (O.fst (O.wk1 e))) (O.var 0) ]↑)
           B' ((O.snd (O.wk1 e)) O.∘ (O.var 0) ^ l)
           ((O.wk1 f) O.∘ O.cast l (O.wk1 A') (O.wk1 A)
             (O.Idsym (O.gen (O.Ukind rA l) []) (O.wk1 A) (O.wk1 A') (O.fst (O.wk1 e))) (O.var 0) ^ l)
           ^ l)
         PE.≡
-        lam (emb_oterm_term A') ▹ cast l (emb_oterm_term B [
-          cast l (wk1 (emb_oterm_term A')) (wk1 (emb_oterm_term A))
-            (Idsym (Univ rA l) (wk1 (emb_oterm_term A)) (wk1 (emb_oterm_term A'))
-              (fst (wk1 (emb_oterm_term e))))
-            (var 0) ]↑) (emb_oterm_term B')
-          ((snd (wk1 (emb_oterm_term e))) ∘ (var 0) ^ l)
-          ((wk1 (emb_oterm_term f)) ∘ cast l (wk1 (emb_oterm_term A')) (wk1 (emb_oterm_term A))
-            (Idsym (Univ rA l) (wk1 (emb_oterm_term A)) (wk1 (emb_oterm_term A'))
-              (fst (wk1 (emb_oterm_term e))))
+        lam (emb-oterm A') ▹ cast l (emb-oterm B [
+          cast l (wk1 (emb-oterm A')) (wk1 (emb-oterm A))
+            (Idsym (Univ rA l) (wk1 (emb-oterm A)) (wk1 (emb-oterm A'))
+              (fst (wk1 (emb-oterm e))))
+            (var 0) ]↑) (emb-oterm B')
+          ((snd (wk1 (emb-oterm e))) ∘ (var 0) ^ l)
+          ((wk1 (emb-oterm f)) ∘ cast l (wk1 (emb-oterm A')) (wk1 (emb-oterm A))
+            (Idsym (Univ rA l) (wk1 (emb-oterm A)) (wk1 (emb-oterm A'))
+              (fst (wk1 (emb-oterm e))))
             (var 0) ^ l)
           ^ l
-  body = PE.cong (lam (emb_oterm_term A') ▹_^ l)
+  body = PE.cong (lam (emb-oterm A') ▹_^ l)
            (PE.cong₄ (cast l)
              (emb-snd-subst {A} {A'} {rA} {B} {e})
              PE.refl
@@ -1311,17 +1314,17 @@ emb-castΠ-lamBody {A} {A'} {rA} {B} {B'} {e} {f} = body
              (emb-wk1-∘a {A} {A'} {rA} {e} f l))
 
 emb-snd-Π-type : ∀ {A A' rA B B'} e →
-  (Π (emb_oterm_term A') ^ rA ° ⁰ ▹ Id (U ⁰)
-    (emb_oterm_term B [ cast ⁰ (wk1 (emb_oterm_term A')) (wk1 (emb_oterm_term A))
-      (Idsym (Univ rA ⁰) (wk1 (emb_oterm_term A)) (wk1 (emb_oterm_term A'))
-        (fst (wk1 (emb_oterm_term e)))) (var 0) ]↑)
-    (emb_oterm_term B') ° ⁰ ° ⁰ ^ %)
+  (Π (emb-oterm A') ^ rA ° ⁰ ▹ Id (U ⁰)
+    (emb-oterm B [ cast ⁰ (wk1 (emb-oterm A')) (wk1 (emb-oterm A))
+      (Idsym (Univ rA ⁰) (wk1 (emb-oterm A)) (wk1 (emb-oterm A'))
+        (fst (wk1 (emb-oterm e)))) (var 0) ]↑)
+    (emb-oterm B') ° ⁰ ° ⁰ ^ %)
   PE.≡
-  (emb_oterm_term (O.Π A' ^ rA ° ⁰ ▹ O.Id (O.U ⁰)
+  (emb-oterm (O.Π A' ^ rA ° ⁰ ▹ O.Id (O.U ⁰)
     (B O.[ O.cast ⁰ (O.wk1 A') (O.wk1 A)
       (O.Idsym (O.gen (O.Ukind rA ⁰) []) (O.wk1 A) (O.wk1 A') (O.fst (O.wk1 e))) (O.var 0) ]↑)
     B' ° ⁰ ° ⁰ ^ %))
 emb-snd-Π-type {A} {A'} {rA} {B} {B'} e =
-  PE.cong (λ D → (Π (emb_oterm_term A') ^ rA ° ⁰ ▹ D ° ⁰ ° ⁰ ^ %))
-    (PE.cong (λ u → (Id (U ⁰) u (emb_oterm_term B')))
+  PE.cong (λ D → (Π (emb-oterm A') ^ rA ° ⁰ ▹ D ° ⁰ ° ⁰ ^ %))
+    (PE.cong (λ u → (Id (U ⁰) u (emb-oterm B')))
       (PE.sym (emb-snd-subst {A} {A'} {rA} {B} {e})))

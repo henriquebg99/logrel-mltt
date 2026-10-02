@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
@@ -21,8 +23,8 @@ open import Definition.LogicalRelation.Substitution.Weakening senv swf equivs
 import Definition.LogicalRelation.Substitution.Irrelevance senv swf equivs as S
 open import Definition.LogicalRelation.Substitution.Introductions.Pi senv swf equivs
 open import Definition.LogicalRelation.Substitution.Introductions.Ind senv swf equivs
-open import Definition.LogicalRelation.Substitution.Introductions.IndRect senv swf equivs {{eqrel}}
-  using (ctrArity; branchTy-nf; Πarg; Πih; ihFun; ihGo; ctrVars; concl; varIdx; rec-Ind)
+open import Definition.Untyped.IndRect senv equivs
+  using (ctrArity; branchTy-nf; Πarg; Πih; ctrVars; concl; varIdx; rec-Ind)
 open import Definition.LogicalRelation.Fundamental.Variable senv swf equivs
 open import Tools.Nat
 open import Tools.Product
@@ -74,10 +76,6 @@ private
   tail^-var : ∀ d σ x → tail^ d σ x PE.≡ σ (d + x)
   tail^-var 0 σ x = PE.refl
   tail^-var (1+ d) σ x = tail^-var d (tail σ) x
-
-  wk1^Subst-var : ∀ d x → wk1^Subst d idSubst x PE.≡ var (d + x)
-  wk1^Subst-var 0 x = PE.refl
-  wk1^Subst-var (1+ d) x = PE.cong wk1 (wk1^Subst-var d x)
 
   subst-↑^-var : ∀ d u σ x
                → (σ ₛ•ₛ consSubst (wk1^Subst d idSubst) u) x PE.≡ consSubst (tail^ d σ) (subst σ u) x

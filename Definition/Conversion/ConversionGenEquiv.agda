@@ -1,5 +1,7 @@
 -- Algorithmic equality.
 
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.ConversionGenEquiv (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
@@ -7,6 +9,7 @@ open import Definition.Untyped senv equivs
 open import Definition.Typed senv equivs
 open import Tools.Nat
 open import Tools.Product
+open import Tools.List using (All₃; []ₐ; _∷ₐ_)
 import Tools.PropositionalEquality as PE
 open import Definition.LogicalRelation senv swf equivs
 open import Definition.Conversion senv equivs
@@ -40,7 +43,14 @@ notEmptyU (univ x) =
       er , _ = Univ-PE-injectivity (U≡A-whnf U=SProp Uₙ)
   in !≢% (PE.sym er)
 
+Indsmall' : ∀ {Γ A l i} → Γ ⊢ Ind i ∷ A ^ [ ! , l ] → l PE.≡ ι ¹
+Indsmall' (Indⱼ x _) = PE.refl
+Indsmall' (conv X x) = Indsmall' X
 
+Indsmall : ∀ {Γ l i} → Γ ⊢ Ind i ^ [ ! , l ] → l PE.≡ ι ⁰
+Indsmall {l = ι ⁰} (univ x) = PE.refl
+Indsmall {l = ι ¹} (univ x) with Indsmall' x
+... | ()
 
 Ubig : ∀ {Γ r l} → Γ ⊢ Univ r l ^ [ ! , ∞ ] → l PE.≡ ¹
 Ubig (Uⱼ x) = PE.refl
@@ -80,9 +90,12 @@ mutual
   ⊢is⊢⊢conv↑Term : ∀ {Γ A t u l} → Γ ⊢ t [conv↑] u ∷ A ^ l → Γ ⊢⊢ t [conv↑] u ∷ A ^ l
   ⊢is⊢⊢conv↓Term : ∀ {Γ A t u l} → Γ ⊢ t [conv↓] u ∷ A ^ l → Γ ⊢⊢ t [conv↓] u ∷ A ^ l
   ⊢is⊢⊢genconv↑ : ∀ {Γ A t u l} → Γ ⊢ t [genconv↑] u ∷ A ^ l → Γ ⊢⊢ t [genconv↑] u ∷ A ^ l
+  ⊢is⊢⊢All₃ : ∀ {Γ ts us As l} → All₃ (λ t u A → Γ ⊢ t [conv↑] u ∷ A ^ l) ts us As
+            → All₃ (λ t u A → Γ ⊢⊢ t [conv↑] u ∷ A ^ l) ts us As
 
   ⊢is⊢⊢~! (var-refl x x₁) = var-refl x x₁
   ⊢is⊢⊢~! (app-cong x x₁) = app-cong (⊢is⊢⊢~↓! x) (⊢is⊢⊢genconv↑ x₁)
+  ⊢is⊢⊢~! (IndRect-cong ind∈ x x₁ x₂) = IndRect-cong ind∈ (⊢is⊢⊢conv↑ x) (⊢is⊢⊢~↓! x₁) (⊢is⊢⊢All₃ x₂)
   ⊢is⊢⊢~! (Emptyrec-cong x x₁) = Emptyrec-cong (⊢is⊢⊢conv↑ x) (⊢is⊢⊢~% x₁)
   ⊢is⊢⊢~! (cast-cong x x₁ x₂ x₃ x₄) =
     let _ , neA , neA' = W.ne~↓! x
@@ -110,6 +123,16 @@ mutual
         _ , ⊢t , ⊢t' = syntacticEqTerm t=t
         _ , net , net' = W.whnfConv↓Term x₁
     in cast-refl' (ne ⊢A ⊢A' Uₙ (⊢is⊢⊢~↓! x)) (⊢is⊢⊢conv↓Term x₁) x₂ (castₙ neA' neA (inversion-ne neA' net' ⊢t')) (inversion-ne neA' net ⊢t)
+  ⊢is⊢⊢~! (cast-neInd x x₁ x₂ x₃) =
+    let _ , neA , neA' = W.ne~↓! x
+        _ , ⊢A ,  ⊢A' = syntacticEqTerm (S.soundness~↓! x)
+    in cast-cong (ne ⊢A ⊢A' Uₙ (⊢is⊢⊢~↓! x)) (Ind-cong (wfTerm x₂) (Ind∈Idʳ x₂)) (⊢is⊢⊢conv↑Term x₁) x₂ x₃
+                 (castnIndₙ neA) (castnIndₙ neA')
+  ⊢is⊢⊢~! (cast-Ind x x₁ x₂ x₃) =
+    let _ , neA , neA' = W.ne~↓! x
+        _ , ⊢A ,  ⊢A' = syntacticEqTerm (S.soundness~↓! x)
+    in cast-cong (Ind-cong (wfTerm x₂) (Ind∈Idˡ x₂)) (ne ⊢A ⊢A' Uₙ (⊢is⊢⊢~↓! x)) (⊢is⊢⊢conv↑Term x₁) x₂ x₃
+                 (castIndₙ neA') (castIndₙ neA)
   ⊢is⊢⊢~! (cast-neΠ ([↑]ₜ B t′ u′ D d d′ whnfB whnft′ whnfu′ t<>u) x₁ x₂ x₃ x₄) =
     let _ , neA , neA' = W.ne~↓! x₁
         t=t = S.soundnessConv↑Term x₂
@@ -152,7 +175,10 @@ mutual
     in cast-cong (PE.subst₃ (λ X Y Z → _ ⊢⊢ X [conv↓] Y ∷ Z ^ ι ¹) (PE.sym Π=Π) (PE.sym Π=Π') (PE.sym U=U)
                             (⊢is⊢⊢conv↓Term t<>u))
                  (PE.subst₃ (λ X Y Z → _ ⊢⊢ X [conv↓] Y ∷ Z ^ ι ¹) (PE.sym Π==Π) (PE.sym Π==Π') (PE.sym U==U) foo)
-                 (⊢is⊢⊢conv↑Term x₂) x₃ x₄ castΠΠ!%ₙ castΠΠ!%ₙ 
+                 (⊢is⊢⊢conv↑Term x₂) x₃ x₄ castΠΠ!%ₙ castΠΠ!%ₙ
+  ⊢is⊢⊢~! (cast-ΠInd x x₁ x₂ x₃) = cast-cong (inversion-whnf-conv Uₙ Πₙ Πₙ (⊢is⊢⊢conv↑Term x)) (Ind-cong (wfTerm x₂) (Ind∈Idʳ x₂)) (⊢is⊢⊢conv↑Term x₁) x₂ x₃ castΠIndₙ castΠIndₙ
+  ⊢is⊢⊢~! (cast-IndΠ x x₁ x₂ x₃) = cast-cong (Ind-cong (wfTerm x₂) (Ind∈Idˡ x₂)) (inversion-whnf-conv Uₙ Πₙ Πₙ (⊢is⊢⊢conv↑Term x)) (⊢is⊢⊢conv↑Term x₁) x₂ x₃ castIndΠₙ castIndΠₙ
+  ⊢is⊢⊢~! (cast-IndInd x x₁ x₂ x₃) = cast-cong (Ind-cong (wfTerm x₂) (Ind∈Idˡ x₂)) (Ind-cong (wfTerm x₂) (Ind∈Idʳ x₂)) (⊢is⊢⊢conv↑Term x₁) x₂ x₃ (castIndInd≢ₙ x) (castIndInd≢ₙ x)
   ⊢is⊢⊢~% (%~↑ ⊢k ⊢l) = %~↑ ⊢k ⊢l
   ⊢is⊢⊢~ (~↑! x) = ~↑! (⊢is⊢⊢~! x)
   ⊢is⊢⊢~ (~↑% x) = ~↑% (⊢is⊢⊢~% x)
@@ -162,14 +188,19 @@ mutual
   ⊢is⊢⊢conv↓ (univ x) = univ (⊢is⊢⊢conv↓Term x)
   ⊢is⊢⊢conv↑Term ([↑]ₜ B t′ u′ D d d′ whnfB whnft′ whnfu′ t<>u) = [↑]ₜ B t′ u′ D d d′ whnfB whnft′ whnfu′ (⊢is⊢⊢conv↓Term t<>u) 
   ⊢is⊢⊢conv↓Term (U-refl x x₁) = U-cong x x₁
+  ⊢is⊢⊢conv↓Term (Ind-refl x i∈) = Ind-cong x i∈
   ⊢is⊢⊢conv↓Term (ne x) = let _ , ⊢A ,  ⊢A' = syntacticEqTerm (S.soundness~↓! x) in ne ⊢A ⊢A' Uₙ (⊢is⊢⊢~↓! x)
+  ⊢is⊢⊢conv↓Term (Ind-ins x) = let _ , ⊢t , ⊢u = syntacticEqTerm (S.soundness~↓! x) in ne ⊢t ⊢u Indₙ (⊢is⊢⊢~↓! x)
   ⊢is⊢⊢conv↓Term (Empty-refl x) = Empty-cong x
   ⊢is⊢⊢conv↓Term (Π-cong x x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈) = Π-cong x x₁ x₂ x₃ x₄ x₅ (⊢is⊢⊢conv↑Term x₇) (⊢is⊢⊢conv↑Term x₈)
   ⊢is⊢⊢conv↓Term (Id-cong x x₁ x₂) = Id-cong (⊢is⊢⊢conv↑Term x) (⊢is⊢⊢conv↑Term x₁) (⊢is⊢⊢conv↑Term x₂)
   ⊢is⊢⊢conv↓Term (ne-ins x x₁ x₂ x₃) = ne x x₁ (ne x₂) (⊢is⊢⊢~↓! x₃)
   ⊢is⊢⊢conv↓Term (η-eq x x₁ x₂ x₃ x₄ x₅ x₆ x₇) = η-eq x x₁ x₃ x₄ x₅ x₆ (⊢is⊢⊢conv↑Term x₇)
+  ⊢is⊢⊢conv↓Term (ctr-cong ⊢Γ ind∈ eq x) = ctr-cong ⊢Γ ind∈ eq (⊢is⊢⊢All₃ x)
   ⊢is⊢⊢genconv↑ {l = [ ! , l ]} X = ⊢is⊢⊢conv↑Term X
   ⊢is⊢⊢genconv↑ {l = [ % , l ]} X = ⊢is⊢⊢~% X
+  ⊢is⊢⊢All₃ []ₐ = []ₐ
+  ⊢is⊢⊢All₃ (x ∷ₐ xs) = ⊢is⊢⊢conv↑Term x ∷ₐ ⊢is⊢⊢All₃ xs
 
 
 
@@ -237,27 +268,45 @@ mutual
   ⊢⊢is⊢conv↑Term : ∀ {Γ A t u l} → Γ ⊢⊢ t [conv↑] u ∷ A ^ l → Γ ⊢ t [conv↑] u ∷ A ^ l
   ⊢⊢is⊢conv↓Term : ∀ {Γ A t u l} → Γ ⊢⊢ t [conv↓] u ∷ A ^ l → Γ ⊢ t [conv↓] u ∷ A ^ l
   ⊢⊢is⊢genconv↑ : ∀ {Γ A t u l} → Γ ⊢⊢ t [genconv↑] u ∷ A ^ l → Γ ⊢ t [genconv↑] u ∷ A ^ l
-
-  -- ⊢⊢is⊢~! = {!!}
+  ⊢⊢is⊢All₃ : ∀ {Γ ts us As l} → All₃ (λ t u A → Γ ⊢⊢ t [conv↑] u ∷ A ^ l) ts us As
+            → All₃ (λ t u A → Γ ⊢ t [conv↑] u ∷ A ^ l) ts us As
 
   ⊢⊢is⊢~! (var-refl x x₁) = var-refl x x₁
   ⊢⊢is⊢~! (app-cong x x₁) = app-cong (⊢⊢is⊢~↓! x) (⊢⊢is⊢genconv↑ x₁) 
+  ⊢⊢is⊢~! (IndRect-cong ind∈ x x₁ x₂) = IndRect-cong ind∈ (⊢⊢is⊢conv↑ x) (⊢⊢is⊢~↓! x₁) (⊢⊢is⊢All₃ x₂)
   ⊢⊢is⊢~! (Emptyrec-cong x x₁) = Emptyrec-cong (⊢⊢is⊢conv↑ x)  (⊢⊢is⊢~% x₁)
 
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castₙ x₅ x₇ x₈) (castₙ x₆ x₉ x₁₀)) =
     cast-cong (inversion-ne-U x₅ (⊢⊢is⊢conv↓Term x)) (inversion-ne-U x₉ (⊢⊢is⊢conv↓Term x₁)) (inversion-whnf-conv' (ne x₅) (ne x₈) (ne x₁₀) (⊢⊢is⊢conv↑Term x₂)) x₃ x₄
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castₙ x₅ x₇ x₈) (castnIndₙ x₆)) = ⊥-elim (Ind≢ne! x₇ (univ (SG.soundnessConv↓Term x₁)))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castₙ x₅ x₇ x₈) (castnΠₙ x₆)) = ⊥-elim (I.Π≢ne x₇ (univ (SG.soundnessConv↓Term x₁)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castₙ x₅ x₇ x₈) (castIndₙ x₆)) = ⊥-elim (Ind≢ne! x₅ (sym (univ (SG.soundnessConv↓Term x))))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castₙ x₅ x₇ x₈) (castΠₙ x₆)) = ⊥-elim (I.Π≢ne x₅ (univ (sym (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castₙ x₅ x₇ x₈) (castIndInd≢ₙ x₆)) = ⊥-elim (Ind≢ne! x₇ (univ (SG.soundnessConv↓Term x₁)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castₙ x₅ x₇ x₈) castIndΠₙ) = ⊥-elim (Ind≢ne! x₅ (sym (univ (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castₙ x₅ x₇ x₈) castΠIndₙ) = ⊥-elim (Ind≢ne! x₇ (univ (SG.soundnessConv↓Term x₁)))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castₙ x₅ x₇ x₈) castΠΠ%!ₙ) = ⊥-elim (I.Π≢ne x₇ (univ (SG.soundnessConv↓Term x₁)))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castₙ x₅ x₇ x₈) castΠΠ!%ₙ) = ⊥-elim (I.Π≢ne x₇ (univ (SG.soundnessConv↓Term x₁)))
 
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnIndₙ x₅) (castₙ x₆ x₇ x₈)) = ⊥-elim (Ind≢ne! x₇ (sym (univ (SG.soundnessConv↓Term x₁))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnIndₙ x₅) (castnIndₙ x₆)) with Ind≡A (univ (SG.soundnessConv↓Term x₁)) Indₙ
+  ... | PE.refl = cast-neInd (inversion-ne-U x₅ (⊢⊢is⊢conv↓Term x)) (⊢⊢is⊢conv↑Term x₂) x₃ x₄
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnIndₙ x₅) (castnΠₙ x₆)) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x₁))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnIndₙ x₅) (castIndₙ x₆)) = ⊥-elim (Ind≢ne! x₅ (univ (sym (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnIndₙ x₅) (castΠₙ x₆)) = ⊥-elim (Ind≢ne! x₆ (univ (sym (SG.soundnessConv↓Term x₁))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnIndₙ x₅) (castIndInd≢ₙ x₆)) = ⊥-elim (Ind≢ne! x₅ (univ (sym (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnIndₙ x₅) castIndΠₙ) = ⊥-elim (Ind≢ne! x₅ (univ (sym (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnIndₙ x₅) castΠIndₙ) = ⊥-elim (I.Π≢ne x₅ (univ (sym (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnIndₙ x₅) castΠΠ%!ₙ) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x₁))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnIndₙ x₅) castΠΠ!%ₙ) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x₁))))
 
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnΠₙ x₅) (castₙ x₆ x₇ x₈)) = ⊥-elim (I.Π≢ne x₇ (univ (sym (SG.soundnessConv↓Term x₁))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnΠₙ x₅) (castnIndₙ x₆)) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x₁)))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnΠₙ x₅) (castnΠₙ x₆)) =
     let Π=Π = univ (SG.soundnessConv↓Term x₁)
         _ , er , elF , elF' , elG , elG' ,  _ , er' , er'' = injectivityGen0 Π=Π
         foo = subst7 (λ X Y Z T U V W → _ ⊢ Π _ ^ X ° Y ▹ _ ° Z ° ⁰ ^ U [conv↓] Π _ ^ _ ° V ▹ _ ° W ° ⁰ ^ T ∷ _ ^ ι ¹)
-                    er elF elG er'' er' elF' elG' 
+                    er elF elG er'' er' elF' elG'
                     (⊢⊢is⊢conv↓Term x₁)
         ⊢Π , ⊢Π' = syntacticEq Π=Π
     in subst7 (λ X Y Z T U V W → _ ⊢ cast ⁰ _ (Π _ ^ _ ° V ▹ _ ° W ° ⁰ ^ T) _ _ ~
@@ -267,19 +316,36 @@ mutual
                 (inversion-ne-U x₅ (⊢⊢is⊢conv↓Term x))
                 (⊢⊢is⊢conv↑Term x₂)
                 (PE.subst₃  (λ X Y Z → _ ⊢ _ ∷ Id (U ⁰) _ (Π _ ^ _ ° X ▹ _ ° Y ° ⁰ ^ Z) ^ [ % , ι ⁰ ]) elF' elG' er'' x₃)
-                (PE.subst₄  (λ X Y Z W → _ ⊢ _ ∷ Id (U ⁰) _ (Π _ ^ W ° X ▹ _ ° Y ° ⁰ ^ Z) ^ [ % , ι ⁰ ]) elF elG er' er x₄))                
+                (PE.subst₄  (λ X Y Z W → _ ⊢ _ ∷ Id (U ⁰) _ (Π _ ^ W ° X ▹ _ ° Y ° ⁰ ^ Z) ^ [ % , ι ⁰ ]) elF elG er' er x₄))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnΠₙ x₅) (castIndₙ x₆)) = ⊥-elim (I.Π≢ne x₆ (univ (sym (SG.soundnessConv↓Term x₁))))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnΠₙ x₅) (castΠₙ x₆)) = ⊥-elim (I.Π≢ne x₅ (univ (sym (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnΠₙ x₅) (castIndInd≢ₙ x₆)) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x₁)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnΠₙ x₅) castIndΠₙ) = ⊥-elim (Ind≢ne! x₅ (univ (sym (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnΠₙ x₅) castΠIndₙ) = ⊥-elim (I.Π≢ne x₅ (univ (sym (SG.soundnessConv↓Term x))))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnΠₙ x₅) castΠΠ%!ₙ) = ⊥-elim (I.Π≢ne x₅ (univ (sym (SG.soundnessConv↓Term x))))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castnΠₙ x₅) castΠΠ!%ₙ) = ⊥-elim (I.Π≢ne x₅ (univ (sym (SG.soundnessConv↓Term x))))
 
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndₙ x₅) (castₙ x₆ x₇ x₈)) = ⊥-elim (Ind≢ne! x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndₙ x₅) (castnIndₙ x₆)) = ⊥-elim (Ind≢ne! x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndₙ x₅) (castnΠₙ x₆)) = ⊥-elim (Ind≢ne! x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndₙ x₅) (castIndₙ x₆)) with Ind≡A (univ (SG.soundnessConv↓Term x)) Indₙ
+  ... | PE.refl = cast-Ind (inversion-ne-U x₆ (⊢⊢is⊢conv↓Term x₁)) (⊢⊢is⊢conv↑Term x₂) x₃ x₄
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndₙ x₅) (castΠₙ x₆)) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndₙ x₅) (castIndInd≢ₙ x₆)) = ⊥-elim (Ind≢ne! x₅ (univ (SG.soundnessConv↓Term x₁)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndₙ x₅) castIndΠₙ) = ⊥-elim (I.Π≢ne x₅ (univ (SG.soundnessConv↓Term x₁)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndₙ x₅) castΠIndₙ) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndₙ x₅) castΠΠ%!ₙ) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndₙ x₅) castΠΠ!%ₙ) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x)))
 
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castΠₙ x₅) (castₙ x₆ x₇ x₈)) = ⊥-elim (I.Π≢ne x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castΠₙ x₅) (castnIndₙ x₆)) = ⊥-elim (I.Π≢ne x₆ (univ (SG.soundnessConv↓Term x)))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castΠₙ x₅) (castnΠₙ x₆)) = ⊥-elim (I.Π≢ne x₅ (univ (SG.soundnessConv↓Term x₁)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castΠₙ x₅) (castIndₙ x₆)) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x))))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castΠₙ x₅) (castΠₙ x₆)) =
     let Π=Π = univ (SG.soundnessConv↓Term x)
         _ , er , elF , elF' , elG , elG' ,  _ , er' , er'' = injectivityGen0 Π=Π
         foo = subst7 (λ X Y Z T U V W → _ ⊢ Π _ ^ X ° Y ▹ _ ° Z ° ⁰ ^ U [conv↓] Π _ ^ _ ° V ▹ _ ° W ° ⁰ ^ T ∷ _ ^ ι ¹)
-                    er elF elG er'' er' elF' elG' 
+                    er elF elG er'' er' elF' elG'
                     (⊢⊢is⊢conv↓Term x)
         ⊢Π , ⊢Π' = syntacticEq Π=Π
     in subst7 (λ X Y Z T U V W → _ ⊢ cast ⁰ (Π _ ^ X ° V ▹ _ ° W ° ⁰ ^ T) _ _ _ ~
@@ -291,17 +357,92 @@ mutual
                       Uₙ Πₙ Πₙ foo)
                 (inversion-ne-U x₆ (⊢⊢is⊢conv↓Term x₁))
                 (PE.subst₄  (λ X Y Z W → _ ⊢ _ [conv↑] _ ∷ Π _ ^ W ° X ▹ _ ° Y ° ⁰ ^ Z ^ _) elF elG er' er (⊢⊢is⊢conv↑Term x₂))
-                (PE.subst₄  (λ X Y Z W → _ ⊢ _ ∷ Id (U ⁰) (Π _ ^ W ° X ▹ _ ° Y ° ⁰ ^ Z) _ ^ [ % , ι ⁰ ]) elF elG er' er x₃)                
+                (PE.subst₄  (λ X Y Z W → _ ⊢ _ ∷ Id (U ⁰) (Π _ ^ W ° X ▹ _ ° Y ° ⁰ ^ Z) _ ^ [ % , ι ⁰ ]) elF elG er' er x₃)
                 (PE.subst₃  (λ X Y Z → _ ⊢ _ ∷ Id (U ⁰) (Π _ ^ _ ° X ▹ _ ° Y ° ⁰ ^ Z) _ ^ [ % , ι ⁰ ]) elF' elG' er'' x₄))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castΠₙ x₅) (castIndInd≢ₙ x₆)) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castΠₙ x₅) castIndΠₙ) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castΠₙ x₅) castΠIndₙ) =  ⊥-elim (Ind≢ne! x₅ (univ (SG.soundnessConv↓Term x₁)))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castΠₙ x₅) castΠΠ%!ₙ) = ⊥-elim (I.Π≢ne x₅ (univ (SG.soundnessConv↓Term x₁)))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castΠₙ x₅) castΠΠ!%ₙ) = ⊥-elim (I.Π≢ne x₅ (univ (SG.soundnessConv↓Term x₁)))
 
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndInd≢ₙ x₅) (castₙ x₆ x₇ x₈)) = ⊥-elim (Ind≢ne! x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndInd≢ₙ x₅) (castnIndₙ x₆)) = ⊥-elim (Ind≢ne! x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndInd≢ₙ x₅) (castnΠₙ x₆)) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x₁))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndInd≢ₙ x₅) (castIndₙ x₆)) = ⊥-elim (Ind≢ne! x₆ (sym (univ (SG.soundnessConv↓Term x₁))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndInd≢ₙ x₅) (castΠₙ x₆)) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndInd≢ₙ x₅) (castIndInd≢ₙ x₆))
+    with Ind≡A (univ (SG.soundnessConv↓Term x)) Indₙ | Ind≡A (univ (SG.soundnessConv↓Term x₁)) Indₙ
+  ... | PE.refl | PE.refl = cast-IndInd x₅ (⊢⊢is⊢conv↑Term x₂) x₃ x₄
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndInd≢ₙ x₅) castIndΠₙ) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x₁))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndInd≢ₙ x₅) castΠIndₙ) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndInd≢ₙ x₅) castΠΠ%!ₙ) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x₁))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ (castIndInd≢ₙ x₅) castΠΠ!%ₙ) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x₁))))
 
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castIndΠₙ (castₙ x₆ x₇ x₈)) = ⊥-elim (Ind≢ne! x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castIndΠₙ (castnIndₙ x₆)) = ⊥-elim (Ind≢ne! x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castIndΠₙ (castnΠₙ x₆)) = ⊥-elim (Ind≢ne! x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castIndΠₙ (castIndₙ x₆)) = ⊥-elim (I.Π≢ne x₆ (sym (univ (SG.soundnessConv↓Term x₁))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castIndΠₙ (castΠₙ x₆)) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castIndΠₙ (castIndInd≢ₙ x₆)) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x₁)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castIndΠₙ castIndΠₙ) with Ind≡A (univ (SG.soundnessConv↓Term x)) Indₙ
+  ... | PE.refl =
+    let Π=Π = univ (SG.soundnessConv↓Term x₁)
+        _ , er , elF , elF' , elG , elG' ,  _ , er' , er'' = injectivityGen0 Π=Π
+        foo = PE.subst₃ (λ X T U → _ ⊢ Π _ ^ X ° _ ▹ _ ° _ ° ⁰ ^ U [conv↓] Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ T ∷ _ ^ ι ¹)
+                        er er'' er'
+                        (⊢⊢is⊢conv↓Term x₁)
+        ⊢Π , ⊢Π' = syntacticEq Π=Π
+    in
+    PE.subst₃ (λ X T U → _ ⊢ cast ⁰ (Ind _) (Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ T) _ _ ~
+      cast ⁰ (Ind _) (Π _ ^ X ° _ ▹ _ ° _ ° ⁰ ^ U) _ _ ↑!
+               Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ T ^ ι ⁰) (PE.sym er) (PE.sym er'') (PE.sym  er')
+      (cast-IndΠ  ([↑]ₜ _ _ _ (id (Ugenⱼ (wfTerm x₃)))
+                      (id (un-univ (PE.subst₂  (λ Z W → _ ⊢ Π _ ^ W ° _ ▹ _ ° _ ° ⁰ ^ Z ^ [ _ , _ ]) er' er ⊢Π)))
+                      (id (un-univ (PE.subst  (λ Z → _ ⊢ Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ Z ^ [ _ , _ ]) er'' ⊢Π')))
+                      Uₙ Πₙ Πₙ foo)
+                (⊢⊢is⊢conv↑Term x₂)
+                (PE.subst (λ Z → _ ⊢ _ ∷ Id (U ⁰) _ (Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ Z) ^ [ % , ι ⁰ ]) er'' x₃)
+                (PE.subst₂ (λ Z W → _ ⊢ _ ∷ Id (U ⁰) _ (Π _ ^ W ° _ ▹ _ ° _ ° ⁰ ^ Z) ^ [ % , ι ⁰ ]) er' er x₄))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castIndΠₙ castΠIndₙ) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castIndΠₙ castΠΠ%!ₙ) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castIndΠₙ castΠΠ!%ₙ) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x)))
 
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠIndₙ (castₙ x₆ x₇ x₈)) = ⊥-elim (I.Π≢ne x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠIndₙ (castnIndₙ x₆)) = ⊥-elim (I.Π≢ne x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠIndₙ (castnΠₙ x₆)) = ⊥-elim (I.Π≢ne x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠIndₙ (castIndₙ x₆)) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠIndₙ (castΠₙ x₆)) = ⊥-elim (Ind≢ne! x₆ (sym (univ (SG.soundnessConv↓Term x₁))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠIndₙ (castIndInd≢ₙ x₆)) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠIndₙ castIndΠₙ) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠIndₙ castΠIndₙ) with Ind≡A (univ (SG.soundnessConv↓Term x₁)) Indₙ
+  ... | PE.refl =
+    let Π=Π = univ (SG.soundnessConv↓Term x)
+        _ , er , elF , elF' , elG , elG' ,  _ , er' , er'' = injectivityGen0 Π=Π
+        foo = PE.subst₃ (λ X T U → _ ⊢ Π _ ^ X ° _ ▹ _ ° _ ° ⁰ ^ U [conv↓] Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ T ∷ _ ^ ι ¹)
+                    er er'' er'
+                    (⊢⊢is⊢conv↓Term x)
+        ⊢Π , ⊢Π' = syntacticEq Π=Π
+    in PE.subst₃ (λ X T U  → _ ⊢ cast ⁰ (Π _ ^ X ° _ ▹ _ ° _ ° ⁰ ^ T) _ _ _ ~
+                                 cast ⁰ (Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ U) _ _ _ ↑! _ ^ ι ⁰)
+           (PE.sym er) (PE.sym er') (PE.sym er'')
+      (cast-ΠInd ([↑]ₜ _ _ _ (id (Ugenⱼ (wfTerm x₃)))
+                      (id (un-univ (PE.subst₂  (λ Z W → _ ⊢ Π _ ^ W ° _ ▹ _ ° _ ° ⁰ ^ Z ^ [ _ , _ ]) er' er ⊢Π)))
+                      (id (un-univ (PE.subst (λ Z → _ ⊢ Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ Z ^ [ _ , _ ]) er'' ⊢Π')))
+                      Uₙ Πₙ Πₙ foo)
+                (PE.subst₂  (λ Z W → _ ⊢ _ [conv↑] _ ∷ Π _ ^ W ° _ ▹ _ ° _ ° ⁰ ^ Z ^ _) er' er (⊢⊢is⊢conv↑Term x₂))
+                (PE.subst₂  (λ Z W → _ ⊢ _ ∷ Id (U ⁰) (Π _ ^ W ° _ ▹ _ ° _ ° ⁰ ^ Z) _ ^ [ % , ι ⁰ ]) er' er x₃)
+                (PE.subst   (λ Z → _ ⊢ _ ∷ Id (U ⁰) (Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ Z) _ ^ [ % , ι ⁰ ]) er'' x₄))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠIndₙ castΠΠ%!ₙ) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x₁))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠIndₙ castΠΠ!%ₙ) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x₁))))
 
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ%!ₙ (castₙ x₆ x₇ x₈)) = ⊥-elim (I.Π≢ne x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ%!ₙ (castnIndₙ x₆)) = ⊥-elim (I.Π≢ne x₆ (univ (SG.soundnessConv↓Term x)))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ%!ₙ (castnΠₙ x₆)) = ⊥-elim (I.Π≢ne x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ%!ₙ (castIndₙ x₆)) = ⊥-elim (I.Π≢ne x₆ (sym (univ (SG.soundnessConv↓Term x₁))))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ%!ₙ (castΠₙ x₆)) = ⊥-elim (I.Π≢ne x₆ (sym (univ (SG.soundnessConv↓Term x₁))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ%!ₙ (castIndInd≢ₙ x₆)) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x₁)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ%!ₙ castIndΠₙ) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ%!ₙ castΠIndₙ) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x₁)))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ%!ₙ castΠΠ%!ₙ) =
     let Π=Π = SG.soundnessConv↓Term x
         _ , _ , _ , _ , _ , er , er' = injectivityGen (univ Π=Π)
@@ -310,10 +451,10 @@ mutual
         ⊢Π , ⊢Π' = syntacticEq (univ Π=Π)
         ⊢Π'' , ⊢Π''' = syntacticEq (univ Π=Π')
         foo = PE.subst₂ (λ T U → _ ⊢ Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ U [conv↓] Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ T ∷ _ ^ ι ¹)
-                    er' er 
+                    er' er
                     (⊢⊢is⊢conv↓Term x)
         foo' = PE.subst₂ (λ T U → _ ⊢ Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ U [conv↓] Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ T ∷ _ ^ ι ¹)
-                    e' e 
+                    e' e
                     (⊢⊢is⊢conv↓Term x₁)
     in PE.subst₄ (λ X T U V → _ ⊢ cast ⁰ (Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ X) (Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ T)  _ _ ~
                                   cast ⁰ (Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ U) (Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ V) _ _ ↑! (Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ T) ^ ι ⁰)
@@ -335,8 +476,13 @@ mutual
     in ⊥-elim (!≢% (PE.sym erF))
 
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ!%ₙ (castₙ x₆ x₇ x₈)) = ⊥-elim (I.Π≢ne x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ!%ₙ (castnIndₙ x₆)) = ⊥-elim (I.Π≢ne x₆ (univ (SG.soundnessConv↓Term x)))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ!%ₙ (castnΠₙ x₆)) = ⊥-elim (I.Π≢ne x₆ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ!%ₙ (castIndₙ x₆)) = ⊥-elim (I.Π≢ne x₆ (sym (univ (SG.soundnessConv↓Term x₁))))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ!%ₙ (castΠₙ x₆)) = ⊥-elim (I.Π≢ne x₆ (sym (univ (SG.soundnessConv↓Term x₁))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ!%ₙ (castIndInd≢ₙ x₆)) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x₁)))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ!%ₙ castIndΠₙ) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ!%ₙ castΠIndₙ) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x₁)))
   ⊢⊢is⊢~! (cast-cong x x₁ x₂ x₃ x₄ castΠΠ!%ₙ castΠΠ!%ₙ) =
     let Π=Π = SG.soundnessConv↓Term x
         _ , _ , _ , _ , _ , er , er' = injectivityGen (univ Π=Π)
@@ -345,10 +491,10 @@ mutual
         ⊢Π , ⊢Π' = syntacticEq (univ Π=Π)
         ⊢Π'' , ⊢Π''' = syntacticEq (univ Π=Π')
         foo = PE.subst₂ (λ T U → _ ⊢ Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ U [conv↓] Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ T ∷ _ ^ ι ¹)
-                    er' er 
+                    er' er
                     (⊢⊢is⊢conv↓Term x)
         foo' = PE.subst₂ (λ T U → _ ⊢ Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ U [conv↓] Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ T ∷ _ ^ ι ¹)
-                    e' e 
+                    e' e
                     (⊢⊢is⊢conv↓Term x₁)
     in PE.subst₄ (λ X T U V → _ ⊢ cast ⁰ (Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ X) (Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ T)  _ _ ~
                                   cast ⁰ (Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ U) (Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ V) _ _ ↑! (Π _ ^ _ ° _ ▹ _ ° _ ° ⁰ ^ T) ^ ι ⁰)
@@ -370,8 +516,14 @@ mutual
     in ⊥-elim (!≢% erF)
 
   ⊢⊢is⊢~! (cast-refl x x₁ x₂ (castₙ x₃ x₄ x₅) cast) = cast-refl (inversion-ne-U x₃ (⊢⊢is⊢conv↓Term x)) (⊢⊢is⊢conv↓Term x₁) x₂
+  ⊢⊢is⊢~! (cast-refl x x₁ x₂ (castnIndₙ x₃) cast) = ⊥-elim (Ind≢ne! x₃ (univ (sym (SG.soundnessConv↓Term x))))
   ⊢⊢is⊢~! (cast-refl x x₁ x₂ (castnΠₙ x₃) cast) = ⊥-elim (I.Π≢ne x₃ (univ (sym (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-refl x x₁ x₂ (castIndₙ x₃) cast) = ⊥-elim (Ind≢ne! x₃ (univ (SG.soundnessConv↓Term x)))
   ⊢⊢is⊢~! (cast-refl x x₁ x₂ (castΠₙ x₃) cast) = ⊥-elim (I.Π≢ne x₃ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-refl x x₁ x₂ (castIndInd≢ₙ x₃) cast) with Ind≡A (univ (SG.soundnessConv↓Term x)) Indₙ
+  ... | PE.refl = ⊥-elim (x₃ PE.refl)
+  ⊢⊢is⊢~! (cast-refl x x₁ x₂ castIndΠₙ cast) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-refl x x₁ x₂ castΠIndₙ cast) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x))))
   ⊢⊢is⊢~! (cast-refl x x₁ x₂ castΠΠ%!ₙ cast) =
     let Π=Π = SG.soundnessConv↓Term x
         _ , erF , _ = injectivityGen (univ Π=Π)
@@ -382,8 +534,14 @@ mutual
     in ⊥-elim (!≢% erF)
 
   ⊢⊢is⊢~! (cast-refl' x x₁ x₂ (castₙ x₃ x₄ x₅) cast) = cast-refl' (inversion-ne-U x₄ (⊢⊢is⊢conv↓Term x)) (⊢⊢is⊢conv↓Term x₁) x₂
+  ⊢⊢is⊢~! (cast-refl' x x₁ x₂ (castnIndₙ x₃) cast) = ⊥-elim (Ind≢ne! x₃ (univ (SG.soundnessConv↓Term x)))
   ⊢⊢is⊢~! (cast-refl' x x₁ x₂ (castnΠₙ x₃) cast) = ⊥-elim (I.Π≢ne x₃ (univ (SG.soundnessConv↓Term x)))
+  ⊢⊢is⊢~! (cast-refl' x x₁ x₂ (castIndₙ x₃) cast) =  ⊥-elim (Ind≢ne! x₃ (univ (sym (SG.soundnessConv↓Term x))))
   ⊢⊢is⊢~! (cast-refl' x x₁ x₂ (castΠₙ x₃) cast) = ⊥-elim (I.Π≢ne x₃ (univ (sym (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-refl' x x₁ x₂ (castIndInd≢ₙ x₃) cast) with Ind≡A (univ (SG.soundnessConv↓Term x)) Indₙ
+  ... | PE.refl = ⊥-elim (x₃ PE.refl)
+  ⊢⊢is⊢~! (cast-refl' x x₁ x₂ castIndΠₙ cast) = ⊥-elim (Ind≢Π! (sym (univ (SG.soundnessConv↓Term x))))
+  ⊢⊢is⊢~! (cast-refl' x x₁ x₂ castΠIndₙ cast) = ⊥-elim (Ind≢Π! (univ (SG.soundnessConv↓Term x)))
   ⊢⊢is⊢~! (cast-refl' x x₁ x₂ castΠΠ%!ₙ cast) =
     let Π=Π = SG.soundnessConv↓Term x
         _ , erF , _ = injectivityGen (univ Π=Π)
@@ -400,6 +558,7 @@ mutual
   ⊢⊢is⊢conv↓ (univ x) = univ (⊢⊢is⊢conv↓Term x)
   ⊢⊢is⊢conv↑Term ([↑]ₜ B t′ u′ D d d′ whnfB whnft′ whnfu′ t<>u) = [↑]ₜ B t′ u′ D d d′ whnfB whnft′ whnfu′ (⊢⊢is⊢conv↓Term t<>u)
   ⊢⊢is⊢conv↓Term (U-cong x x₁) = U-refl x x₁
+  ⊢⊢is⊢conv↓Term (Ind-cong x i∈) = Ind-refl x i∈
   ⊢⊢is⊢conv↓Term (Empty-cong x) = Empty-refl x
   ⊢⊢is⊢conv↓Term (Π-cong x x₁ x₂ x₃ x₄ x₅ x₆ x₇) =
     let F=F = SG.soundnessConv↑Term x₆
@@ -412,6 +571,7 @@ mutual
         ⊢ΓF = wfTerm ⊢t
         ⊢Γ , ⊢F = inversion-ctx ⊢ΓF
     in η-eq x x₁ ⊢F x₃ x₄ x₅ x₆ t=t
+  ⊢⊢is⊢conv↓Term (ctr-cong ⊢Γ ind∈ eq x) = ctr-cong ⊢Γ ind∈ eq (⊢⊢is⊢All₃ x)
   ⊢⊢is⊢conv↓Term (ne x x₁ Uₙ x₃) =
     let t=u = ⊢⊢is⊢~↓! x₃
         whnf , net , neu = W.ne~↓! t=u
@@ -419,8 +579,18 @@ mutual
         _ , M=U = neTypeEq net ⊢t x
         M==U = U≡A-whnf (sym M=U) whnf
     in ne (PE.subst (λ X → _ ⊢ _ ~ _ ↓! X ^ _) M==U t=u)
+  ⊢⊢is⊢conv↓Term (ne ⊢Ind x₁ Indₙ x₃) with Indsmall (syntacticTerm ⊢Ind)
+  ... | PE.refl =
+    let t=u = ⊢⊢is⊢~↓! x₃
+        whnf , net , neu = W.ne~↓! t=u
+        _ , ⊢t , ⊢t' = syntacticEqTerm (S.soundness~↓! t=u)
+        _ , M=U = neTypeEq net ⊢t ⊢Ind
+        M==U = Ind≡A (sym M=U) whnf
+    in Ind-ins (PE.subst (λ X → _ ⊢ _ ~ _ ↓! X ^ _) M==U t=u)
   ⊢⊢is⊢conv↓Term (ne x x₁ (ne x₂) x₃) with nesmall x₂ (syntacticTerm x)
   ... | _ , PE.refl = ne-ins x x₁ x₂ (⊢⊢is⊢~↓! x₃)
 
   ⊢⊢is⊢genconv↑ {l = [ ! , l ]} X = ⊢⊢is⊢conv↑Term X
   ⊢⊢is⊢genconv↑ {l = [ % , l ]} X = ⊢⊢is⊢~% X
+  ⊢⊢is⊢All₃ []ₐ = []ₐ
+  ⊢⊢is⊢All₃ (x ∷ₐ xs) = ⊢⊢is⊢conv↑Term x ∷ₐ ⊢⊢is⊢All₃ xs

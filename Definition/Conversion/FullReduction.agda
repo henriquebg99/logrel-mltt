@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.FullReduction (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
@@ -24,16 +26,25 @@ open import Definition.LogicalRelation.Fundamental.Reducibility senv swf equivs
 open import Definition.Typed.Consequences.RelevanceUnicity senv swf equivs
 open import Tools.Empty using (⊥; ⊥-elim)
 open import Tools.Product
+open import Tools.List using (All; All₃; []ₐ; _∷ₐ_)
+import Tools.List as TL
 import Tools.PropositionalEquality as PE
 mutual
   data NfNeutral (Γ : Con Term) : Term → Set where
     var     : ∀ n                     → NfNeutral Γ (var n)
     ∘ₙ      : ∀ {k u l}     → NfNeutral Γ  k → Nf Γ u → NfNeutral Γ  (k ∘ u ^ l)
+    IndRectₙ : ∀ {i lG P t ms} → Nf (Γ ∙ Ind i ^ [ ! , ι ⁰ ]) P → NfNeutral Γ t → All (Nf Γ) ms
+                               → NfNeutral Γ (IndRect i lG P t ms)
     castₙ : ∀ {l A B e t} → NfNeutral Γ  A → NfNeutral Γ B → NfNeutral Γ t → NfNeutral Γ  (cast l A B e t)
+    castIndₙ : ∀ {l i B e t} → NfNeutral Γ  B → Nf Γ t → NfNeutral Γ  (cast l (Ind i) B e t)
     castΠₙ : ∀ {l A rA lA P lP B e t} → Nf Γ A → Nf (Γ ∙ A ^ [ rA , ι lA ]) P → NfNeutral Γ  B → Nf Γ t
                                       → NfNeutral Γ (cast l (Π A ^ rA ° lA ▹ P ° lP ° l ^ !) B e t)
+    castneIndₙ : ∀ {l i B e t} → NfNeutral Γ  B → Nf Γ t → NfNeutral Γ  (cast l B (Ind i) e t)
     castneΠₙ : ∀ {l A rA lA P lP B e t} → Nf Γ A → Nf (Γ ∙ A ^ [ rA , ι lA ]) P → NfNeutral Γ  B → Nf Γ t
                                       → NfNeutral Γ (cast l B (Π A ^ rA ° lA ▹ P ° lP ° l ^ !) e t)
+    castIndIndₙ : ∀ {l i j e t} → reprInd i PE.≢ reprInd j → Nf Γ t → NfNeutral Γ  (cast l (Ind i) (Ind j) e t)
+    castIndΠₙ : ∀ {l i A rA B e t} → Nf Γ A → Nf (Γ ∙ A ^ [ rA , ι ⁰ ]) B → Nf Γ t → NfNeutral Γ  (cast l (Ind i) (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ !) e t)
+    castΠIndₙ : ∀ {l i A rA B e t} → Nf Γ A → Nf (Γ ∙ A ^ [ rA , ι ⁰ ]) B → Nf Γ t → NfNeutral Γ  (cast l (Π A ^ rA ° ⁰ ▹ B ° ⁰ ° l ^ !) (Ind i) e t)
     castΠΠ%!ₙ : ∀ {l A B A' B' e t} → Nf Γ A → Nf (Γ ∙ A ^ [ % , ι ⁰ ]) B → Nf Γ A' → Nf (Γ ∙ A' ^ [ ! , ι ⁰ ]) B' → Nf Γ t
                                     → NfNeutral Γ  (cast l (Π A ^ % ° ⁰ ▹ B ° ⁰ ° l ^ !) (Π A' ^ ! ° ⁰ ▹ B' ° ⁰ ° l ^ !) e t)
     castΠΠ!%ₙ : ∀ {l A B A' B' e t} → Nf Γ A → Nf (Γ ∙ A ^ [ ! , ι ⁰ ]) B → Nf Γ A' → Nf (Γ ∙ A' ^ [ % , ι ⁰ ]) B' → Nf Γ t
@@ -45,9 +56,11 @@ mutual
     Uₙ    : ∀ {r l} → Nf Γ (Univ r l)
     Πₙ    : ∀ {A r rΠ lA B lB l} → Nf Γ A → Nf (Γ ∙ A ^ [ r , ι lA ]) B → Nf Γ (Π A ^ r ° lA ▹ B ° lB ° l ^ rΠ)
     Idₙ : ∀ {A t u} → Nf Γ  A → Nf Γ t → Nf Γ u → Nf Γ  (Id A t u)
+    Indₙ    : ∀ {i} → Nf Γ (Ind i)
     Emptyₙ : ∀ {l} → Nf Γ (Empty l)
 
     lamₙ  : ∀ {A l rF lF t} → Γ ⊢ A ^ [ rF , ι lF ] → Nf (Γ ∙ A ^ [ rF , ι lF ]) t → Nf Γ (lam A ▹ t ^ l)
+    ctrₙ  : ∀ {i j args} → All (Nf Γ) args → Nf Γ (ctr i j args)
 
     ne   : ∀ {n} → NfNeutral Γ  n → Nf Γ n
     sprop   : ∀ {t A l} → Γ ⊢ t ∷ A ^ [ % , l ] → Nf Γ t
@@ -55,19 +68,27 @@ mutual
 NfNeutralNeutral :  ∀ {t Γ} → NfNeutral Γ t → Neutral t
 NfNeutralNeutral (var n) = var n
 NfNeutralNeutral (∘ₙ X x) = ∘ₙ (NfNeutralNeutral X)
+NfNeutralNeutral (IndRectₙ x X xs) = IndRectₙ (NfNeutralNeutral X)
 NfNeutralNeutral (castₙ X x x₁) = castₙ (NfNeutralNeutral X) (NfNeutralNeutral x) (NfNeutralNeutral x₁)
+NfNeutralNeutral (castIndₙ X x) = castIndₙ (NfNeutralNeutral X)
 NfNeutralNeutral (castΠₙ x x₁ X x₂) = castΠₙ (NfNeutralNeutral X)
+NfNeutralNeutral (castIndIndₙ x x₁) = castIndInd≢ₙ x
+NfNeutralNeutral (castIndΠₙ x x₁ x₂) = castIndΠₙ
+NfNeutralNeutral (castΠIndₙ x x₁ x₂) = castΠIndₙ
 NfNeutralNeutral (castΠΠ%!ₙ x x₁ x₂ x₃ x₄) = castΠΠ%!ₙ
 NfNeutralNeutral (castΠΠ!%ₙ x x₁ x₂ x₃ x₄) = castΠΠ!%ₙ
 NfNeutralNeutral (Emptyrecₙ x) = Emptyrecₙ
+NfNeutralNeutral (castneIndₙ X x) = castnIndₙ (NfNeutralNeutral X)
 NfNeutralNeutral (castneΠₙ x x₁ X x₂) = castnΠₙ (NfNeutralNeutral X)
 
 NfWhnf :  ∀ {Γ t A l} → Γ ⊢ t ∷ A ^ [ ! , l ] → Nf Γ t → Whnf t
 NfWhnf ⊢t Uₙ = Uₙ
 NfWhnf ⊢t (Πₙ X X₁) = Πₙ
 NfWhnf ⊢t (Idₙ X x x₁) = Idₙ
+NfWhnf ⊢t Indₙ = Indₙ
 NfWhnf ⊢t Emptyₙ = Emptyₙ
 NfWhnf ⊢t (lamₙ _ X) = lamₙ
+NfWhnf ⊢t (ctrₙ X) = ctrₙ
 NfWhnf ⊢t (ne x) = ne (NfNeutralNeutral x)
 NfWhnf ⊢t (sprop ⊢t') = let !≡% = relevance-uniq ⊢t ⊢t' in ⊥-elim (!≢% !≡%)
 
@@ -126,13 +147,31 @@ mutual
   convNfNeutral {r = [ % , l ]} Γ≡Δ ⊢t (∘ₙ X x) =
     let F , rF , lF , G , lG , ⊢k , ⊢u , _ , _ , erl = inversion-app-irr ⊢t
     in ∘ₙ (convNfNeutral Γ≡Δ ⊢k X) (convNf Γ≡Δ ⊢u x) 
+  convNfNeutral Γ≡Δ ⊢t (IndRectₙ x X xs) =
+    let _ , _ , _ , _ , _ , ⊢x , ⊢X , ⊢xs , _ = inversion-IndRect ⊢t
+    in IndRectₙ (convNf (Γ≡Δ ∙ refl (syntacticTerm ⊢X)) (un-univ ⊢x) x) (convNfNeutral Γ≡Δ ⊢X X)
+                (convNfAll Γ≡Δ ⊢xs xs)
   convNfNeutral Γ≡Δ ⊢t (castₙ X x x₁) =
     let _ , ⊢X , ⊢x , ⊢e , ⊢x₁ , _ = inversion-cast ⊢t
     in castₙ (convNfNeutral Γ≡Δ ⊢X X) (convNfNeutral Γ≡Δ ⊢x x) (convNfNeutral Γ≡Δ ⊢x₁ x₁)
+  convNfNeutral Γ≡Δ ⊢t (castIndₙ X x) =
+    let _ , _ , ⊢X , ⊢e , ⊢x , _ = inversion-cast ⊢t
+    in castIndₙ (convNfNeutral Γ≡Δ ⊢X X) (convNf Γ≡Δ ⊢x x)
   convNfNeutral Γ≡Δ ⊢t (castΠₙ x x₁ X x₂) =
     let _ , ⊢Π , ⊢X , ⊢e , ⊢x₂ , _ = inversion-cast ⊢t
         _ , _ , _ , ⊢F , ⊢G , _ = inversion-Π ⊢Π
     in castΠₙ (convNf Γ≡Δ ⊢F x) (convNf (Γ≡Δ ∙ refl (univ ⊢F)) ⊢G x₁) (convNfNeutral Γ≡Δ ⊢X X) (convNf Γ≡Δ ⊢x₂ x₂)
+  convNfNeutral Γ≡Δ ⊢t (castIndIndₙ x x₁) =
+    let _ , _ , _ , _ , ⊢x₁ , _ = inversion-cast ⊢t
+    in castIndIndₙ x (convNf Γ≡Δ ⊢x₁ x₁)
+  convNfNeutral Γ≡Δ ⊢t (castIndΠₙ x x₁ x₂) =
+    let _ , _ , ⊢Π , ⊢e , ⊢x₂ , _ = inversion-cast ⊢t
+        _ , _ , _ , ⊢F , ⊢G , _ = inversion-Π ⊢Π
+    in castIndΠₙ (convNf Γ≡Δ ⊢F x) (convNf (Γ≡Δ ∙ refl (univ ⊢F)) ⊢G x₁) (convNf Γ≡Δ ⊢x₂ x₂)
+  convNfNeutral Γ≡Δ ⊢t (castΠIndₙ x x₁ x₂) =
+    let _ , ⊢Π , _ , ⊢e , ⊢x₂ , _ = inversion-cast ⊢t
+        _ , _ , _ , ⊢F , ⊢G , _ = inversion-Π ⊢Π
+    in castΠIndₙ (convNf Γ≡Δ ⊢F x) (convNf (Γ≡Δ ∙ refl (univ ⊢F)) ⊢G x₁) (convNf Γ≡Δ ⊢x₂ x₂)
   convNfNeutral Γ≡Δ ⊢t (castΠΠ%!ₙ x x₁ x₂ x₃ x₄) =
     let _ , ⊢Π , ⊢Π' , ⊢e , ⊢x₄ , _ = inversion-cast ⊢t
         _ , _ , _ , ⊢F , ⊢G , _ = inversion-Π ⊢Π
@@ -148,6 +187,9 @@ mutual
   convNfNeutral Γ≡Δ ⊢t (Emptyrecₙ x) =
     let _ , ⊢x , _ = inversion-Emptyrec ⊢t
     in Emptyrecₙ (convNf Γ≡Δ (un-univ ⊢x) x)
+  convNfNeutral Γ≡Δ ⊢t (castneIndₙ X x) =
+    let _ , ⊢A , ⊢B , ⊢e , ⊢x₄ , _ = inversion-cast ⊢t
+    in castneIndₙ (convNfNeutral Γ≡Δ ⊢A X) (convNf Γ≡Δ ⊢x₄ x)
   convNfNeutral Γ≡Δ ⊢t (castneΠₙ x x₁ X x₂) =
     let _ , ⊢A , ⊢Π , ⊢e , ⊢x₄ , _ = inversion-cast ⊢t
         _ , _ , _ , ⊢F , ⊢G , _ = inversion-Π ⊢Π
@@ -163,6 +205,7 @@ mutual
   convNf Γ≡Δ ⊢t (Idₙ X x x₁) =
     let _ , ⊢X , ⊢x , ⊢x₁ , _ = inversion-Id ⊢t
     in Idₙ (convNf Γ≡Δ ⊢X X) (convNf Γ≡Δ ⊢x x) (convNf Γ≡Δ ⊢x₁ x₁)
+  convNf Γ≡Δ ⊢t Indₙ = Indₙ
   convNf Γ≡Δ ⊢t Emptyₙ = Emptyₙ
   convNf Γ≡Δ ⊢t (lamₙ ⊢F X) =
     let rF , lF , G , rG , lG , ⊢F' , ⊢t' , _ , erl = inversion-lam ⊢t
@@ -170,8 +213,15 @@ mutual
         erF , elF = relevance-unicity ⊢F ⊢F'
     in lamₙ (stability Γ≡Δ  ⊢F) (convNf (Γ≡Δ ∙ refl ⊢F) 
             (PE.subst₂ (λ r l → _ ∙ _ ^ [ r , ι l ] ⊢ _ ∷ G ^ [ rG , ι lG ]) (PE.sym erF) (PE.sym (ιinj elF)) ⊢t')  X)
+  convNf Γ≡Δ ⊢t (ctrₙ X) =
+    let _ , _ , _ , _ , _ , ⊢X , _ = inversion-ctr ⊢t
+    in ctrₙ (convNfAll Γ≡Δ ⊢X X)
   convNf Γ≡Δ ⊢t (ne x) = ne (convNfNeutral Γ≡Δ ⊢t x)
   convNf Γ≡Δ ⊢t (sprop x) = sprop (stabilityTerm Γ≡Δ x)
+
+  convNfAll :  ∀ {Γ Δ ts As r} → ⊢ Γ ≡ Δ → Γ ⊢All ts ∷ As ^ r → All (Nf Γ) ts → All (Nf Δ) ts
+  convNfAll Γ≡Δ εⱼ []ₐ = []ₐ
+  convNfAll Γ≡Δ (consⱼ ⊢t ⊢ts) (x ∷ₐ xs) = convNf Γ≡Δ ⊢t x ∷ₐ convNfAll Γ≡Δ ⊢ts xs
 
 mutual
   fullRedNe : ∀ {t t' A l Γ} → Γ ⊢ t ~ t' ↑! A ^ l → ∃ λ u → NfNeutral Γ u × Γ ⊢ t ≡ u ∷ A ^ [ ! , l ]
@@ -187,6 +237,13 @@ mutual
     in  (t′ ∘ a ^ lΠ) ,
         ∘ₙ nfT′ (sprop ⊢a) ,
         app-cong t≡t′ (proof-irrelevance ⊢a ⊢a)
+  fullRedNe (IndRect-cong {lG = l} ind∈ P t ms) =
+    let P′ , nfP′ , P≡P′ = fullRed P
+        t′ , nft′ , t≡t′ = fullRedNe′ t
+        ms′ , nfms′ , ms≡ms′ = fullRedTermAll ms
+    in  IndRect _ l P′ t′ ms′
+     , IndRectₙ nfP′ nft′ nfms′
+     ,  IndRect-cong ind∈ P≡P′ t≡t′ (All₃-⊢All ms≡ms′)
   fullRedNe (Emptyrec-cong {k = k} {ll = l} C (%~↑ ⊢e ⊢e')) =
     let C′ , nfC′ , C≡C′ = fullRed C
     in  Emptyrec l ⁰ C′ k , Emptyrecₙ nfC′
@@ -202,6 +259,14 @@ mutual
         B≡B = trans (sym (soundness~↓! x₁)) B≡B′
     in cast ⁰ A′ B′ e t′ , castₙ nfA′ nfB′ (NfNeutralNfNeutral nt nX nft′ t≡t′) ,
        cast-cong A≡A′ B≡B t≡t′ ⊢e (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wfTerm ⊢e)) ) A≡A′ B≡B))) 
+  fullRedNe (cast-Ind {e = e} {e' = e'} x x₁ ⊢e ⊢e') =
+    let A′ , nfA′ , A≡A′ = fullRedNe′ x
+        t′ , nft′ , t≡t′ = fullRedTerm x₁
+        A≡A = trans (sym (soundness~↓! x)) A≡A′
+        ⊢Ind = Indⱼ′ (wfTerm ⊢e) (Ind∈Idˡ ⊢e)
+    in cast ⁰ _ A′ e t′ , castIndₙ nfA′ nft′ ,
+       cast-cong (refl ⊢Ind) A≡A t≡t′ ⊢e
+                 (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wfTerm ⊢e)) ) (refl ⊢Ind) A≡A)))
   fullRedNe {Γ = Γ} (cast-Π {e = e} {e' = e'} x x₁ x₂ ⊢e ⊢e') =
     let A′ , nfA′ , A≡A′ = fullRedTerm x
         B′ , nfB′ , B≡B′ = fullRedNe′ x₁
@@ -211,6 +276,23 @@ mutual
         B≡B = trans (sym (soundness~↓! x₁)) B≡B′
     in cast ⁰ A′ B′ e t′ , PE.subst (λ A →  NfNeutral Γ (cast ⁰ A B′ e t′)) (PE.sym Π≡HE) nfCast ,
        cast-cong A≡A′ B≡B t≡t′ ⊢e (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wfTerm ⊢e)) ) A≡A′ B≡B)))
+  fullRedNe {Γ = Γ} (cast-ΠInd {i = i} {e = e} {e' = e'} x x₁ ⊢e ⊢e') =
+    let A′ , nfA′ , A≡A′ = fullRedTerm x
+        t′ , nft′ , t≡t′ = fullRedTerm x₁
+        H , E , NfH , NfE , Π≡HE = NfΠA (univ A≡A′) nfA′
+        nfCast = castΠIndₙ NfH NfE nft′
+        ⊢Ind = Indⱼ′ (wfTerm ⊢e) (Ind∈Idʳ ⊢e)
+    in cast ⁰ A′ (Ind i) e t′ , PE.subst (λ A → NfNeutral  Γ (cast ⁰ A (Ind i) e t′)) (PE.sym Π≡HE) nfCast ,
+       cast-cong A≡A′ (refl ⊢Ind) t≡t′ ⊢e (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wfTerm ⊢e)) ) A≡A′ (refl ⊢Ind))))
+  fullRedNe {Γ = Γ} (cast-IndΠ {i = i} {e = e} {e' = e'} x x₁ ⊢e ⊢e') =
+    let A′ , nfA′ , A≡A′ = fullRedTerm x
+        t′ , nft′ , t≡t′ = fullRedTerm x₁
+        H , E , NfH , NfE , Π≡HE = NfΠA (univ A≡A′) nfA′
+        nfCast = castIndΠₙ NfH NfE nft′
+        A≡A = trans (sym (soundnessConv↑Term x)) A≡A′
+        ⊢Ind = Indⱼ′ (wfTerm ⊢e) (Ind∈Idˡ ⊢e)
+    in cast ⁰ (Ind i) A′ e t′ , PE.subst (λ A →  NfNeutral Γ (cast ⁰ (Ind i) A e t′)) (PE.sym Π≡HE) nfCast ,
+       cast-cong (refl ⊢Ind) A≡A t≡t′ ⊢e (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wfTerm ⊢e)) ) (refl ⊢Ind) A≡A)))
   fullRedNe {Γ = Γ} (cast-ΠΠ%! {e = e} {e' = e'} x x₁ x₂ ⊢e ⊢e') =
     let A′ , nfA′ , A≡A′ = fullRedTerm x
         B′ , nfB′ , B≡B′ = fullRedTerm x₁
@@ -231,6 +313,12 @@ mutual
         B≡B = trans (sym (soundnessConv↑Term x₁)) B≡B′
     in cast ⁰ A′ B′ e t′ , PE.subst₂ (λ A B →  NfNeutral Γ (cast ⁰ A B e t′)) (PE.sym Π≡HE) (PE.sym Π≡HE') nfCast ,
        cast-cong A≡A′ B≡B t≡t′ ⊢e (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wfTerm ⊢e)) ) A≡A′ B≡B)))
+  fullRedNe (cast-neInd {e = e} x x₁ ⊢e _) =
+    let A′ , nfA′ , A≡A′ = fullRedNe′ x
+        t′ , nft′ , t≡t′ = fullRedTerm x₁
+        ⊢Ind = Indⱼ′ (wfTerm ⊢e) (Ind∈Idʳ ⊢e)
+    in cast ⁰ A′ _ e t′ , castneIndₙ nfA′ nft′ ,
+       cast-cong A≡A′ (refl ⊢Ind) t≡t′ ⊢e (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wfTerm ⊢e)) ) A≡A′ (refl ⊢Ind) )))
   fullRedNe {Γ = Γ} (cast-neΠ {e = e} X x x₁ ⊢e _) =
     let A′ , nfA′ , A≡A′ = fullRedNe′ x
         t′ , nft′ , t≡t′ = fullRedTerm x₁
@@ -249,7 +337,14 @@ mutual
     in cast ⁰ A′ A′ e t′ ,
        castₙ nfA′ nfA′ (NeutralNfNeutral (inversion-ne neA (NfWhnf ⊢t′ nft′) ⊢t′) nft′ ⊢t′) ,
        cast-cong A≡A′ (trans (sym A≡A) A≡A′) t≡t′ ⊢e (conv ⊢e (univ (Id-cong (refl (univ 0<1 (wfTerm ⊢e)) ) A≡A′ (trans (sym A≡A) A≡A′)))) 
-  
+  fullRedNe (cast-IndInd {e = e} x x₁ ⊢e _) =
+    let t′ , nft′ , t≡t′ = fullRedTerm x₁
+        Indi≡Indi = refl (Indⱼ′ (wfTerm ⊢e) (Ind∈Idˡ ⊢e))
+        Indj≡Indj = refl (Indⱼ′ (wfTerm ⊢e) (Ind∈Idʳ ⊢e))
+    in cast ⁰ _ _ e t′ ,
+       castIndIndₙ x nft′ ,
+       cast-cong Indi≡Indi Indj≡Indj t≡t′ ⊢e ⊢e
+    
   fullRedNe (cast-refl' x x₁ x₂) =
     let A′ , nfA′ , A≡A′ = fullRedNe′ x
         _ , _ , neA = ne~↓! x
@@ -287,6 +382,7 @@ mutual
   fullRedTerm′ (ne A) =
     let B , nf , A≡B = fullRedNe′ A
     in  B , ne nf , A≡B
+  fullRedTerm′ (Ind-refl ⊢Γ i∈) = Ind _ , Indₙ , refl (Indⱼ′ ⊢Γ i∈)
   fullRedTerm′ (Empty-refl ⊢Γ) = Empty _ , Emptyₙ , refl (Emptyⱼ ⊢Γ)
   fullRedTerm′ (Π-cong {rF = rF} PE.refl PE.refl PE.refl PE.refl l< l<' ⊢F F G) =
     let F′ , nfF′ , F≡F′ = fullRedTerm F
@@ -299,11 +395,17 @@ mutual
         t′ , nfT′ , t≡t′ = fullRedTerm t
         u′ , nfU′ , u≡u′ = fullRedTerm u
     in Id A′ t′ u′ , Idₙ nfA′ nfT′ nfU′ , Id-cong A≡A′ t≡t′ u≡u′
+  fullRedTerm′  (Ind-ins t) =
+    let u , nf , t≡u = fullRedNe′ t
+    in  u , ne nf , t≡u
   fullRedTerm′ (ne-ins ⊢t _ _ t) =
     let u , nfU , t≡u = fullRedNe′ t
         _ , ⊢t∷M , _ = syntacticEqTerm t≡u
         _ , neT , _ = ne~↓! t
     in  u , ne nfU , conv t≡u (proj₂ (neTypeEq neT ⊢t∷M ⊢t))
+  fullRedTerm′ (ctr-cong ⊢Γ ind∈ eq args) =
+    let args′ , nfArgs′ , args≡args′ = fullRedTermAll args
+    in  ctr _ _ args′ , ctrₙ nfArgs′ , ctr-cong ⊢Γ ind∈ eq args≡args′
   fullRedTerm′ {Γ = Γ} (η-eq {f} {g} {F} {G} {rF} {lF} {lG} {l} l< l<' ⊢F ⊢t _ _ _ t∘0) =
     let u , nf , t∘0≡u = fullRedTerm t∘0
         _ , _ , ⊢u = syntacticEqTerm t∘0≡u
@@ -319,3 +421,10 @@ mutual
                                      (wkSingleSubstId u) (wkSingleSubstId _)
                                      (sym (β-red l< l<' wk⊢F wk⊢u (var ΓF⊢ here)))))
 
+  fullRedTermAll : ∀ {ts ts' As l Γ} → All₃ (λ t t' A → Γ ⊢ t [conv↑] t' ∷ A ^ l) ts ts' As
+                 → ∃ λ us → All (Nf Γ) us × All₃ (λ t u A → Γ ⊢ t ≡ u ∷ A ^ [ ! , l ]) ts us As
+  fullRedTermAll []ₐ = TL.[] , []ₐ , []ₐ
+  fullRedTermAll (t ∷ₐ ts) =
+    let u , nfU , t≡u = fullRedTerm t
+        us , nfUs , ts≡us = fullRedTermAll ts
+    in  u TL.∷ us , nfU ∷ₐ nfUs , t≡u ∷ₐ ts≡us

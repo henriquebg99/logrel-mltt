@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
@@ -329,8 +331,8 @@ Ind∈ᵣ D = Ind∈ (_⊢_:⇒*:_^_.⊢B D)
          (i∈ : i ∈ₗ SU.indNames senv) (j∈ : j ∈ₗ SU.indNames senv)
          (i≢j : i PE.≢ j) (H : reprInd i PE.≡ reprInd j) →
          ∀ {t e} → ([t] : Γ ⊩⟨ ι ⁰ ⟩ t ∷ A ^ [ ! , ι ⁰ ] / Indᵣ [A]) → (⊢e : Γ ⊢ e ∷ Id (U ⁰) A B ^ [ % , ι ⁰ ]) →
-         Γ ⊢ cast ⁰ A B e t ⇒* emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs i j i∈ j∈ H)) ∘ t ^ ⁰ ∷ B ^ ι ⁰
-         × Γ ⊩⟨ ι ⁰ ⟩ emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs i j i∈ j∈ H)) ∘ t ^ ⁰ ∷ B ^ [ ! , ι ⁰ ] / Indᵣ [B]
+         Γ ⊢ cast ⁰ A B e t ⇒* emb-oterm (Eq.fwdₒ (Eq.repr-equiv equivs i j i∈ j∈ H)) ∘ t ^ ⁰ ∷ B ^ ι ⁰
+         × Γ ⊩⟨ ι ⁰ ⟩ emb-oterm (Eq.fwdₒ (Eq.repr-equiv equivs i j i∈ j∈ H)) ∘ t ^ ⁰ ∷ B ^ [ ! , ι ⁰ ] / Indᵣ [B]
 [cast]IndEquiv {A} {B} {i} {j} {Γ} ⊢Γ [[ ⊢A , ⊢IndA , D ]] [[ ⊢B , ⊢IndB , D' ]] i∈ j∈ i≢j H {t} {e} [t] ⊢e =
   let ⊢t = escapeTerm {l = ι ⁰} (Indᵣ [[ ⊢A , ⊢IndA , D ]]) [t]
       ⊢tI = conv ⊢t (subset* D)

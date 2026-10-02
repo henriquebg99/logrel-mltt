@@ -1,6 +1,10 @@
--- We define a record with witnesses that the forward and backward
--- equivalences are reducible in the logical relation, for an instance of the 
--- generic equality
+-- We define a record with a witness that the forward function between two
+-- inductive types with the same representative is reducible in the logical
+-- relation, for an instance of the generic equality. It is the only
+-- reducibility fact about the equivalences needed by the cast rules; the
+-- instance is built in Definition.LogicalRelation.Fundamental.SimpleTerm.
+
+{-# OPTIONS --safe #-}
 
 import Definition.Typed.EqualityRelation as ER
 
@@ -52,20 +56,11 @@ import Tools.PropositionalEquality as PE
        (λ [ρ] ⊢Δ → Lwk.wk [ρ] ⊢Δ [Ind])
        [G] G-ext
 
--- The functions of every equivalence of [equivs] are reducible
 record EquivRed : Set₁ where
   field
-    [fwd] : ∀ {Γ equiv} (⊢Γ : ⊢ Γ) → equiv ∈ₗ equivs
-          → let [Π] = ΠIndInd (Eq.Equiv.indA equiv) (Eq.Equiv.indB equiv) (Eq.Equiv.indA∈ equiv) (Eq.Equiv.indB∈ equiv) ⊢Γ
-            in Γ ⊩⟨ ι ⁰ ⟩ emb_oterm_term (Eq.fwdₒ equiv)
-                 ∷ Π Ind (Eq.Equiv.indA equiv) ^ ! ° ⁰ ▹ Ind (Eq.Equiv.indB equiv) ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / [Π]
-    [bwd] : ∀ {Γ equiv} (⊢Γ : ⊢ Γ) → equiv ∈ₗ equivs
-          → let [Π] = ΠIndInd (Eq.Equiv.indB equiv) (Eq.Equiv.indA equiv) (Eq.Equiv.indB∈ equiv) (Eq.Equiv.indA∈ equiv) ⊢Γ
-            in Γ ⊩⟨ ι ⁰ ⟩ emb_oterm_term (Eq.bwdₒ equiv)
-                 ∷ Π Ind (Eq.Equiv.indB equiv) ^ ! ° ⁰ ▹ Ind (Eq.Equiv.indA equiv) ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / [Π]
     -- The forward function of the equivalence between two inductives with the
     -- same representative (a composite of the equivalences of [equivs])
     [repr-fwd] : ∀ {Γ i j} (⊢Γ : ⊢ Γ) (i∈ : i ∈ₗ SI.indNames senv) (j∈ : j ∈ₗ SI.indNames senv)
                  (H : reprInd i PE.≡ reprInd j)
-               → Γ ⊩⟨ ι ⁰ ⟩ emb_oterm_term (Eq.fwdₒ (Eq.repr-equiv equivs i j i∈ j∈ H))
+               → Γ ⊩⟨ ι ⁰ ⟩ emb-oterm (Eq.fwdₒ (Eq.repr-equiv equivs i j i∈ j∈ H))
                    ∷ Π Ind i ^ ! ° ⁰ ▹ Ind j ° ⁰ ° ⁰ ^ ! ^ [ ! , ι ⁰ ] / ΠIndInd i j i∈ j∈ ⊢Γ

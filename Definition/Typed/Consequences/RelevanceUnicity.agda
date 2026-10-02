@@ -1,9 +1,11 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.Consequences.RelevanceUnicity (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 open import Definition.Typed.EqRelInstance senv swf equivs
 open import Definition.Untyped.Properties senv equivs using (subst-Univ-either)
-open import Definition.Untyped senv equivs hiding (U≢Π; U≢ne; Π≢ne; U≢Empty; Empty≢Π; Empty≢ne)
+open import Definition.Untyped senv equivs hiding (U≢Ind; U≢Π; U≢ne; Ind≢Π; Ind≢ne; Π≢ne; U≢Empty; Ind≢Empty; Empty≢Π; Empty≢ne)
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv swf equivs
 open import Definition.Typed.Weakening senv equivs
@@ -20,6 +22,13 @@ open import Tools.Empty
 open import Tools.Sum using (_⊎_; inj₁; inj₂)
 import Tools.PropositionalEquality as PE
 
+Ind-relevant-term : ∀ {Γ A r i} → Γ ⊢ Ind i ∷ A ^ r → Whnf A → A PE.≡ Univ ! ⁰
+Ind-relevant-term [Ind] whnfA = let [[Ind]] , e = inversion-Ind [Ind]
+                                in U≡A-whnf (sym (PE.subst (λ r → _ ⊢ _ ≡ _ ^ r) e [[Ind]])) whnfA
+
+Ind-relevant : ∀ {Γ r i} → Γ ⊢ Ind i ^ r → r PE.≡ [ ! , ι ⁰ ]
+Ind-relevant (univ [Ind]) = let er , el = Univ-PE-injectivity (Ind-relevant-term [Ind] Uₙ)
+                            in PE.cong₂ (λ x y → [ x , ι y ]) er el
 
 Empty-irrelevant-term : ∀ {Γ A r} → Γ ⊢ sEmpty ∷ A ^ r → Whnf A → A PE.≡ SProp
 Empty-irrelevant-term [Empty] whnfA = let [[Empty]] , e = inversion-Empty [Empty]
@@ -108,7 +117,11 @@ relevance-unicity ⊢A₁ ⊢A₂ | B , nB , ⊢B , rB | C , nC , ⊢C , rC =
   in relevance-unicity′ nC (PE.subst _ e ⊢B) ⊢C
 
 -- inequalities at any relevance
-          
+U≢Ind : ∀ {r r′ l l′ i Γ} → Γ ⊢ Univ r l ≡ Ind i ^ [ r′ , l′ ] → ⊥
+U≢Ind U≡Ind = Ineq.U≢Ind! (PE.subst (λ rx → _ ⊢ _ ≡ _ ^ [ rx , _ ])
+                                    (proj₁ (typelevel-injectivity (Ind-relevant (proj₂ (syntacticEq U≡Ind)))))
+                                    U≡Ind)
+
 U≢Π : ∀ {rU lU  F rF G lF lG lΠ r Γ} → Γ ⊢ Univ rU lU ≡ Π F ^ rF ° lF ▹ G ° lG ° lΠ ^ r ^ [ r , ι lΠ ] → ⊥
 U≢Π U≡Π =
   let r≡! , _ = relevance-unicity (proj₁ (syntacticEq U≡Π)) (Ugenⱼ (wfEq U≡Π))
@@ -120,11 +133,20 @@ U≢ne neK U≡K =
   in Ineq.U≢ne! neK (PE.subst (λ rx → _ ⊢ _ ≡ _ ^ [ rx , _ ]) r≡! U≡K)
 
 
+Ind≢Π : ∀ {i F rF G lF lG r Γ} → Γ ⊢ Ind i ≡ Π F ^ rF ° lF ▹ G ° lG ° ⁰  ^ r ^ [ r , ι ⁰ ] → ⊥
+Ind≢Π Ind≡Π =
+  let r≡! , _ = typelevel-injectivity (Ind-relevant (proj₁ (syntacticEq Ind≡Π)))
+  in Ineq.Ind≢Π! (PE.subst (λ rx → _ ⊢ _ ≡ Π _ ^ _ ° _ ▹ _ ° _ ° _ ^ rx ^ [ rx , _ ]) r≡! Ind≡Π)
+
 Empty≢Π : ∀ {F rF G lF r Γ} → Γ ⊢ sEmpty ≡ Π F ^ rF ° lF ▹ G ° ⁰ ° ⁰ ^ r ^ [ r , ι ⁰ ] → ⊥
 Empty≢Π Empty≡Π =
   let r≡% , _ = relevance-unicity (proj₁ (syntacticEq Empty≡Π)) (univ (Emptyⱼ (wfEq Empty≡Π)))
   in Ineq.Empty≢Π% (PE.subst (λ rx → _ ⊢ _ ≡ Π _ ^ _ ° _ ▹ _ ° _ ° _ ^ rx ^ [ rx , _ ]) r≡% Empty≡Π)
 
+Ind≢ne : ∀ {i K r Γ} → Neutral K → Γ ⊢ Ind i ≡ K ^ [ r , ι ⁰ ] → ⊥
+Ind≢ne neK Ind≡K =
+  let r≡! , _ = typelevel-injectivity (Ind-relevant (proj₁ (syntacticEq Ind≡K)))
+  in Ineq.Ind≢ne! neK (PE.subst (λ rx → _ ⊢ _ ≡ _ ^ [ rx , _ ]) r≡! Ind≡K)
 
 Empty≢ne : ∀ {K r Γ} → Neutral K → Γ ⊢ sEmpty ≡ K ^ [ r , ι ⁰ ] → ⊥
 Empty≢ne neK Empty≡K =
@@ -139,7 +161,12 @@ U≢Empty U≡Empty =
       e₂ , _ = relevance-unicity ⊢Empty (univ (Emptyⱼ (wfEq U≡Empty)))
   in !≢% (PE.trans (PE.sym e₁) e₂)
 
--- ℕ and Empty also by relevance
+-- Ind and Empty also by relevance
+Ind≢Empty : ∀ {Γ i r} → Γ ⊢ Ind i ≡ sEmpty ^ r → ⊥
+Ind≢Empty Ind≡Empty =
+  let ⊢Ind , ⊢Empty = syntacticEq Ind≡Empty
+      e₁ , _ = typelevel-injectivity (PE.trans (PE.sym (Ind-relevant ⊢Ind)) (Empty-irrelevant ⊢Empty))
+  in !≢% e₁
 
 relevance-uniq : ∀ {Γ t T₁ T₂ r₁ r₂ l₁ l₂} → Γ ⊢ t ∷ T₁ ^ [ r₁ , l₁ ] → Γ ⊢ t ∷ T₂ ^ [ r₂ , l₂ ] →
                  r₁ PE.≡ r₂

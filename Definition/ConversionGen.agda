@@ -1,12 +1,17 @@
 -- Algorithmic equality.
 
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.ConversionGen (senv : SI.SEnv) (equivs : E.Equivs senv) where
 open import Definition.Untyped senv equivs
+import Definition.SUntyped as SU
 open import Definition.Typed senv equivs
 open import Tools.Nat
 open import Tools.Product
+open import Tools.List using (List; All₃; map; _∈ₗ_)
+open import Tools.Maybe using (just)
 import Tools.PropositionalEquality as PE
 infix 10 _⊢⊢_~_↑_^_
 infix 10 _⊢⊢_[conv↑]_^_
@@ -16,13 +21,15 @@ infix 10 _⊢⊢_[conv↓]_∷_^_
 infix 10 _⊢⊢_[genconv↑]_∷_^_
 
 data PosType : Term → Set where
+  Indₙ : ∀ {i} → PosType (Ind i)
   Uₙ : ∀ {r l} → PosType (Univ r l)
   ne : ∀{n} → Neutral n → PosType n
 
 -- These views classify only whnfs.
--- Natural, PosType, and Function are a subsets of Whnf.
+-- PosType and Function are subsets of Whnf.
 
 posTypeWhnf : ∀ {A} → PosType A → Whnf A
+posTypeWhnf Indₙ = Indₙ
 posTypeWhnf Uₙ  = Uₙ
 posTypeWhnf (ne x) = ne x
 
@@ -37,6 +44,13 @@ mutual
                 → Γ ⊢⊢ k ~ l ↓! Π F ^ rF ° lF ▹ G ° lG ° lΠ ^ ! ^ ι lΠ
                 → Γ ⊢⊢ t [genconv↑] v ∷ F ^ [ rF , ι lF ]
                 → Γ ⊢⊢ k ∘ t ^ lΠ ~ l ∘ v ^ lΠ ↑! G [ t ] ^ ι lG
+    IndRect-cong : ∀ {ind P P' t t' ms ms' lG}
+                → ind ∈ₗ senv
+                → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢⊢ P [conv↑] P' ^ [ ! , ι lG ]
+                → Γ ⊢⊢ t ~ t' ↓! Ind (SU.SInd.name ind) ^ ι ⁰
+                → All₃ (λ m m' A → Γ ⊢⊢ m [conv↑] m' ∷ A ^ ι lG) ms ms' (indRectBranchTyList ind P ! lG)
+                → Γ ⊢⊢ IndRect (SU.SInd.name ind) lG P t ms ~ IndRect (SU.SInd.name ind) lG P' t' ms'
+                      ↑! (P [ t ]) ^ ι lG
     Emptyrec-cong : ∀ {k l F G ll}
                   → Γ ⊢⊢ F [conv↑] G ^ [ ! , ι ll ]
                   → Γ ⊢⊢ k ~ l ↑% sEmpty ^ ι ⁰
@@ -126,6 +140,7 @@ mutual
     U-cong    : ∀ {r r' }
               → r PE.≡ r' -- needed for K issues
               → ⊢ Γ → Γ ⊢⊢ Univ r ⁰ [conv↓] Univ r' ⁰ ∷ U ¹ ^ next ¹
+    Ind-cong  : ∀ {i} → ⊢ Γ → i ∈ₗ SU.indNames senv → Γ ⊢⊢ Ind i [conv↓] Ind i ∷ U ⁰ ^ next ⁰
     Empty-cong : ⊢ Γ → Γ ⊢⊢ sEmpty [conv↓] sEmpty ∷ SProp ^ next ⁰
     Π-cong    : ∀ {F G H E rF rH rΠ lF lH lG lE lΠ ll}
               → ll PE.≡ next lΠ
@@ -142,6 +157,13 @@ mutual
               → Γ ⊢⊢ t [conv↑] t' ∷ A ^ ι l
               → Γ ⊢⊢ u [conv↑] u' ∷ A ^ ι l
               → Γ ⊢⊢ Id A t u [conv↓] Id A' t' u' ∷ SProp ^ next ⁰
+    ctr-cong  : ∀ {ind j args args' Ts}
+              → ⊢ Γ
+              → ind ∈ₗ senv
+              → SU.ctrArgsTypeList ind j PE.≡ just Ts
+              → All₃ (λ a a' A → Γ ⊢⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' (map emb-stype Ts)
+              → Γ ⊢⊢ ctr (SU.SInd.name ind) j args [conv↓] ctr (SU.SInd.name ind) j args'
+                    ∷ Ind (SU.SInd.name ind) ^ ι ⁰
     ne        : ∀ {k l M W ll}
               → Γ ⊢ k ∷ W ^ [ ! , ll ]
               → Γ ⊢ l ∷ W ^ [ ! , ll ]

@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.Inversion (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where

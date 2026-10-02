@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.Transitivity (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
@@ -503,23 +505,23 @@ abstract
          <=-trans (leS sizet~t) (<=-help-rigid1 {a = sizeConv↑Term x₁} {b = sizeConv↑Term x₅})
 
     trans~↑! {n = 1+ n} {Γ = Γ} PE.refl Γ≡Δ (cast-IndΠ x x₁ x₂ x₃) (cast-IndΠ x₄ x₅ x₆ x₇) (leS e) =
-      let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
-          t~t , sizet~t = transConv↑Term {n = n} PE.refl Γ≡Δ (refl (Ugenⱼ ⊢Γ)) x x₄
-                                         (<<-trans (<=-help-ab' {a = sizeConv↑Term x} {b = sizeConv↑Term x₄}) e)
-          u~u , sizeu~u = transConv↑Term {n = n} PE.refl Γ≡Δ (refl (univ (Indⱼ′ ⊢Γ (Ind∈Idˡ x₂)))) x₁ x₅
-                                         (<<-trans (<=-help-ab'' {a = sizeConv↑Term x} {c = sizeConv↑Term x₄}) e)
-          A₁≡B = univ (soundnessConv↑Term x)
-      in _ , cast-IndΠ t~t u~u x₂ (stabilityTerm (symConEq Γ≡Δ) x₇) , refl (proj₁ (syntacticEq A₁≡B)) , A₁≡B ,
-         leS (<=-trans (<=-cong-+ sizet~t sizeu~u) (<=-help-3-abcd {a = sizeConv↑Term x}))
-
-    trans~↑! {n = 1+ n} {Γ = Γ} el Γ≡Δ (cast-ΠInd x x₁ x₂ x₃) (cast-ΠInd x₄ x₅ x₆ x₇) (leS e) =
       let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
           t~t , sizet~t = transConv↑Term {n = n} PE.refl (symConEq Γ≡Δ) (refl (Ugenⱼ ⊢Δ)) x₄ x
                                          (<<bind-suc <=-help-ab'- e)
-          u~u , sizeu~u = transConv↑Term {n = n} PE.refl Γ≡Δ (sym (univ (soundnessConv↑Term x))) x₁ x₅
+          u~u , sizeu~u = transConv↑Term {n = n} PE.refl Γ≡Δ (refl (univ (Indⱼ′ ⊢Γ (Ind∈Idˡ x₂)))) x₁ x₅
                                          (<<-trans (<=-help-ab'' {a = sizeConv↑Term x} {c = sizeConv↑Term x₄}) e)
-      in _ , cast-ΠInd (stabilityConv↑Term (symConEq Γ≡Δ) t~t) u~u x₂ (stabilityTerm (symConEq Γ≡Δ) x₇) , refl (univ (Indⱼ′ ⊢Γ (Ind∈Idʳ x₂))) , refl (univ (Indⱼ′ ⊢Γ (Ind∈Idʳ x₂))) ,
+          Π≡Π = univ (soundnessConv↑Term x)
+      in _ , cast-IndΠ (stabilityConv↑Term (symConEq Γ≡Δ) t~t) u~u x₂ (stabilityTerm (symConEq Γ≡Δ) x₇) , refl (proj₂ (syntacticEq Π≡Π)) , sym Π≡Π ,
          leS (<=-trans (<=-cong-+ (<=-trans (≡-to-<= (stabilitySizeConv↑Term (symConEq Γ≡Δ) t~t)) sizet~t) sizeu~u) (<=-help-3-abcd- {a = sizeConv↑Term x} {b = sizeConv↑Term x₄}))
+
+    trans~↑! {n = 1+ n} {Γ = Γ} el Γ≡Δ (cast-ΠInd x x₁ x₂ x₃) (cast-ΠInd x₄ x₅ x₆ x₇) (leS e) =
+      let ⊢Γ , _ , _ = contextConvSubst Γ≡Δ
+          t~t , sizet~t = transConv↑Term {n = n} PE.refl Γ≡Δ (refl (Ugenⱼ ⊢Γ)) x x₄
+                                         (<<-trans (<=-help-ab' {a = sizeConv↑Term x} {b = sizeConv↑Term x₄}) e)
+          u~u , sizeu~u = transConv↑Term {n = n} PE.refl Γ≡Δ (univ (soundnessConv↑Term x)) x₁ x₅
+                                         (<<-trans (<=-help-ab'' {a = sizeConv↑Term x} {c = sizeConv↑Term x₄}) e)
+      in _ , cast-ΠInd t~t u~u x₂ (stabilityTerm (symConEq Γ≡Δ) x₇) , refl (univ (Indⱼ′ ⊢Γ (Ind∈Idʳ x₂))) , refl (univ (Indⱼ′ ⊢Γ (Ind∈Idʳ x₂))) ,
+         leS (<=-trans (<=-cong-+ sizet~t sizeu~u) (<=-help-3-abcd {a = sizeConv↑Term x}))
 
 
 
@@ -887,8 +889,8 @@ abstract
          → (sizeConv↓Term (ctr-cong ⊢Γ ind∈ argsTypeEq ps) + sizeConv↓Term e2) <= n
          → ∃ λ (e'' : Γ ⊢ ctr i j args [conv↓] u ∷ Ind i ^ ι ⁰)
              → (sizeConv↓Term e'' <= (sizeConv↓Term (ctr-cong ⊢Γ ind∈ argsTypeEq ps) + sizeConv↓Term e2))
-      go (ne-ins _ _ _ x) eq _ = ⊥-elim (Ctr≢ne (proj₁ (proj₂ (ne~↓! x))) (PE.sym eq))
-      go (Ind-ins x) eq _ = ⊥-elim (Ctr≢ne (proj₁ (proj₂ (ne~↓! x))) (PE.sym eq))
+      go (ne-ins _ _ _ x) eq _ = ⊥-elim (ctr≢ne (proj₁ (proj₂ (ne~↓! x))) (PE.sym eq))
+      go (Ind-ins x) eq _ = ⊥-elim (ctr≢ne (proj₁ (proj₂ (ne~↓! x))) (PE.sym eq))
       go (ctr-cong {args = args2} {args' = args2'} ⊢Γ' ind∈' argsTypeEq' qs) eq fuel2
         with ctr-PE-injectivity eq
       ... | name≡ , PE.refl , PE.refl with SI.name-inj senv (proj₁ swf) ind∈' ind∈ name≡

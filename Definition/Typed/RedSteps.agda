@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.RedSteps (senv : SI.SEnv) (equivs : E.Equivs senv) where

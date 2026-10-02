@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.NonParanoidTyping (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
@@ -11,7 +13,12 @@ open import Definition.Typed.Consequences.Syntactic senv swf equivs
 open import Tools.Nat using (Nat)
 open import Tools.Product
 open import Tools.Empty
+open import Tools.List using (List; map; All₃; nth; _++_; _∈ₗ_; []ₐ; _∷ₐ_)
+import Tools.List as TL
+open import Tools.Maybe using (just)
 import Tools.PropositionalEquality as PE
+import Definition.SUntyped as SU
+import Definition.Equiv senv as Eq
 infixl 30 _∙_
 infix 30 Πⱼ_▹_▹_
 
@@ -37,6 +44,7 @@ mutual
          → l < l'
          → ⊢⊢ Γ
          → Γ ⊢⊢ (Univ r l) ∷ (Univ ! l') ^ [ ! , next l' ]
+    Indⱼ    : ∀ {ind} → ⊢⊢ Γ → ind ∈ₗ senv → Γ ⊢⊢ Ind (SU.SInd.name ind) ∷ U ⁰ ^ [ ! , ι ¹ ]
     Emptyⱼ : ⊢⊢ Γ → Γ ⊢⊢ sEmpty ∷ SProp ^ [ ! , ι ¹ ]
     Πⱼ_▹_▹_ : ∀ {F rF lF G lG r l}
            → (r PE.≡ ! → lF ≤ l × lG ≤ l)
@@ -64,6 +72,19 @@ mutual
            → Γ ⊢⊢ snd e ∷ Π A' ^ rA ° ⁰ ▹ Id (U ⁰)
                         (B [ cast ⁰ (wk1 A') (wk1 A) (Idsym (Univ rA ⁰) (wk1 A) (wk1 A') (fst (wk1 e))) (var 0) ]↑)
                         B' ° ⁰ ° ⁰ ^ % ^ [ % , ι ⁰ ]
+    Ctrⱼ    : ∀ {ind j args Ts}
+           → ⊢⊢ Γ
+           → ind ∈ₗ senv
+           → SU.ctrArgsTypeList ind j PE.≡ just Ts
+           → Γ ⊢⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+           → Γ ⊢⊢ ctr (SU.SInd.name ind) j args ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+    IndRectⱼ : ∀ {ind P rG lG t ms}
+           → (rG PE.≡ % → lG PE.≡ ⁰)
+           → ind ∈ₗ senv
+           → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢⊢ P ^ [ rG , ι lG ]
+           → Γ ⊢⊢ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+           → Γ ⊢⊢All ms ∷ indRectBranchTyList ind P rG lG ^ [ rG , ι lG ]
+           → Γ ⊢⊢ IndRect (SU.SInd.name ind) lG P t ms ∷ P [ t ] ^ [ rG , ι lG ]
     Emptyrecⱼ : ∀ {A lA rA e}
            → Γ ⊢⊢ A ^ [ rA , ι lA ] → Γ ⊢⊢ e ∷ sEmpty ^ [ % ,  ι ⁰ ] -> Γ ⊢⊢ Emptyrec lA ⁰ A e ∷ A ^ [ rA , ι lA ]
     Idⱼ : ∀ {A l t u}
@@ -88,6 +109,26 @@ mutual
            → Γ ⊢⊢ t ∷ A ^ r
            → Γ ⊢⊢ A ≡ B ^ r
            → Γ ⊢⊢ t ∷ B ^ r
+    equiv-eqⱼ : ∀ {n e}
+              → ⊢⊢ Γ
+              → (nth equivs n PE.≡ just e)
+              → Γ ⊢⊢ equiv-eq n ∷ Id (U ⁰) (Ind (E.Equiv.indA e)) (Ind (E.Equiv.indB e)) ^ [ % , ι ⁰ ]
+
+  -- Pointwise typing of lists of terms
+  data _⊢⊢All_∷_^_ (Γ : Con Term) : List Term → List Term → TypeInfo → Set where
+    εⱼ   : ∀ {r} → Γ ⊢⊢All TL.[] ∷ TL.[] ^ r
+    consⱼ  : ∀ {t ts A As r}
+         → Γ ⊢⊢ t ∷ A ^ r
+         → Γ ⊢⊢All ts ∷ As ^ r
+         → Γ ⊢⊢All (t TL.∷ ts) ∷ (A TL.∷ As) ^ r
+
+  -- Pointwise conversion of lists of terms
+  data _⊢⊢All_≡_∷_^_ (Γ : Con Term) : List Term → List Term → List Term → TypeInfo → Set where
+    εⱼ   : ∀ {r} → Γ ⊢⊢All TL.[] ≡ TL.[] ∷ TL.[] ^ r
+    consⱼ  : ∀ {t t′ ts ts′ A As r}
+         → Γ ⊢⊢ t ≡ t′ ∷ A ^ r
+         → Γ ⊢⊢All ts ≡ ts′ ∷ As ^ r
+         → Γ ⊢⊢All (t TL.∷ ts) ≡ (t′ TL.∷ ts′) ∷ (A TL.∷ As) ^ r
 
   -- Type equality
   data _⊢⊢_≡_^_ (Γ : Con Term) : Term → Term → TypeInfo → Set where
@@ -143,6 +184,30 @@ mutual
                 → Γ     ⊢⊢ g ∷ Π F ^ rF ° lF ▹ G ° lG ° l ^ ! ^ [ ! , ι l ]
                 → Γ ∙ F ^ [ rF , ι lF ] ⊢⊢ wk1 f ∘ var Nat.zero ^ l ≡ wk1 g ∘ var Nat.zero ^ l ∷ G ^ [ ! , ι lG ]
                 → Γ     ⊢⊢ f ≡ g ∷ Π F ^ rF ° lF ▹ G ° lG ° l ^ ! ^ [ ! , ι l ]
+    ctr-cong    : ∀ {ind j args args' Ts}
+                → ⊢⊢ Γ
+                → ind ∈ₗ senv
+                → SU.ctrArgsTypeList ind j PE.≡ just Ts
+                → All₃ (λ a a' A → Γ ⊢⊢ a ≡ a' ∷ A ^ [ ! , ι ⁰ ]) args args' (map emb-stype Ts)
+                → Γ ⊢⊢ ctr (SU.SInd.name ind) j args ≡ ctr (SU.SInd.name ind) j args' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+    IndRect-cong : ∀ {ind P P' lG t t' ms ms'}
+                → ind ∈ₗ senv
+                → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢⊢ P ≡ P' ^ [ ! , ι lG ]
+                → Γ ⊢⊢ t ≡ t' ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+                → Γ ⊢⊢All ms ≡ ms' ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
+                → Γ ⊢⊢ IndRect (SU.SInd.name ind) lG P t ms ≡ IndRect (SU.SInd.name ind) lG P' t' ms' ∷ P [ t ] ^ [ ! , ι lG ]
+    IndRect-ctr≡ : ∀ {ind j P lG args ms m Ts}
+                → ind ∈ₗ senv
+                → SU.ctrArgsTypeList ind j PE.≡ just Ts
+                → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢⊢ P ^ [ ! , ι lG ]
+                → Γ ⊢⊢All args ∷ map emb-stype Ts ^ [ ! , ι ⁰ ]
+                → Γ ⊢⊢All ms ∷ indRectBranchTyList ind P ! lG ^ [ ! , ι lG ]
+                → nth ms j PE.≡ just m
+                → Γ ⊢⊢ IndRect (SU.SInd.name ind) lG P (ctr (SU.SInd.name ind) j args) ms
+                    ≡ apps lG m
+                             (args ++ map (λ a → IndRect (SU.SInd.name ind) lG P a ms)
+                                     (ctrRecArgs (SU.SInd.name ind) Ts args))
+                    ∷ P [ ctr (SU.SInd.name ind) j args ] ^ [ ! , ι lG ]
     Emptyrec-cong : ∀ {A A' l e e'}
                 → Γ ⊢⊢ A ≡ A' ^ [ ! , ι l ]
                 → Γ ⊢⊢ e ∷ sEmpty ^ [ % , ι ⁰ ]
@@ -178,10 +243,21 @@ mutual
                       cast l (B [ a ]↑) B' ((snd (wk1 e)) ∘ (var 0) ^ ⁰) ((wk1 f) ∘ a ^ l))
                       ^ l)
                    ∷ Π A' ^ rA ° lA ▹ B' ° lB ° l  ^ ! ^ [ ! , ι l ]
+    cast-equiv : ∀ {A B e t}
+               → (A∈ : A ∈ₗ SU.indNames senv)
+               → (B∈ : B ∈ₗ SU.indNames senv)
+               → A PE.≢ B
+               → (H : reprInd A PE.≡ reprInd B)
+               → Γ ⊢⊢ e ∷ Id (U ⁰) (Ind A) (Ind B) ^ [ % , ι ⁰ ]
+               → Γ ⊢⊢ t ∷ Ind A ^ [ ! , ι ⁰ ]
+               → Γ ⊢⊢ cast ⁰ (Ind A) (Ind B) e t
+                   ≡ emb-oterm (Eq.fwdₒ (Eq.repr-equiv equivs A B A∈ B∈ H)) ∘ t ^ ⁰
+                   ∷ Ind B ^ [ ! , ι ⁰ ]
 
 mutual 
   wfTerm : ∀ {Γ A t r} → Γ ⊢⊢ t ∷ A ^ r → ⊢⊢ Γ
   wfTerm (univ <l ⊢⊢Γ) = ⊢⊢Γ
+  wfTerm (Indⱼ ⊢⊢Γ _) = ⊢⊢Γ
   wfTerm (Emptyⱼ ⊢⊢Γ) = ⊢⊢Γ
   wfTerm (Πⱼ <l ▹ <l' ▹ G) with wf G
   ... | ⊢Γ ∙ F = ⊢Γ
@@ -191,18 +267,27 @@ mutual
   wfTerm (g ∘ⱼ a) = wfTerm a
   wfTerm (fstⱼ e) = wfTerm e
   wfTerm (sndⱼ e) = wfTerm e
+  wfTerm (Ctrⱼ ⊢⊢Γ _ _ _) = ⊢⊢Γ
+  wfTerm (IndRectⱼ _ _ P t ms) = wfTerm t
   wfTerm (Emptyrecⱼ A e) = wfTerm e
   wfTerm (Idⱼ t u) = wfTerm t
   wfTerm (Idreflⱼ t) = wfTerm t
   wfTerm (transpⱼ P t s u e) = wfTerm t
   wfTerm (castⱼ e t) = wfTerm t
   wfTerm (conv t A≡B) = wfTerm t
+  wfTerm (equiv-eqⱼ ⊢⊢Γ _) = ⊢⊢Γ
 
   wf : ∀ {Γ A r} → Γ ⊢⊢ A ^ r → ⊢⊢ Γ
   wf (Uⱼ ⊢⊢Γ) = ⊢⊢Γ
   wf (univ A) = wfTerm A
 
-
+adm-cast-Ind-refl : ∀ {Γ ind e t}
+         → ind ∈ₗ senv
+         → Γ ⊢⊢ e ∷ Id (U ⁰) (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) ^ [ % , ι ⁰ ]
+         → Γ ⊢⊢ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+         → Γ ⊢⊢ cast ⁰ (Ind (SU.SInd.name ind)) (Ind (SU.SInd.name ind)) e t ≡ t ∷ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ]
+adm-cast-Ind-refl ind∈ ⊢⊢e ⊢⊢t = let ⊢⊢Γ = wfTerm ⊢⊢e
+                                in cast-refl (refl (univ (Indⱼ ⊢⊢Γ ind∈))) ⊢⊢e ⊢⊢t
 
 
 mutual
@@ -211,6 +296,10 @@ mutual
   ⊢is⊢⊢eq : ∀ {Γ A B r} → Γ ⊢ A ≡ B ^ r → Γ ⊢⊢ A ≡ B ^ r
   ⊢is⊢⊢term : ∀ {Γ A t r} → Γ ⊢ t ∷ A ^ r → Γ ⊢⊢ t ∷ A ^ r
   ⊢is⊢⊢eqterm : ∀ {Γ A t u r} → Γ ⊢ t ≡ u ∷ A ^ r → Γ ⊢⊢ t ≡ u ∷ A ^ r
+  ⊢is⊢⊢All : ∀ {Γ ts As r} → Γ ⊢All ts ∷ As ^ r → Γ ⊢⊢All ts ∷ As ^ r
+  ⊢is⊢⊢All≡ : ∀ {Γ ts us As r} → Γ ⊢All ts ≡ us ∷ As ^ r → Γ ⊢⊢All ts ≡ us ∷ As ^ r
+  ⊢is⊢⊢All₃ : ∀ {Γ ts us As r} → All₃ (λ t u A → Γ ⊢ t ≡ u ∷ A ^ r) ts us As
+            → All₃ (λ t u A → Γ ⊢⊢ t ≡ u ∷ A ^ r) ts us As
   
   ⊢is⊢⊢ctx ε = ε
   ⊢is⊢⊢ctx (⊢Γ ∙ x) = ⊢is⊢⊢ctx ⊢Γ ∙ ⊢is⊢⊢ x
@@ -224,6 +313,7 @@ mutual
   ⊢is⊢⊢eq (trans X X₁) = trans (⊢is⊢⊢eq X) (⊢is⊢⊢eq X₁)
   
   ⊢is⊢⊢term (univ x ⊢Γ) = univ x (⊢is⊢⊢ctx ⊢Γ)
+  ⊢is⊢⊢term (Indⱼ ⊢Γ ind∈) = Indⱼ (⊢is⊢⊢ctx ⊢Γ) ind∈
   ⊢is⊢⊢term (Emptyⱼ ⊢Γ) = Emptyⱼ (⊢is⊢⊢ctx ⊢Γ)
   ⊢is⊢⊢term (Πⱼ x ▹ x₁ ▹ X ▹ X₁) = Πⱼ x ▹ x₁ ▹ univ (⊢is⊢⊢term X₁)
   ⊢is⊢⊢term (var ⊢Γ x) = var (⊢is⊢⊢ctx ⊢Γ) x
@@ -231,12 +321,15 @@ mutual
   ⊢is⊢⊢term (x ▹ X ▹ X₁ ▹ X₂ ∘ⱼ X₃) = ⊢is⊢⊢term X₂ ∘ⱼ ⊢is⊢⊢term X₃
   ⊢is⊢⊢term (fstⱼ X X₁ _ _ X₂) = fstⱼ (⊢is⊢⊢term X₂)
   ⊢is⊢⊢term (sndⱼ X X₁ _ _ X₂) = sndⱼ (⊢is⊢⊢term X₂)
+  ⊢is⊢⊢term (Ctrⱼ ⊢Γ ind∈ eq X) = Ctrⱼ (⊢is⊢⊢ctx ⊢Γ) ind∈ eq (⊢is⊢⊢All X)
+  ⊢is⊢⊢term (IndRectⱼ x ind∈ X X₁ X₂) = IndRectⱼ x ind∈ (⊢is⊢⊢ X) (⊢is⊢⊢term X₁) (⊢is⊢⊢All X₂)
   ⊢is⊢⊢term (Emptyrecⱼ x X) = Emptyrecⱼ (⊢is⊢⊢ x) (⊢is⊢⊢term X)
   ⊢is⊢⊢term (Idⱼ X X₁ X₂) = Idⱼ (⊢is⊢⊢term X₁) (⊢is⊢⊢term X₂) 
   ⊢is⊢⊢term (Idreflⱼ X) = Idreflⱼ (⊢is⊢⊢term X)
   ⊢is⊢⊢term (transpⱼ x x₁ X X₁ X₂ X₃) = transpⱼ (⊢is⊢⊢ x₁) (⊢is⊢⊢term X) (⊢is⊢⊢term X₁) (⊢is⊢⊢term X₂) (⊢is⊢⊢term X₃)
   ⊢is⊢⊢term (castⱼ X X₁ X₂ X₃) = castⱼ (⊢is⊢⊢term X₂) (⊢is⊢⊢term X₃) 
   ⊢is⊢⊢term (conv X x) = conv (⊢is⊢⊢term X) (⊢is⊢⊢eq x)
+  ⊢is⊢⊢term (equiv-eqⱼ ⊢Γ x) = equiv-eqⱼ (⊢is⊢⊢ctx ⊢Γ) x
 
   ⊢is⊢⊢eqterm (refl x) = refl (⊢is⊢⊢term x)
   ⊢is⊢⊢eqterm (sym X) = sym (⊢is⊢⊢eqterm X)
@@ -246,12 +339,26 @@ mutual
   ⊢is⊢⊢eqterm (app-cong X X₁) = app-cong (⊢is⊢⊢eqterm X) (⊢is⊢⊢eqterm X₁)
   ⊢is⊢⊢eqterm (β-red x x₁ x₂ x₃ x₄) = β-red x x₁ (⊢is⊢⊢term x₃) (⊢is⊢⊢term x₄)
   ⊢is⊢⊢eqterm (η-eq x x₁ x₂ x₃ x₄ X) = η-eq (⊢is⊢⊢term x₃) (⊢is⊢⊢term x₄) (⊢is⊢⊢eqterm X)
+  ⊢is⊢⊢eqterm (ctr-cong ⊢Γ ind∈ eq X) = ctr-cong (⊢is⊢⊢ctx ⊢Γ) ind∈ eq (⊢is⊢⊢All₃ X)
+  ⊢is⊢⊢eqterm (IndRect-cong ind∈ x X X₁) = IndRect-cong ind∈ (⊢is⊢⊢eq x) (⊢is⊢⊢eqterm X) (⊢is⊢⊢All≡ X₁)
+  ⊢is⊢⊢eqterm (IndRect-ctr≡ ind∈ eq x X X₁ nth≡) = IndRect-ctr≡ ind∈ eq (⊢is⊢⊢ x) (⊢is⊢⊢All X) (⊢is⊢⊢All X₁) nth≡
   ⊢is⊢⊢eqterm (Emptyrec-cong x x₁ x₂) = Emptyrec-cong (⊢is⊢⊢eq x) (⊢is⊢⊢term x₁) (⊢is⊢⊢term x₂)
   ⊢is⊢⊢eqterm (proof-irrelevance x x₁) = proof-irrelevance (⊢is⊢⊢term x) (⊢is⊢⊢term x₁)
   ⊢is⊢⊢eqterm (Id-cong X X₁ X₂) = Id-cong (univ (⊢is⊢⊢eqterm X)) (⊢is⊢⊢eqterm X₁) (⊢is⊢⊢eqterm X₂)
   ⊢is⊢⊢eqterm (cast-refl X x x₁) = cast-refl (univ (⊢is⊢⊢eqterm X)) (⊢is⊢⊢term x) (⊢is⊢⊢term x₁)
   ⊢is⊢⊢eqterm (cast-cong X X₁ X₂ x x₁) = cast-cong (univ (⊢is⊢⊢eqterm X)) (univ (⊢is⊢⊢eqterm X₁)) (⊢is⊢⊢eqterm X₂) (⊢is⊢⊢term x) (⊢is⊢⊢term x₁)
   ⊢is⊢⊢eqterm (cast-Π x x₁ x₂ x₃ x₄ x₅) = cast-Π (⊢is⊢⊢term x₄) (⊢is⊢⊢term x₅)
+  ⊢is⊢⊢eqterm (cast-Ind-refl ind∈ x x₁) = adm-cast-Ind-refl ind∈ (⊢is⊢⊢term x) (⊢is⊢⊢term x₁)
+  ⊢is⊢⊢eqterm (cast-equiv A∈ B∈ A≢B H x x₁) = cast-equiv A∈ B∈ A≢B H (⊢is⊢⊢term x) (⊢is⊢⊢term x₁)
+
+  ⊢is⊢⊢All εⱼ = εⱼ
+  ⊢is⊢⊢All (consⱼ x X) = consⱼ (⊢is⊢⊢term x) (⊢is⊢⊢All X)
+
+  ⊢is⊢⊢All≡ εⱼ = εⱼ
+  ⊢is⊢⊢All≡ (consⱼ x X) = consⱼ (⊢is⊢⊢eqterm x) (⊢is⊢⊢All≡ X)
+
+  ⊢is⊢⊢All₃ []ₐ = []ₐ
+  ⊢is⊢⊢All₃ (x ∷ₐ X) = ⊢is⊢⊢eqterm x ∷ₐ ⊢is⊢⊢All₃ X
 
 
 mutual
@@ -260,6 +367,10 @@ mutual
   ⊢⊢is⊢eq : ∀ {Γ A B r} → Γ ⊢⊢ A ≡ B ^ r → Γ ⊢ A ≡ B ^ r
   ⊢⊢is⊢term : ∀ {Γ A t r} → Γ ⊢⊢ t ∷ A ^ r → Γ ⊢ t ∷ A ^ r
   ⊢⊢is⊢eqterm : ∀ {Γ A t u r} → Γ ⊢⊢ t ≡ u ∷ A ^ r → Γ ⊢ t ≡ u ∷ A ^ r
+  ⊢⊢is⊢All : ∀ {Γ ts As r} → Γ ⊢⊢All ts ∷ As ^ r → Γ ⊢All ts ∷ As ^ r
+  ⊢⊢is⊢All≡ : ∀ {Γ ts us As r} → Γ ⊢⊢All ts ≡ us ∷ As ^ r → Γ ⊢All ts ≡ us ∷ As ^ r
+  ⊢⊢is⊢All₃ : ∀ {Γ ts us As r} → All₃ (λ t u A → Γ ⊢⊢ t ≡ u ∷ A ^ r) ts us As
+            → All₃ (λ t u A → Γ ⊢ t ≡ u ∷ A ^ r) ts us As
   
   ⊢⊢is⊢ctx ε = ε
   ⊢⊢is⊢ctx (⊢Γ ∙ x) = ⊢⊢is⊢ctx ⊢Γ ∙ ⊢⊢is⊢ x
@@ -273,6 +384,7 @@ mutual
   ⊢⊢is⊢eq (trans X X₁) = trans (⊢⊢is⊢eq X) (⊢⊢is⊢eq X₁)
   
   ⊢⊢is⊢term (univ x ⊢Γ) = univ x (⊢⊢is⊢ctx ⊢Γ)
+  ⊢⊢is⊢term (Indⱼ ⊢Γ ind∈) = Indⱼ (⊢⊢is⊢ctx ⊢Γ) ind∈
   ⊢⊢is⊢term (Emptyⱼ ⊢Γ) = Emptyⱼ (⊢⊢is⊢ctx ⊢Γ)
   ⊢⊢is⊢term (Πⱼ x ▹ x₁ ▹ X₁) =
     let ⊢G = ⊢⊢is⊢ X₁
@@ -298,6 +410,8 @@ mutual
         rG , _ , _ , ⊢A , ⊢B , _ , req , _ = inversion-Π ⊢Π
         rG' , _ , _ , ⊢A' , ⊢B' , _ , req' , _ = inversion-Π ⊢Π'
     in sndⱼ ⊢A (PE.subst (λ rr → _ ⊢ _ ∷ Univ rr _ ^ [ ! , _ ]) req ⊢B) ⊢A' (PE.subst (λ rr → _ ⊢ _ ∷ Univ rr _ ^ [ ! , _ ]) req' ⊢B') ⊢e
+  ⊢⊢is⊢term (Ctrⱼ ⊢Γ ind∈ eq X) = Ctrⱼ (⊢⊢is⊢ctx ⊢Γ) ind∈ eq (⊢⊢is⊢All X)
+  ⊢⊢is⊢term (IndRectⱼ x ind∈ X X₁ X₂) = IndRectⱼ x ind∈ (⊢⊢is⊢ X) (⊢⊢is⊢term X₁) (⊢⊢is⊢All X₂)
   ⊢⊢is⊢term (Emptyrecⱼ x X) = Emptyrecⱼ (⊢⊢is⊢ x) (⊢⊢is⊢term X)
   ⊢⊢is⊢term (Idⱼ X₁ X₂) =
     let ⊢t = (⊢⊢is⊢term X₁)
@@ -314,6 +428,7 @@ mutual
         _ , leq , _ = Uinjectivity Ueq
     in castⱼ (PE.subst (λ l → _ ⊢ _ ∷ _ ^ [ ! , ι l ]) leq ⊢A) (PE.subst (λ l → _ ⊢ _ ∷ _ ^ [ ! , ι l ]) leq ⊢B) ⊢e (⊢⊢is⊢term X₃) 
   ⊢⊢is⊢term (conv X x) = conv (⊢⊢is⊢term X) (⊢⊢is⊢eq x)
+  ⊢⊢is⊢term (equiv-eqⱼ ⊢Γ x) = equiv-eqⱼ (⊢⊢is⊢ctx ⊢Γ) x
 
   ⊢⊢is⊢eqterm (refl x) = refl (⊢⊢is⊢term x)
   ⊢⊢is⊢eqterm (sym X) = sym (⊢⊢is⊢eqterm X)
@@ -332,6 +447,9 @@ mutual
         ⊢Π = un-univ (syntacticTerm ⊢t)
         rG , l! , l% , ⊢F , ⊢G , _ , req , _ = inversion-Π ⊢Π
     in η-eq (proj₁ (l! req)) (proj₂ (l! req)) (univ ⊢F) ⊢t (⊢⊢is⊢term x₄) (⊢⊢is⊢eqterm X)
+  ⊢⊢is⊢eqterm (ctr-cong ⊢Γ ind∈ eq X) = ctr-cong (⊢⊢is⊢ctx ⊢Γ) ind∈ eq (⊢⊢is⊢All₃ X)
+  ⊢⊢is⊢eqterm (IndRect-cong ind∈ x X X₁) = IndRect-cong ind∈ (⊢⊢is⊢eq x) (⊢⊢is⊢eqterm X) (⊢⊢is⊢All≡ X₁)
+  ⊢⊢is⊢eqterm (IndRect-ctr≡ ind∈ eq x X X₁ nth≡) = IndRect-ctr≡ ind∈ eq (⊢⊢is⊢ x) (⊢⊢is⊢All X) (⊢⊢is⊢All X₁) nth≡
   ⊢⊢is⊢eqterm (Emptyrec-cong x x₁ x₂) = Emptyrec-cong (⊢⊢is⊢eq x) (⊢⊢is⊢term x₁) (⊢⊢is⊢term x₂)
   ⊢⊢is⊢eqterm (proof-irrelevance x x₁) = proof-irrelevance (⊢⊢is⊢term x) (⊢⊢is⊢term x₁)
   ⊢⊢is⊢eqterm (Id-cong X X₁ X₂) = Id-cong (un-univ≡ (⊢⊢is⊢eq X)) (⊢⊢is⊢eqterm X₁) (⊢⊢is⊢eqterm X₂)
@@ -344,3 +462,13 @@ mutual
         _ , _ , _ , ⊢F , ⊢G , _ , req , _ = inversion-Π ⊢Π
         _ , _ , _ , ⊢F' , ⊢G' , _ , req' , _ = inversion-Π ⊢Π'
     in cast-Π ⊢F (PE.subst (λ rr → _ ⊢ _ ∷ Univ rr _ ^ [ ! , _ ]) req ⊢G) ⊢F' (PE.subst (λ rr → _ ⊢ _ ∷ Univ rr _ ^ [ ! , _ ]) req' ⊢G') ⊢e (⊢⊢is⊢term x₅)
+  ⊢⊢is⊢eqterm (cast-equiv A∈ B∈ A≢B H x x₁) = cast-equiv A∈ B∈ A≢B H (⊢⊢is⊢term x) (⊢⊢is⊢term x₁)
+
+  ⊢⊢is⊢All εⱼ = εⱼ
+  ⊢⊢is⊢All (consⱼ x X) = consⱼ (⊢⊢is⊢term x) (⊢⊢is⊢All X)
+
+  ⊢⊢is⊢All≡ εⱼ = εⱼ
+  ⊢⊢is⊢All≡ (consⱼ x X) = consⱼ (⊢⊢is⊢eqterm x) (⊢⊢is⊢All≡ X)
+
+  ⊢⊢is⊢All₃ []ₐ = []ₐ
+  ⊢⊢is⊢All₃ (x ∷ₐ X) = ⊢⊢is⊢eqterm x ∷ₐ ⊢⊢is⊢All₃ X

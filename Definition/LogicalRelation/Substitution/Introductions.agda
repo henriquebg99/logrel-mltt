@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
@@ -6,6 +8,8 @@ module Definition.LogicalRelation.Substitution.Introductions (senv : SI.SEnv) (s
 open import Definition.Typed.EqualityRelation senv equivs
 open import Definition.LogicalRelation.Substitution.Introductions.Application senv swf equivs public
 open import Definition.LogicalRelation.Substitution.Introductions.Lambda senv swf equivs public
+open import Definition.LogicalRelation.Substitution.Introductions.Ind senv swf equivs public
+open import Definition.LogicalRelation.Substitution.Introductions.IndRect senv swf equivs public
 open import Definition.LogicalRelation.Substitution.Introductions.Empty senv swf equivs public
 open import Definition.LogicalRelation.Substitution.Introductions.Emptyrec senv swf equivs public
 open import Definition.LogicalRelation.Substitution.Introductions.Pi senv swf equivs public

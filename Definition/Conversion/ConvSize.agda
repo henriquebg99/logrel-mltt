@@ -1,5 +1,7 @@
 -- Algorithmic equality.
 
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.ConvSize (senv : SI.SEnv) (equivs : E.Equivs senv) where

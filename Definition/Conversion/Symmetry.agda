@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.Symmetry (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
@@ -197,12 +199,12 @@ mutual
       in _ , univ (sym (soundness~↓! X)) , cast-Ind A'≡A (symConv↑Term Γ≡Δ x) (stabilityTerm Γ≡Δ x₂) (stabilityTerm Γ≡Δ x₁)
   sym~↑! Γ≡Δ (cast-IndΠ x x₁ x₂ x₃) =
       let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
-      in _ , univ (soundnessConv↑Term x) , cast-IndΠ (symConv↑Term Γ≡Δ x) (symConv↑Term Γ≡Δ x₁)
+      in _ , univ (sym (soundnessConv↑Term x)) , cast-IndΠ (symConv↑Term Γ≡Δ x) (symConv↑Term Γ≡Δ x₁)
                                            (stabilityTerm Γ≡Δ x₃) (stabilityTerm Γ≡Δ x₂)
   sym~↑! Γ≡Δ (cast-ΠInd x x₁ x₂ x₃) =
       let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ
       in _ , refl (univ (Indⱼ′ ⊢Γ (Ind∈Idʳ x₂))) , cast-ΠInd (symConv↑Term Γ≡Δ x)
-                                           (convConvTerm (symConv↑Term Γ≡Δ x₁) (univ (sym (soundnessConv↑Term (stabilityConv↑Term Γ≡Δ x)))))
+                                           (convConvTerm (symConv↑Term Γ≡Δ x₁) (univ (soundnessConv↑Term (stabilityConv↑Term Γ≡Δ x))))
                                            (stabilityTerm Γ≡Δ x₃) (stabilityTerm Γ≡Δ x₂)
   sym~↑! Γ≡Δ (cast-IndInd x₁ x₂ x₃ x₄) =
       let ⊢Γ , ⊢Δ , _ = contextConvSubst Γ≡Δ

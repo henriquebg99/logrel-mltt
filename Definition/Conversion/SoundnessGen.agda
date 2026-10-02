@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.SoundnessGen (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
@@ -13,6 +15,8 @@ open import Definition.Typed.Consequences.NeTypeEq senv swf equivs
 open import Definition.Typed.Consequences.Inversion senv swf equivs
 open import Definition.Typed.Consequences.Equality senv swf equivs
 open import Tools.Product
+open import Tools.List using (All₃; []ₐ; _∷ₐ_; _∈ₗ_)
+import Definition.SUntyped as SU
 import Tools.PropositionalEquality as PE
 inversion-lam' : ∀ {t F F' G rF lF lG lΠ Γ} → Γ ⊢ lam F ▹ t ^ lΠ ∷ Π F' ^ rF ° lF ▹ G ° lG ° lΠ ^ ! ^ [ ! , ι lΠ ] →
       Γ ⊢ F ^ [ rF , ι lF ]
@@ -27,6 +31,8 @@ mutual
   soundness~↑! (var-refl x x≡y) = PE.subst (λ y → _ ⊢ _ ≡ var y ∷ _ ^ _) x≡y (refl x)
   soundness~↑! (app-cong {rF = !} k~l x₁) = app-cong (soundness~↓! k~l) (soundnessConv↑Term x₁)
   soundness~↑! (app-cong {rF = %} k~l x₁) = app-cong (soundness~↓! k~l) (let _ , _ , y = soundness~↑% x₁ in y)
+  soundness~↑! (IndRect-cong ind∈ x x₁ x₂) =
+    IndRect-cong ind∈ (soundnessConv↑ x) (soundness~↓! x₁) (All₃-soundAll x₂)
   soundness~↑! (Emptyrec-cong x₁ k~l) = let ⊢k , ⊢l , _ = soundness~↑% k~l in
     Emptyrec-cong (soundnessConv↑ x₁) ⊢k ⊢l
   soundness~↑! (cast-cong X x x₁ x₂ x₃ neCast neCast') =
@@ -73,6 +79,8 @@ mutual
 
   -- Algorithmic equality of terms in WHNF is well-formed.
   soundnessConv↓Term : ∀ {a b A lA Γ} → Γ ⊢⊢ a [conv↓] b ∷ A ^ lA → Γ ⊢ a ≡ b ∷ A ^ [ ! , lA ]
+  soundnessConv↓Term (Ind-cong ⊢Γ i∈) = refl (Indⱼ′ ⊢Γ i∈)
+  soundnessConv↓Term (ctr-cong ⊢Γ ind∈ eq h) = ctr-cong ⊢Γ ind∈ eq (All₃-sound h)
   soundnessConv↓Term (Empty-cong ⊢Γ) = refl (Emptyⱼ ⊢Γ)
   soundnessConv↓Term (Π-cong PE.refl PE.refl PE.refl PE.refl l< l<' c c₁) =
     let F=F = soundnessConv↑Term c
@@ -114,6 +122,18 @@ mutual
     in η-eq l< l<' ⊢F x x₁ t=t'
   soundnessConv↓Term (U-cong PE.refl ⊢Γ) = refl (univ 0<1 ⊢Γ)
 
+  All₃-sound : ∀ {Γ args args' As} →
+    All₃ (λ a a' A → Γ ⊢⊢ a [conv↑] a' ∷ A ^ ι ⁰) args args' As →
+    All₃ (λ a a' A → Γ ⊢ a ≡ a' ∷ A ^ [ ! , ι ⁰ ]) args args' As
+  All₃-sound []ₐ = []ₐ
+  All₃-sound (p ∷ₐ ps) = soundnessConv↑Term p ∷ₐ All₃-sound ps
+
+  All₃-soundAll : ∀ {Γ ms ms' As l} →
+    All₃ (λ a a' A → Γ ⊢⊢ a [conv↑] a' ∷ A ^ l) ms ms' As →
+    Γ ⊢All ms ≡ ms' ∷ As ^ [ ! , l ]
+  All₃-soundAll []ₐ = εⱼ
+  All₃-soundAll (p ∷ₐ ps) = consⱼ (soundnessConv↑Term p) (All₃-soundAll ps)
+
 
 
 app-cong′ : ∀ {Γ k l t v F rF lF G lG lΠ}
@@ -121,6 +141,15 @@ app-cong′ : ∀ {Γ k l t v F rF lF G lG lΠ}
           → Γ ⊢⊢ t [genconv↑] v ∷ F ^ [ rF , ι lF ]
           → Γ ⊢⊢ k ∘ t ^ lΠ ~ l ∘ v ^ lΠ ↑ G [ t ] ^ [ ! , ι lG ]
 app-cong′ k~l t=v = ~↑! (app-cong k~l t=v)
+
+IndRect-cong′ : ∀ {Γ ind P P' t t' ms ms' lG}
+             → ind ∈ₗ senv
+             → Γ ∙ Ind (SU.SInd.name ind) ^ [ ! , ι ⁰ ] ⊢⊢ P [conv↑] P' ^ [ ! , ι lG ]
+             → Γ ⊢⊢ t ~ t' ↓! Ind (SU.SInd.name ind) ^ ι ⁰
+             → All₃ (λ m m' A → Γ ⊢⊢ m [conv↑] m' ∷ A ^ ι lG) ms ms' (indRectBranchTyList ind P ! lG)
+             → Γ ⊢⊢ IndRect (SU.SInd.name ind) lG P t ms ~ IndRect (SU.SInd.name ind) lG P' t' ms'
+                   ↑ (P [ t ]) ^ [ ! , ι lG ]
+IndRect-cong′ ind∈ x x₁ x₂ = ~↑! (IndRect-cong ind∈ x x₁ x₂)
 
 
 Emptyrec-cong′ : ∀ {Γ k l F lF G}

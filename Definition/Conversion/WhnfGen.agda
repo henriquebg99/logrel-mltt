@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Conversion.WhnfGen (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
@@ -14,6 +16,8 @@ mutual
   ne~↑! (var-refl x₁ x≡y) = var _ , var _
   ne~↑! (app-cong x x₁) = let _ , q , w = ne~↓! x
                          in  ∘ₙ q , ∘ₙ w
+  ne~↑! (IndRect-cong _ x x₁ x₂) = let _ , q , w = ne~↓! x₁
+                                  in  IndRectₙ q , IndRectₙ w
   ne~↑! (Emptyrec-cong x x₁) = Emptyrecₙ , Emptyrecₙ
   ne~↑! (cast-cong X x x₁ x₂ x₃ neCast neCast') = neCast , neCast'
   ne~↑! (cast-refl x x₁ x₂ neCast neCast') =  neCast , neCast'
@@ -32,6 +36,8 @@ mutual
   whnfConv↓Term (ne t u x x₁) =
     let _ , neT , neU = ne~↓! x₁
     in posTypeWhnf x , ne neT , ne neU
+  whnfConv↓Term (Ind-cong x _) = Uₙ , Indₙ , Indₙ
+  whnfConv↓Term (ctr-cong _ _ _ x) = Indₙ , ctrₙ , ctrₙ
   whnfConv↓Term (Empty-cong x) = Uₙ , Emptyₙ , Emptyₙ
   whnfConv↓Term (Π-cong _ _ _ _ _ _ x₁ x₂) = Uₙ , Πₙ , Πₙ
   whnfConv↓Term (Id-cong x x₁ x₂) = Uₙ , Idₙ , Idₙ

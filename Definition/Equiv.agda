@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 module Definition.Equiv (senv : SI.SEnv) where
 open import Definition.OUntyped senv
@@ -54,7 +56,7 @@ record Equiv : Set where
     ⊢sect : ∀ {Γ} → ⊢ Γ → Γ ⊢ sect ∷ sectTy indA (emb-sterm-oterm fwd) (emb-sterm-oterm bwd) ^ [ % , ι ⁰ ]
 
 open Equiv
--- FIXME useless definition
+-- The equivalences between inductive types that the theory is parameterized by
 Equivs : Set
 Equivs = List Equiv
 

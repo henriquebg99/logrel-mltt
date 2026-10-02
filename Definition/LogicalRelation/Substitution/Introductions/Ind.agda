@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.Typed.EqualityRelation as ER
 
 import Definition.SUntyped as SI
@@ -71,10 +73,10 @@ ctrArgsPos : ∀ {ind j Ts} → SU.ctrArgsTypeList ind j PE.≡ just Ts
 ctrArgsPos {ind} {j} {Ts} eq =
   all∈ (λ T T∈ → SU.SInd.name ind , SU.ctrArgsTypesPositive ind j Ts eq T T∈)
 
-private
-  ⊢All-length : ∀ {Γ ts As r} → Γ ⊢All ts ∷ As ^ r → length ts PE.≡ length As
-  ⊢All-length εⱼ = PE.refl
-  ⊢All-length (consⱼ _ rest) = PE.cong 1+ (⊢All-length rest)
+-- Well-typed argument lists have as many arguments as argument types
+⊢All-length : ∀ {Γ ts As r} → Γ ⊢All ts ∷ As ^ r → length ts PE.≡ length As
+⊢All-length εⱼ = PE.refl
+⊢All-length (consⱼ _ rest) = PE.cong 1+ (⊢All-length rest)
 
 ------------------------------------------------------------------------
 -- Reducible constructors (specific Ind derivation)

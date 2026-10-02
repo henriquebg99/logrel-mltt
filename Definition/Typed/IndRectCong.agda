@@ -1,17 +1,16 @@
-import Definition.Typed.EqualityRelation as ER
+{-# OPTIONS --safe #-}
 
 import Definition.SUntyped as SI
 import Definition.Equiv as E
-module Definition.Typed.IndRectCong (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) {{eqrel : ER.EqRelSet senv equivs}} where
-open import Definition.Typed.EqualityRelation senv equivs
+module Definition.Typed.IndRectCong (senv : SI.SEnv) (swf : SI.swfenv senv) (equivs : E.Equivs senv) where
 
 open import Definition.Untyped senv equivs
 open import Definition.Untyped.Properties senv equivs
 open import Definition.Typed senv equivs
 open import Definition.Typed.Properties senv swf equivs
 open import Definition.Typed.Weakening senv equivs
-open import Definition.LogicalRelation.Substitution.Introductions.IndRect senv swf equivs
-  using (ctrArity; branchTy-nf; Πarg; Πih; ihFun; ihGo; ctrVars; concl; varIdx; rec-Ind)
+open import Definition.Untyped.IndRect senv equivs
+  using (ctrArity; branchTy-nf; Πarg; Πih; ctrVars; concl; varIdx; rec-Ind)
 open import Tools.Nat
 open import Tools.Product
 open import Tools.List using (List; All; All₂; []ₐ; _∷ₐ_; map; length; length-range; range; range-suc; zip; foldr;

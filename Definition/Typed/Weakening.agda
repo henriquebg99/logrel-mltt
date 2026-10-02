@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.Weakening (senv : SI.SEnv) (equivs : E.Equivs senv) where
@@ -16,22 +18,22 @@ otwk id = O.id
 otwk (step ρ) = O.step (otwk ρ)
 otwk (lift ρ) = O.lift (otwk ρ)
 
-emb-otwk : ∀ ρ → emb_wk (otwk ρ) PE.≡ ρ
+emb-otwk : ∀ ρ → emb-Wk (otwk ρ) PE.≡ ρ
 emb-otwk id = PE.refl
 emb-otwk (step ρ) = PE.cong step (emb-otwk ρ)
 emb-otwk (lift ρ) = PE.cong lift (emb-otwk ρ)
 
-wk-emb-fwd : ∀ equiv ρ → U.wk ρ (emb_oterm_term (Eq.fwdₒ equiv)) PE.≡ emb_oterm_term (Eq.fwdₒ equiv)
+wk-emb-fwd : ∀ equiv ρ → U.wk ρ (emb-oterm (Eq.fwdₒ equiv)) PE.≡ emb-oterm (Eq.fwdₒ equiv)
 wk-emb-fwd equiv ρ =
-  PE.trans (PE.cong (λ wkρ → U.wk wkρ (emb_oterm_term (Eq.fwdₒ equiv))) (PE.sym (emb-otwk ρ)))
+  PE.trans (PE.cong (λ wkρ → U.wk wkρ (emb-oterm (Eq.fwdₒ equiv))) (PE.sym (emb-otwk ρ)))
            (PE.trans (PE.sym (emb-wk (otwk ρ) (Eq.fwdₒ equiv)))
-                     (PE.cong emb_oterm_term (Eq.fwdₒ-wk equiv (otwk ρ))))
+                     (PE.cong emb-oterm (Eq.fwdₒ-wk equiv (otwk ρ))))
 
-wk-emb-bwd : ∀ equiv ρ → U.wk ρ (emb_oterm_term (Eq.bwdₒ equiv)) PE.≡ emb_oterm_term (Eq.bwdₒ equiv)
+wk-emb-bwd : ∀ equiv ρ → U.wk ρ (emb-oterm (Eq.bwdₒ equiv)) PE.≡ emb-oterm (Eq.bwdₒ equiv)
 wk-emb-bwd equiv ρ =
-  PE.trans (PE.cong (λ wkρ → U.wk wkρ (emb_oterm_term (Eq.bwdₒ equiv))) (PE.sym (emb-otwk ρ)))
+  PE.trans (PE.cong (λ wkρ → U.wk wkρ (emb-oterm (Eq.bwdₒ equiv))) (PE.sym (emb-otwk ρ)))
            (PE.trans (PE.sym (emb-wk (otwk ρ) (Eq.bwdₒ equiv)))
-                     (PE.cong emb_oterm_term (Eq.bwdₒ-wk equiv (otwk ρ))))
+                     (PE.cong emb-oterm (Eq.bwdₒ-wk equiv (otwk ρ))))
 
 -- Weakening type
 
@@ -318,7 +320,7 @@ wkTerm {ρ = ρ} [ρ] ⊢Δ (Id-Π {rA = rA} {t = t} {u = u} <l <l' Aⱼ Bⱼ t�
     PE.subst (λ f → Δ ⊢ cast ⁰ (Ind A) (Ind B) (U.wk ρ e) (U.wk ρ t) ≡ f ∘ U.wk ρ t ^ ⁰ ∷ Ind B ^ [ ! , ι ⁰ ])
              (PE.sym (wk-emb-fwd (Eq.repr-equiv equivs A B A∈ B∈ H) ρ))
              (cast-equiv A∈ B∈ A≢B H (wkTerm [ρ] ⊢Δ ⊢e) (wkTerm [ρ] ⊢Δ ⊢t))
-  wkEqTerm ρ ⊢Δ (cast-Ind-ctr ind∈ e t) = cast-Ind-ctr ind∈ (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
+  wkEqTerm ρ ⊢Δ (cast-Ind-refl ind∈ e t) = cast-Ind-refl ind∈ (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
 
 mutual
   wkRed : ∀ {Γ Δ A B r ρ} → ρ ∷ Δ ⊆ Γ →
@@ -411,7 +413,7 @@ mutual
     PE.subst (λ f → Δ ⊢ cast ⁰ (Ind A) (Ind B) (U.wk ρ e) (U.wk ρ t) ⇒ f ∘ U.wk ρ t ^ ⁰ ∷ Ind B ^ ι ⁰)
              (PE.sym (wk-emb-fwd (Eq.repr-equiv equivs A B A∈ B∈ H) ρ))
              (cast-equiv A∈ B∈ A≢B H (wkTerm [ρ] ⊢Δ ⊢e) (wkTerm [ρ] ⊢Δ ⊢t))
-  wkRedTerm ρ ⊢Δ (cast-Ind-ctr ind∈ e t) = cast-Ind-ctr ind∈ (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
+  wkRedTerm ρ ⊢Δ (cast-Ind-refl ind∈ e t) = cast-Ind-refl ind∈ (wkTerm ρ ⊢Δ e) (wkTerm ρ ⊢Δ t)
   wkRedTerm {ρ = ρ₁} ρ ⊢Δ (cast-ne-cong K neK L neL e n) = cast-ne-cong (wkTerm ρ ⊢Δ K) (wkNeutral ρ₁ neK) (wkTerm ρ ⊢Δ L) (wkNeutral ρ₁ neL) (wkTerm ρ ⊢Δ e) (wkRedTerm ρ ⊢Δ n)
 wkRed* : ∀ {Γ Δ A B r ρ} → ρ ∷ Δ ⊆ Γ →
            let ρA = U.wk ρ A

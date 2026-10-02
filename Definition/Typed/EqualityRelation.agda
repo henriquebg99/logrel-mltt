@@ -1,3 +1,5 @@
+{-# OPTIONS --safe #-}
+
 import Definition.SUntyped as SI
 import Definition.Equiv as E
 module Definition.Typed.EqualityRelation (senv : SI.SEnv) (equivs : E.Equivs senv) where
@@ -124,10 +126,6 @@ record EqRelSet : Set₁ where
               → Γ ⊢ F ≅ H ∷ (Univ rF lF) ^ [ ! , next lF ]
               → Γ ∙ F ^ [ rF , ι lF ] ⊢ G ≅ E ∷ (Univ r lG) ^ [ ! , next lG ]
               → Γ ⊢ Π F ^ rF ° lF ▹ G ° lG ° l ^ r ≅ Π H ^ rF ° lF ▹ E ° lG ° l ^ r ∷ (Univ r l) ^ [ ! , next l ]
-
-    -- Zero reflexivity
-
-    -- Successor congruence
 
     -- Constructor congruence
     ≅-ctr-cong : ∀ {ind j args args' Ts Γ}
